@@ -1,9 +1,14 @@
-import { Button, Col, Divider, Modal, Row } from 'antd'
+import { Button, Col, Divider, message, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
 import { REFUND_STATUS } from '../../../constants'
-import { ramdonString, showAmount } from '../../../helpers'
-import { IProfile, InvoiceItem, UserInvoice } from '../../../shared.types'
+import {
+  getInvoicePermission,
+  ramdonString,
+  showAmount
+} from '../../../helpers'
+import { sendInvoiceInMailReq } from '../../../requests'
+import { InvoiceItem, IProfile, UserInvoice } from '../../../shared.types'
 
 interface Props {
   user: IProfile | undefined
@@ -31,6 +36,21 @@ const Index = ({ detail, closeModal }: Props) => {
         href={`mailto: ${iv.userAccount.email}`}
       >{`${iv.userAccount.firstName} ${iv.userAccount.lastName}`}</a>
     )
+  }
+
+  const onSendInvoice = async () => {
+    if (detail == null || detail.invoiceId == '' || detail.invoiceId == null) {
+      return
+    }
+    setLoading(true)
+    const [_, err] = await sendInvoiceInMailReq(detail.invoiceId)
+    setLoading(false)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+    message.success('Invoice sent.')
+    closeModal()
   }
 
   return (
@@ -63,7 +83,6 @@ const Index = ({ detail, closeModal }: Props) => {
         <Col span={8}>{detail.gateway.gatewayName}</Col>
         <Col span={4}>{detail.refund != null ? 'Yes' : 'No'}</Col>
       </Row>
-
       {detail.refund && (
         <div style={{ margin: '22px 0' }}>
           <Divider style={{ color: '#757575', fontSize: '14px' }}>
@@ -132,7 +151,6 @@ const Index = ({ detail, closeModal }: Props) => {
           </Row>
         ))}
       <Divider />
-
       <Row className="flex items-center">
         <Col span={14}> </Col>
         <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
@@ -169,7 +187,6 @@ const Index = ({ detail, closeModal }: Props) => {
           span={4}
         >{`${showAmount(detail.totalAmount, detail.currency, true)}`}</Col>
       </Row>
-
       {/* <Row className="flex items-center">
         <Col span={20}></Col>
         <Col span={4}>
@@ -177,12 +194,15 @@ const Index = ({ detail, closeModal }: Props) => {
           total with payment link
         </Col>
       </Row> */}
-
       <div className="mt-6 flex items-center justify-end gap-4">
-        <div style={{ display: 'flex', gap: '16px' }}>
-          {/* <Button onClick={onSendInvoice} loading={loading} disabled={loading}>
+        <div className="flex w-full justify-between gap-4">
+          <Button
+            onClick={onSendInvoice}
+            loading={loading}
+            disabled={loading || !getInvoicePermission(detail).sendable}
+          >
             Send Invoice
-    </Button> */}
+          </Button>
           <Button onClick={closeModal} disabled={loading} type="primary">
             Close
           </Button>
