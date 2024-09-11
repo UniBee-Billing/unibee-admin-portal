@@ -1,0 +1,13 @@
+name: Deploy development environment
+
+on:
+  push:
+    branches:
+      - develop/v**
+
+jobs:
+  deploy-development-env:
+    uses: ./.github/workflows/deployment.yml
+    with:
+      environment: development
+    
