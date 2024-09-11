@@ -9,5 +9,6 @@ jobs:
   deploy-development-env:
     uses: ./.github/workflows/deployment.yml
     with:
-      environment: development
+      environment: development 
+    secrets: inherit
     
