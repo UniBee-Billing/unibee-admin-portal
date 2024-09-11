@@ -14,6 +14,9 @@ on:
         required: true
       DOCKERHUB_USERNAME:
         required: true
+      DEPLOYMENT_KEY:
+        required: true
+      
 
 jobs:
   deploy:
@@ -35,3 +38,7 @@ jobs:
         with:
           push: true
           tags: unibee/admin-portal:${{ inputs.version }}-dev
+
+      - name: Deploy to cluster
+        if: inputs.environment == 'development'
+        run: 'curl --header "Content-Type: application/json" --request POST --data "{\"key\":\"${{ secrets.DEPLOYMENT_KEY }}\", \"deployment\":\"adminPortal\", \"imageTag\":\"${{ inputs.version }}-dev\"}" https://api.unibee.dev/cloud/cd/k8s/pod/restart'
