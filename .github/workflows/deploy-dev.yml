@@ -6,9 +6,30 @@ on:
       - develop/v**
 
 jobs:
+  parse-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+    steps:
+      - name: Get branch names.
+        id: branch-names
+        uses: tj-actions/branch-names@v8
+
+      - name: Extract version
+        id: extract_version
+        run: |
+          if [[ ${{ steps.branch-names.outputs.current_branch }} =~ ^[^/]+/(v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          else
+            echo "No version found"
+            exit 1
+          fi
+
   deploy-development-env:
+    needs: parse-version
     uses: ./.github/workflows/deployment.yml
     with:
       environment: development 
+      version: ${{ needs.parse-version.outputs.version }}
     secrets: inherit
     
