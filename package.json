@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx --fix ./",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prettier:check": "prettier './src/**/*.{js,jsx,ts,tsx}' --check",
+    "prettier:fix": "prettier './src/**/*.{js,jsx,ts,tsx}' --write",
+    "lint:check": "eslint --ext .js,.jsx,.ts,.tsx ./src",
+    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx ./src --fix"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",

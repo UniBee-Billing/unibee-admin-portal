@@ -1,0 +1,55 @@
+name: Deploy production environment
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed 
+
+jobs:
+  deploy-production-env:
+    if: |
+      startsWith(github.head_ref, 'release/') || 
+      startsWith(github.head_ref, 'develop/') ||
+      startsWith(github.head_ref, 'staging/')
+    uses: ./.github/workflows/deployment.yml
+    with:
+      environment: production
+ 
+  release:
+    runs-on: ubuntu-latest
+    needs: deploy-production-env
+    permissions:
+      contents: write
+    # Only create release when release branch is merged
+    if: startsWith(github.head_ref, 'release/')
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Extract version
+        id: extract_version
+        run: |
+          if [[ ${{ github.head_ref }} =~ ^release/(v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          else
+            echo "No version found"
+            exit 1
+          fi
+
+      - name: Tag version 
+        uses: anothrNick/github-tag-action@v1 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          WITH_V: true
+          CUSTOM_TAG: ${{ steps.extract_version.outputs.version }} 
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.extract_version.outputs.version }}  
+          name: Release v${{ steps.extract_version.outputs.version }}  
+          generateReleaseNotes: true 

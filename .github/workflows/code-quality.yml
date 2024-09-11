@@ -1,0 +1,22 @@
+name: Check code style and conventions 
+
+on:
+  push
+
+jobs:
+  check-code-style:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Run Lint
+        run: npm run lint:check
