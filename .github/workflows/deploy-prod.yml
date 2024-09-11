@@ -15,7 +15,8 @@ jobs:
       startsWith(github.head_ref, 'staging/')
     uses: ./.github/workflows/deployment.yml
     with:
-      environment: production
+      environment: production 
+    secrets: inherit
  
   release:
     runs-on: ubuntu-latest
