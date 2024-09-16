@@ -1,4 +1,4 @@
-# Unibee-merchant-portal 
+# Unibee-admin-portal 
 The most advanced open-source billing software designed specifically for SaaS businesses. UniBee offers a user-friendly and cost-effective alternative to closed-source, expensive, and complex solutions like Recurly, Chargebee, and Paddle.
 
 This project is a single-page WEB application which is Front-end of UniBee billing admin management system.
@@ -11,10 +11,10 @@ Clone this repository and install the dependencies.
 
 ```shell
 # Clone this repository
-git clone https://github.com/UniBee-Billing/unibee-merchant-portal
+git clone https://github.com/UniBee-Billing/unibee-admin-portal
 
 # Install dependencies
-cd unibee-merchant-portal
+cd unibee-admin-portal
 yarn
 ```
 
@@ -44,7 +44,7 @@ yarn build
 The build command will generate the static files in the `dist` folder of the project.
 
 ### Building with Docker
-The merchant portal also supports building the application using Docker, run the following command to build the docker image:
+The admin portal also supports building the application using Docker, run the following command to build the docker image:
 
 ```shell
 docker build -t <tag> .
