@@ -51,4 +51,4 @@ docker build -t <tag> .
 ```
 
 ## License
-AGPL v3.0.
+AGPLv3.
