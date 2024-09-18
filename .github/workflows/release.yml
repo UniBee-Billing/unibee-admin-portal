@@ -1,9 +1,8 @@
-name: Release the latest version
+name: Release latest version
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+\.[0-9]+\.[0-9]+' 
+  repository_dispatch:
+    types: [release]
 
 permissions:
   contents: write
@@ -15,9 +14,16 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
 
+      - name: Tag version
+        uses: anothrNick/github-tag-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: false
+          CUSTOM_TAG: ${{ github.event.client_payload.version }}
+
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag: ${{ github.event.client_payload.version }}
+          name: Release ${{ github.event.client_payload.version }}
           generateReleaseNotes: true
