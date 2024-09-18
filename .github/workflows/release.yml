@@ -14,6 +14,18 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build prod image and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: 'unibee/admin-portal:${{ github.event.client_payload.version }}'
+
       - name: Tag version
         uses: anothrNick/github-tag-action@v1
         env:
