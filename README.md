@@ -1,6 +1,4 @@
 # Unibee-admin-portal 
-The most advanced open-source billing software designed specifically for SaaS businesses. UniBee offers a user-friendly and cost-effective alternative to closed-source, expensive, and complex solutions like Recurly, Chargebee, and Paddle.
-
 This project is a single-page WEB application which is Front-end of UniBee billing admin management system.
 
 ## Prerequisites 
