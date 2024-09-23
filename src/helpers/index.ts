@@ -29,7 +29,7 @@ passwordSchema
   .symbols(1) // should have special characters
 
 export const urlRegx =
-  /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/
+  /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/
 
 export const showAmount = (
   amount: number | undefined,
@@ -213,7 +213,7 @@ export const isValidMap = (str: string | null) => {
       return false
     }
     return typeof obj == 'object'
-  } catch (err) {
+  } catch {
     return false
   }
 }
@@ -225,7 +225,6 @@ export const downloadStaticFile = (url: string, fileName: string) => {
     headers: { Authorization: `${localStorage.getItem('merchantToken')}` },
     responseType: 'blob'
   }).then((response) => {
-    console.log('download res: ', response)
     const href = URL.createObjectURL(response.data)
     const link = document.createElement('a')
     link.href = href
@@ -252,10 +251,15 @@ export const formatPlanInterval = (plan: IPlan | undefined) =>
     ? ''
     : `${plan.intervalCount == 1 ? '' : plan.intervalCount}${plan.intervalUnit}`
 
+    
+type SubDetail = Pick<ISubscriptionType, 'addons' | 'user' | 'unfinishedSubscriptionPendingUpdate' | 'latestInvoice' | 'plan'> & {
+  subscription: ISubscriptionType
+}
+
 // subscription data returned from backend need to be re-constructred before front-end use
 // make sure subDetail is the returned subscription data from backend.
 // in general, it's of the structure: {addons, gateway, plan, subscription, user, unfinishedSubscriptionPendingUpdate}
-export const normalizeSub = (subDetail: any): ISubscriptionType | null => {
+export const normalizeSub = (subDetail: SubDetail): ISubscriptionType | null => {
   const {
     user,
     addons,
@@ -263,7 +267,6 @@ export const normalizeSub = (subDetail: any): ISubscriptionType | null => {
     subscription,
     latestInvoice,
     plan,
-    gateway
   } = subDetail
   if (null == subscription) {
     return null
@@ -271,20 +274,20 @@ export const normalizeSub = (subDetail: any): ISubscriptionType | null => {
   const s: ISubscriptionType = { ...subscription }
   s.plan = plan
   s.latestInvoice = latestInvoice
-  s.addons = addons?.map((a: any) => ({
-    ...a.addonPlan,
-    quantity: a.quantity,
-    addonPlanId: a.addonPlan.id
+  s.addons = addons?.map((addon) => ({
+    ...addon.addonPlan,
+    quantity: addon.quantity,
+    addonPlanId: addon.addonPlan.id
   }))
   s.user = user
   s.unfinishedSubscriptionPendingUpdate = unfinishedSubscriptionPendingUpdate
   if (s.unfinishedSubscriptionPendingUpdate != null) {
     if (s.unfinishedSubscriptionPendingUpdate.updateAddons != null) {
       s.unfinishedSubscriptionPendingUpdate.updateAddons =
-        s.unfinishedSubscriptionPendingUpdate.updateAddons.map((a: any) => ({
-          ...a.addonPlan,
-          quantity: a.quantity,
-          addonPlanId: a.addonPlan.id
+        s.unfinishedSubscriptionPendingUpdate.updateAddons.map((addon) => ({
+          ...addon.addonPlan,
+          quantity: addon.quantity,
+          addonPlanId: addon.addonPlan.id
         }))
     }
   }

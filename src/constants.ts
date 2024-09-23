@@ -1,6 +1,3 @@
-import { Tag } from 'antd'
-import { ReactElement } from 'react'
-
 export enum PlanType {
   MainPlan = 1,
   Addon = 2,
@@ -234,5 +231,5 @@ const PERMISSIONS = {
 }
 
 export const PERMISSION_LIST = Object.entries(PERMISSIONS)
-  .map(([k, v]) => v)
+  .map((values) => values[1])
   .sort((a, b) => a.order - b.order)

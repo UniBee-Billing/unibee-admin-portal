@@ -19,7 +19,6 @@ export const usePagination = () => {
   )
   const onPageChange: (page: number, pageSize: number) => void = (
     page: number,
-    pageSize: number
   ) => {
     setPage(page - 1)
     setSearchParams({ page: page + '' })
@@ -28,7 +27,6 @@ export const usePagination = () => {
   // some tables are part of a page, no need to set searchParams on URL
   const onPageChangeNoParams: (page: number, pageSize: number) => void = (
     page: number,
-    pageSize: number
   ) => {
     setPage(page - 1)
   }
@@ -53,11 +51,20 @@ export const useCountdown = (
       const currentTime = new Date().getTime()
       if (currentTime - lastTime >= 1000) {
         lastTime = currentTime
-        val--
-        val >= 0 && setCurrentVal(val) // I don't want to use many if/else checks
-        val == 0 && setCounting(false)
-        val < 0 &&
-          (setCurrentVal(valBK), cancelAnimationFrame(countdownReqId.current))
+        val--;
+
+        if(val >= 0) {
+          setCurrentVal(val)
+        }
+
+        if(val === 0) {
+          setCounting(false)
+        }
+
+        if(val < 0) {
+          setCurrentVal(valBK)
+          cancelAnimationFrame(countdownReqId.current)
+        }
       }
     })()
   }

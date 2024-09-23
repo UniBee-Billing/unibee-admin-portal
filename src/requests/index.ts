@@ -1,10 +1,10 @@
 import axios from 'axios'
-// import { useProfileStore } from "../stores";
 import { CURRENCY } from '../constants'
 import {
   DiscountCode,
   ExpiredError,
   IProfile,
+  ISubscriptionType,
   TExportDataType,
   TImportDataType,
   TMerchantInfo,
@@ -46,7 +46,7 @@ type TSignupReq = {
 }
 export const signUpReq = async (body: TSignupReq) => {
   try {
-    const res = await request.post(`/merchant/auth/sso/register`, body)
+    await request.post(`/merchant/auth/sso/register`, body)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -61,7 +61,7 @@ type TSignupVerifyReq = {
 }
 export const signUpVerifyReq = async (body: TSignupVerifyReq) => {
   try {
-    const res = await request.post(`/user/auth/sso/registerVerify`, body)
+    await request.post(`/user/auth/sso/registerVerify`, body)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -88,7 +88,7 @@ export const loginWithPasswordReq = async (body: TPassLogin) => {
 
 export const loginWithOTPReq = async (email: string) => {
   try {
-    const res = await request.post(`/merchant/auth/sso/loginOTP`, { email })
+    await request.post(`/merchant/auth/sso/loginOTP`, { email })
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -116,7 +116,7 @@ export const loginWithOTPVerifyReq = async (
 
 export const forgetPassReq = async (email: string) => {
   try {
-    const res = await request.post(`/merchant/auth/sso/passwordForgetOTP`, {
+    await request.post(`/merchant/auth/sso/passwordForgetOTP`, {
       email
     })
     return [null, null]
@@ -132,7 +132,7 @@ export const forgetPassVerifyReq = async (
   newPassword: string
 ) => {
   try {
-    const res = await request.post(
+    await request.post(
       `/merchant/auth/sso/passwordForgetOTPVerify`,
       {
         email,
@@ -173,8 +173,7 @@ export const resetPassReq = async (
 export const logoutReq = async () => {
   const session = useSessionStore.getState()
   try {
-    const res = await request.post(`/merchant/member/logout`, {})
-    const code = res.data.code
+    await request.post(`/merchant/member/logout`, {})
     session.setSession({ expired: true, refresh: null })
     return [null, null]
   } catch (err) {
@@ -422,7 +421,6 @@ export const getPlanDetail = async (planId: number) => {
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
     }
-    console.log('get plan detail: ', res.data.data)
     return [res.data.data.plan, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -481,7 +479,7 @@ export const getPlanDetailWithMore = async (
 }
 
 // create a new or save an existing plan
-export const savePlan = async (planDetail: any, isNew: boolean) => {
+export const savePlan = async (planDetail: ISubscriptionType['plan'], isNew: boolean) => {
   const url = isNew ? '/merchant/plan/new' : `/merchant/plan/edit`
   try {
     const res = await request.post(url, planDetail)
@@ -2252,10 +2250,8 @@ export const saveWebhookReq = async ({
       endpointId == null
         ? '/merchant/webhook/new_endpoint'
         : '/merchant/webhook/update_endpoint'
-    const body: any = { url, events }
-    if (endpointId != null) {
-      body.endpointId = endpointId
-    }
+    const body = { url, events, endpointId: endpointId === null ? undefined : endpointId }
+
     const res = await request.post(actionUrl, body)
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -2404,7 +2400,6 @@ export const getActivityLogsReq = async (
 ) => {
   let term = ''
   for (const [key, value] of Object.entries(searchTerm)) {
-    console.log(key, value)
     term += `${key}=${value}&`
   }
   term = term.substring(0, term.length - 1)
@@ -2452,7 +2447,7 @@ export const exportDataReq = async ({
   format
 }: {
   task: TExportDataType
-  payload: any
+  payload: unknown
   exportColumns?: string[]
   format?: 'xlsx' | 'csv'
 }) => {
@@ -2558,7 +2553,7 @@ export const saveExportTmplReq = async ({
   name: string
   templateId?: number
   task: TExportDataType
-  payload?: any
+  payload?: unknown
   exportColumns?: string[]
   format?: 'xlsx' | 'csv'
 }) => {
@@ -2638,10 +2633,7 @@ export const saveProductReq = async ({
 }) => {
   const isNew = productId == null
   const url = `/merchant/product/${isNew ? 'new' : 'edit'}`
-  const body: any = { productName, description }
-  if (!isNew) {
-    body.productId = productId
-  }
+  const body = { productName, description, productId: !isNew ? productId : undefined }
   try {
     const res = await request.post(url, body)
     if (res.data.code == 61 || res.data.code == 62) {

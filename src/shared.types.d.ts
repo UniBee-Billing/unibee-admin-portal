@@ -138,6 +138,7 @@ interface ISubAddon extends IPlan {
   // then apply them on the plan
   quantity: number
   addonPlanId: number
+  addonPlan: ISubAddon
 }
 
 interface IBillableMetrics {
