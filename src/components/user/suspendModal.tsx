@@ -19,7 +19,7 @@ const Index = ({ user, closeModal, refresh, setRefreshSub }: Props) => {
       return
     }
     setLoading(true)
-    const [res, err] = await suspendUserReq(user.id as number)
+    const [_, err] = await suspendUserReq(user.id as number)
     setLoading(false)
     if (err != null) {
       message.error(err.message)

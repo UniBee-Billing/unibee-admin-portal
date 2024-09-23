@@ -133,7 +133,7 @@ interface IPlan {
   product: IProduct
 }
 
-interface ISubAddon extends IPlan {
+export interface ISubAddon extends IPlan {
   // when update subscription plan, I need to know which addons users have selected,
   // then apply them on the plan
   quantity: number

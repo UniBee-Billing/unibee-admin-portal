@@ -40,7 +40,7 @@ const previewWrapperStyle: CSSProperties = {
 
 const Index = () => {
   const navigate = useNavigate()
-  let location = useLocation()
+  const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [invoiceDetail, setInvoiceDetail] = useState<UserInvoice | null>(null)
   //   const [userProfile, setUserProfile] = useState<IProfile | null>(null)
