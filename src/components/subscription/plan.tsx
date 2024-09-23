@@ -74,7 +74,7 @@ const Index = ({
       return null
     }
     return (
-      <div className=" text-sm text-gray-500">
+      <div className="text-sm text-gray-500">
         <div>Trial Price: {showAmount(amount, plan.currency)}</div>
         <div>
           Trial lengh:&nbsp;

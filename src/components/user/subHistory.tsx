@@ -86,7 +86,7 @@ const Index = ({ userId }: { userId: number }) => {
           '―'
         ) : (
           <div
-            className=" w-full overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-full overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}plan/${record.plan.id}`)}
           >
             {record.plan.planName}
@@ -132,7 +132,7 @@ const Index = ({ userId }: { userId: number }) => {
               <div style={{ width: '280px' }}>
                 {addons.map((a: any) => (
                   <Row key={a.id}>
-                    <Col span={10} className=" font-bold text-gray-500">
+                    <Col span={10} className="font-bold text-gray-500">
                       {a.addonPlan.planName}
                     </Col>
                     <Col span={14}>
@@ -164,7 +164,7 @@ const Index = ({ userId }: { userId: number }) => {
           ''
         ) : (
           <div
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
           >
             {subId}
@@ -181,7 +181,7 @@ const Index = ({ userId }: { userId: number }) => {
           ''
         ) : (
           <div
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}invoice/${invoiceId}`)}
           >
             {invoiceId}

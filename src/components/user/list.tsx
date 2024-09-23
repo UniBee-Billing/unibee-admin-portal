@@ -215,7 +215,7 @@ const Index = () => {
       key: 'subscriptionId',
       render: (subId, _) => (
         <div
-          className="btn-user-with-subid  w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+          className="btn-user-with-subid w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           onClick={(evt) => {
             navigate(`${APP_PATH}subscription/${subId}`)
           }}
@@ -350,7 +350,7 @@ const Index = () => {
           />
         </Col>
       </Row>
-      <div className=" h-3"></div>
+      <div className="h-3"></div>
 
       {loadingPlans ? (
         <Spin
@@ -445,7 +445,7 @@ const Search = ({
         // initialValues={DEFAULT_SEARCH_TERM}
       >
         <Row className="flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+          <Col span={3} className="font-bold text-gray-500">
             Account name
           </Col>
           <Col span={4}>
@@ -470,7 +470,7 @@ const Search = ({
         </Row>
 
         <Row className="my-3 flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+          <Col span={3} className="font-bold text-gray-500">
             Account created
           </Col>
           <Col span={4}>

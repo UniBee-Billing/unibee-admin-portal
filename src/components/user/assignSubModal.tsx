@@ -168,19 +168,19 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       <div className="flex justify-between">
         <div className="my-6 w-3/6">
           <Row gutter={[16, 48]}>
-            <Col span={7} className=" font-bold text-gray-700">
+            <Col span={7} className="font-bold text-gray-700">
               UserId
             </Col>
             <Col span={17}>{user.id}</Col>
           </Row>
           <Row gutter={[16, 48]}>
-            <Col span={7} className=" font-bold text-gray-700">
+            <Col span={7} className="font-bold text-gray-700">
               User name
             </Col>
             <Col span={17}>{`${user.firstName} ${user.lastName}`}</Col>
           </Row>
           <Row gutter={[16, 48]} className="mb-4">
-            <Col span={7} className=" font-bold text-gray-700">
+            <Col span={7} className="font-bold text-gray-700">
               Email
             </Col>
             <Col span={17}>{user.email}</Col>
@@ -222,7 +222,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
             />
           </div>
 
-          <div className=" mb-12 flex flex-col items-center justify-center">
+          <div className="mb-12 flex flex-col items-center justify-center">
             {selectedPlan != null && (
               <Plan
                 plan={plans.find((p) => p.id == selectedPlan)!}

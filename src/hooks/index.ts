@@ -18,7 +18,7 @@ export const usePagination = () => {
     isNaN(pageNum) || pageNum <= 0 ? 0 : pageNum - 1
   )
   const onPageChange: (page: number, pageSize: number) => void = (
-    page: number,
+    page: number
   ) => {
     setPage(page - 1)
     setSearchParams({ page: page + '' })
@@ -26,7 +26,7 @@ export const usePagination = () => {
 
   // some tables are part of a page, no need to set searchParams on URL
   const onPageChangeNoParams: (page: number, pageSize: number) => void = (
-    page: number,
+    page: number
   ) => {
     setPage(page - 1)
   }
@@ -51,17 +51,17 @@ export const useCountdown = (
       const currentTime = new Date().getTime()
       if (currentTime - lastTime >= 1000) {
         lastTime = currentTime
-        val--;
+        val--
 
-        if(val >= 0) {
+        if (val >= 0) {
           setCurrentVal(val)
         }
 
-        if(val === 0) {
+        if (val === 0) {
           setCounting(false)
         }
 
-        if(val < 0) {
+        if (val < 0) {
           setCurrentVal(valBK)
           cancelAnimationFrame(countdownReqId.current)
         }

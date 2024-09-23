@@ -73,7 +73,7 @@ const Index = ({ userId }: { userId: number }) => {
           ''
         ) : (
           <div
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
           >
             {subId}
@@ -94,7 +94,7 @@ const Index = ({ userId }: { userId: number }) => {
           ''
         ) : (
           <div
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}invoice/${ivId}`)}
           >
             {ivId}

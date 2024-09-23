@@ -255,12 +255,12 @@ const Index = ({
       key: 'totalAmount',
       width: 150,
       render: (amt, iv) => (
-        <div className=" flex items-center">
-          <div className={iv.refund == null ? '' : ' text-red-500'}>
+        <div className="flex items-center">
+          <div className={iv.refund == null ? '' : 'text-red-500'}>
             {showAmount(amt, iv.currency, true)}
           </div>
           {iv.refund == null && (
-            <div className=" text-xs text-gray-500">{` (tax: ${showAmount(iv.taxAmount, iv.currency, true)})`}</div>
+            <div className="text-xs text-gray-500">{` (tax: ${showAmount(iv.taxAmount, iv.currency, true)})`}</div>
           )}
           {iv.refund != null && (
             <Tooltip title="Refund info">
@@ -628,7 +628,7 @@ const Search = ({
         disabled={searching}
         initialValues={DEFAULT_TERM}
       >
-        <Row className="mb-3  flex items-center" gutter={[8, 8]}>
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
           <Col span={3} className="font-bold text-gray-500">
             First/Last name
           </Col>
@@ -677,8 +677,8 @@ const Search = ({
           </Col>
         </Row>
 
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={3} className="font-bold text-gray-500">
             Invoice created
           </Col>
           <Col span={4}>

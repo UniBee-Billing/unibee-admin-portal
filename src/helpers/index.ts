@@ -251,22 +251,30 @@ export const formatPlanInterval = (plan: IPlan | undefined) =>
     ? ''
     : `${plan.intervalCount == 1 ? '' : plan.intervalCount}${plan.intervalUnit}`
 
-    
-type SubDetail = Pick<ISubscriptionType, 'addons' | 'user' | 'unfinishedSubscriptionPendingUpdate' | 'latestInvoice' | 'plan'> & {
+type SubDetail = Pick<
+  ISubscriptionType,
+  | 'addons'
+  | 'user'
+  | 'unfinishedSubscriptionPendingUpdate'
+  | 'latestInvoice'
+  | 'plan'
+> & {
   subscription: ISubscriptionType
 }
 
 // subscription data returned from backend need to be re-constructred before front-end use
 // make sure subDetail is the returned subscription data from backend.
 // in general, it's of the structure: {addons, gateway, plan, subscription, user, unfinishedSubscriptionPendingUpdate}
-export const normalizeSub = (subDetail: SubDetail): ISubscriptionType | null => {
+export const normalizeSub = (
+  subDetail: SubDetail
+): ISubscriptionType | null => {
   const {
     user,
     addons,
     unfinishedSubscriptionPendingUpdate,
     subscription,
     latestInvoice,
-    plan,
+    plan
   } = subDetail
   if (null == subscription) {
     return null

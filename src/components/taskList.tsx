@@ -77,7 +77,7 @@ const Index = ({ onClose }: { onClose: () => void }) => {
       extra={
         <Tooltip title="Refresh">
           <span
-            className={` ${loading ? ' cursor-not-allowed' : ' cursor-pointer'}`}
+            className={` ${loading ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             onClick={getList}
           >
             <SyncOutlined />
@@ -149,7 +149,7 @@ const renderJson = (text: string) => {
           </div>
         }
       >
-        <div className=" cursor-pointer">
+        <div className="cursor-pointer">
           <InfoCircleOutlined />
         </div>
       </Popover>
@@ -187,11 +187,11 @@ const TaskItem = ({ t }: { t: TTaskItem }) => {
     <div style={{ height: '50px' }}>
       <Row style={rowStyle}>
         <Col span={3}>{t.id}</Col>
-        <Col span={3} className=" font-bold text-gray-500">
+        <Col span={3} className="font-bold text-gray-500">
           Task
         </Col>
         <Col span={8}>
-          <div className=" flex">
+          <div className="flex">
             {t.taskName}&nbsp;{t.payload != 'null' && renderJson(t.payload)}
           </div>
         </Col>
@@ -201,7 +201,7 @@ const TaskItem = ({ t }: { t: TTaskItem }) => {
             <Popover
               placement="right"
               content={
-                <div className=" min-w-48 max-w-60">{t.failureReason}</div>
+                <div className="min-w-48 max-w-60">{t.failureReason}</div>
               }
             >
               <InfoCircleOutlined />
@@ -221,11 +221,11 @@ const TaskItem = ({ t }: { t: TTaskItem }) => {
 
       <Row style={rowStyle}>
         <Col span={3}></Col>
-        <Col span={3} className=" font-bold text-gray-500">
+        <Col span={3} className="font-bold text-gray-500">
           Start
         </Col>
         <Col span={8}>{formatDate(t.startTime, true)}</Col>
-        <Col span={2} className=" font-bold text-gray-500">
+        <Col span={2} className="font-bold text-gray-500">
           End
         </Col>
         <Col span={6}>

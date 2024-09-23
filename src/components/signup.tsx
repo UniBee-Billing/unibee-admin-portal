@@ -106,7 +106,7 @@ const Index = () => {
           marginTop: '100px'
         }}
       >
-        <h1 className=" mb-6 mt-9">Merchant Signup</h1>
+        <h1 className="mb-6 mt-9">Merchant Signup</h1>
         <>
           <div
             className="flex flex-col justify-center"

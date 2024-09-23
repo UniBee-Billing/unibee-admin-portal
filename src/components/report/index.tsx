@@ -522,7 +522,7 @@ const Index = () => {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className=" flex flex-wrap gap-2"
+                  className="flex flex-wrap gap-2"
                 >
                   {filteredFields.map(({ field, isHide }, idx) => (
                     <Draggable
@@ -558,8 +558,8 @@ const Index = () => {
             </Droppable>
           </div>
         </Spin>
-        <div className=" my-6 flex items-center justify-center">
-          <span className=" mr-2">Report from/to:</span>
+        <div className="my-6 flex items-center justify-center">
+          <span className="mr-2">Report from/to:</span>
           <DatePicker
             value={reportTimeStart}
             onChange={reportRangeChange('reportTimeStart')}
@@ -571,8 +571,8 @@ const Index = () => {
             onChange={reportRangeChange('reportTimeEnd')}
             disabled={loading || exporting}
           />
-          <div className=" mx-4">
-            <span className=" mx-2">Export format: </span>
+          <div className="mx-4">
+            <span className="mx-2">Export format: </span>
             <Radio.Group
               onChange={onExportFormatChange}
               value={exportFormat}
@@ -584,8 +584,8 @@ const Index = () => {
           </div>
         </div>
 
-        <Row className=" mb-2">
-          <Col span={8} className=" font-bold">
+        <Row className="mb-2">
+          <Col span={8} className="font-bold">
             Fields
           </Col>
           <Col span={12} className="font-bold">
@@ -596,7 +596,7 @@ const Index = () => {
             </Col> */}
         </Row>
         <div
-          className=" my-4 p-2"
+          className="my-4 p-2"
           style={{
             border: '1px solid #eee',
             borderRadius: '4px',
@@ -611,7 +611,7 @@ const Index = () => {
                 <Droppable droppableId="exported-fields">
                   {(provided, snapshot) => (
                     <div
-                      className="exported-fields  px-2"
+                      className="exported-fields px-2"
                       style={{
                         minHeight: '420px',
                         // maxHeight: '420px',
@@ -639,7 +639,7 @@ const Index = () => {
                                 {...provided.dragHandleProps}
                                 ref={provided.innerRef}
                               >
-                                <div className=" flex items-center">
+                                <div className="flex items-center">
                                   <Button
                                     size="small"
                                     icon={<DeleteOutlined />}
@@ -704,7 +704,7 @@ const Index = () => {
           </Form>
         </div>
       </DragDropContext>
-      <div className=" flex items-center justify-end gap-4">
+      <div className="flex items-center justify-end gap-4">
         <Button
           type="primary"
           onClick={exportReportReq}

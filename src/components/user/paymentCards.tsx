@@ -84,7 +84,7 @@ const Index = ({
         <Col span={2}>
           <div className="flex justify-evenly gap-2">
             <Tooltip title="Refresh">
-              <span className=" cursor-pointer" onClick={refresh}>
+              <span className="cursor-pointer" onClick={refresh}>
                 <SyncOutlined />
               </span>
             </Tooltip>

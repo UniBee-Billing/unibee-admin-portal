@@ -27,7 +27,7 @@ const Index = ({
   const goSignup = () => navigate(`${APP_PATH}signup`)
 
   return (
-    <div className="flex h-full items-center justify-center ">
+    <div className="flex h-full items-center justify-center">
       <div className="flex flex-col items-center justify-center">
         <h1 style={{ marginBottom: '36px' }}>Billing Admin Login</h1>
         <Radio.Group
@@ -40,7 +40,7 @@ const Index = ({
           value={loginType}
         />
         <div
-          className="mb-3 mt-6 flex flex-col items-center justify-center rounded-lg  bg-white"
+          className="mb-3 mt-6 flex flex-col items-center justify-center rounded-lg bg-white"
           style={{
             width: '620px',
             height: '300px',

@@ -59,7 +59,7 @@ const Index = () => {
       render: (plan, codeUsagDetail) => (
         <div
           onClick={(e) => navigate(`${APP_PATH}plan/${plan.id}`)}
-          className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+          className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
         >
           {plan.planName}
         </div>
@@ -81,7 +81,7 @@ const Index = () => {
         ) : (
           <div
             onClick={(e) => navigate(`${APP_PATH}user/${user.id}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {`${user.firstName} ${user.lastName}`}
           </div>
@@ -103,7 +103,7 @@ const Index = () => {
         ) : (
           <div
             onClick={(e) => navigate(`${APP_PATH}subscription/${subId}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
           </div>
@@ -212,8 +212,8 @@ const Index = () => {
         }}
       />
       <div className="mx-0 my-4 flex w-full items-center justify-end">
-        <div className=" flex w-2/4 justify-end">
-          <div className=" flex w-full justify-between">
+        <div className="flex w-2/4 justify-end">
+          <div className="flex w-full justify-between">
             <Button onClick={goBack}>Go back</Button>
             <Pagination
               current={page + 1} // back-end starts with 0, front-end starts with 1
@@ -291,8 +291,8 @@ const Search = ({
   return (
     <div>
       <Form form={form} onFinish={goSearch} disabled={searching || exporting}>
-        <Row className=" mb-5 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-500">
+        <Row className="mb-5 flex items-center" gutter={[8, 8]}>
+          <Col span={2} className="font-bold text-gray-500">
             Code used
           </Col>
           <Col span={4}>

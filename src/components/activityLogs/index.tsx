@@ -197,7 +197,7 @@ const Index = () => {
         onPageChange={onPageChange}
         goSearch={goSearch}
       />
-      <div className=" h-4"></div>
+      <div className="h-4"></div>
       <Table
         columns={columns}
         dataSource={logs}
@@ -273,7 +273,7 @@ const Search = ({
     <div>
       <Form form={form} initialValues={DEFAULT_TERM} disabled={searching}>
         <Row className="my-2 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-600">
+          <Col span={2} className="font-bold text-gray-600">
             Billing admin
           </Col>
           <Col span={4}>
@@ -321,7 +321,7 @@ const Search = ({
         </Row>
 
         <Row className="my-2 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-600">
+          <Col span={2} className="font-bold text-gray-600">
             User
           </Col>
           <Col span={4}>
@@ -354,7 +354,7 @@ const Search = ({
         </Row>
 
         <Row className="my-2 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-600">
+          <Col span={2} className="font-bold text-gray-600">
             Subscription Id{' '}
           </Col>
           <Col span={4}>

@@ -707,7 +707,7 @@ const SubscriptionInfoSection = ({
                 <div style={{ width: '280px' }}>
                   {subInfo?.addons.map((a, idx) => (
                     <Row key={idx}>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         {a.planName}
                       </Col>
                       <Col span={14}>
@@ -747,7 +747,7 @@ const SubscriptionInfoSection = ({
                 content={
                   <div style={{ width: '320px' }}>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Code
                       </Col>
                       <Col span={14}>
@@ -766,13 +766,13 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Name
                       </Col>
                       <Col span={14}>{subInfo.latestInvoice.discount.name}</Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Status
                       </Col>
                       <Col span={14}>
@@ -782,7 +782,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Billing Type
                       </Col>
                       <Col span={14}>
@@ -792,7 +792,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Discount Amt
                       </Col>
                       <Col span={14}>
@@ -800,7 +800,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Cycle limit
                       </Col>
                       <Col span={14}>
@@ -808,7 +808,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Valid range
                       </Col>
                       <Col span={14}>

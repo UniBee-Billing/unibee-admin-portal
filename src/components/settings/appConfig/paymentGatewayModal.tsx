@@ -64,7 +64,7 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
         footer={null}
         closeIcon={null}
       >
-        <div className="my-6  w-full ">
+        <div className="my-6 w-full">
           <Row gutter={[16, 32]} style={{ marginBottom: '12px' }}>
             <Col span={4}>
               {gatewayDetail?.gatewayName == 'paypal'
@@ -94,7 +94,7 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
           <Row gutter={[16, 32]}>
             <Col span={4}></Col>
             <Col span={20}>
-              <div className=" text-xs text-gray-400">
+              <div className="text-xs text-gray-400">
                 For security reason, your{' '}
                 {gatewayDetail?.gatewayName == 'paypal'
                   ? 'Secret'

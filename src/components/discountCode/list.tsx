@@ -314,7 +314,7 @@ const Index = () => {
         onPageChange={onPageChange}
         clearFilters={clearFilters}
       />
-      <div className=" mb-4"></div>
+      <div className="mb-4"></div>
       <Table
         columns={columns}
         dataSource={codeList}
@@ -388,8 +388,8 @@ const Search = ({
   return (
     <div>
       <Form form={form} onFinish={goSearch} disabled={searching || exporting}>
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={3} className="font-bold text-gray-500">
             Code created
           </Col>
           <Col span={4}>

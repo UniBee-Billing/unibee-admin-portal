@@ -137,7 +137,7 @@ const Index = () => {
       render: (_, sub) => (
         <span>
           {`${sub.plan?.planName}`}{' '}
-          <span className=" text-xs text-gray-400">
+          <span className="text-xs text-gray-400">
             (
             {`${showAmount(sub.plan?.amount, sub.plan?.currency)}/${formatPlanInterval(sub.plan)}`}
             )
@@ -426,7 +426,7 @@ const Index = () => {
         onPageChange={onPageChange}
         clearFilters={clearFilters}
       />
-      <div className=" mb-3"></div>
+      <div className="mb-3"></div>
       {loadingPlans ? (
         <Spin
           indicator={<LoadingOutlined spin />}
@@ -522,8 +522,8 @@ const Search = ({
         initialValues={DEFAULT_TERM}
         disabled={searching || exporting}
       >
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={4} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
             Subscription created
           </Col>
           <Col span={4}>

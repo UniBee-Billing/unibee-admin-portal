@@ -278,7 +278,7 @@ const Index = () => {
         }}
       />
       <div className="flex w-full justify-end">
-        <div className="mx-0 my-4 flex w-3/6 items-center justify-between ">
+        <div className="mx-0 my-4 flex w-3/6 items-center justify-between">
           <Button onClick={goBack}>Go Back</Button>
           <Pagination
             current={page + 1} // back-end starts with 0, front-end starts with 1

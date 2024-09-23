@@ -51,7 +51,7 @@ const Index = ({
       <div style={{ height: '12px' }}></div>
       <p>
         Are you sure you have received the payment and want to mark this invoice
-        as <span className=" text-red-600">PAID</span>?{' '}
+        as <span className="text-red-600">PAID</span>?{' '}
       </p>
       <Form
         form={form}

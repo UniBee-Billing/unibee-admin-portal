@@ -41,7 +41,7 @@ const Index = ({ closeModal }: IProps) => {
         footer={null}
         closeIcon={null}
       >
-        <div className="my-6  w-full ">
+        <div className="my-6 w-full">
           <Row gutter={[16, 32]} style={{ marginBottom: '12px' }}>
             <Col span={4}>Your API key</Col>
             <Col span={20}>
@@ -51,7 +51,7 @@ const Index = ({ closeModal }: IProps) => {
           <Row>
             <Col span={4}></Col>
             <Col span={20}>
-              <div className=" text-xs text-gray-400">
+              <div className="text-xs text-gray-400">
                 For security reason, your key won't show up here after submit.
               </div>
               <div>

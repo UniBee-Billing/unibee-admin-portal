@@ -50,7 +50,7 @@ const Index = ({
       <div style={{ height: '12px' }}></div>
       <p>
         Are you sure you have refunded user's payment, and want to mark refund
-        status as <span className=" text-red-600">SUCCEEDED</span> ?
+        status as <span className="text-red-600">SUCCEEDED</span> ?
       </p>
       <Form
         form={form}

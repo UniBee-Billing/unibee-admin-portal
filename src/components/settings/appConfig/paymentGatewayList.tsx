@@ -105,7 +105,7 @@ const Index = ({
             )}
           </Col>
           <Col span={10}>
-            <div className=" text-gray-500">{g.description}</div>
+            <div className="text-gray-500">{g.description}</div>
           </Col>
           <Col span={2}>
             <Button

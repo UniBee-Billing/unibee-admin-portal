@@ -942,7 +942,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               <Switch disabled={!enableTrialWatch || formDisabled} />
             </Form.Item>
             <span
-              className=" ml-2 text-xs text-gray-400"
+              className="ml-2 text-xs text-gray-400"
               // style={{ top: '-45px', left: '240px', width: '600px' }}
             >
               When enabled, users can only use bank card payment (no Crypto or
@@ -958,7 +958,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
             <Row
               gutter={[8, 8]}
               style={{ marginTop: '0px' }}
-              className=" font-bold text-gray-500"
+              className="font-bold text-gray-500"
             >
               <Col span={5}>Name</Col>
               <Col span={3}>Code</Col>

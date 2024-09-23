@@ -248,7 +248,7 @@ const Index = ({
           userProfile == null ||
           userProfile?.status == 2
         } // user has active sub || user not exist || user is suspended
-        className=" my-4"
+        className="my-4"
       >
         Assign Subscription
       </Button>

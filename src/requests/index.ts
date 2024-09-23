@@ -132,14 +132,11 @@ export const forgetPassVerifyReq = async (
   newPassword: string
 ) => {
   try {
-    await request.post(
-      `/merchant/auth/sso/passwordForgetOTPVerify`,
-      {
-        email,
-        verificationCode,
-        newPassword
-      }
-    )
+    await request.post(`/merchant/auth/sso/passwordForgetOTPVerify`, {
+      email,
+      verificationCode,
+      newPassword
+    })
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -479,7 +476,10 @@ export const getPlanDetailWithMore = async (
 }
 
 // create a new or save an existing plan
-export const savePlan = async (planDetail: ISubscriptionType['plan'], isNew: boolean) => {
+export const savePlan = async (
+  planDetail: ISubscriptionType['plan'],
+  isNew: boolean
+) => {
   const url = isNew ? '/merchant/plan/new' : `/merchant/plan/edit`
   try {
     const res = await request.post(url, planDetail)
@@ -2250,7 +2250,11 @@ export const saveWebhookReq = async ({
       endpointId == null
         ? '/merchant/webhook/new_endpoint'
         : '/merchant/webhook/update_endpoint'
-    const body = { url, events, endpointId: endpointId === null ? undefined : endpointId }
+    const body = {
+      url,
+      events,
+      endpointId: endpointId === null ? undefined : endpointId
+    }
 
     const res = await request.post(actionUrl, body)
     if (res.data.code == 61 || res.data.code == 62) {
@@ -2633,7 +2637,11 @@ export const saveProductReq = async ({
 }) => {
   const isNew = productId == null
   const url = `/merchant/product/${isNew ? 'new' : 'edit'}`
-  const body = { productName, description, productId: !isNew ? productId : undefined }
+  const body = {
+    productName,
+    description,
+    productId: !isNew ? productId : undefined
+  }
   try {
     const res = await request.post(url, body)
     if (res.data.code == 61 || res.data.code == 62) {

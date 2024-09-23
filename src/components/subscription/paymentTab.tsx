@@ -142,23 +142,23 @@ const Index = ({
             <Popover
               placement="right"
               content={
-                <div className=" min-w-48 max-w-60">
+                <div className="min-w-48 max-w-60">
                   {pay.payment.authorizeReason != '' && (
                     <Row>
-                      <Col span={8} className=" text-xs text-gray-500">
+                      <Col span={8} className="text-xs text-gray-500">
                         Auth reason:
                       </Col>
-                      <Col span={16} className=" text-sm">
+                      <Col span={16} className="text-sm">
                         {pay.payment.authorizeReason}
                       </Col>
                     </Row>
                   )}
                   {pay.payment.failureReason != '' && (
                     <Row>
-                      <Col span={8} className=" text-xs text-gray-500">
+                      <Col span={8} className="text-xs text-gray-500">
                         Other:
                       </Col>
-                      <Col span={16} className=" text-sm">
+                      <Col span={16} className="text-sm">
                         {pay.payment.failureReason}
                       </Col>
                     </Row>
@@ -218,7 +218,7 @@ const Index = ({
         ) : (
           <div
             onClick={(e) => navigate(`${APP_PATH}subscription/${subId}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
           </div>
@@ -251,7 +251,7 @@ const Index = ({
         ) : (
           <div
             onClick={(e) => navigate(`${APP_PATH}user/${userId}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {userId}
           </div>
@@ -519,8 +519,8 @@ const Search = ({
         initialValues={DEFAULT_TERM}
         className="my-4"
       >
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={4} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
             Transaction created
           </Col>
           <Col span={4}>
