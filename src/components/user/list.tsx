@@ -136,7 +136,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { plans, total } = planList
+    const { plans } = planList
     planFilterRef.current =
       plans == null
         ? []
@@ -216,7 +216,7 @@ const Index = () => {
       render: (subId, _) => (
         <div
           className="btn-user-with-subid w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-          onClick={(evt) => {
+          onClick={() => {
             navigate(`${APP_PATH}subscription/${subId}`)
           }}
         >
@@ -236,7 +236,7 @@ const Index = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, plan) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
+      render: (d) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
     },
     {
       title: 'Status',
@@ -278,7 +278,7 @@ const Index = () => {
       ),
       width: 128,
       key: 'action',
-      render: (_, record) => (
+      render: (_) => (
         <Space size="middle" className="user-action-btn-wrapper">
           <Tooltip title="Edit">
             <Button
@@ -376,7 +376,7 @@ const Index = () => {
             spinning: loading,
             indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
           }}
-          onRow={(user, rowIndex) => {
+          onRow={(user) => {
             return {
               onClick: (evt) => {
                 if (
@@ -411,11 +411,6 @@ const Index = () => {
 }
 
 export default Index
-const DEFAULT_SEARCH_TERM = {
-  firstName: '',
-  lastName: '',
-  email: ''
-}
 const Search = ({
   form,
   searching,
@@ -493,7 +488,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

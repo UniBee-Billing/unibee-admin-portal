@@ -34,7 +34,6 @@ dayjs.extend(relativeTime)
 
 SyntaxHighlighter.registerLanguage('json', json)
 
-const APP_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 
 const Index = ({ onClose }: { onClose: () => void }) => {

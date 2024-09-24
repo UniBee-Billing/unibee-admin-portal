@@ -46,7 +46,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { merchantRoles, total } = res
+    const { merchantRoles } = res
     merchantRoles.forEach((r: TRole) => (r.localId = r.id + ''))
     merchantRoles.unshift(OWNER_ROLE)
     setRoles(merchantRoles)

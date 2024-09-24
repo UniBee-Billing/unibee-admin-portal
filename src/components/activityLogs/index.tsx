@@ -1,4 +1,4 @@
-import { LoadingOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -7,18 +7,13 @@ import {
   Input,
   Pagination,
   Row,
-  Select,
-  Space,
   Table,
-  Tooltip,
   message
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CURRENCY } from '../../constants'
-import { getActivityLogsReq, getRoleListReq } from '../../requests'
+import { getActivityLogsReq } from '../../requests'
 import { TActivityLogs } from '../../shared.types.d'
 
 import { formatDate } from '../../helpers'
@@ -99,7 +94,7 @@ const Index = () => {
       title: 'Time',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, log) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
+      render: (d) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
     },
     {
       title: 'Invoice Id',
@@ -210,7 +205,7 @@ const Index = () => {
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
         onChange={onTableChange}
-        onRow={(record, rowIndex) => {
+        onRow={() => {
           return {
             onClick: (event) => {
               const tgt = event.target

@@ -1,7 +1,6 @@
 import { Tag } from 'antd'
 import React, { ReactElement } from 'react'
 import {
-  CURRENCY,
   DISCOUNT_CODE_STATUS,
   INVOICE_STATUS,
   MERCHANT_USER_STATUS,

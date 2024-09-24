@@ -1,4 +1,4 @@
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -344,7 +344,7 @@ const ResetPassWithOldPass = ({
               message: 'Please input your new password!'
             },
             ({ getFieldValue }) => ({
-              validator(rule, value) {
+              validator(value) {
                 if (getFieldValue('oldPassword') == value) {
                   return Promise.reject(
                     'New password should not be the same as old password.'
@@ -373,7 +373,7 @@ const ResetPassWithOldPass = ({
               message: 'Please retype your new password!'
             },
             ({ getFieldValue }) => ({
-              validator(rule, value) {
+              validator(value) {
                 if (value == getFieldValue('newPassword')) {
                   return Promise.resolve()
                 }

@@ -1,10 +1,8 @@
-import { CopyOutlined, LoadingOutlined } from '@ant-design/icons'
-import { Button, Col, Input, Modal, Row, Spin, message } from 'antd'
+import { Button, Col, Input, Modal, Row, message } from 'antd'
 // import dayjs from 'dayjs'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 // import { useCopyContent } from '../../hooks'
-import { saveGatewayKeyReq, saveVatSenseKeyReq } from '../../../requests'
-import { TGateway } from '../../../shared.types'
+import { saveVatSenseKeyReq } from '../../../requests'
 const { TextArea } = Input
 
 interface IProps {

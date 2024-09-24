@@ -323,7 +323,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { plans, total } = planList
+    const { plans } = planList
     planFilterRef.current =
       plans == null
         ? []
@@ -335,10 +335,7 @@ const Index = () => {
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
     pagination,
-    filters,
-    sorter,
-    extra
-  ) => {
+    filters  ) => {
     // console.log('params', pagination, filters, sorter, extra);
     // onPageChange(1, PAGE_SIZE)
     setFilters(filters as TFilters)
@@ -447,9 +444,9 @@ const Index = () => {
           rowClassName="clickable-tbl-row"
           pagination={false}
           onChange={onTableChange}
-          onRow={(record, rowIndex) => {
+          onRow={(record) => {
             return {
-              onClick: (event) => {
+              onClick: () => {
                 navigate(`${APP_PATH}subscription/${record.subscriptionId}`, {
                   state: { subscriptionId: record.subscriptionId }
                 })
@@ -546,7 +543,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

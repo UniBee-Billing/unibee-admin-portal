@@ -29,7 +29,6 @@ import {
   useSessionStore
 } from './stores'
 
-import Dashboard from './components/dashboard'
 import InvoiceDetail from './components/invoice/detail'
 import InvoiceList from './components/invoice/list'
 import OutletPage from './components/outletPage'

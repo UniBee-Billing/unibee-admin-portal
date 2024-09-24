@@ -593,7 +593,6 @@ interface ISubSectionProps {
 }
 const SubscriptionInfoSection = ({
   subInfo,
-  plans,
   onDueDateChange,
   refresh,
   toggleTerminateModal,

@@ -1,21 +1,16 @@
 import {
-  CheckCircleOutlined,
-  DollarOutlined,
   LoadingOutlined
 } from '@ant-design/icons'
-import { Button, Col, Row, Spin, Tooltip, message } from 'antd'
+import { Button, Col, Row, Spin, message } from 'antd'
 import React, {
   CSSProperties,
-  forwardRef,
   useEffect,
-  useRef,
   useState
 } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { INVOICE_STATUS } from '../../constants'
 import { getInvoicePermission, showAmount } from '../../helpers'
 import { getInvoiceDetailReq } from '../../requests'
-import { IProfile, TInvoicePerm, UserInvoice } from '../../shared.types.d'
+import { UserInvoice } from '../../shared.types.d'
 import { normalizeAmt } from '../helpers'
 import RefundModal from '../payment/refundModal'
 import InvoiceDetailModal from '../subscription/modals/invoiceDetail'
@@ -25,7 +20,6 @@ import MarkAsRefundedModal from './markAsRefundedModal'
 // import InvoiceItemsModal from '../subscription/modals/newInvoice' // obsolete
 
 const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
-const API_URL = import.meta.env.VITE_API_URL
 const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',

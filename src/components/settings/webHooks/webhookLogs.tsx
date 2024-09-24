@@ -222,7 +222,7 @@ const Index = () => {
       dataIndex: 'createTime',
       key: 'createTime',
       width: 120,
-      render: (d, plan) =>
+      render: (d) =>
         // dayjs(new Date(d * 1000)).format('YYYY-MMM-DD, HH:MM:ss')
         formatDate(d, true)
     },

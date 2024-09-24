@@ -35,7 +35,7 @@ import {
   savePlan,
   togglePublishReq
 } from '../../requests'
-import { IBillableMetrics, IPlan, IProduct } from '../../shared.types.d'
+import { IBillableMetrics, IPlan } from '../../shared.types.d'
 import { useProductListStore } from '../../stores'
 import { PlanStatus } from '../ui/statusTag'
 
@@ -688,7 +688,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 message: 'Please input your plan price!'
               },
               ({ getFieldValue }) => ({
-                validator(rule, value) {
+                validator(value) {
                   const num = Number(value)
                   if (isNaN(num) || num < 0) {
                     return Promise.reject(`Please input a valid price (> 0).`)
@@ -781,8 +781,8 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   required: false,
                   message: ''
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(value) {
                     if (value == null || value.length == 0) {
                       return Promise.resolve()
                     }
@@ -823,8 +823,8 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   required: false,
                   message: ''
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(value) {
                     if (value == null || value.length == 0) {
                       return Promise.resolve()
                     }
@@ -870,7 +870,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   message: 'Please input your trial price!'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(value) {
                     if (!enableTrialWatch) {
                       return Promise.resolve()
                     }
@@ -916,8 +916,8 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 required: enableTrialWatch,
                 message: 'Please input your trial length!'
               },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
+              () => ({
+                validator(value) {
                   if (!enableTrialWatch) {
                     return Promise.resolve()
                   }
@@ -1030,8 +1030,8 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 required: false,
                 message: 'Please input a valid object JSON string!'
               },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
+              () => ({
+                validator(value) {
                   return isValidMap(value)
                     ? Promise.resolve()
                     : Promise.reject('Invalid JSON object string')

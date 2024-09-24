@@ -3,9 +3,7 @@ import {
   ProfileOutlined,
   SyncOutlined,
   UserAddOutlined,
-  UserDeleteOutlined,
-  UsergroupDeleteOutlined
-} from '@ant-design/icons'
+  UserDeleteOutlined} from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -23,13 +21,10 @@ import {
   message
 } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
-import dayjs from 'dayjs'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { emailValidate, formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import {
-  getMerchantUserListReq,
   getMerchantUserListReq2,
   getMerchantUserListWithMoreReq,
   inviteMemberReq,
@@ -37,11 +32,10 @@ import {
   updateMemberRolesReq
 } from '../../requests'
 import '../../shared.css'
-import { IMerchantUserProfile, IProfile, TRole } from '../../shared.types'
+import { IMerchantUserProfile, TRole } from '../../shared.types'
 import { useProfileStore } from '../../stores'
 import { MerchantUserStatus } from '../ui/statusTag'
 
-const APP_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 
 type TFilters = {
@@ -132,7 +126,7 @@ const Index = () => {
       dataIndex: 'MemberRoles',
       key: 'MemberRoles',
       filters: roles.map((r) => ({ text: r.role, value: r.id as number })),
-      render: (roles, user) => (
+      render: (roles) => (
         <Popover
           placement="top"
           content={
@@ -153,7 +147,7 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s, user) => MerchantUserStatus(s)
+      render: (s) => MerchantUserStatus(s)
     },
     {
       title: 'Email',
@@ -164,7 +158,7 @@ const Index = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, user) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
+      render: (d) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
     },
     {
       title: (
@@ -193,7 +187,7 @@ const Index = () => {
       ),
       width: 164,
       key: 'action',
-      render: (_, user) => (
+      render: (_) => (
         <Space size="middle" className="member-action-btn-wrapper">
           <Tooltip title="View activities logs">
             <Button
@@ -220,10 +214,7 @@ const Index = () => {
 
   const onTableChange: TableProps<IMerchantUserProfile>['onChange'] = (
     pagination,
-    filters,
-    sorter,
-    extra
-  ) => {
+    filters  ) => {
     setRoleFilters(filters as TFilters)
     onPageChange(1, PAGE_SIZE) // any search term, filters change should reset page to 1.
   }
@@ -277,7 +268,7 @@ const Index = () => {
           spinning: loading,
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
-        onRow={(user, rowIndex) => {
+        onRow={(user) => {
           return {
             onClick: (evt) => {
               if (!profileStore.isOwner) {
@@ -439,8 +430,8 @@ const InviteModal = ({
               required: true,
               message: 'Please input your Email!'
             },
-            ({ getFieldValue }) => ({
-              validator(rule, value) {
+            () => ({
+              validator(value) {
                 if (value != null && value != '' && emailValidate(value)) {
                   return Promise.resolve()
                 }

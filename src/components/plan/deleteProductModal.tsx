@@ -1,9 +1,9 @@
-import { Button, Col, Form, message, Modal, Row } from 'antd'
+import { Button, Col, message, Modal, Row } from 'antd'
 import update from 'immutability-helper'
-import React, { CSSProperties, useEffect, useState } from 'react'
+import React, { CSSProperties, useState } from 'react'
 import { deleteProductReq } from '../../requests'
 import { IProduct } from '../../shared.types'
-import { useAppConfigStore, useProductListStore } from '../../stores'
+import { useProductListStore } from '../../stores'
 
 const rowStyle: CSSProperties = {
   display: 'flex',

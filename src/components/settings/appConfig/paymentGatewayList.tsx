@@ -4,7 +4,7 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { Button, Col, Row, Tag } from 'antd'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { TGateway } from '../../../shared.types'
 // import { useAppConfigStore } from '../../stores';
 import GatewayModal from './paymentGatewayModal'

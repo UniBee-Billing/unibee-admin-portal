@@ -97,11 +97,6 @@ export const METRICS_AGGREGATE_TYPE: { [key: number]: string } = {
   5: 'sum'
 }
 
-export const GATEWAY_TYPE: { [key: number]: string } = {
-  1: 'Card',
-  2: 'Crypto'
-}
-
 export const DISCOUNT_CODE_STATUS: { [key: number]: string } = {
   1: 'Editing',
   2: 'Active',

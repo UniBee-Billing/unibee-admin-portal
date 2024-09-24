@@ -1,6 +1,6 @@
-import { Button, Col, DatePicker, Modal, Row, Tag, message } from 'antd'
+import { Button, Col, DatePicker, Modal, Row, message } from 'antd'
 // import { showAmount } from "../helpers";
-import dayjs, { Dayjs } from 'dayjs'
+import { Dayjs } from 'dayjs'
 import { useState } from 'react'
 import { markAsIncompleteReq } from '../../../requests'
 import { ISubscriptionType } from '../../../shared.types'
@@ -15,7 +15,7 @@ const Index = ({ subInfo, closeModal, refresh }: Props) => {
   const [loading, setLoading] = useState(false)
   const [incompleteDate, setIncompleteDate] = useState<Dayjs | null>(null)
 
-  const onDateChange = async (date: Dayjs | null, dateString: string) => {
+  const onDateChange = async (date: Dayjs | null) => {
     setIncompleteDate(date)
   }
 

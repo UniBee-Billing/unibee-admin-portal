@@ -34,7 +34,7 @@ import { formatDate, getInvoicePermission, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getInvoiceListReq } from '../../requests'
 import '../../shared.css'
-import { IProfile, TInvoicePerm, UserInvoice } from '../../shared.types.d'
+import { IProfile, UserInvoice } from '../../shared.types.d'
 import { useAppConfigStore } from '../../stores'
 import { normalizeAmt } from '../helpers'
 import MarkAsPaidModal from '../invoice/markAsPaidModal'
@@ -277,7 +277,7 @@ const Index = ({
       dataIndex: 'refund',
       key: 'refund',
       width: 100,
-      render: (refund, iv) => (refund == null ? 'Invoice' : 'Credit Note')
+      render: (refund) => (refund == null ? 'Invoice' : 'Credit Note')
     },
     {
       title: 'Status',
@@ -456,10 +456,7 @@ const Index = ({
 
   const onTableChange: TableProps<UserInvoice>['onChange'] = (
     pagination,
-    filters,
-    sorter,
-    extra
-  ) => {
+    filters  ) => {
     setFilters(filters as TFilters)
   }
 
@@ -701,7 +698,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

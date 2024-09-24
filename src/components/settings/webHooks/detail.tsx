@@ -11,7 +11,7 @@ import {
   message
 } from 'antd'
 import React, { useEffect, useState } from 'react'
-import { ramdonString, urlRegx } from '../../../helpers'
+import { ramdonString } from '../../../helpers'
 import {
   deleteWebhookReq,
   getEventListReq,
@@ -109,8 +109,8 @@ const Index = ({
                   required: true,
                   message: 'Please input your endpoint URL!'
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(value) {
                     // if (urlRegx.test(value)) {
                     // return Promise.resolve()
                     // }

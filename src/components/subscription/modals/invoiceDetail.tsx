@@ -11,7 +11,7 @@ interface Props {
   closeModal: () => void
 }
 
-const Index = ({ user, detail, closeModal }: Props) => {
+const Index = ({ detail, closeModal }: Props) => {
   console.log('invoice detai: ', detail)
   const [loading, setLoading] = useState(false)
   // const appConfigStore = useAppConfigStore();
@@ -111,7 +111,7 @@ const Index = ({ user, detail, closeModal }: Props) => {
         </Col>
       </Row>
       {invoiceList &&
-        invoiceList.map((v, i) => (
+        invoiceList.map((v) => (
           <Row
             key={v.id}
             style={{ margin: '8px 0', display: 'flex', alignItems: 'center' }}

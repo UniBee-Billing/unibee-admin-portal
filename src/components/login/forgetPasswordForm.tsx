@@ -94,8 +94,8 @@ const Index = ({
               required: true,
               message: 'Please input your new password!'
             },
-            ({ getFieldValue }) => ({
-              validator(rule, value) {
+            () => ({
+              validator(value) {
                 if (!passwordSchema.validate(value)) {
                   return Promise.reject(
                     'At least 8 characters containing lowercase, uppercase, number and special character.'
@@ -119,7 +119,7 @@ const Index = ({
               message: 'Please retype your new password!'
             },
             ({ getFieldValue }) => ({
-              validator(rule, value) {
+              validator(value) {
                 if (value == getFieldValue('newPassword')) {
                   return Promise.resolve()
                 }

@@ -21,12 +21,10 @@ const Index = () => {
   // const appConfigStore = useAppConfigStore();
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(0) // pagination props
-  const onPageChange = (page: number, pageSize: number) => setPage(page - 1)
   const [webhookList, setWebhookList] = useState<TWebhook[]>([])
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [logModalOpen, setLogModalOpen] = useState(false)
   const toggleDetailModal = () => setDetailModalOpen(!detailModalOpen)
-  const toggleLogModal = () => setLogModalOpen(!logModalOpen)
   const [currentWebhookIdx, setCurrentWebhookIdx] = useState(-1)
 
   const onNewWebhook = () => {
@@ -54,7 +52,7 @@ const Index = () => {
       title: 'Events',
       dataIndex: 'webhookEvents',
       key: 'webhookEvents',
-      render: (evt, webhook) => (
+      render: (evt) => (
         <Popover
           placement="top"
           content={
@@ -82,13 +80,13 @@ const Index = () => {
       title: 'Modified at',
       dataIndex: 'gmtModify',
       key: 'gmtModify',
-      render: (d, plan) => formatDate(d)
+      render: (d) => formatDate(d)
     },
     {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, plan) => formatDate(d) // dayjs(new Date(d * 1000)).format('YYYY-MMM-DD')
+      render: (d) => formatDate(d) // dayjs(new Date(d * 1000)).format('YYYY-MMM-DD')
     },
     {
       title: (
@@ -105,7 +103,7 @@ const Index = () => {
         </>
       ),
       key: 'action',
-      render: (_, record) => (
+      render: (_) => (
         <Space size="middle">
           <Tooltip title="Edit">
             <Button

@@ -53,21 +53,6 @@ export const signUpReq = async (body: TSignupReq) => {
     return [null, e]
   }
 }
-// -------------
-
-type TSignupVerifyReq = {
-  email: string
-  verificationCode: string
-}
-export const signUpVerifyReq = async (body: TSignupVerifyReq) => {
-  try {
-    await request.post(`/user/auth/sso/registerVerify`, body)
-    return [null, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
 
 type TPassLogin = {
   email: string
@@ -196,7 +181,7 @@ export const getAppConfigReq = async () => {
   }
 }
 
-export const getGatewayListReq = async () => {
+const getGatewayListReq = async () => {
   const session = useSessionStore.getState()
   try {
     const res = await request.get(`/merchant/gateway/list`)
@@ -406,7 +391,7 @@ export const getPlanList = async (
 
 // -----------------
 
-export const getPlanDetail = async (planId: number) => {
+const getPlanDetail = async (planId: number) => {
   const session = useSessionStore.getState()
   try {
     const res = await request.post('/merchant/plan/detail', {
@@ -661,28 +646,7 @@ export const getSublist = async (body: TSubListReq, refreshCb: () => void) => {
 }
 // ------------
 
-export const getSubByUserReq = async (
-  userId: number,
-  refreshCb: () => void
-) => {
-  try {
-    const res = await request.get(
-      `/merchant/subscription/user_subscription_detail?userId=${userId}`
-    )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-
-export const getSubDetail = async (subscriptionId: string) => {
+const getSubDetail = async (subscriptionId: string) => {
   try {
     const res = await request.post(`/merchant/subscription/detail`, {
       subscriptionId
@@ -1023,22 +987,6 @@ type TGetSubTimelineReq = {
   createTimeStart?: number // used in /merchant/payment/timeline/list only
   createTimeEnd?: number // ditto
 }
-export const getSubTimelineReq = async (body: TGetSubTimelineReq) => {
-  const session = useSessionStore.getState()
-  try {
-    const res = await request.post(`/merchant/subscription/timeline_list`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data.subscriptionTimeLines, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
 
 // query params are the same as getSubTimelineReq
 export const getPaymentTimelineReq = async (
@@ -1091,28 +1039,6 @@ export const getPaymentTimelineReq = async (
       )
     }
     return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-
-export const getDetailPaymentListReq = async (
-  params: TGetSubTimelineReq,
-  refreshCb: () => void
-) => {
-  const { page, count } = params
-  try {
-    const res = await request.get(
-      `/merchant/payment/list?page=${page}&count=${count}`
-    )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data.paymentDetails, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1602,7 +1528,7 @@ export const toggleDiscountCodeActivateReq = async (
   }
 }
 // ----------
-export type TGetInvoicesReq = {
+type TGetInvoicesReq = {
   userId?: number
   page: number
   count: number
@@ -1877,26 +1803,6 @@ export const sendInvoiceInMailReq = async (invoiceId: string) => {
   }
 }
 
-export const downloadInvoice = (url: string) => {
-  if (url == null || url == '') {
-    return
-  }
-  axios({
-    url,
-    method: 'GET',
-    responseType: 'blob'
-  }).then((response) => {
-    const href = URL.createObjectURL(response.data)
-    const link = document.createElement('a')
-    link.href = href
-    link.setAttribute('download', 'invoice.pdf')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(href)
-  })
-}
-
 // ------------------
 type TUserList = {
   merchantId: number
@@ -1959,7 +1865,7 @@ export const importDataReq = async (file: File, task: TImportDataType) => {
 
 // this is used when page is loading (as part of getMerchantUserListWithMoreReq), no search params available
 // ??? I don't like this.
-export const getMerchantUserListReq = async (refreshCb?: () => void) => {
+const getMerchantUserListReq = async (refreshCb?: () => void) => {
   try {
     const res = await request.get('/merchant/member/list?page=0&count=10')
     if (res.data.code == 61 || res.data.code == 62) {
@@ -2099,7 +2005,7 @@ export const getMemberProfileReq = async (refreshCb?: () => void) => {
   }
 }
 
-export const getPaymentGatewayListReq = async () => {
+const getPaymentGatewayListReq = async () => {
   try {
     const res = await request.get(`/merchant/gateway/list`)
     if (res.data.code == 61 || res.data.code == 62) {
@@ -2475,7 +2381,7 @@ export const exportDataReq = async ({
   }
 }
 
-export const getExportFieldsReq = async ({
+const getExportFieldsReq = async ({
   task
 }: {
   task: TExportDataType

@@ -18,7 +18,6 @@ import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { ReactElement, useEffect, useState } from 'react'
 // import { ISubscriptionType } from "../../shared.types";
 import {
-  InfoCircleFilled,
   InfoCircleOutlined,
   LoadingOutlined,
   SyncOutlined
@@ -217,7 +216,7 @@ const Index = ({
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}subscription/${subId}`)}
+            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
@@ -250,7 +249,7 @@ const Index = ({
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}user/${userId}`)}
+            onClick={() => navigate(`${APP_PATH}user/${userId}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {userId}
@@ -261,7 +260,7 @@ const Index = ({
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, invoice) => formatDate(d, true)
+      render: (d) => formatDate(d, true)
     },
     {
       title: (
@@ -543,7 +542,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

@@ -1,5 +1,5 @@
-import { Button, Col, Input, Modal, Row, Spin, message } from 'antd'
-import { useEffect, useState } from 'react'
+import { Button, Col, Input, Modal, Row, message } from 'antd'
+import { useState } from 'react'
 import { saveGatewayKeyReq } from '../../../requests'
 import { TGateway } from '../../../shared.types'
 const { TextArea } = Input

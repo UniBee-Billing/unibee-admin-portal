@@ -1,30 +1,15 @@
 import {
-  CheckCircleOutlined,
-  DollarOutlined,
   LoadingOutlined
 } from '@ant-design/icons'
-import { Button, Col, Row, Spin, Tooltip, message } from 'antd'
-import React, { CSSProperties, useEffect, useState } from 'react'
+import { Button, Spin, message } from 'antd'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { INVOICE_STATUS } from '../../constants'
-import { showAmount } from '../../helpers'
-import { getInvoiceDetailReq, getPaymentDetailReq } from '../../requests'
-import { IProfile, TInvoicePerm, UserInvoice } from '../../shared.types.d'
-import { normalizeAmt } from '../helpers'
-import RefundModal from '../payment/refundModal'
-import InvoiceDetailModal from '../subscription/modals/invoiceDetail'
-import { InvoiceStatus } from '../ui/statusTag'
+import { getPaymentDetailReq } from '../../requests'
+import { UserInvoice } from '../../shared.types.d'
 // import MarkAsPaidModal from './markAsPaidModal'
 // import InvoiceItemsModal from '../subscription/modals/newInvoice' // obsolete
 
 const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
-const API_URL = import.meta.env.VITE_API_URL
-const rowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  height: '32px'
-}
-const colStyle: CSSProperties = { fontWeight: 'bold' }
 
 const Index = () => {
   const navigate = useNavigate()
@@ -32,17 +17,10 @@ const Index = () => {
   const [invoiceDetail, setInvoiceDetail] = useState<UserInvoice | null>(null)
   //   const [userProfile, setUserProfile] = useState<IProfile | null>(null)
   const [showInvoiceItems, setShowInvoiceItems] = useState(false)
-  const toggleInvoiceItems = () => setShowInvoiceItems(!showInvoiceItems)
   const [refundModalOpen, setRefundModalOpen] = useState(false)
-  const toggleRefundModal = () => setRefundModalOpen(!refundModalOpen)
   const [markPaidModalOpen, setMarkPaidModalOpen] = useState(false)
-  const toggleMarkPaidModal = () => setMarkPaidModalOpen(!markPaidModalOpen)
 
   const goBack = () => navigate(`${APP_PATH}transaction/list`)
-  const goToUser = (userId: number) => () =>
-    navigate(`${APP_PATH}user/${userId}`)
-  const goToSub = (subId: string) => () =>
-    navigate(`${APP_PATH}subscription/${subId}`)
 
   const fetchData = async () => {
     const pathName = window.location.pathname.split('/')

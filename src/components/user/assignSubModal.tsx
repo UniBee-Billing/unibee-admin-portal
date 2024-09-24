@@ -141,7 +141,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       message.error(err.message)
       return
     }
-    const { plans, total } = res
+    const { plans } = res
     setPlans(
       plans == null
         ? []

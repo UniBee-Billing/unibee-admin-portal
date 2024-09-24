@@ -119,9 +119,9 @@ const Index = ({ userId }: { userId: number }) => {
         rowClassName="clickable-tbl-row"
         pagination={false}
         // scroll={{ x: true, y: 640 }}
-        onRow={(record, rowIndex) => {
+        onRow={() => {
           return {
-            onClick: (event) => {}
+            onClick: () => {}
           }
         }}
         loading={{

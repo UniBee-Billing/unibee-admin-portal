@@ -5,27 +5,20 @@ import {
   DatePicker,
   Form,
   FormInstance,
-  Input,
   Pagination,
-  Popconfirm,
   Row,
-  Select,
   Space,
-  Spin,
   Table,
   message
 } from 'antd'
 import { ColumnsType } from 'antd/es/table'
-import dayjs, { Dayjs } from 'dayjs'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CURRENCY } from '../../constants'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getDiscountCodeUsageDetailReq } from '../../requests'
-import { DiscountCode, DiscountCodeUsage, IPlan } from '../../shared.types'
+import { DiscountCodeUsage } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
-import { DiscountCodeStatus } from '../ui/statusTag'
 
 const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
 const PAGE_SIZE = 10
@@ -56,9 +49,9 @@ const Index = () => {
       title: 'Applied plan',
       dataIndex: 'plan',
       key: 'plan',
-      render: (plan, codeUsagDetail) => (
+      render: (plan) => (
         <div
-          onClick={(e) => navigate(`${APP_PATH}plan/${plan.id}`)}
+          onClick={() => navigate(`${APP_PATH}plan/${plan.id}`)}
           className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
         >
           {plan.planName}
@@ -75,12 +68,12 @@ const Index = () => {
       title: 'Used by',
       dataIndex: 'user',
       key: 'user',
-      render: (user, code_detail) =>
+      render: (user) =>
         user == null ? (
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}user/${user.id}`)}
+            onClick={() => navigate(`${APP_PATH}user/${user.id}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {`${user.firstName} ${user.lastName}`}
@@ -91,7 +84,7 @@ const Index = () => {
       title: 'Used at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (usedAt, code_detail) => formatDate(usedAt, true)
+      render: (usedAt) => formatDate(usedAt, true)
     },
     {
       title: 'Subscription Id',
@@ -102,7 +95,7 @@ const Index = () => {
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}subscription/${subId}`)}
+            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
@@ -205,9 +198,9 @@ const Index = () => {
           spinning: loading,
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
-        onRow={(code, rowIndex) => {
+        onRow={() => {
           return {
-            onClick: (evt) => {}
+            onClick: () => {}
           }
         }}
       />
@@ -315,7 +308,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

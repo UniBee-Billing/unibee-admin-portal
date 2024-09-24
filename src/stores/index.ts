@@ -62,7 +62,7 @@ export const useProfileStore = create<ProfileSlice>()(
   )
 )
 
-export type TProductList = { list: IProduct[] }
+type TProductList = { list: IProduct[] }
 const INITIAL_PRODUCT_LIST: TProductList = { list: [] }
 interface ProductListSlice extends TProductList {
   getProductList: () => TProductList

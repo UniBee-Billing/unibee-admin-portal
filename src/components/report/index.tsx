@@ -135,7 +135,7 @@ const Index = () => {
       return
     }
     const { exportTmplRes, exportFieldsRes } = res
-    const { templates, total } = exportTmplRes
+    const { templates } = exportTmplRes
     setTemplates(templates ?? [])
     let { columns, columnComments, columnHeaders } = exportFieldsRes
     fieldComments.current = columnComments
@@ -176,7 +176,7 @@ const Index = () => {
     (
       dateType: 'reportTimeStart' | 'reportTimeEnd'
     ): DatePickerProps['onChange'] =>
-    (date, dateString) => {
+    (date) => {
       if (dateType == 'reportTimeStart') {
         if (date != null) {
           date = date.hour(0).minute(0).second(0)
@@ -304,7 +304,7 @@ const Index = () => {
       message.error(err2.message)
       return
     }
-    const { templates, total } = res2
+    const { templates } = res2
     setTemplates(templates)
   }
 
@@ -345,7 +345,7 @@ const Index = () => {
       return
     }
     {
-      const { templates, total } = res2
+      const { templates } = res2
       setTemplates(templates)
     }
   }
@@ -375,7 +375,7 @@ const Index = () => {
       return
     }
 
-    const { templates, total } = res2
+    const { templates } = res2
     setTemplates(templates ?? [])
     setSelectedTmpl(null)
   }
@@ -530,7 +530,7 @@ const Index = () => {
                       draggableId={field.id.toString()}
                       index={idx}
                     >
-                      {(provided, snapshot) => (
+                      {(provided) => (
                         <div
                           className={`${isHide && 'hidden'}`}
                           {...provided.draggableProps}

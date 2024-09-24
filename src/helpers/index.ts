@@ -28,9 +28,6 @@ passwordSchema
   .is()
   .symbols(1) // should have special characters
 
-export const urlRegx =
-  /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/
-
 export const showAmount = (
   amount: number | undefined,
   currency: keyof typeof CURRENCY | undefined,

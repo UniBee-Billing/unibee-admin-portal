@@ -130,7 +130,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { plans, total } = res
+    const { plans } = res
     // if NEW_CODE.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
     let planList = plans == null ? [] : plans.map((p: any) => p.plan)
     if (NEW_CODE.discountType == 2) {
@@ -390,7 +390,7 @@ const Index = () => {
                 message: 'Please choose your discount amount!'
               },
               ({ getFieldValue }) => ({
-                validator(rule, value) {
+                validator(value) {
                   if (watchDiscountType == 1) {
                     return Promise.resolve()
                   }
@@ -427,8 +427,8 @@ const Index = () => {
                 required: watchDiscountType == 1,
                 message: 'Please choose your discount percentage!'
               },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
+              () => ({
+                validator(value) {
                   if (watchDiscountType == 2) {
                     // 2: fixed amount
                     return Promise.resolve()
@@ -460,8 +460,8 @@ const Index = () => {
                   required: watchBillingType != 1,
                   message: 'Please input your cycleLimit!'
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(value) {
                     const num = Number(value)
                     if (!Number.isInteger(num)) {
                       return Promise.reject(
@@ -498,8 +498,8 @@ const Index = () => {
                 required: true,
                 message: 'Please choose your validity range!'
               },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
+              () => ({
+                validator(value) {
                   if (value[0] == null || value[1] == null) {
                     return Promise.reject('Please select a valid date range.')
                   }
@@ -523,8 +523,8 @@ const Index = () => {
               {
                 required: watchPlanIds != null && watchPlanIds.length > 0
               },
-              ({ getFieldValue }) => ({
-                validator(rule, plans) {
+              () => ({
+                validator(plans) {
                   if (plans == null || plans.length == 0) {
                     return Promise.resolve()
                   }

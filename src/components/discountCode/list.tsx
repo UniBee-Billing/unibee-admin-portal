@@ -191,7 +191,7 @@ const Index = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (createTime, code) => formatDate(createTime)
+      render: (createTime) => formatDate(createTime)
     },
     {
       title: 'Validity Range',
@@ -237,7 +237,7 @@ const Index = () => {
       ),
       width: 128,
       key: 'action',
-      render: (_, record) => (
+      render: (_) => (
         <Space size="middle" className="code-action-btn-wrapper">
           <Tooltip title="Edit">
             <Button
@@ -412,7 +412,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

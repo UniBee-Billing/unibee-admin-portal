@@ -1,25 +1,16 @@
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Form, Input, Modal, Skeleton, Spin, message } from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
+import { Button, Form, Input, Skeleton, Spin, message } from 'antd'
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { emailValidate, passwordSchema } from '../../helpers'
+import { emailValidate } from '../../helpers'
 import {
   getMerchantInfoReq,
-  logoutReq,
-  resetPassReq,
   updateMerchantInfoReq,
   uploadLogoReq
 } from '../../requests'
 import { TMerchantInfo } from '../../shared.types'
 import {
-  useAppConfigStore,
   useMerchantInfoStore,
-  usePermissionStore,
-  useProfileStore,
-  useSessionStore
-} from '../../stores'
-
-const APP_PATH = import.meta.env.BASE_URL
+  useProfileStore} from '../../stores'
 
 const Index = () => {
   const merchantInfoStore = useMerchantInfoStore()
@@ -139,8 +130,8 @@ const Index = () => {
                   required: true,
                   message: 'Please upload your company logo! (Max size: 4M)'
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(value) {
                     if (value != '') {
                       return Promise.resolve()
                     }
@@ -192,8 +183,8 @@ const Index = () => {
                   required: true,
                   message: 'Please input your Email!'
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(value) {
                     if (emailValidate(value)) {
                       return Promise.resolve()
                     }

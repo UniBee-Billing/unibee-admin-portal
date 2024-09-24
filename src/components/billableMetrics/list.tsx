@@ -1,7 +1,6 @@
 import { LoadingOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons'
 import { Button, Pagination, Space, Table, Tooltip, message } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '../../constants'
@@ -63,7 +62,7 @@ const Index = () => {
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
-      render: (t, metrics) => {
+      render: (t) => {
         return <span>{METRICS_TYPE[t]}</span>
       }
     },
@@ -71,7 +70,7 @@ const Index = () => {
       title: 'Aggregation Type',
       dataIndex: 'aggregationType',
       key: 'aggregationType',
-      render: (aggreType, metrics) => {
+      render: (aggreType) => {
         return <span>{METRICS_AGGREGATE_TYPE[aggreType]}</span>
       }
     },
@@ -79,7 +78,7 @@ const Index = () => {
       title: 'Aggregation Property',
       dataIndex: 'aggregationProperty',
       key: 'aggregationProperty',
-      render: (prop, metrics) => <span>{prop}</span>
+      render: (prop) => <span>{prop}</span>
       // filters: PLAN_STATUS_FILTER,
       // onFilter: (value, record) => record.status == value,
     },
@@ -87,7 +86,7 @@ const Index = () => {
       title: 'Updated at',
       dataIndex: 'gmtModify',
       key: 'gmtModify',
-      render: (d, metrics) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
+      render: (d) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
     },
     {
       title: (
@@ -114,7 +113,7 @@ const Index = () => {
       ),
       key: 'action',
       width: 150,
-      render: (_, record) => (
+      render: (_) => (
         <Space size="middle">
           <a>Edit</a>
         </Space>
@@ -161,7 +160,7 @@ const Index = () => {
         onChange={onTableChange}
         onRow={(record, rowIndex) => {
           return {
-            onClick: (event) => {
+            onClick: () => {
               console.log('row click: ', record, '///', rowIndex)
               navigate(`${APP_PATH}billable-metric/${record.id}`)
             }

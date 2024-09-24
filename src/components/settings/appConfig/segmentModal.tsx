@@ -1,4 +1,4 @@
-import { Button, Col, Input, Modal, Row, Spin, message } from 'antd'
+import { Button, Col, Input, Modal, Row, message } from 'antd'
 import { useState } from 'react'
 import { segmentSetupReq } from '../../../requests'
 const { TextArea } = Input

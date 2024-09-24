@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Spin, message } from 'antd'
+import { Button, Form, Input, Modal, Select, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { CURRENCY } from '../../../constants'
 import { currencyDecimalValidate } from '../../../helpers'
@@ -117,8 +117,8 @@ const Index = ({ closeModal, detail, refresh }: IProps) => {
                 required: true,
                 message: 'Please input the minimum amount!'
               },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
+              () => ({
+                validator(value) {
                   const num = Number(value)
                   if (isNaN(num) || num <= 0) {
                     return Promise.reject(`Please input a valid price (> 0).`)

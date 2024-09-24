@@ -1,4 +1,4 @@
-import type { DatePickerProps, TabsProps } from 'antd'
+import type { TabsProps } from 'antd'
 import { Button, Divider, Tabs, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -33,11 +33,6 @@ const Index = () => {
   // <SubscriptionTab /> will get {refreshSub: true}, in its useEffect, do the refresh.
   const [refreshSub, setRefreshSub] = useState(false)
   const [adminNotePushed, setAdminNotePushed] = useState(true)
-
-  const onTabChange = (key: string) => {
-    setActiveTab(key)
-    setSearchParams({ tab: key })
-  }
 
   const fetchUserProfile = async () => {
     const [user, err] = await getUserProfile(userId as number, fetchUserProfile)

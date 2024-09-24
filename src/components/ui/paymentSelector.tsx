@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler, ReactElement } from 'react'
+import React, { ChangeEventHandler } from 'react'
 import { useAppConfigStore } from '../../stores'
 import PayPalIcon from './icon/PayPal.svg?react'
 import AmexIcon from './icon/amex.svg?react'
