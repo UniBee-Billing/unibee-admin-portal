@@ -1,8 +1,8 @@
 import { Button, Modal, message } from 'antd'
 // import { showAmount } from "../helpers";
 import { useState } from 'react'
-import { ISubscriptionType } from '../../../@types/shared.types'
 import { cancelSubReq } from '../../../requests'
+import { ISubscriptionType } from '../../../shared.types'
 
 interface Props {
   subInfo: ISubscriptionType | null

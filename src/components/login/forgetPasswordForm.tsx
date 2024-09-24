@@ -95,7 +95,7 @@ const Index = ({
               message: 'Please input your new password!'
             },
             () => ({
-              validator(value) {
+              validator(_, value) {
                 if (!passwordSchema.validate(value)) {
                   return Promise.reject(
                     'At least 8 characters containing lowercase, uppercase, number and special character.'

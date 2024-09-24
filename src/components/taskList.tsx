@@ -24,10 +24,10 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
 import { useInterval } from 'usehooks-ts'
-import { TExportDataType } from '../@types/shared.types'
 import { downloadStaticFile, formatDate } from '../helpers'
 import { usePagination } from '../hooks'
 import { getDownloadListReq } from '../requests'
+import { TExportDataType } from '../shared.types'
 import { TaskStatus } from './ui/statusTag'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)

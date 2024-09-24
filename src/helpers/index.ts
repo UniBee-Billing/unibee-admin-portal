@@ -2,13 +2,13 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import Dinero from 'dinero.js'
 import passwordValidator from 'password-validator'
+import { CURRENCY } from '../constants'
 import {
   IPlan,
   ISubscriptionType,
   TInvoicePerm,
   UserInvoice
-} from '../@types/shared.types'
-import { CURRENCY } from '../constants'
+} from '../shared.types'
 
 export const passwordSchema = new passwordValidator()
 passwordSchema

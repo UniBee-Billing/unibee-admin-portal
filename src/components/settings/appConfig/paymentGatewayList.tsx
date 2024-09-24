@@ -5,7 +5,7 @@ import {
 } from '@ant-design/icons'
 import { Button, Col, Row, Tag } from 'antd'
 import React, { useState } from 'react'
-import { TGateway } from '../../../@types/shared.types'
+import { TGateway } from '../../../shared.types'
 // import { useAppConfigStore } from '../../stores';
 import GatewayModal from './paymentGatewayModal'
 

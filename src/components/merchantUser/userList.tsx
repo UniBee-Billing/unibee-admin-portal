@@ -23,7 +23,6 @@ import {
 } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
-import { IMerchantUserProfile, TRole } from '../../@types/shared.types'
 import { emailValidate, formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import {
@@ -34,6 +33,7 @@ import {
   updateMemberRolesReq
 } from '../../requests'
 import '../../shared.css'
+import { IMerchantUserProfile, TRole } from '../../shared.types'
 import { useProfileStore } from '../../stores'
 import { MerchantUserStatus } from '../ui/statusTag'
 
@@ -433,7 +433,7 @@ const InviteModal = ({
               message: 'Please input your Email!'
             },
             () => ({
-              validator(value) {
+              validator(_, value) {
                 if (value != null && value != '' && emailValidate(value)) {
                   return Promise.resolve()
                 }

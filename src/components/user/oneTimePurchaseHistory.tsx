@@ -3,10 +3,10 @@ import { Divider, message, Pagination } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IOneTimeHistoryItem } from '../../@types/shared.types'
 import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { getOneTimePaymentHistoryReq } from '../../requests'
+import { IOneTimeHistoryItem } from '../../shared.types'
 import { PaymentStatus } from '../ui/statusTag'
 
 const APP_PATH = import.meta.env.BASE_URL

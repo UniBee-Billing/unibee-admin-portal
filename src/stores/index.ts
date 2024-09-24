@@ -7,7 +7,7 @@ import {
   IProfile,
   TGateway,
   TMerchantInfo
-} from '../@types/shared.types'
+} from '../shared.types'
 // import { createStore } from "zustand";
 
 // logged-in user profile

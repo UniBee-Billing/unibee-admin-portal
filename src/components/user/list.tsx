@@ -28,12 +28,12 @@ import {
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IProfile } from '../../@types/shared.types'
 import { SUBSCRIPTION_STATUS, USER_STATUS } from '../../constants'
 import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getUserListReq } from '../../requests'
 import '../../shared.css'
+import { IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
@@ -488,7 +488,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

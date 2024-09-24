@@ -12,10 +12,10 @@ import {
 import { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IProduct, ISubAddon, ISubHistoryItem } from '../../@types/shared.types'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { getProductListReq, getSubscriptionHistoryReq } from '../../requests'
+import { IProduct, ISubAddon, ISubHistoryItem } from '../../shared.types'
 import { SubHistoryStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10

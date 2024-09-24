@@ -161,7 +161,7 @@ const Index = ({
               message: 'Please input your Email!'
             },
             () => ({
-              validator(value) {
+              validator(_, value) {
                 if (value != null && value != '' && emailValidate(value)) {
                   return Promise.resolve()
                 }

@@ -12,8 +12,8 @@ import {
   message
 } from 'antd'
 import { ReactElement, useEffect, useState } from 'react'
-import { Country, IProfile } from '../../@types/shared.types'
 import { getCountryListReq, saveUserProfileReq } from '../../requests'
+import { Country, IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import PaymentSelector from '../ui/paymentSelector'
 import { UserStatus } from '../ui/statusTag'

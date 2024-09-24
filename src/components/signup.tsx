@@ -172,7 +172,7 @@ const Index = () => {
                     message: 'Please input your Email!'
                   },
                   () => ({
-                    validator(value) {
+                    validator(_, value) {
                       if (
                         value != null &&
                         value != '' &&
@@ -210,7 +210,7 @@ const Index = () => {
                     message: 'Please input your password!'
                   },
                   () => ({
-                    validator(value) {
+                    validator(_, value) {
                       if (!passwordSchema.validate(value)) {
                         return Promise.reject(
                           'At least 8 characters containing lowercase, uppercase, number and special character.'

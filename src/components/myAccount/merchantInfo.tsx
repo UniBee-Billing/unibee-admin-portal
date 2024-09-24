@@ -1,13 +1,13 @@
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Form, Input, Skeleton, Spin, message } from 'antd'
 import React, { useEffect, useState } from 'react'
-import { TMerchantInfo } from '../../@types/shared.types'
 import { emailValidate } from '../../helpers'
 import {
   getMerchantInfoReq,
   updateMerchantInfoReq,
   uploadLogoReq
 } from '../../requests'
+import { TMerchantInfo } from '../../shared.types'
 import { useMerchantInfoStore, useProfileStore } from '../../stores'
 
 const Index = () => {
@@ -129,7 +129,7 @@ const Index = () => {
                   message: 'Please upload your company logo! (Max size: 4M)'
                 },
                 () => ({
-                  validator(value) {
+                  validator(_, value) {
                     if (value != '') {
                       return Promise.resolve()
                     }
@@ -182,7 +182,7 @@ const Index = () => {
                   message: 'Please input your Email!'
                 },
                 () => ({
-                  validator(value) {
+                  validator(_, value) {
                     if (emailValidate(value)) {
                       return Promise.resolve()
                     }

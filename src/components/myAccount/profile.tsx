@@ -15,7 +15,6 @@ import {
 } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IMerchantMemberProfile, TRole } from '../../@types/shared.types'
 import { passwordSchema } from '../../helpers'
 import { useCountdown } from '../../hooks'
 import {
@@ -24,6 +23,7 @@ import {
   logoutReq,
   resetPassReq
 } from '../../requests'
+import { IMerchantMemberProfile, TRole } from '../../shared.types'
 import {
   useAppConfigStore,
   useMerchantInfoStore,
@@ -344,7 +344,7 @@ const ResetPassWithOldPass = ({
               message: 'Please input your new password!'
             },
             ({ getFieldValue }) => ({
-              validator(value) {
+              validator(_, value) {
                 if (getFieldValue('oldPassword') == value) {
                   return Promise.reject(
                     'New password should not be the same as old password.'

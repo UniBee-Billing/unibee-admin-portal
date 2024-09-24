@@ -11,13 +11,13 @@ import {
   message
 } from 'antd'
 import React, { useEffect, useState } from 'react'
-import { TWebhook } from '../../../@types/shared.types'
 import { ramdonString } from '../../../helpers'
 import {
   deleteWebhookReq,
   getEventListReq,
   saveWebhookReq
 } from '../../../requests'
+import { TWebhook } from '../../../shared.types'
 
 const Index = ({
   closeModal,
@@ -110,7 +110,7 @@ const Index = ({
                   message: 'Please input your endpoint URL!'
                 },
                 () => ({
-                  validator(value) {
+                  validator(_, value) {
                     // if (urlRegx.test(value)) {
                     // return Promise.resolve()
                     // }

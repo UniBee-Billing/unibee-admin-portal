@@ -17,10 +17,10 @@ import {
 import Table, { ColumnsType } from 'antd/es/table'
 import update from 'immutability-helper'
 import { ChangeEventHandler, useEffect, useState } from 'react'
-import { TRole } from '../../../@types/shared.types'
 import { PERMISSION_LIST } from '../../../constants'
 import { ramdonString } from '../../../helpers'
 import { deleteRoleReq, getRoleListReq, saveRoleReq } from '../../../requests'
+import { TRole } from '../../../shared.types'
 
 const OWNER_ROLE: TRole = {
   localId: ramdonString(8),

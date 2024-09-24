@@ -23,12 +23,12 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import { IProfile, PaymentItem } from '../../@types/shared.types'
 import { CURRENCY, PAYMENT_STATUS, PAYMENT_TYPE } from '../../constants'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPaymentTimelineReq } from '../../requests'
 import '../../shared.css'
+import { IProfile, PaymentItem } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import RefundInfoModal from '../payment/refundModal'
 import { PaymentStatus } from '../ui/statusTag'
@@ -542,7 +542,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

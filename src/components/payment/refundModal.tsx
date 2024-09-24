@@ -3,9 +3,9 @@ import { Button, Col, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TRefund } from '../../@types/shared.types'
 import { REFUND_STATUS } from '../../constants'
 import { showAmount } from '../../helpers'
+import { TRefund } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 
 const APP_PATH = import.meta.env.BASE_URL

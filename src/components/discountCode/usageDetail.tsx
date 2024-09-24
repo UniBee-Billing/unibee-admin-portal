@@ -14,10 +14,10 @@ import {
 import { ColumnsType } from 'antd/es/table'
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { DiscountCodeUsage } from '../../@types/shared.types'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getDiscountCodeUsageDetailReq } from '../../requests'
+import { DiscountCodeUsage } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 
 const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
@@ -308,7 +308,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

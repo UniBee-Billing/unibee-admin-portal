@@ -13,8 +13,8 @@ import {
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TActivityLogs } from '../../@types/shared.types'
 import { getActivityLogsReq } from '../../requests'
+import { TActivityLogs } from '../../shared.types'
 
 import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'

@@ -20,7 +20,6 @@ import {
 import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { IBillableMetrics, IPlan } from '../../@types/shared.types'
 import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
@@ -36,6 +35,7 @@ import {
   savePlan,
   togglePublishReq
 } from '../../requests'
+import { IBillableMetrics, IPlan } from '../../shared.types'
 import { useProductListStore } from '../../stores'
 import { PlanStatus } from '../ui/statusTag'
 
@@ -782,7 +782,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   message: ''
                 },
                 () => ({
-                  validator(value) {
+                  validator(_, value) {
                     if (value == null || value.length == 0) {
                       return Promise.resolve()
                     }
@@ -824,7 +824,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   message: ''
                 },
                 () => ({
-                  validator(value) {
+                  validator(_, value) {
                     if (value == null || value.length == 0) {
                       return Promise.resolve()
                     }
@@ -1031,7 +1031,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 message: 'Please input a valid object JSON string!'
               },
               () => ({
-                validator(value) {
+                validator(_, value) {
                   return isValidMap(value)
                     ? Promise.resolve()
                     : Promise.reject('Invalid JSON object string')

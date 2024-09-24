@@ -12,7 +12,6 @@ import {
 import dayjs, { Dayjs } from 'dayjs'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { DiscountCode, IPlan } from '../../@types/shared.types'
 import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
@@ -27,6 +26,7 @@ import {
   toggleDiscountCodeActivateReq,
   updateDiscountCodeReq
 } from '../../requests'
+import { DiscountCode, IPlan } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
 import { DiscountCodeStatus } from '../ui/statusTag'
 
@@ -499,7 +499,7 @@ const Index = () => {
                 message: 'Please choose your validity range!'
               },
               () => ({
-                validator(value) {
+                validator(_, value) {
                   if (value[0] == null || value[1] == null) {
                     return Promise.reject('Please select a valid date range.')
                   }
@@ -524,7 +524,7 @@ const Index = () => {
                 required: watchPlanIds != null && watchPlanIds.length > 0
               },
               () => ({
-                validator(plans) {
+                validator(_, plans) {
                   if (plans == null || plans.length == 0) {
                     return Promise.resolve()
                   }

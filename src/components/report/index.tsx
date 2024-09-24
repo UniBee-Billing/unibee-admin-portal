@@ -23,7 +23,6 @@ import dayjs, { Dayjs } from 'dayjs'
 import update from 'immutability-helper'
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd'
-import { TExportDataType } from '../../@types/shared.types'
 import {
   exportDataReq,
   getExportFieldsWithMore,
@@ -31,6 +30,7 @@ import {
   removeExportTmplReq,
   saveExportTmplReq
 } from '../../requests'
+import { TExportDataType } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { fuzzyMatch } from './helpers'
 import './index.css'

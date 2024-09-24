@@ -2,8 +2,8 @@ import { Button, Col, DatePicker, Modal, Row, message } from 'antd'
 // import { showAmount } from "../helpers";
 import { Dayjs } from 'dayjs'
 import { useState } from 'react'
-import { ISubscriptionType } from '../../../@types/shared.types'
 import { markAsIncompleteReq } from '../../../requests'
+import { ISubscriptionType } from '../../../shared.types'
 import { SubscriptionStatus } from '../../ui/statusTag'
 
 interface Props {

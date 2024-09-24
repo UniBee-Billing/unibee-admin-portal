@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { CURRENCY } from '../constants'
 import {
   DiscountCode,
   ExpiredError,
@@ -8,8 +9,7 @@ import {
   TImportDataType,
   TMerchantInfo,
   TRole
-} from '../@types/shared.types'
-import { CURRENCY } from '../constants'
+} from '../shared.types'
 import { useMerchantInfoStore, useSessionStore } from '../stores'
 import { request } from './client'
 

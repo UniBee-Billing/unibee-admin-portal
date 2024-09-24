@@ -1,8 +1,8 @@
 import { Button, Col, message, Modal, Row } from 'antd'
 import update from 'immutability-helper'
 import React, { CSSProperties, useState } from 'react'
-import { IProduct } from '../../@types/shared.types'
 import { deleteProductReq } from '../../requests'
+import { IProduct } from '../../shared.types'
 import { useProductListStore } from '../../stores'
 
 const rowStyle: CSSProperties = {

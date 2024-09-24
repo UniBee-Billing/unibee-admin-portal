@@ -28,13 +28,13 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import { IProfile, UserInvoice } from '../../@types/shared.types'
 import RefundIcon from '../../assets/refund.svg?react'
 import { CURRENCY, INVOICE_STATUS } from '../../constants'
 import { formatDate, getInvoicePermission, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getInvoiceListReq } from '../../requests'
 import '../../shared.css'
+import { IProfile, UserInvoice } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { normalizeAmt } from '../helpers'
 import MarkAsPaidModal from '../invoice/markAsPaidModal'
@@ -699,7 +699,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

@@ -23,7 +23,6 @@ import { ColumnsType, TableProps } from 'antd/es/table'
 import dayjs from 'dayjs'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DiscountCode } from '../../@types/shared.types'
 import {
   DISCOUNT_CODE_BILLING_TYPE,
   DISCOUNT_CODE_STATUS,
@@ -33,6 +32,7 @@ import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getDiscountCodeListReq } from '../../requests'
 import '../../shared.css'
+import { DiscountCode } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { DiscountCodeStatus } from '../ui/statusTag'
 
@@ -412,7 +412,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()
