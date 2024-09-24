@@ -106,6 +106,7 @@ interface IProduct {
 interface IPlan {
   id: number
   productId: number
+  plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
   planName: string
   description: string

@@ -20,6 +20,7 @@ import {
 import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { IBillableMetrics, IPlan } from '../../@types/shared.types'
 import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
@@ -35,7 +36,6 @@ import {
   savePlan,
   togglePublishReq
 } from '../../requests'
-import { IBillableMetrics, IPlan } from '../../shared.types.d'
 import { useProductListStore } from '../../stores'
 import { PlanStatus } from '../ui/statusTag'
 

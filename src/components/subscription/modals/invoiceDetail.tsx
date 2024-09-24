@@ -1,9 +1,13 @@
 import { Button, Col, Divider, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
+import {
+  IProfile,
+  InvoiceItem,
+  UserInvoice
+} from '../../../@types/shared.types'
 import { REFUND_STATUS } from '../../../constants'
 import { ramdonString, showAmount } from '../../../helpers'
-import { IProfile, InvoiceItem, UserInvoice } from '../../../shared.types'
 
 interface Props {
   user: IProfile | undefined

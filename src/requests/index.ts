@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { CURRENCY } from '../constants'
 import {
   DiscountCode,
   ExpiredError,
@@ -9,7 +8,8 @@ import {
   TImportDataType,
   TMerchantInfo,
   TRole
-} from '../shared.types.d'
+} from '../@types/shared.types'
+import { CURRENCY } from '../constants'
 import { useMerchantInfoStore, useSessionStore } from '../stores'
 import { request } from './client'
 
@@ -2381,11 +2381,7 @@ export const exportDataReq = async ({
   }
 }
 
-const getExportFieldsReq = async ({
-  task
-}: {
-  task: TExportDataType
-}) => {
+const getExportFieldsReq = async ({ task }: { task: TExportDataType }) => {
   try {
     const res = await request.post(`/merchant/task/export_column_list`, {
       task

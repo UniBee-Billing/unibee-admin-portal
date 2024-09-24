@@ -1,8 +1,8 @@
 import { Checkbox, Input } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import React, { useEffect, useState } from 'react'
+import { IPlan } from '../../@types/shared.types'
 import { showAmount } from '../../helpers'
-import { IPlan } from '../../shared.types.d'
 
 const TIME_UNITS = [
   // in seconds

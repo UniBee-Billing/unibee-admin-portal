@@ -1,13 +1,13 @@
 import { Button, Col, Divider, message, Modal, Row, Select, Switch } from 'antd'
 import update from 'immutability-helper'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { IPlan, IProfile } from '../../@types/shared.types'
 import HiddenIcon from '../../assets/hidden.svg?react'
 import {
   createSubscriptionReq,
   getPlanList,
   TPlanListBody
 } from '../../requests'
-import { IPlan, IProfile } from '../../shared.types.d'
 import { useAppConfigStore } from '../../stores'
 import Plan from '../subscription/plan'
 import PaymentMethodSelector from '../ui/paymentSelector'
@@ -17,6 +17,14 @@ interface Props {
   productId: number
   refresh: () => void
   closeModal: () => void
+}
+
+interface CreateSubScriptionBody {
+  planId: number
+  gatewayId: number
+  userId: number
+  startIncomplete: boolean
+  trialEnd?: number
 }
 
 const Index = ({ user, productId, closeModal, refresh }: Props) => {
@@ -95,19 +103,18 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     console.log('submitting: ', selectedPlan, '//', gatewayId, '//', user)
     // return
 
-    const body: any = {
-      planId: selectedPlan as number,
-      gatewayId: gatewayId as number,
-      userId: user.id as number
-      // trialEnd: sec
+    const body: CreateSubScriptionBody = {
+      planId: selectedPlan,
+      gatewayId: gatewayId,
+      userId: user.id!,
+      startIncomplete: false
     }
     // requirementPayment is mainly used for internal employees, defaut length is 5yr
     if (!requirePayment) {
       const fiveYearFromNow = new Date(
         new Date().setFullYear(new Date().getFullYear() + 5)
       )
-      const sec = Math.round(fiveYearFromNow.getTime() / 1000)
-      body.trialEnd = sec
+      body.trialEnd = Math.round(fiveYearFromNow.getTime() / 1000)
     } else {
       body.startIncomplete = true
     }
@@ -145,7 +152,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     setPlans(
       plans == null
         ? []
-        : plans.map((p: any) => ({
+        : plans.map((p: IPlan) => ({
             ...p.plan,
             metricPlanLimits: p.metricPlanLimits
           }))

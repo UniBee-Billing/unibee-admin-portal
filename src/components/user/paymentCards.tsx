@@ -19,6 +19,20 @@ interface Props {
   readonly: boolean
   refreshUserProfile: null | (() => void)
 }
+
+interface MethodData {
+  brand: string
+  country: string
+  expYear: number
+  expMonth: number
+}
+
+interface Method {
+  id: string
+  type: string
+  data: MethodData
+}
+
 const Index = ({
   userId,
   gatewayId,
@@ -48,7 +62,7 @@ const Index = ({
     const cards =
       methodList == null
         ? []
-        : methodList.map((m: any) => ({
+        : methodList.map((m: Method) => ({
             id: m.id,
             type: m.type,
             ...m.data,

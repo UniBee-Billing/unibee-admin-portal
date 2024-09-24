@@ -3,8 +3,8 @@ import { Button, Divider, message } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
+import { TAdminNote } from '../../@types/shared.types'
 import { createAdminNoteReq, getAdminNoteReq } from '../../requests'
-import { TAdminNote } from '../../shared.types'
 import './adminNote.css'
 
 const Index = ({

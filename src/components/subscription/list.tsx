@@ -27,12 +27,12 @@ import {
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ISubscriptionType, TImportDataType } from '../../@types/shared.types'
 import { CURRENCY, SUBSCRIPTION_STATUS } from '../../constants'
 import { formatDate, formatPlanInterval, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getSublist } from '../../requests'
 import '../../shared.css'
-import { ISubscriptionType, TImportDataType } from '../../shared.types.d'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus } from '../ui/statusTag'
@@ -335,7 +335,8 @@ const Index = () => {
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
     pagination,
-    filters  ) => {
+    filters
+  ) => {
     // console.log('params', pagination, filters, sorter, extra);
     // onPageChange(1, PAGE_SIZE)
     setFilters(filters as TFilters)

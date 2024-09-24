@@ -19,10 +19,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
+import { TWebhookLogs } from '../../../@types/shared.types'
 import { formatDate } from '../../../helpers'
 import { useCopyContent, usePagination } from '../../../hooks'
 import { getWebhookLogs, resendWebhookEvt } from '../../../requests'
-import { TWebhookLogs } from '../../../shared.types'
 SyntaxHighlighter.registerLanguage('json', json)
 
 const APP_PATH = import.meta.env.BASE_URL

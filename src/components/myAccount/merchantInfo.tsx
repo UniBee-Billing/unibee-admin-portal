@@ -1,16 +1,14 @@
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Form, Input, Skeleton, Spin, message } from 'antd'
 import React, { useEffect, useState } from 'react'
+import { TMerchantInfo } from '../../@types/shared.types'
 import { emailValidate } from '../../helpers'
 import {
   getMerchantInfoReq,
   updateMerchantInfoReq,
   uploadLogoReq
 } from '../../requests'
-import { TMerchantInfo } from '../../shared.types'
-import {
-  useMerchantInfoStore,
-  useProfileStore} from '../../stores'
+import { useMerchantInfoStore, useProfileStore } from '../../stores'
 
 const Index = () => {
   const merchantInfoStore = useMerchantInfoStore()

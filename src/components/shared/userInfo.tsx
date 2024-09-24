@@ -1,6 +1,6 @@
 import { Col, Row } from 'antd'
 import { CSSProperties } from 'react'
-import { IProfile } from '../../shared.types.d'
+import { IProfile } from '../../@types/shared.types'
 import { useAppConfigStore } from '../../stores'
 import { UserStatus } from '../ui/statusTag'
 

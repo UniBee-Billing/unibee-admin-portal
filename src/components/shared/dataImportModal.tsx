@@ -5,10 +5,10 @@ import {
 } from '@ant-design/icons'
 import { Button, Modal, Steps, message } from 'antd'
 import { useState } from 'react'
+import { TImportDataType } from '../../@types/shared.types'
 import { downloadStaticFile, formatBytes } from '../../helpers'
 import { importDataReq } from '../../requests'
 import '../../shared.css'
-import { TImportDataType } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 
 const Index = ({

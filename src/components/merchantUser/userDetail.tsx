@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { IProfile } from '../../shared.types'
+import { IProfile } from '../../@types/shared.types'
 
 const Index = () => {
   const [loading, setLoading] = useState(false)

@@ -28,13 +28,13 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
+import { IProfile, UserInvoice } from '../../@types/shared.types'
 import RefundIcon from '../../assets/refund.svg?react'
 import { CURRENCY, INVOICE_STATUS } from '../../constants'
 import { formatDate, getInvoicePermission, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getInvoiceListReq } from '../../requests'
 import '../../shared.css'
-import { IProfile, UserInvoice } from '../../shared.types.d'
 import { useAppConfigStore } from '../../stores'
 import { normalizeAmt } from '../helpers'
 import MarkAsPaidModal from '../invoice/markAsPaidModal'
@@ -456,7 +456,8 @@ const Index = ({
 
   const onTableChange: TableProps<UserInvoice>['onChange'] = (
     pagination,
-    filters  ) => {
+    filters
+  ) => {
     setFilters(filters as TFilters)
   }
 

@@ -1,7 +1,7 @@
 import { Button, message, Modal } from 'antd'
 import React, { useState } from 'react'
+import { IProfile } from '../../@types/shared.types'
 import { suspendUserReq } from '../../requests'
-import { IProfile } from '../../shared.types.d'
 import UserInfo from '../shared/userInfo'
 
 interface Props {

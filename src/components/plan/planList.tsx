@@ -20,12 +20,12 @@ import type { ColumnsType, TableProps } from 'antd/es/table'
 // import currency from 'currency.js'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { IPlan } from '../../@types/shared.types'
 import { PLAN_STATUS } from '../../constants'
 import { formatPlanPrice } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { copyPlanReq, getPlanList } from '../../requests'
 import '../../shared.css'
-import { IPlan } from '../../shared.types.d'
 import { PlanStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
@@ -243,7 +243,8 @@ const Index = ({
 
   const onTableChange: TableProps<IPlan>['onChange'] = (
     pagination,
-    filters  ) => {
+    filters
+  ) => {
     onPageChange(1, PAGE_SIZE)
     // console.log('params', pagination, filters, sorter, extra)
     setFilters(filters as TFilters)

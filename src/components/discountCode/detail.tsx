@@ -12,6 +12,7 @@ import {
 import dayjs, { Dayjs } from 'dayjs'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { DiscountCode, IPlan } from '../../@types/shared.types'
 import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
@@ -26,7 +27,6 @@ import {
   toggleDiscountCodeActivateReq,
   updateDiscountCodeReq
 } from '../../requests'
-import { DiscountCode, IPlan } from '../../shared.types.d'
 import { useMerchantInfoStore } from '../../stores'
 import { DiscountCodeStatus } from '../ui/statusTag'
 

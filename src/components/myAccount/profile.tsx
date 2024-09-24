@@ -15,6 +15,7 @@ import {
 } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { IMerchantMemberProfile, TRole } from '../../@types/shared.types'
 import { passwordSchema } from '../../helpers'
 import { useCountdown } from '../../hooks'
 import {
@@ -23,7 +24,6 @@ import {
   logoutReq,
   resetPassReq
 } from '../../requests'
-import { IMerchantMemberProfile, TRole } from '../../shared.types'
 import {
   useAppConfigStore,
   useMerchantInfoStore,

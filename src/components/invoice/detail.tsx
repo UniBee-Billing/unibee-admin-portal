@@ -1,16 +1,10 @@
-import {
-  LoadingOutlined
-} from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Spin, message } from 'antd'
-import React, {
-  CSSProperties,
-  useEffect,
-  useState
-} from 'react'
+import React, { CSSProperties, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { UserInvoice } from '../../@types/shared.types'
 import { getInvoicePermission, showAmount } from '../../helpers'
 import { getInvoiceDetailReq } from '../../requests'
-import { UserInvoice } from '../../shared.types.d'
 import { normalizeAmt } from '../helpers'
 import RefundModal from '../payment/refundModal'
 import InvoiceDetailModal from '../subscription/modals/invoiceDetail'

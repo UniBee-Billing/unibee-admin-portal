@@ -1,7 +1,7 @@
 import { Button, Col, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
+import { ISubscriptionType } from '../../../@types/shared.types'
 import { daysBetweenDate, showAmount } from '../../../helpers'
-import { ISubscriptionType } from '../../../shared.types.d'
 
 interface Props {
   isOpen: boolean

@@ -13,8 +13,8 @@ import {
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TActivityLogs } from '../../@types/shared.types'
 import { getActivityLogsReq } from '../../requests'
-import { TActivityLogs } from '../../shared.types.d'
 
 import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
@@ -240,6 +240,13 @@ const Index = () => {
 
 export default Index
 
+interface SearchParams {
+  form: FormInstance<unknown>
+  searching: boolean
+  goSearch: () => void
+  onPageChange: (page: number, pageSize: number) => void
+}
+
 const DEFAULT_TERM = {
   currency: 'EUR',
   status: [],
@@ -247,17 +254,7 @@ const DEFAULT_TERM = {
   amountEnd: ''
   // refunded: false,
 }
-const Search = ({
-  form,
-  searching,
-  goSearch,
-  onPageChange
-}: {
-  form: FormInstance<any>
-  searching: boolean
-  goSearch: () => void
-  onPageChange: (page: number, pageSize: number) => void
-}) => {
+const Search = ({ form, searching, goSearch, onPageChange }: SearchParams) => {
   const clear = () => {
     form.resetFields()
     onPageChange(1, PAGE_SIZE)

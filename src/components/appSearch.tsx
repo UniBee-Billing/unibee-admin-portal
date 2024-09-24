@@ -4,10 +4,10 @@ import dayjs from 'dayjs'
 import { CSSProperties, ChangeEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
+import { IProfile, UserInvoice } from '../@types/shared.types'
 import { INVOICE_STATUS, SUBSCRIPTION_STATUS } from '../constants'
 import { showAmount } from '../helpers'
 import { appSearchReq } from '../requests'
-import { IProfile, UserInvoice } from '../shared.types.d'
 import './appSearch.css'
 
 const { Search } = Input

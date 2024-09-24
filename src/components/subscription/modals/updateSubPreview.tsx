@@ -1,7 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Modal, Row, Spin } from 'antd'
+import { IPreview } from '../../../@types/shared.types'
 import { showAmount } from '../../../helpers'
-import { IPreview } from '../../../shared.types.d'
 
 interface Props {
   isOpen: boolean

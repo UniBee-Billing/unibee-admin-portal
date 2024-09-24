@@ -22,6 +22,12 @@ import update from 'immutability-helper'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
+import {
+  DiscountCode,
+  IPlan,
+  IPreview,
+  ISubscriptionType
+} from '../../@types/shared.types'
 import { daysBetweenDate, showAmount } from '../../helpers'
 import {
   createPreviewReq,
@@ -34,12 +40,6 @@ import {
   updateSubscription
 } from '../../requests'
 import '../../shared.css'
-import {
-  DiscountCode,
-  IPlan,
-  IPreview,
-  ISubscriptionType
-} from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { DiscountCodeStatus, SubscriptionStatus } from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'

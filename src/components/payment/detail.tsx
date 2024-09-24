@@ -1,11 +1,8 @@
-import {
-  LoadingOutlined
-} from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Spin, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getPaymentDetailReq } from '../../requests'
-import { UserInvoice } from '../../shared.types.d'
 // import MarkAsPaidModal from './markAsPaidModal'
 // import InvoiceItemsModal from '../subscription/modals/newInvoice' // obsolete
 
@@ -14,12 +11,6 @@ const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, 
 const Index = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [invoiceDetail, setInvoiceDetail] = useState<UserInvoice | null>(null)
-  //   const [userProfile, setUserProfile] = useState<IProfile | null>(null)
-  const [showInvoiceItems, setShowInvoiceItems] = useState(false)
-  const [refundModalOpen, setRefundModalOpen] = useState(false)
-  const [markPaidModalOpen, setMarkPaidModalOpen] = useState(false)
-
   const goBack = () => navigate(`${APP_PATH}transaction/list`)
 
   const fetchData = async () => {
@@ -37,7 +28,6 @@ const Index = () => {
       return
     }
     console.log('payment detail res: ', paymentDetail)
-    const { gateway, invoice, payment, user } = paymentDetail
     /*
     const { invoice } = res
     normalizeAmt([invoice])

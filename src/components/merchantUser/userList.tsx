@@ -3,7 +3,8 @@ import {
   ProfileOutlined,
   SyncOutlined,
   UserAddOutlined,
-  UserDeleteOutlined} from '@ant-design/icons'
+  UserDeleteOutlined
+} from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -22,6 +23,7 @@ import {
 } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
+import { IMerchantUserProfile, TRole } from '../../@types/shared.types'
 import { emailValidate, formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import {
@@ -32,7 +34,6 @@ import {
   updateMemberRolesReq
 } from '../../requests'
 import '../../shared.css'
-import { IMerchantUserProfile, TRole } from '../../shared.types'
 import { useProfileStore } from '../../stores'
 import { MerchantUserStatus } from '../ui/statusTag'
 
@@ -214,7 +215,8 @@ const Index = () => {
 
   const onTableChange: TableProps<IMerchantUserProfile>['onChange'] = (
     pagination,
-    filters  ) => {
+    filters
+  ) => {
     setRoleFilters(filters as TFilters)
     onPageChange(1, PAGE_SIZE) // any search term, filters change should reset page to 1.
   }

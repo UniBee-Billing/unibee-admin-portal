@@ -1,6 +1,6 @@
 import { Button, Divider, Modal, Select, Tag } from 'antd'
+import { IPlan, ISubscriptionType } from '../../../@types/shared.types'
 import HiddenIcon from '../../../assets/hidden.svg?react'
-import { IPlan, ISubscriptionType } from '../../../shared.types.d'
 import Plan from '../plan'
 
 interface Props {

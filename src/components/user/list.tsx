@@ -28,12 +28,12 @@ import {
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { IProfile } from '../../@types/shared.types'
 import { SUBSCRIPTION_STATUS, USER_STATUS } from '../../constants'
 import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getUserListReq } from '../../requests'
 import '../../shared.css'
-import { IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
@@ -152,7 +152,7 @@ const Index = () => {
     console.log('export user params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({ task: 'UserExport', payload })
+    const [_, err] = await exportDataReq({ task: 'UserExport', payload })
     setExporting(false)
     if (err != null) {
       message.error(err.message)
@@ -190,7 +190,7 @@ const Index = () => {
       title: 'Name',
       dataIndex: 'firstName',
       key: 'userName',
-      render: (firstName, user) => `${user.firstName} ${user.lastName}`
+      render: (_, user) => `${user.firstName} ${user.lastName}`
     },
     {
       title: 'Email',
@@ -419,7 +419,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   goSearch: () => void

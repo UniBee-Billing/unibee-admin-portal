@@ -2,6 +2,12 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
 import update from 'immutability-helper'
 import { useState } from 'react'
+import {
+  IProfile,
+  InvoiceItem,
+  TInvoicePerm,
+  UserInvoice
+} from '../../../@types/shared.types'
 import { CURRENCY } from '../../../constants'
 import { ramdonString, showAmount } from '../../../helpers'
 import {
@@ -13,12 +19,6 @@ import {
   saveInvoiceReq,
   sendInvoiceInMailReq
 } from '../../../requests'
-import {
-  IProfile,
-  InvoiceItem,
-  TInvoicePerm,
-  UserInvoice
-} from '../../../shared.types.d'
 
 const newPlaceholderItem = (): InvoiceItem => ({
   id: ramdonString(8),
