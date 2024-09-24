@@ -77,7 +77,7 @@ const UserAccountTab = ({
         return
       }
       setCountryList(
-        list.map((c: any) => ({
+        list.map((c: IProfile) => ({
           code: c.countryCode,
           name: c.countryName
         }))
@@ -92,12 +92,12 @@ const UserAccountTab = ({
 
   const countryCode = Form.useWatch('countryCode', form)
   useEffect(() => {
-    countryCode &&
-      countryList.length > 0 &&
+    if (countryCode && countryList.length > 0) {
       form.setFieldValue(
         'countryName',
         countryList.find((c) => c.code == countryCode)!.name
       )
+    }
   }, [countryCode])
 
   const isCardPaymentSelected =

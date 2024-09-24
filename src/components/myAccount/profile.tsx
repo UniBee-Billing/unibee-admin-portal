@@ -39,10 +39,10 @@ const Index = () => {
   const profileStore = useProfileStore()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false) // page loading
-  const [submitting, setSubmitting] = useState(false)
+  const [submitting] = useState(false)
   const [resetPasswordModal, setResetPasswordModal] = useState(false)
   const togglePasswordModal = () => setResetPasswordModal(!resetPasswordModal)
-  const [myInfo, setMyInfo] = useState<IMerchantMemberProfile | null>(null)
+  const [_, setMyInfo] = useState<IMerchantMemberProfile | null>(null)
 
   const getInfo = async () => {
     setLoading(true)

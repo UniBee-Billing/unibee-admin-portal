@@ -21,7 +21,7 @@ const Index = ({ closeModal }: IProps) => {
       return
     }
     setLoading(true)
-    const [res, err] = await saveVatSenseKeyReq(apiKey)
+    const [_, err] = await saveVatSenseKeyReq(apiKey)
     setLoading(false)
     if (err != null) {
       message.error(err.message)

@@ -108,7 +108,7 @@ const Index = ({
     })
 
     if (triggeredByExpired) {
-      sessionStore.refresh && sessionStore.refresh()
+      sessionStore.refresh?.()
       sessionStore.setSession({ expired: false, refresh: null })
       message.success('Login succeeded')
     } else {

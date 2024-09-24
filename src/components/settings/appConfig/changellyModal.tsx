@@ -34,7 +34,7 @@ const Index = ({ gateway, closeModal, refresh }: IProps) => {
       return
     }
     setLoading(true)
-    const [res, err] = await saveChangellyPubKeyReq(
+    const [_, err] = await saveChangellyPubKeyReq(
       gateway.gatewayId as number,
       webhookSecret
     )

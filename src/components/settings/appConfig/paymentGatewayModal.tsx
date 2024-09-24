@@ -34,17 +34,15 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
       message.error('Private Key is empty')
       return
     }
-    const body: any = {
+    const body = {
       gatewayKey: pubKey,
-      gatewaySecret: privateKey
+      gatewaySecret: privateKey,
+      gatewayName: isNew ? gatewayDetail?.gatewayName : undefined,
+      gatewayId: isNew ? undefined : gatewayDetail?.gatewayId
     }
-    if (isNew) {
-      body.gatewayName = gatewayDetail?.gatewayName
-    } else {
-      body.gatewayId = gatewayDetail.gatewayId
-    }
+
     setLoading(true)
-    const [res, err] = await saveGatewayKeyReq(body, isNew)
+    const [_, err] = await saveGatewayKeyReq(body, isNew)
     setLoading(false)
     if (err != null) {
       message.error(err.message)

@@ -43,6 +43,11 @@ const APP_PATH = import.meta.env.BASE_URL
 const getAmount = (amt: number, currency: string) =>
   amt / CURRENCY[currency].stripe_factor
 
+interface Metric {
+  metricId: number
+  metricLimit: number
+}
+
 type TMetricsItem = {
   localId: string
   metricId?: number
@@ -117,7 +122,7 @@ const Index = () => {
   const params = useParams()
   const planId = params.planId // http://localhost:5174/plan/270?productId=0, planId is 270
   const isNew = planId == null
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, _] = useSearchParams()
   const productId = useRef(parseInt(searchParams.get('productId') ?? '0'))
   const productsStore = useProductListStore()
   console.log('productsStore: ', productsStore.list)
@@ -206,7 +211,7 @@ const Index = () => {
     setSelectOnetime(newOnetimeAddons)
   }, [itvCountUnit, itvCountValue, planCurrency])
 
-  const onSave = async (values: any) => {
+  const onSave = async (values: unknown) => {
     if (!isProductValid) {
       return
     }
@@ -275,11 +280,11 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     }
 
     let m = JSON.parse(JSON.stringify(selectedMetrics)) // selectedMetrics.map(metric => ({metricLimit: Number(metric.metricLimit)}))
-    m = m.map((metrics: any) => ({
+    m = m.map((metrics: Metric) => ({
       metricId: metrics.metricId,
       metricLimit: Number(metrics.metricLimit)
     }))
-    m = m.filter((metric: any) => !isNaN(metric.metricLimit))
+    m = m.filter((metric: Metric) => !isNaN(metric.metricLimit))
     f.metricLimits = m
 
     console.log('saving...: ', f)
@@ -373,9 +378,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     )
 
     const addons =
-      addonList.plans == null ? [] : addonList.plans.map((p: any) => p.plan)
-    const regularAddons = addons.filter((p: any) => p.type == 2)
-    const onetimeAddons = addons.filter((p: any) => p.type == 3)
+      addonList.plans == null ? [] : addonList.plans.map((p: IPlan) => p.plan)
+    const regularAddons = addons.filter((p: IPlan) => p.type == 2)
+    const onetimeAddons = addons.filter((p: IPlan) => p.type == 3)
     setAddons(regularAddons)
     setMetricsList(
       metricsList.merchantMetrics == null ? [] : metricsList.merchantMetrics
@@ -383,14 +388,14 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     if (isNew) {
       setSelectAddons(
         regularAddons.filter(
-          (a: any) =>
+          (a: IPlan) =>
             a.currency == NEW_PLAN.currency &&
             a.intervalUnit == NEW_PLAN.intervalUnit &&
             a.intervalCount == NEW_PLAN.intervalCount
         )
       )
       setSelectOnetime(
-        onetimeAddons.filter((a: any) => a.currency == NEW_PLAN.currency)
+        onetimeAddons.filter((a: IPlan) => a.currency == NEW_PLAN.currency)
       )
       return
     }
@@ -422,7 +427,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     if (metadata != null && metadata != '') {
       try {
         metadata = JSON.stringify(metadata)
-      } catch (err) {
+      } catch {
         metadata = ''
       }
     }
@@ -463,7 +468,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       null == planDetail.metricPlanLimits ||
       planDetail.metricPlanLimits.length == 0
         ? [{ localId: ramdonString(8) }]
-        : planDetail.metricPlanLimits.map((m: any) => ({
+        : planDetail.metricPlanLimits.map((m: Metric) => ({
             localId: ramdonString(8),
             metricId: m.metricId,
             metricLimit: m.metricLimit
@@ -472,14 +477,14 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
 
     setSelectAddons(
       regularAddons.filter(
-        (a: any) =>
+        (a: IPlan) =>
           a.intervalCount == planDetail.plan.intervalCount &&
           a.intervalUnit == planDetail.plan.intervalUnit &&
           a.currency == planDetail.plan.currency
       )
     )
     setSelectOnetime(
-      onetimeAddons.filter((a: any) => a.currency == planDetail.plan.currency)
+      onetimeAddons.filter((a: IPlan) => a.currency == planDetail.plan.currency)
     )
   }
 
@@ -547,7 +552,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     try {
       const obj = JSON.parse(metadata)
       form.setFieldValue('metadata', JSON.stringify(obj, null, 4))
-    } catch (err) {
+    } catch {
       message.error('Invalid custome data.')
       return
     }

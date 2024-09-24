@@ -90,14 +90,14 @@ const Index = () => {
 
     // if discount.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
     let plans =
-      planList.plans == null ? [] : planList.plans.map((p: any) => p.plan)
+      planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
     if (discount.discountType == 2) {
       // fixed amt
       plans = plans.filter((p: IPlan) => p.currency == discount.currency)
     }
     setPlanList(plans)
     planListRef.current =
-      planList.plans == null ? [] : planList.plans.map((p: any) => p.plan)
+      planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
 
     discount.validityRange = [
       dayjs(discount.startTime * 1000),
@@ -132,13 +132,13 @@ const Index = () => {
     }
     const { plans } = res
     // if NEW_CODE.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
-    let planList = plans == null ? [] : plans.map((p: any) => p.plan)
+    let planList = plans == null ? [] : plans.map((p: IPlan) => p.plan)
     if (NEW_CODE.discountType == 2) {
       // fixed amt
       planList = planList.filter((p: IPlan) => p.currency == NEW_CODE.currency)
     }
     setPlanList(planList)
-    planListRef.current = plans == null ? [] : plans.map((p: any) => p.plan)
+    planListRef.current = plans == null ? [] : plans.map((p: IPlan) => p.plan)
   }
 
   const onSave = async () => {
@@ -167,7 +167,7 @@ const Index = () => {
     // return
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
     setLoading(true)
-    const [res, err] = await method(code)
+    const [_, err] = await method(code)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -182,7 +182,7 @@ const Index = () => {
       return
     }
     setLoading(true)
-    const [res, err] = await deleteDiscountCodeReq(code.id)
+    const [_, err] = await deleteDiscountCodeReq(code.id)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -207,7 +207,7 @@ const Index = () => {
       return
     }
     setLoading(true)
-    const [res, err] = await toggleDiscountCodeActivateReq(code.id, action)
+    const [_, err] = await toggleDiscountCodeActivateReq(code.id, action)
     setLoading(false)
     if (null != err) {
       message.error(err.message)

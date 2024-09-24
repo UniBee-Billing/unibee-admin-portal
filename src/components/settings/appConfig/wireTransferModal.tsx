@@ -69,7 +69,7 @@ const Index = ({ closeModal, detail, refresh }: IProps) => {
     const method = isNew
       ? createWireTransferAccountReq
       : updateWireTransferAccountReq
-    const [res, err] = await method(accInfo)
+    const [_, err] = await method(accInfo)
     setLoading(false)
     if (err != null) {
       message.error(err.message)

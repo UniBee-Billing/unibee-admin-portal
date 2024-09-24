@@ -38,6 +38,7 @@ import {
   DiscountCode,
   IPlan,
   IPreview,
+  ISubAddon,
   ISubscriptionType
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
@@ -90,7 +91,7 @@ const Index = ({
   const toggleChangeSubStatusModal = () =>
     setChangeSubStatusModal(!changeSubStatusModal)
 
-  const onSimDateChange = async (date: Dayjs | null, dateString: string) => {
+  const onSimDateChange = async (_day: Dayjs | null, dateString: string) => {
     if (isProduction) {
       return
     }
@@ -314,7 +315,7 @@ const Index = ({
     } = subDetail
     const localActiveSub: ISubscriptionType = { ...subscription }
     localActiveSub.latestInvoice = latestInvoice
-    localActiveSub.addons = addons?.map((a: any) => ({
+    localActiveSub.addons = addons?.map((a: ISubAddon) => ({
       ...a.addonPlan,
       quantity: a.quantity,
       addonPlanId: a.addonPlan.id
@@ -328,7 +329,7 @@ const Index = ({
       ) {
         localActiveSub.unfinishedSubscriptionPendingUpdate.updateAddons =
           localActiveSub.unfinishedSubscriptionPendingUpdate.updateAddons.map(
-            (a: any) => ({
+            (a: ISubAddon) => ({
               ...a.addonPlan,
               quantity: a.quantity,
               addonPlanId: a.addonPlan.id
@@ -344,7 +345,7 @@ const Index = ({
     let plans: IPlan[] =
       planList.plans == null
         ? []
-        : planList.plans.map((p: any) => ({
+        : planList.plans.map((p: IPlan) => ({
             ...p.plan,
             addons: p.addons
           }))
@@ -375,7 +376,7 @@ const Index = ({
     setActiveSub(localActiveSub)
   }
 
-  const onDueDateChange = (date: Dayjs | null, dateStr: string) => {
+  const onDueDateChange = (_: Dayjs | null, dateStr: string) => {
     setNewDueDate(dateStr as string)
     toggleSetDueDateModal()
   }
@@ -414,7 +415,9 @@ const Index = ({
   }, [changePlanModal])
 
   useEffect(() => {
-    refreshSub && fetchData()
+    if (refreshSub) {
+      fetchData()
+    }
   }, [refreshSub])
 
   return (

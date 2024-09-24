@@ -1,6 +1,6 @@
 // import { EditFilled, MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Form, Input, message, Modal } from 'antd'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { markInvoiceAsPaidReq } from '../../requests'
 
 const { TextArea } = Input
@@ -23,7 +23,7 @@ const Index = ({
 
   const onConfirm = async () => {
     setLoading(true)
-    const [res, err] = await markInvoiceAsPaidReq(
+    const [_, err] = await markInvoiceAsPaidReq(
       invoiceId,
       form.getFieldValue('reason'),
       form.getFieldValue('TransferNumber')

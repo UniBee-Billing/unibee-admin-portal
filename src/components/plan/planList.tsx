@@ -108,7 +108,7 @@ const Index = ({
     setPlan(
       plans == null
         ? []
-        : plans.map((p: any) => ({
+        : plans.map((p: IPlan) => ({
             ...p.plan,
             metricPlanLimits: p.metricPlanLimits
           }))
@@ -241,10 +241,7 @@ const Index = ({
     }
   ]
 
-  const onTableChange: TableProps<IPlan>['onChange'] = (
-    pagination,
-    filters
-  ) => {
+  const onTableChange: TableProps<IPlan>['onChange'] = (_, filters) => {
     onPageChange(1, PAGE_SIZE)
     // console.log('params', pagination, filters, sorter, extra)
     setFilters(filters as TFilters)

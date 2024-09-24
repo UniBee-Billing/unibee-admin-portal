@@ -69,7 +69,7 @@ const Index = ({
     // console.log('importing: ', importType, '///', f)
     // return
     setImporting(true)
-    const [res, err] = await importDataReq(f, importType)
+    const [_, err] = await importDataReq(f, importType)
     setImporting(false)
     evt.target.value = ''
     if (null != err) {

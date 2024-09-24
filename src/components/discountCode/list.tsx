@@ -106,7 +106,7 @@ const Index = () => {
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'DiscountExport',
       payload
     })
@@ -372,7 +372,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   goSearch: () => void

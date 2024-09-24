@@ -113,11 +113,6 @@ const Index = () => {
         wireTransfer.minimumAmount /=
           CURRENCY[wireTransfer.currency].stripe_factor
       }
-      const changelly = gateways.find(
-        (g: TGateway) => g.gatewayName == 'changelly'
-      )
-      if (changelly != null) {
-      }
     }
     setGatewayList(gateways ?? [])
   }

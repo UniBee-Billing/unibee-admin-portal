@@ -348,7 +348,7 @@ const Index = ({
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'TransactionExport',
       payload
     })
@@ -414,7 +414,7 @@ const Index = ({
           spinning: loading,
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
-        onRow={(record, rowIndex) => {
+        onRow={(_, rowIndex) => {
           return {
             onClick: (event) => {
               if (
@@ -466,7 +466,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   exportData: () => void

@@ -93,9 +93,13 @@ const Index = () => {
   }
 
   const getMerchantUserList = async () => {
-    const body: any = { page, count: PAGE_SIZE }
-    if (roleFilters.MemberRoles != null && roleFilters.MemberRoles.length > 0) {
-      body.roleIds = roleFilters.MemberRoles
+    const body = {
+      page,
+      count: PAGE_SIZE,
+      roleIds:
+        roleFilters.MemberRoles != null && roleFilters.MemberRoles.length > 0
+          ? roleFilters.MemberRoles
+          : undefined
     }
     setLoading(true)
     const [res, err] = await getMerchantUserListReq2(body, getMerchantUserList)
@@ -214,7 +218,7 @@ const Index = () => {
   ]
 
   const onTableChange: TableProps<IMerchantUserProfile>['onChange'] = (
-    pagination,
+    _,
     filters
   ) => {
     setRoleFilters(filters as TFilters)
@@ -336,17 +340,17 @@ const InviteModal = ({
   const isNew = userData == undefined
 
   const onConfirm = async () => {
-    const body: any = form.getFieldsValue()
+    const body = form.getFieldsValue()
     setLoading(true)
     if (isNew) {
-      const [res, err] = await inviteMemberReq(body)
+      const [_, err] = await inviteMemberReq(body)
       setLoading(false)
       if (null != err) {
         message.error(err.message)
         return
       }
     } else {
-      const [res, err] = await updateMemberRolesReq({
+      const [_, err] = await updateMemberRolesReq({
         memberId: body.id,
         roleIds: body.roleIds
       })
@@ -506,7 +510,7 @@ const SuspendModal = ({
       return
     }
     setLoading(true)
-    const [res, err] = await suspendMemberReq(userData!.id)
+    const [_, err] = await suspendMemberReq(userData!.id)
     setLoading(false)
     if (null != err) {
       message.error(err.message)

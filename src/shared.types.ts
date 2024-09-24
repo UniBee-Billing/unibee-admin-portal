@@ -154,6 +154,10 @@ interface IBillableMetrics {
   createTime: string
 }
 
+export interface SubscriptionWrapper extends ISubscriptionType {
+  subscription: ISubscriptionType
+}
+
 interface ISubscriptionType {
   id: number
   subscriptionId: string
@@ -465,13 +469,18 @@ type TGateway = {
   }
 }
 
+export interface TRolePermission {
+  group: string
+  permissions: string[]
+}
+
 export type TRole = {
   id?: number
   localId: string
   createTime?: number
   merchantId?: number
   role: string
-  permissions: { group: string; permissions: string[] }[]
+  permissions: TRolePermission[]
 }
 
 export type TActivityLogs = {

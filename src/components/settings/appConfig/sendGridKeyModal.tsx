@@ -21,7 +21,7 @@ const Index = ({ closeModal }: IProps) => {
       return
     }
     setLoading(true)
-    const [res, err] = await saveSendGridKeyReq(apiKey)
+    const [_, err] = await saveSendGridKeyReq(apiKey)
     setLoading(false)
     if (err != null) {
       message.error(err.message)

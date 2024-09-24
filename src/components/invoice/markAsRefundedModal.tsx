@@ -1,6 +1,5 @@
-// import { EditFilled, MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Form, Input, message, Modal } from 'antd'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { markRefundAsSucceedReq } from '../../requests'
 
 const { TextArea } = Input
@@ -23,7 +22,7 @@ const Index = ({
 
   const onConfirm = async () => {
     setLoading(true)
-    const [res, err] = await markRefundAsSucceedReq(
+    const [_, err] = await markRefundAsSucceedReq(
       invoiceId,
       form.getFieldValue('reason')
     )

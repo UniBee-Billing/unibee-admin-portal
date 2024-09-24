@@ -133,7 +133,7 @@ const renderJson = (text: string) => {
   let parsedJson = ''
   try {
     parsedJson = JSON.stringify(JSON.parse(text), null, 2)
-  } catch (err) {
+  } catch {
     parsedJson = text
   }
   return (

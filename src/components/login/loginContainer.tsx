@@ -17,7 +17,11 @@ const Index = ({
   const navigate = useNavigate()
   const [email, setEmail] = useState(initialEmail) // email need to be shared on passwordLogin and OtpLogin, so it has to be defined in parent.
   const onEmailChange = (evt: ChangeEvent<HTMLInputElement> | string) => {
-    typeof evt == 'string' ? setEmail(evt) : setEmail(evt.target.value)
+    if (typeof evt === 'string') {
+      setEmail(evt)
+    } else {
+      setEmail(evt.target.value)
+    }
   }
   const [loginType, setLoginType] = useState<'password' | 'OTP'>('password')
   const [logging, setLogging] = useState(false)

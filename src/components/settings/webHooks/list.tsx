@@ -20,10 +20,8 @@ const Index = () => {
   const navigate = useNavigate()
   // const appConfigStore = useAppConfigStore();
   const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(0) // pagination props
   const [webhookList, setWebhookList] = useState<TWebhook[]>([])
   const [detailModalOpen, setDetailModalOpen] = useState(false)
-  const [logModalOpen, setLogModalOpen] = useState(false)
   const toggleDetailModal = () => setDetailModalOpen(!detailModalOpen)
   const [currentWebhookIdx, setCurrentWebhookIdx] = useState(-1)
 
@@ -160,7 +158,7 @@ const Index = () => {
           spinning: loading,
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
-        onRow={(iv, rowIndex) => {
+        onRow={(_, rowIndex) => {
           return {
             onClick: (evt) => {
               setCurrentWebhookIdx(rowIndex as number)

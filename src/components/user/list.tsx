@@ -33,7 +33,7 @@ import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getUserListReq } from '../../requests'
 import '../../shared.css'
-import { IProfile } from '../../shared.types'
+import { IPlan, IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
@@ -140,9 +140,9 @@ const Index = () => {
     planFilterRef.current =
       plans == null
         ? []
-        : plans.map((p: any) => ({
-            value: p.plan.id,
-            text: p.plan.planName
+        : plans.map((p: IPlan) => ({
+            value: p.plan?.id,
+            text: p.plan?.planName
           }))
   }
 

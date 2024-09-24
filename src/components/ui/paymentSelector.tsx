@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler } from 'react'
+import React, { ChangeEventHandler, ReactNode } from 'react'
 import { useAppConfigStore } from '../../stores'
 import PayPalIcon from './icon/PayPal.svg?react'
 import AmexIcon from './icon/amex.svg?react'
@@ -21,7 +21,7 @@ const PAYMENTS: {
   [key in PAYMENT_METHODS]: {
     label: string
     order: number
-    logo: any
+    logo: ReactNode
   }
 } = {
   stripe: {

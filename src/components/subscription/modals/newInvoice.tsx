@@ -55,10 +55,9 @@ const Index = ({
   const [loading, setLoading] = useState(false)
   // const appConfigStore = useAppConfigStore();
   if (detail != null) {
-    detail.lines &&
-      detail.lines.forEach((item) => {
-        item.id = ramdonString(8)
-      })
+    detail.lines?.forEach((item) => {
+      item.id = ramdonString(8)
+    })
   }
 
   const [invoiceList, setInvoiceList] = useState<InvoiceItem[]>(
@@ -152,10 +151,10 @@ const Index = ({
       quantity: Number(v.quantity)
     }))
     setLoading(true)
-    let saveInvoiceRes, err
+    let _saveInvoiceRes, err
     if (detail == null) {
       // creating a new invoice
-      ;[saveInvoiceRes, err] = await createInvoiceReq({
+      ;[_saveInvoiceRes, err] = await createInvoiceReq({
         userId: user!.id as number,
         taxPercentage: Number(taxPercentage) * 100,
         currency,
@@ -165,7 +164,7 @@ const Index = ({
       })
     } else {
       // saving an invoice
-      ;[saveInvoiceRes, err] = await saveInvoiceReq({
+      ;[_saveInvoiceRes, err] = await saveInvoiceReq({
         invoiceId: detail.invoiceId,
         taxPercentage: Number(taxPercentage) / 100,
         currency: detail.currency,

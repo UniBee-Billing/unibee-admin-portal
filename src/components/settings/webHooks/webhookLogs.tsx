@@ -68,7 +68,7 @@ const Index = () => {
 
   const resend = (logId: number) => async () => {
     setResending(true)
-    const [resendRes, err] = await resendWebhookEvt(logId)
+    const [_, err] = await resendWebhookEvt(logId)
     setResending(false)
     if (err != null) {
       message.error(err.message)
@@ -85,7 +85,7 @@ const Index = () => {
     let parsedJson = ''
     try {
       parsedJson = JSON.stringify(JSON.parse(text), null, 2)
-    } catch (err) {
+    } catch {
       parsedJson = text
     }
 

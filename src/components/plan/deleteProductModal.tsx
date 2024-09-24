@@ -1,6 +1,6 @@
 import { Button, Col, message, Modal, Row } from 'antd'
 import update from 'immutability-helper'
-import React, { CSSProperties, useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { deleteProductReq } from '../../requests'
 import { IProduct } from '../../shared.types'
 import { useProductListStore } from '../../stores'
@@ -27,7 +27,7 @@ const Index = ({ closeModal, refresh, product }: Props) => {
       return
     }
     setLoading(true)
-    const [res, err] = await deleteProductReq(product.id)
+    const [_, err] = await deleteProductReq(product.id)
     setLoading(false)
     if (null != err) {
       message.error(err.message)

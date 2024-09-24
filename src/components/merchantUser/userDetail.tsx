@@ -1,10 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { IProfile } from '../../shared.types'
+import { useEffect } from 'react'
 
 const Index = () => {
-  const [loading, setLoading] = useState(false)
-  const [userProfile, setUserProfile] = useState<IProfile | null>(null)
-
   /*
   const fetchUserProfile = async () => {
     const userId = Number(params.adminId)

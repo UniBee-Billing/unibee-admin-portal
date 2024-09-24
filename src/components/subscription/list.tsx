@@ -32,7 +32,12 @@ import { formatDate, formatPlanInterval, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getSublist } from '../../requests'
 import '../../shared.css'
-import { ISubscriptionType, TImportDataType } from '../../shared.types'
+import {
+  IPlan,
+  ISubscriptionType,
+  SubscriptionWrapper,
+  TImportDataType
+} from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus } from '../ui/statusTag'
@@ -80,7 +85,7 @@ const Index = () => {
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'SubscriptionExport',
       payload
     })
@@ -289,20 +294,22 @@ const Index = () => {
       return
     }
 
-    const list: ISubscriptionType[] = subscriptions.map((s: any) => {
-      return {
-        ...s.subscription,
-        plan: s.plan,
-        addons:
-          s.addons == null
-            ? []
-            : s.addons.map((a: any) => ({
-                ...a.addonPlan,
-                quantity: a.quantity
-              })),
-        user: s.user
+    const list: ISubscriptionType[] = subscriptions.map(
+      (s: SubscriptionWrapper) => {
+        return {
+          ...s.subscription,
+          plan: s.plan,
+          addons:
+            s.addons == null
+              ? []
+              : s.addons.map((a) => ({
+                  ...a.addonPlan,
+                  quantity: a.quantity
+                })),
+          user: s.user
+        }
       }
-    })
+    )
     setSubList(list)
     setTotal(total)
   }
@@ -327,14 +334,14 @@ const Index = () => {
     planFilterRef.current =
       plans == null
         ? []
-        : plans.map((p: any) => ({
-            value: p.plan.id,
-            text: p.plan.planName
+        : plans.map((p: IPlan) => ({
+            value: p.plan?.id,
+            text: p.plan?.planName
           }))
   }
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
-    pagination,
+    _,
     filters
   ) => {
     // console.log('params', pagination, filters, sorter, extra);
@@ -496,7 +503,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   goSearch: () => void

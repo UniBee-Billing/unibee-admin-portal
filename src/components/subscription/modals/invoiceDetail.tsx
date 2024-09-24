@@ -13,16 +13,15 @@ interface Props {
 
 const Index = ({ detail, closeModal }: Props) => {
   console.log('invoice detai: ', detail)
-  const [loading, setLoading] = useState(false)
+  const [loading] = useState(false)
   // const appConfigStore = useAppConfigStore();
-  if (detail != null) {
-    detail.lines &&
-      detail.lines.forEach((item) => {
-        item.id = ramdonString(8)
-      })
+  if (detail != null && detail.lines) {
+    detail.lines.forEach((item) => {
+      item.id = ramdonString(8)
+    })
   }
 
-  const [invoiceList, setInvoiceList] = useState<InvoiceItem[]>(detail.lines)
+  const [invoiceList] = useState<InvoiceItem[]>(detail.lines)
 
   const getUserName = (iv: UserInvoice) => {
     if (iv.userAccount == null) {

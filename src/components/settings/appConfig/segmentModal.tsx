@@ -33,7 +33,7 @@ const Index = ({ closeModal, serverSideKey, refresh }: IProps) => {
       return
     }
     setLoading(true)
-    const [res, err] = await segmentSetupReq(serverKey, clientKey)
+    const [_, err] = await segmentSetupReq(serverKey, clientKey)
     if (err != null) {
       message.error(err.message)
       return

@@ -33,7 +33,7 @@ const Index = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0) // 0: input email, 1: input code
   const [errMailMsg, setErrMailMsg] = useState('')
-  const [sendingMailaddr, setSendingMailaddr] = useState(false) // TODO: when submitting email-address, disable its button.
+  const [_, setSendingMailaddr] = useState(false) // TODO: when submitting email-address, disable its button.
   const [countVal, counting, startCount, stopCounter] = useCountdown(60)
 
   const goBackForward = () => setCurrentStep((currentStep + 1) % 2)
@@ -89,7 +89,7 @@ interface IMailFormProps {
   email: string
   onEmailChange: (evt: React.ChangeEvent<HTMLInputElement>) => void
   goForward: () => void
-  sendMailaddress: () => Promise<any>
+  sendMailaddress: () => Promise<unknown>
   setLogging: (val: boolean) => void
 }
 const MailForm = ({
@@ -165,7 +165,7 @@ interface IOtpFormProps {
   errMailMsg: string
   counting: boolean
   countVal: number
-  sendMailaddress: () => Promise<any>
+  sendMailaddress: () => Promise<unknown>
   goBack: () => void
   triggeredByExpired: boolean
   setLogging: (val: boolean) => void
@@ -237,7 +237,7 @@ const OTPForm = ({
     })
 
     if (triggeredByExpired) {
-      sessionStore.refresh && sessionStore.refresh()
+      sessionStore.refresh?.()
       sessionStore.setSession({ expired: false, refresh: null })
       message.success('Login succeeded')
     } else {

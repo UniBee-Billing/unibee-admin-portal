@@ -213,7 +213,7 @@ const Index = ({
     console.log('export iv params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({ task: 'InvoiceExport', payload })
+    const [_, err] = await exportDataReq({ task: 'InvoiceExport', payload })
     setExporting(false)
     if (err != null) {
       message.error(err.message)
@@ -322,7 +322,7 @@ const Index = ({
       // hidden: embeddingMode,
       // "hidden" is supported in higher version of antd, but that version broke many other things,
       // like <DatePicker />
-      render: (u, iv) => (
+      render: (_, iv) => (
         <span>{`${iv.userAccount.firstName} ${iv.userAccount.lastName}`}</span>
       )
     },
@@ -331,7 +331,7 @@ const Index = ({
       dataIndex: 'userAccount',
       key: 'userEmail',
       // hidden: embeddingMode,
-      render: (u, iv) =>
+      render: (_, iv) =>
         iv.userAccount == null ? null : (
           <a href={`mailto:${iv.userAccount.email}`}> {iv.userAccount.email}</a>
         )
@@ -454,10 +454,7 @@ const Index = ({
 
   const clearFilters = () => setFilters({ status: null })
 
-  const onTableChange: TableProps<UserInvoice>['onChange'] = (
-    pagination,
-    filters
-  ) => {
+  const onTableChange: TableProps<UserInvoice>['onChange'] = (_, filters) => {
     setFilters(filters as TFilters)
   }
 
@@ -534,7 +531,7 @@ const Index = ({
           rowClassName="clickable-tbl-row"
           pagination={false}
           scroll={{ x: 'max-content', y: 640 }}
-          onRow={(record, rowIndex) => {
+          onRow={(_, rowIndex) => {
             return {
               onClick: (event) => {
                 setInvoiceIdx(rowIndex as number)
@@ -598,7 +595,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   goSearch: () => void
   onPageChange: (page: number, pageSize: number) => void

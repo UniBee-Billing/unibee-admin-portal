@@ -20,7 +20,6 @@ const Index = ({
   const [submitting, setSubmitting] = useState(false)
   const [noteList, setNoteList] = useState<TAdminNote[]>([])
   const [note, setNote] = useState('')
-  const [page, setPage] = useState(0)
 
   const createNote = async () => {
     if (subscriptionId == null) {
@@ -31,7 +30,7 @@ const Index = ({
     }
 
     setSubmitting(true)
-    const [res, err] = await createAdminNoteReq({ subscriptionId, note })
+    const [_, err] = await createAdminNoteReq({ subscriptionId, note })
     setSubmitting(false)
     if (null != err) {
       message.error(err.message)

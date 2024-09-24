@@ -11,18 +11,23 @@ import {
   DatePicker,
   Form,
   Input,
+  message,
   Radio,
   Row,
   Select,
   Spin,
   Tag,
-  Tooltip,
-  message
+  Tooltip
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
 import update from 'immutability-helper'
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd'
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult
+} from 'react-beautiful-dnd'
 import {
   exportDataReq,
   getExportFieldsWithMore,
@@ -35,12 +40,17 @@ import { useAppConfigStore } from '../../stores'
 import { fuzzyMatch } from './helpers'
 import './index.css'
 
+interface TExpTmplPayload {
+  reportTimeStart: number
+  reportTimeEnd: number
+}
+
 type TExpTmpl = {
   templateId: number
   name: string
   createTime: string
   task: TExportDataType
-  payload: any
+  payload: TExpTmplPayload
   exportColumns: string[]
   format: 'csv' | 'xlsx'
 }
@@ -137,10 +147,10 @@ const Index = () => {
     const { exportTmplRes, exportFieldsRes } = res
     const { templates } = exportTmplRes
     setTemplates(templates ?? [])
-    let { columns, columnComments, columnHeaders } = exportFieldsRes
+    const { columns, columnComments, columnHeaders } = exportFieldsRes
     fieldComments.current = columnComments
     fieldHeaders.current = columnHeaders
-    columns = columns.map((c: string) => {
+    const parsedColumns = columns.map((c: string) => {
       const col = settableFields.find((f) => f.id == c)
       if (col != null) {
         return col
@@ -148,8 +158,8 @@ const Index = () => {
         return { name: c, id: c, node: null }
       }
     })
-    setAvailableFields(columns)
-    allFields.current = columns
+    setAvailableFields(parsedColumns)
+    allFields.current = parsedColumns
   }
 
   const AddCommentTip = ({
@@ -211,7 +221,7 @@ const Index = () => {
     // console.log('exporting...,', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'InvoiceExport',
       payload,
       exportColumns,
@@ -230,7 +240,7 @@ const Index = () => {
 
   const onSelectTmpl = (tmplId: number) => {
     const tmpl = templates.find((t) => t.templateId == tmplId)
-    if (tmpl == null) {
+    if (!tmpl) {
       return
     }
     setSelectedTmpl(tmplId)
@@ -320,7 +330,7 @@ const Index = () => {
       payload.reportTimeEnd = reportTimeEnd.unix()
     }
     setLoading(true)
-    const [res, err] = await saveExportTmplReq({
+    const [_, err] = await saveExportTmplReq({
       name: templates.find((t) => t.templateId == selectedTmpl)!.name,
       templateId: selectedTmpl,
       task: 'InvoiceExport',
@@ -355,7 +365,7 @@ const Index = () => {
       return
     }
     setLoading(true)
-    const [res, err] = await removeExportTmplReq({
+    const [_, err] = await removeExportTmplReq({
       templateId: selectedTmpl
     })
     setLoading(false)
@@ -380,9 +390,13 @@ const Index = () => {
     setSelectedTmpl(null)
   }
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result
-    console.log('dragEnd result :', result)
+
+    if (!destination) {
+      return
+    }
+
     if (
       destination.droppableId == 'available-fields' &&
       source.droppableId == 'exported-fields'

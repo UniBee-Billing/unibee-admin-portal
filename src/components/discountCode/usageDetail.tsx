@@ -128,8 +128,7 @@ const Index = () => {
   ]
 
   const normalizeSearchTerms = () => {
-    let searchTerm: any = {}
-    searchTerm = form.getFieldsValue()
+    const searchTerm = form.getFieldsValue()
     const start = form.getFieldValue('createTimeStart')
     const end = form.getFieldValue('createTimeEnd')
     if (start != null) {
@@ -229,19 +228,25 @@ const Index = () => {
 
 export default Index
 
+interface SearchTerms {
+  id: number
+}
+
+interface SearchParams {
+  form: FormInstance<unknown>
+  searching: boolean
+  goSearch: () => void
+  onPageChange: (page: number, pageSize: number) => void
+  normalizeSearchTerms: () => SearchTerms
+}
+
 const Search = ({
   form,
   searching,
   goSearch,
   onPageChange,
   normalizeSearchTerms
-}: {
-  form: FormInstance<any>
-  searching: boolean
-  goSearch: () => void
-  onPageChange: (page: number, pageSize: number) => void
-  normalizeSearchTerms: () => any
-}) => {
+}: SearchParams) => {
   const appConfig = useAppConfigStore()
   const params = useParams()
   const codeId = params.discountCodeId
@@ -266,7 +271,7 @@ const Search = ({
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'UserDiscountExport',
       payload
     })
