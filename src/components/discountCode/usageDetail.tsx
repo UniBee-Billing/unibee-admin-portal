@@ -5,27 +5,20 @@ import {
   DatePicker,
   Form,
   FormInstance,
-  Input,
   Pagination,
-  Popconfirm,
   Row,
-  Select,
   Space,
-  Spin,
   Table,
   message
 } from 'antd'
 import { ColumnsType } from 'antd/es/table'
-import dayjs, { Dayjs } from 'dayjs'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CURRENCY } from '../../constants'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getDiscountCodeUsageDetailReq } from '../../requests'
-import { DiscountCode, DiscountCodeUsage, IPlan } from '../../shared.types'
+import { DiscountCodeUsage } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
-import { DiscountCodeStatus } from '../ui/statusTag'
 
 const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
 const PAGE_SIZE = 10
@@ -56,10 +49,10 @@ const Index = () => {
       title: 'Applied plan',
       dataIndex: 'plan',
       key: 'plan',
-      render: (plan, codeUsagDetail) => (
+      render: (plan) => (
         <div
-          onClick={(e) => navigate(`${APP_PATH}plan/${plan.id}`)}
-          className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+          onClick={() => navigate(`${APP_PATH}plan/${plan.id}`)}
+          className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
         >
           {plan.planName}
         </div>
@@ -75,13 +68,13 @@ const Index = () => {
       title: 'Used by',
       dataIndex: 'user',
       key: 'user',
-      render: (user, code_detail) =>
+      render: (user) =>
         user == null ? (
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}user/${user.id}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            onClick={() => navigate(`${APP_PATH}user/${user.id}`)}
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {`${user.firstName} ${user.lastName}`}
           </div>
@@ -91,7 +84,7 @@ const Index = () => {
       title: 'Used at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (usedAt, code_detail) => formatDate(usedAt, true)
+      render: (usedAt) => formatDate(usedAt, true)
     },
     {
       title: 'Subscription Id',
@@ -102,8 +95,8 @@ const Index = () => {
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}subscription/${subId}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
           </div>
@@ -135,8 +128,7 @@ const Index = () => {
   ]
 
   const normalizeSearchTerms = () => {
-    let searchTerm: any = {}
-    searchTerm = form.getFieldsValue()
+    const searchTerm = form.getFieldsValue()
     const start = form.getFieldValue('createTimeStart')
     const end = form.getFieldValue('createTimeEnd')
     if (start != null) {
@@ -205,15 +197,15 @@ const Index = () => {
           spinning: loading,
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
-        onRow={(code, rowIndex) => {
+        onRow={() => {
           return {
-            onClick: (evt) => {}
+            onClick: () => {}
           }
         }}
       />
       <div className="mx-0 my-4 flex w-full items-center justify-end">
-        <div className=" flex w-2/4 justify-end">
-          <div className=" flex w-full justify-between">
+        <div className="flex w-2/4 justify-end">
+          <div className="flex w-full justify-between">
             <Button onClick={goBack}>Go back</Button>
             <Pagination
               current={page + 1} // back-end starts with 0, front-end starts with 1
@@ -236,19 +228,25 @@ const Index = () => {
 
 export default Index
 
+interface SearchTerms {
+  id: number
+}
+
+interface SearchParams {
+  form: FormInstance<unknown>
+  searching: boolean
+  goSearch: () => void
+  onPageChange: (page: number, pageSize: number) => void
+  normalizeSearchTerms: () => SearchTerms
+}
+
 const Search = ({
   form,
   searching,
   goSearch,
   onPageChange,
   normalizeSearchTerms
-}: {
-  form: FormInstance<any>
-  searching: boolean
-  goSearch: () => void
-  onPageChange: (page: number, pageSize: number) => void
-  normalizeSearchTerms: () => any
-}) => {
+}: SearchParams) => {
   const appConfig = useAppConfigStore()
   const params = useParams()
   const codeId = params.discountCodeId
@@ -273,7 +271,7 @@ const Search = ({
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'UserDiscountExport',
       payload
     })
@@ -291,8 +289,8 @@ const Search = ({
   return (
     <div>
       <Form form={form} onFinish={goSearch} disabled={searching || exporting}>
-        <Row className=" mb-5 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-500">
+        <Row className="mb-5 flex items-center" gutter={[8, 8]}>
+          <Col span={2} className="font-bold text-gray-500">
             Code used
           </Col>
           <Col span={4}>
@@ -315,7 +313,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

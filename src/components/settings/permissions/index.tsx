@@ -20,7 +20,7 @@ import { ChangeEventHandler, useEffect, useState } from 'react'
 import { PERMISSION_LIST } from '../../../constants'
 import { ramdonString } from '../../../helpers'
 import { deleteRoleReq, getRoleListReq, saveRoleReq } from '../../../requests'
-import { TRole } from '../../../shared.types'
+import { TRole, TRolePermission } from '../../../shared.types'
 
 const OWNER_ROLE: TRole = {
   localId: ramdonString(8),
@@ -46,7 +46,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { merchantRoles, total } = res
+    const { merchantRoles } = res
     merchantRoles.forEach((r: TRole) => (r.localId = r.id + ''))
     merchantRoles.unshift(OWNER_ROLE)
     setRoles(merchantRoles)
@@ -84,7 +84,7 @@ const Index = () => {
     delete role.localId
     delete role.merchantId
     setLoading(true)
-    const [res, err] = await saveRoleReq(role, r.id == null)
+    const [_, err] = await saveRoleReq(role, r.id == null)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -104,7 +104,7 @@ const Index = () => {
 
   const onDelete = (id: number) => async () => {
     setLoading(true)
-    const [res, err] = await deleteRoleReq(id)
+    const [_, err] = await deleteRoleReq(id)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -189,9 +189,11 @@ const Index = () => {
       dataIndex: 'permissions',
       key: p.group,
       with: p.width,
-      render: (perm: any, record: TRole) => {
+      render: (perm: TRole['permissions'], record: TRole) => {
         const g =
-          perm == null ? undefined : perm.find((pm: any) => pm.group == p.group)
+          perm == null
+            ? undefined
+            : perm.find((pm: TRolePermission) => pm.group == p.group)
         return (
           <Switch
             size="small"

@@ -34,7 +34,7 @@ import { formatDate, getInvoicePermission, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getInvoiceListReq } from '../../requests'
 import '../../shared.css'
-import { IProfile, TInvoicePerm, UserInvoice } from '../../shared.types.d'
+import { IProfile, UserInvoice } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { normalizeAmt } from '../helpers'
 import MarkAsPaidModal from '../invoice/markAsPaidModal'
@@ -213,7 +213,7 @@ const Index = ({
     console.log('export iv params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({ task: 'InvoiceExport', payload })
+    const [_, err] = await exportDataReq({ task: 'InvoiceExport', payload })
     setExporting(false)
     if (err != null) {
       message.error(err.message)
@@ -255,12 +255,12 @@ const Index = ({
       key: 'totalAmount',
       width: 150,
       render: (amt, iv) => (
-        <div className=" flex items-center">
-          <div className={iv.refund == null ? '' : ' text-red-500'}>
+        <div className="flex items-center">
+          <div className={iv.refund == null ? '' : 'text-red-500'}>
             {showAmount(amt, iv.currency, true)}
           </div>
           {iv.refund == null && (
-            <div className=" text-xs text-gray-500">{` (tax: ${showAmount(iv.taxAmount, iv.currency, true)})`}</div>
+            <div className="text-xs text-gray-500">{` (tax: ${showAmount(iv.taxAmount, iv.currency, true)})`}</div>
           )}
           {iv.refund != null && (
             <Tooltip title="Refund info">
@@ -277,7 +277,7 @@ const Index = ({
       dataIndex: 'refund',
       key: 'refund',
       width: 100,
-      render: (refund, iv) => (refund == null ? 'Invoice' : 'Credit Note')
+      render: (refund) => (refund == null ? 'Invoice' : 'Credit Note')
     },
     {
       title: 'Status',
@@ -322,7 +322,7 @@ const Index = ({
       // hidden: embeddingMode,
       // "hidden" is supported in higher version of antd, but that version broke many other things,
       // like <DatePicker />
-      render: (u, iv) => (
+      render: (_, iv) => (
         <span>{`${iv.userAccount.firstName} ${iv.userAccount.lastName}`}</span>
       )
     },
@@ -331,7 +331,7 @@ const Index = ({
       dataIndex: 'userAccount',
       key: 'userEmail',
       // hidden: embeddingMode,
-      render: (u, iv) =>
+      render: (_, iv) =>
         iv.userAccount == null ? null : (
           <a href={`mailto:${iv.userAccount.email}`}> {iv.userAccount.email}</a>
         )
@@ -454,12 +454,7 @@ const Index = ({
 
   const clearFilters = () => setFilters({ status: null })
 
-  const onTableChange: TableProps<UserInvoice>['onChange'] = (
-    pagination,
-    filters,
-    sorter,
-    extra
-  ) => {
+  const onTableChange: TableProps<UserInvoice>['onChange'] = (_, filters) => {
     setFilters(filters as TFilters)
   }
 
@@ -536,7 +531,7 @@ const Index = ({
           rowClassName="clickable-tbl-row"
           pagination={false}
           scroll={{ x: 'max-content', y: 640 }}
-          onRow={(record, rowIndex) => {
+          onRow={(_, rowIndex) => {
             return {
               onClick: (event) => {
                 setInvoiceIdx(rowIndex as number)
@@ -600,7 +595,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   goSearch: () => void
   onPageChange: (page: number, pageSize: number) => void
@@ -628,7 +623,7 @@ const Search = ({
         disabled={searching}
         initialValues={DEFAULT_TERM}
       >
-        <Row className="mb-3  flex items-center" gutter={[8, 8]}>
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
           <Col span={3} className="font-bold text-gray-500">
             First/Last name
           </Col>
@@ -677,8 +672,8 @@ const Search = ({
           </Col>
         </Row>
 
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={3} className="font-bold text-gray-500">
             Invoice created
           </Col>
           <Col span={4}>
@@ -701,7 +696,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

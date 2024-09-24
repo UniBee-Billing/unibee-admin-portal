@@ -1,5 +1,5 @@
 import { CopyOutlined } from '@ant-design/icons'
-import { Button, Col, Input, Modal, Row, Spin, message } from 'antd'
+import { Button, Col, Input, Modal, Row, message } from 'antd'
 import { useState } from 'react'
 import { useCopyContent } from '../../../hooks'
 import { saveChangellyPubKeyReq } from '../../../requests'
@@ -34,7 +34,7 @@ const Index = ({ gateway, closeModal, refresh }: IProps) => {
       return
     }
     setLoading(true)
-    const [res, err] = await saveChangellyPubKeyReq(
+    const [_, err] = await saveChangellyPubKeyReq(
       gateway.gatewayId as number,
       webhookSecret
     )
@@ -57,9 +57,9 @@ const Index = ({ gateway, closeModal, refresh }: IProps) => {
         footer={null}
         closeIcon={null}
       >
-        <div className="my-6  w-full ">
+        <div className="my-6 w-full">
           <Row gutter={[16, 32]} style={{ marginBottom: '12px' }}>
-            <Col span={6} className=" text-gray-600">
+            <Col span={6} className="text-gray-600">
               Callback URL
             </Col>
             <Col span={18} className="text-gray-800">
@@ -84,7 +84,7 @@ const Index = ({ gateway, closeModal, refresh }: IProps) => {
             </Col>
           </Row>
           <Row>
-            <Col span={6} className=" text-gray-600">
+            <Col span={6} className="text-gray-600">
               Callback public key
             </Col>
             <Col span={18}>
@@ -93,7 +93,7 @@ const Index = ({ gateway, closeModal, refresh }: IProps) => {
                 value={webhookSecret}
                 onChange={onKeyChange}
               ></TextArea>
-              <div className=" mt-2 text-sm">
+              <div className="mt-2 text-sm">
                 <Button
                   type="link"
                   onClick={copyContent}
@@ -115,7 +115,7 @@ const Index = ({ gateway, closeModal, refresh }: IProps) => {
                 >
                   https://app.pay.changelly.com/integrations
                 </a>
-                <span className=" text-sm text-gray-400">
+                <span className="text-sm text-gray-400">
                   , then paste it here.
                 </span>
               </div>

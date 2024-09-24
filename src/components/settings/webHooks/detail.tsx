@@ -10,8 +10,8 @@ import {
   Select,
   message
 } from 'antd'
-import React, { useEffect, useState } from 'react'
-import { ramdonString, urlRegx } from '../../../helpers'
+import { useEffect, useState } from 'react'
+import { ramdonString } from '../../../helpers'
 import {
   deleteWebhookReq,
   getEventListReq,
@@ -35,7 +35,7 @@ const Index = ({
   const onConfirm = async () => {
     // console.log('form v: ', form.getFieldsValue())
     setSubmitting(true)
-    const [res, err] = await saveWebhookReq(form.getFieldsValue())
+    const [_, err] = await saveWebhookReq(form.getFieldsValue())
     if (err != null) {
       setSubmitting(false)
       message.error(err.message)
@@ -51,7 +51,7 @@ const Index = ({
       return
     }
     setSubmitting(true)
-    const [res, err] = await deleteWebhookReq(detail?.id)
+    const [_, err] = await deleteWebhookReq(detail?.id)
     if (err != null) {
       setSubmitting(false)
       message.error(err.message)
@@ -109,8 +109,8 @@ const Index = ({
                   required: true,
                   message: 'Please input your endpoint URL!'
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(_, value) {
                     // if (urlRegx.test(value)) {
                     // return Promise.resolve()
                     // }

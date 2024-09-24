@@ -1,5 +1,5 @@
-import { Button, Col, Input, Modal, Row, Spin, message } from 'antd'
-import { useEffect, useState } from 'react'
+import { Button, Col, Input, Modal, Row, message } from 'antd'
+import { useState } from 'react'
 import { saveGatewayKeyReq } from '../../../requests'
 import { TGateway } from '../../../shared.types'
 const { TextArea } = Input
@@ -34,17 +34,15 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
       message.error('Private Key is empty')
       return
     }
-    const body: any = {
+    const body = {
       gatewayKey: pubKey,
-      gatewaySecret: privateKey
+      gatewaySecret: privateKey,
+      gatewayName: isNew ? gatewayDetail?.gatewayName : undefined,
+      gatewayId: isNew ? undefined : gatewayDetail?.gatewayId
     }
-    if (isNew) {
-      body.gatewayName = gatewayDetail?.gatewayName
-    } else {
-      body.gatewayId = gatewayDetail.gatewayId
-    }
+
     setLoading(true)
-    const [res, err] = await saveGatewayKeyReq(body, isNew)
+    const [_, err] = await saveGatewayKeyReq(body, isNew)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
@@ -64,7 +62,7 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
         footer={null}
         closeIcon={null}
       >
-        <div className="my-6  w-full ">
+        <div className="my-6 w-full">
           <Row gutter={[16, 32]} style={{ marginBottom: '12px' }}>
             <Col span={4}>
               {gatewayDetail?.gatewayName == 'paypal'
@@ -94,7 +92,7 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
           <Row gutter={[16, 32]}>
             <Col span={4}></Col>
             <Col span={20}>
-              <div className=" text-xs text-gray-400">
+              <div className="text-xs text-gray-400">
                 For security reason, your{' '}
                 {gatewayDetail?.gatewayName == 'paypal'
                   ? 'Secret'

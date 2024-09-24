@@ -1,12 +1,13 @@
-import { StoreApi, UseBoundStore, create } from 'zustand'
+import { create } from 'zustand'
 // import { immer } from "zustand/middleware/immer";
-import { createJSONStorage, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import {
   IAppConfig,
   IProduct,
   IProfile,
+  TGateway,
   TMerchantInfo
-} from '../shared.types.d'
+} from '../shared.types'
 // import { createStore } from "zustand";
 
 // logged-in user profile
@@ -61,7 +62,7 @@ export const useProfileStore = create<ProfileSlice>()(
   )
 )
 
-export type TProductList = { list: IProduct[] }
+type TProductList = { list: IProduct[] }
 const INITIAL_PRODUCT_LIST: TProductList = { list: [] }
 interface ProductListSlice extends TProductList {
   getProductList: () => TProductList
@@ -118,7 +119,7 @@ const INITIAL_APP_VALUE: IAppConfig = {
 interface AppConfigSlice extends IAppConfig {
   getAppConfig: () => IAppConfig
   setAppConfig: (a: IAppConfig) => void
-  setGateway: (g: any) => void
+  setGateway: (g: TGateway[]) => void
   setTaskListOpen: (isOpen: boolean) => void
   reset: () => void
 }
@@ -129,7 +130,7 @@ export const useAppConfigStore = create<AppConfigSlice>()(
       ...INITIAL_APP_VALUE,
       getAppConfig: () => get(),
       setAppConfig: (a) => set({ ...a }),
-      setGateway: (g: any) => {
+      setGateway: (g: TGateway[]) => {
         set({ ...get(), gateway: g })
       },
       setTaskListOpen: (isOpen) => {

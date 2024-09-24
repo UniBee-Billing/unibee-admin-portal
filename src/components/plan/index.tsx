@@ -1,7 +1,6 @@
 import { EditOutlined, LoadingOutlined } from '@ant-design/icons'
-import { Button, Space, Spin, Tabs, message } from 'antd'
+import { Button, Spin, Tabs, message } from 'antd'
 // import currency from 'currency.js'
-import Dinero, { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'

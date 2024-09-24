@@ -1,14 +1,13 @@
-import { LoadingOutlined, SearchOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import { Col, Divider, Input, Row, Spin, message } from 'antd'
 import dayjs from 'dayjs'
-import { CSSProperties, ChangeEvent, useEffect, useRef, useState } from 'react'
+import { CSSProperties, ChangeEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
 import { INVOICE_STATUS, SUBSCRIPTION_STATUS } from '../constants'
 import { showAmount } from '../helpers'
 import { appSearchReq } from '../requests'
-import { IProfile, UserInvoice } from '../shared.types.d'
-import { useAppConfigStore } from '../stores'
+import { IProfile, UserInvoice } from '../shared.types'
 import './appSearch.css'
 
 const { Search } = Input
@@ -434,8 +433,4 @@ const AccountMatch = ({
       )}
     </>
   )
-}
-
-const PrecisionMatch = () => {
-  return <div>d</div>
 }

@@ -1,9 +1,9 @@
-import { EditFilled, MinusOutlined, PlusOutlined } from '@ant-design/icons'
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
 import update from 'immutability-helper'
 import { useState } from 'react'
 import { CURRENCY } from '../../../constants'
-import { daysBetweenDate, ramdonString, showAmount } from '../../../helpers'
+import { ramdonString, showAmount } from '../../../helpers'
 import {
   createInvoiceReq,
   deleteInvoiceReq,
@@ -15,11 +15,10 @@ import {
 } from '../../../requests'
 import {
   IProfile,
-  ISubscriptionType,
   InvoiceItem,
   TInvoicePerm,
   UserInvoice
-} from '../../../shared.types.d'
+} from '../../../shared.types'
 
 const newPlaceholderItem = (): InvoiceItem => ({
   id: ramdonString(8),
@@ -56,10 +55,9 @@ const Index = ({
   const [loading, setLoading] = useState(false)
   // const appConfigStore = useAppConfigStore();
   if (detail != null) {
-    detail.lines &&
-      detail.lines.forEach((item) => {
-        item.id = ramdonString(8)
-      })
+    detail.lines?.forEach((item) => {
+      item.id = ramdonString(8)
+    })
   }
 
   const [invoiceList, setInvoiceList] = useState<InvoiceItem[]>(
@@ -153,10 +151,10 @@ const Index = ({
       quantity: Number(v.quantity)
     }))
     setLoading(true)
-    let saveInvoiceRes, err
+    let _saveInvoiceRes, err
     if (detail == null) {
       // creating a new invoice
-      ;[saveInvoiceRes, err] = await createInvoiceReq({
+      ;[_saveInvoiceRes, err] = await createInvoiceReq({
         userId: user!.id as number,
         taxPercentage: Number(taxPercentage) * 100,
         currency,
@@ -166,7 +164,7 @@ const Index = ({
       })
     } else {
       // saving an invoice
-      ;[saveInvoiceRes, err] = await saveInvoiceReq({
+      ;[_saveInvoiceRes, err] = await saveInvoiceReq({
         invoiceId: detail.invoiceId,
         taxPercentage: Number(taxPercentage) / 100,
         currency: detail.currency,

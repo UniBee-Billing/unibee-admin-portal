@@ -9,9 +9,6 @@ import OneTimeHistory from './oneTimePurchaseHistory'
 import SubHistory from './subHistory'
 import Subscription from './subscriptionTab'
 
-const APP_PATH = import.meta.env.BASE_URL
-type TargetKey = React.MouseEvent | React.KeyboardEvent | string
-
 const Index = ({
   userId,
   userProfile,

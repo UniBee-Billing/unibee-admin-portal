@@ -29,7 +29,6 @@ import {
   useSessionStore
 } from './stores'
 
-import Dashboard from './components/dashboard'
 import InvoiceDetail from './components/invoice/detail'
 import InvoiceList from './components/invoice/list'
 import OutletPage from './components/outletPage'
@@ -296,17 +295,17 @@ const App: React.FC = () => {
               <div className="flex flex-col items-center">
                 <div className="text-xs">{profileStore.email}</div>
                 <div>{`${profileStore.firstName} ${profileStore.lastName}`}</div>
-                <div className=" text-xs text-gray-400">
+                <div className="text-xs text-gray-400">
                   {profileStore.isOwner
                     ? 'Owner'
                     : profileStore.MemberRoles.map((r) => (
-                        <div key={r.role} className=" flex justify-center">
+                        <div key={r.role} className="flex justify-center">
                           {r.role}
                         </div>
                       ))}
                 </div>
               </div>
-              <div onClick={logout} className=" my-4 cursor-pointer">
+              <div onClick={logout} className="my-4 cursor-pointer">
                 <LogoutOutlined />
                 &nbsp;&nbsp;Logout
               </div>
@@ -317,7 +316,7 @@ const App: React.FC = () => {
           )}
           <Layout>
             <Header style={{ background: colorBgContainer }}>
-              <div className=" flex h-full items-center justify-between">
+              <div className="flex h-full items-center justify-between">
                 <AppSearch />
                 <Button
                   onClick={toggleTaskListOpen}

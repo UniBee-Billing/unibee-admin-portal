@@ -33,7 +33,7 @@ import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getUserListReq } from '../../requests'
 import '../../shared.css'
-import { IProfile } from '../../shared.types'
+import { IPlan, IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
@@ -136,13 +136,13 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { plans, total } = planList
+    const { plans } = planList
     planFilterRef.current =
       plans == null
         ? []
-        : plans.map((p: any) => ({
-            value: p.plan.id,
-            text: p.plan.planName
+        : plans.map((p: IPlan) => ({
+            value: p.plan?.id,
+            text: p.plan?.planName
           }))
   }
 
@@ -152,7 +152,7 @@ const Index = () => {
     console.log('export user params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({ task: 'UserExport', payload })
+    const [_, err] = await exportDataReq({ task: 'UserExport', payload })
     setExporting(false)
     if (err != null) {
       message.error(err.message)
@@ -190,7 +190,7 @@ const Index = () => {
       title: 'Name',
       dataIndex: 'firstName',
       key: 'userName',
-      render: (firstName, user) => `${user.firstName} ${user.lastName}`
+      render: (_, user) => `${user.firstName} ${user.lastName}`
     },
     {
       title: 'Email',
@@ -215,8 +215,8 @@ const Index = () => {
       key: 'subscriptionId',
       render: (subId, _) => (
         <div
-          className="btn-user-with-subid  w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-          onClick={(evt) => {
+          className="btn-user-with-subid w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+          onClick={() => {
             navigate(`${APP_PATH}subscription/${subId}`)
           }}
         >
@@ -236,7 +236,7 @@ const Index = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, plan) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
+      render: (d) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
     },
     {
       title: 'Status',
@@ -278,7 +278,7 @@ const Index = () => {
       ),
       width: 128,
       key: 'action',
-      render: (_, record) => (
+      render: (_) => (
         <Space size="middle" className="user-action-btn-wrapper">
           <Tooltip title="Edit">
             <Button
@@ -350,7 +350,7 @@ const Index = () => {
           />
         </Col>
       </Row>
-      <div className=" h-3"></div>
+      <div className="h-3"></div>
 
       {loadingPlans ? (
         <Spin
@@ -376,7 +376,7 @@ const Index = () => {
             spinning: loading,
             indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
           }}
-          onRow={(user, rowIndex) => {
+          onRow={(user) => {
             return {
               onClick: (evt) => {
                 if (
@@ -411,11 +411,6 @@ const Index = () => {
 }
 
 export default Index
-const DEFAULT_SEARCH_TERM = {
-  firstName: '',
-  lastName: '',
-  email: ''
-}
 const Search = ({
   form,
   searching,
@@ -424,7 +419,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   goSearch: () => void
@@ -445,7 +440,7 @@ const Search = ({
         // initialValues={DEFAULT_SEARCH_TERM}
       >
         <Row className="flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+          <Col span={3} className="font-bold text-gray-500">
             Account name
           </Col>
           <Col span={4}>
@@ -470,7 +465,7 @@ const Search = ({
         </Row>
 
         <Row className="my-3 flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+          <Col span={3} className="font-bold text-gray-500">
             Account created
           </Col>
           <Col span={4}>
@@ -493,7 +488,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

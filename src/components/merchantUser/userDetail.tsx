@@ -1,19 +1,6 @@
-import { LoadingOutlined } from '@ant-design/icons'
-import { Button, Spin, message } from 'antd'
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { getUserProfile } from '../../requests'
-import { IProfile } from '../../shared.types'
-import UserAccountTab from '../subscription/userAccountTab'
-
-const APP_PATH = import.meta.env.BASE_URL
+import { useEffect } from 'react'
 
 const Index = () => {
-  const params = useParams()
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  const [userProfile, setUserProfile] = useState<IProfile | null>(null)
-
   /*
   const fetchUserProfile = async () => {
     const userId = Number(params.adminId)

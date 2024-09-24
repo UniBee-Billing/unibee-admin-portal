@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { getProductListReq, getSubscriptionHistoryReq } from '../../requests'
-import { IProduct, ISubHistoryItem } from '../../shared.types'
+import { IProduct, ISubAddon, ISubHistoryItem } from '../../shared.types'
 import { SubHistoryStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
@@ -81,12 +81,12 @@ const Index = ({ userId }: { userId: number }) => {
       title: 'Item Name',
       dataIndex: 'itemName',
       key: 'itemName',
-      render: (plan, record) =>
+      render: (_, record) =>
         record.plan == null ? (
           '―'
         ) : (
           <div
-            className=" w-full overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-full overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}plan/${record.plan.id}`)}
           >
             {record.plan.planName}
@@ -115,13 +115,13 @@ const Index = ({ userId }: { userId: number }) => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, _) => (d === 0 ? 'N/A' : formatDate(d, true))
+      render: (d) => (d === 0 ? 'N/A' : formatDate(d, true))
     },
     {
       title: 'Addons',
       dataIndex: 'addons',
       key: 'addons',
-      render: (addons) =>
+      render: (addons: ISubAddon[]) =>
         addons == null ? (
           '―'
         ) : (
@@ -130,17 +130,20 @@ const Index = ({ userId }: { userId: number }) => {
             title="Addon breakdown"
             content={
               <div style={{ width: '280px' }}>
-                {addons.map((a: any) => (
-                  <Row key={a.id}>
-                    <Col span={10} className=" font-bold text-gray-500">
-                      {a.addonPlan.planName}
+                {addons.map((addon) => (
+                  <Row key={addon.id}>
+                    <Col span={10} className="font-bold text-gray-500">
+                      {addon.addonPlan.planName}
                     </Col>
                     <Col span={14}>
-                      {showAmount(a.addonPlan.amount, a.addonPlan.currency)} ×{' '}
-                      {a.quantity} ={' '}
                       {showAmount(
-                        a.addonPlan.amount * a.quantity,
-                        a.addonPlan.currency
+                        addon.addonPlan.amount,
+                        addon.addonPlan.currency
+                      )}{' '}
+                      × {addon.quantity} ={' '}
+                      {showAmount(
+                        addon.addonPlan.amount * addon.quantity,
+                        addon.addonPlan.currency
                       )}
                     </Col>
                   </Row>
@@ -164,7 +167,7 @@ const Index = ({ userId }: { userId: number }) => {
           ''
         ) : (
           <div
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
           >
             {subId}
@@ -181,7 +184,7 @@ const Index = ({ userId }: { userId: number }) => {
           ''
         ) : (
           <div
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
             onClick={() => navigate(`${APP_PATH}invoice/${invoiceId}`)}
           >
             {invoiceId}
@@ -217,9 +220,9 @@ const Index = ({ userId }: { userId: number }) => {
           rowClassName="clickable-tbl-row"
           pagination={false}
           scroll={{ x: 1280 }}
-          onRow={(record, rowIndex) => {
+          onRow={() => {
             return {
-              onClick: (event) => {}
+              onClick: () => {}
             }
           }}
           loading={{

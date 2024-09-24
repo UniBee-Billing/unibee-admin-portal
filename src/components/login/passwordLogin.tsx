@@ -1,12 +1,11 @@
-import type { FormInstance, InputRef } from 'antd'
+import type { InputRef } from 'antd'
 import { Button, Form, Input, Modal, message } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { emailValidate, passwordSchema } from '../../helpers'
+import { emailValidate } from '../../helpers'
 import { useCountdown } from '../../hooks'
 import {
   forgetPassReq,
-  forgetPassVerifyReq,
   initializeReq,
   loginWithPasswordReq
 } from '../../requests'
@@ -109,7 +108,7 @@ const Index = ({
     })
 
     if (triggeredByExpired) {
-      sessionStore.refresh && sessionStore.refresh()
+      sessionStore.refresh?.()
       sessionStore.setSession({ expired: false, refresh: null })
       message.success('Login succeeded')
     } else {
@@ -161,8 +160,8 @@ const Index = ({
               required: true,
               message: 'Please input your Email!'
             },
-            ({ getFieldValue }) => ({
-              validator(rule, value) {
+            () => ({
+              validator(_, value) {
                 if (value != null && value != '' && emailValidate(value)) {
                   return Promise.resolve()
                 }

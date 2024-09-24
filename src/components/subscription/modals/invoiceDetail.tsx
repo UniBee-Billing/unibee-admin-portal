@@ -11,18 +11,17 @@ interface Props {
   closeModal: () => void
 }
 
-const Index = ({ user, detail, closeModal }: Props) => {
+const Index = ({ detail, closeModal }: Props) => {
   console.log('invoice detai: ', detail)
-  const [loading, setLoading] = useState(false)
+  const [loading] = useState(false)
   // const appConfigStore = useAppConfigStore();
-  if (detail != null) {
-    detail.lines &&
-      detail.lines.forEach((item) => {
-        item.id = ramdonString(8)
-      })
+  if (detail != null && detail.lines) {
+    detail.lines.forEach((item) => {
+      item.id = ramdonString(8)
+    })
   }
 
-  const [invoiceList, setInvoiceList] = useState<InvoiceItem[]>(detail.lines)
+  const [invoiceList] = useState<InvoiceItem[]>(detail.lines)
 
   const getUserName = (iv: UserInvoice) => {
     if (iv.userAccount == null) {
@@ -71,13 +70,13 @@ const Index = ({ user, detail, closeModal }: Props) => {
           <Divider style={{ color: '#757575', fontSize: '14px' }}>
             Refund detail
           </Divider>
-          <Row style={{ fontWeight: 'bold' }} className=" text-gray-500">
+          <Row style={{ fontWeight: 'bold' }} className="text-gray-500">
             <Col span={4}>Amount</Col>
             <Col span={8}>Reason</Col>
             <Col span={8}>Created at</Col>
             <Col span={4}>Status</Col>
           </Row>
-          <Row className=" text-gray-500">
+          <Row className="text-gray-500">
             <Col span={4}>
               {showAmount(
                 detail.refund.refundAmount,
@@ -111,7 +110,7 @@ const Index = ({ user, detail, closeModal }: Props) => {
         </Col>
       </Row>
       {invoiceList &&
-        invoiceList.map((v, i) => (
+        invoiceList.map((v) => (
           <Row
             key={v.id}
             style={{ margin: '8px 0', display: 'flex', alignItems: 'center' }}
@@ -137,22 +136,22 @@ const Index = ({ user, detail, closeModal }: Props) => {
 
       <Row className="flex items-center">
         <Col span={14}> </Col>
-        <Col span={6} style={{ fontSize: '18px' }} className=" text-red-800">
+        <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
           Total Discounted
         </Col>
         <Col
-          className=" text-red-800"
+          className="text-red-800"
           span={4}
         >{`${detail.discountAmount != null && detail.discountAmount > 0 ? showAmount(-1 * detail.discountAmount, detail.currency, true) : showAmount(0, detail.currency)}`}</Col>
       </Row>
       <Row>
         <Col span={14}> </Col>
-        <Col span={6} style={{ fontSize: '18px' }} className=" text-gray-700">
+        <Col span={6} style={{ fontSize: '18px' }} className="text-gray-700">
           VAT{`(${detail.taxPercentage / 100} %)`}
         </Col>
         <Col
           span={4}
-          className=" text-gray-700"
+          className="text-gray-700"
         >{`${showAmount(detail.taxAmount, detail.currency, true)}`}</Col>
       </Row>
       <Divider style={{ margin: '4px 0' }} />
@@ -161,13 +160,13 @@ const Index = ({ user, detail, closeModal }: Props) => {
         <Col
           span={6}
           style={{ fontSize: '18px', fontWeight: 'bold' }}
-          className=" text-gray-600"
+          className="text-gray-600"
         >
           Order Total
         </Col>
         <Col
           style={{ fontSize: '18px', fontWeight: 'bold' }}
-          className=" text-gray-600"
+          className="text-gray-600"
           span={4}
         >{`${showAmount(detail.totalAmount, detail.currency, true)}`}</Col>
       </Row>

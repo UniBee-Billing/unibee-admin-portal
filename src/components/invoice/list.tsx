@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react'
 import InvoiceList from '../subscription/invoicesTab'
 
 const Index = () => {

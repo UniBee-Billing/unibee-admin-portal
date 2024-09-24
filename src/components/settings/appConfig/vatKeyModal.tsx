@@ -1,10 +1,8 @@
-import { CopyOutlined, LoadingOutlined } from '@ant-design/icons'
-import { Button, Col, Input, Modal, Row, Spin, message } from 'antd'
+import { Button, Col, Input, Modal, Row, message } from 'antd'
 // import dayjs from 'dayjs'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 // import { useCopyContent } from '../../hooks'
-import { saveGatewayKeyReq, saveVatSenseKeyReq } from '../../../requests'
-import { TGateway } from '../../../shared.types'
+import { saveVatSenseKeyReq } from '../../../requests'
 const { TextArea } = Input
 
 interface IProps {
@@ -23,7 +21,7 @@ const Index = ({ closeModal }: IProps) => {
       return
     }
     setLoading(true)
-    const [res, err] = await saveVatSenseKeyReq(apiKey)
+    const [_, err] = await saveVatSenseKeyReq(apiKey)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
@@ -42,7 +40,7 @@ const Index = ({ closeModal }: IProps) => {
         footer={null}
         closeIcon={null}
       >
-        <div className="my-6  w-full ">
+        <div className="my-6 w-full">
           <Row gutter={[16, 32]} style={{ marginBottom: '12px' }}>
             <Col span={4}>Your API key</Col>
             <Col span={20}>
@@ -52,7 +50,7 @@ const Index = ({ closeModal }: IProps) => {
           <Row>
             <Col span={4}></Col>
             <Col span={20}>
-              <div className=" text-xs text-gray-400">
+              <div className="text-xs text-gray-400">
                 For security reason, your key won't show up here after submit.
               </div>
               <div>

@@ -26,7 +26,7 @@ import {
   toggleDiscountCodeActivateReq,
   updateDiscountCodeReq
 } from '../../requests'
-import { DiscountCode, IPlan } from '../../shared.types.d'
+import { DiscountCode, IPlan } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
 import { DiscountCodeStatus } from '../ui/statusTag'
 
@@ -90,14 +90,14 @@ const Index = () => {
 
     // if discount.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
     let plans =
-      planList.plans == null ? [] : planList.plans.map((p: any) => p.plan)
+      planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
     if (discount.discountType == 2) {
       // fixed amt
       plans = plans.filter((p: IPlan) => p.currency == discount.currency)
     }
     setPlanList(plans)
     planListRef.current =
-      planList.plans == null ? [] : planList.plans.map((p: any) => p.plan)
+      planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
 
     discount.validityRange = [
       dayjs(discount.startTime * 1000),
@@ -130,15 +130,15 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { plans, total } = res
+    const { plans } = res
     // if NEW_CODE.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
-    let planList = plans == null ? [] : plans.map((p: any) => p.plan)
+    let planList = plans == null ? [] : plans.map((p: IPlan) => p.plan)
     if (NEW_CODE.discountType == 2) {
       // fixed amt
       planList = planList.filter((p: IPlan) => p.currency == NEW_CODE.currency)
     }
     setPlanList(planList)
-    planListRef.current = plans == null ? [] : plans.map((p: any) => p.plan)
+    planListRef.current = plans == null ? [] : plans.map((p: IPlan) => p.plan)
   }
 
   const onSave = async () => {
@@ -167,7 +167,7 @@ const Index = () => {
     // return
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
     setLoading(true)
-    const [res, err] = await method(code)
+    const [_, err] = await method(code)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -182,7 +182,7 @@ const Index = () => {
       return
     }
     setLoading(true)
-    const [res, err] = await deleteDiscountCodeReq(code.id)
+    const [_, err] = await deleteDiscountCodeReq(code.id)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -207,7 +207,7 @@ const Index = () => {
       return
     }
     setLoading(true)
-    const [res, err] = await toggleDiscountCodeActivateReq(code.id, action)
+    const [_, err] = await toggleDiscountCodeActivateReq(code.id, action)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -390,7 +390,7 @@ const Index = () => {
                 message: 'Please choose your discount amount!'
               },
               ({ getFieldValue }) => ({
-                validator(rule, value) {
+                validator(value) {
                   if (watchDiscountType == 1) {
                     return Promise.resolve()
                   }
@@ -427,8 +427,8 @@ const Index = () => {
                 required: watchDiscountType == 1,
                 message: 'Please choose your discount percentage!'
               },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
+              () => ({
+                validator(value) {
                   if (watchDiscountType == 2) {
                     // 2: fixed amount
                     return Promise.resolve()
@@ -460,8 +460,8 @@ const Index = () => {
                   required: watchBillingType != 1,
                   message: 'Please input your cycleLimit!'
                 },
-                ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                () => ({
+                  validator(value) {
                     const num = Number(value)
                     if (!Number.isInteger(num)) {
                       return Promise.reject(
@@ -498,8 +498,8 @@ const Index = () => {
                 required: true,
                 message: 'Please choose your validity range!'
               },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
+              () => ({
+                validator(_, value) {
                   if (value[0] == null || value[1] == null) {
                     return Promise.reject('Please select a valid date range.')
                   }
@@ -523,8 +523,8 @@ const Index = () => {
               {
                 required: watchPlanIds != null && watchPlanIds.length > 0
               },
-              ({ getFieldValue }) => ({
-                validator(rule, plans) {
+              () => ({
+                validator(_, plans) {
                   if (plans == null || plans.length == 0) {
                     return Promise.resolve()
                   }

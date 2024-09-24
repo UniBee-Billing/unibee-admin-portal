@@ -1,13 +1,13 @@
 import { Button, Col, Divider, message, Modal, Row, Select, Switch } from 'antd'
 import update from 'immutability-helper'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import HiddenIcon from '../../assets/hidden.svg?react'
 import {
   createSubscriptionReq,
   getPlanList,
   TPlanListBody
 } from '../../requests'
-import { IPlan, IProfile } from '../../shared.types.d'
+import { IPlan, IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import Plan from '../subscription/plan'
 import PaymentMethodSelector from '../ui/paymentSelector'
@@ -17,6 +17,14 @@ interface Props {
   productId: number
   refresh: () => void
   closeModal: () => void
+}
+
+interface CreateSubScriptionBody {
+  planId: number
+  gatewayId: number
+  userId: number
+  startIncomplete: boolean
+  trialEnd?: number
 }
 
 const Index = ({ user, productId, closeModal, refresh }: Props) => {
@@ -95,19 +103,18 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     console.log('submitting: ', selectedPlan, '//', gatewayId, '//', user)
     // return
 
-    const body: any = {
-      planId: selectedPlan as number,
-      gatewayId: gatewayId as number,
-      userId: user.id as number
-      // trialEnd: sec
+    const body: CreateSubScriptionBody = {
+      planId: selectedPlan,
+      gatewayId: gatewayId,
+      userId: user.id!,
+      startIncomplete: false
     }
     // requirementPayment is mainly used for internal employees, defaut length is 5yr
     if (!requirePayment) {
       const fiveYearFromNow = new Date(
         new Date().setFullYear(new Date().getFullYear() + 5)
       )
-      const sec = Math.round(fiveYearFromNow.getTime() / 1000)
-      body.trialEnd = sec
+      body.trialEnd = Math.round(fiveYearFromNow.getTime() / 1000)
     } else {
       body.startIncomplete = true
     }
@@ -141,11 +148,11 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       message.error(err.message)
       return
     }
-    const { plans, total } = res
+    const { plans } = res
     setPlans(
       plans == null
         ? []
-        : plans.map((p: any) => ({
+        : plans.map((p: IPlan) => ({
             ...p.plan,
             metricPlanLimits: p.metricPlanLimits
           }))
@@ -168,19 +175,19 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       <div className="flex justify-between">
         <div className="my-6 w-3/6">
           <Row gutter={[16, 48]}>
-            <Col span={7} className=" font-bold text-gray-700">
+            <Col span={7} className="font-bold text-gray-700">
               UserId
             </Col>
             <Col span={17}>{user.id}</Col>
           </Row>
           <Row gutter={[16, 48]}>
-            <Col span={7} className=" font-bold text-gray-700">
+            <Col span={7} className="font-bold text-gray-700">
               User name
             </Col>
             <Col span={17}>{`${user.firstName} ${user.lastName}`}</Col>
           </Row>
           <Row gutter={[16, 48]} className="mb-4">
-            <Col span={7} className=" font-bold text-gray-700">
+            <Col span={7} className="font-bold text-gray-700">
               Email
             </Col>
             <Col span={17}>{user.email}</Col>
@@ -222,7 +229,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
             />
           </div>
 
-          <div className=" mb-12 flex flex-col items-center justify-center">
+          <div className="mb-12 flex flex-col items-center justify-center">
             {selectedPlan != null && (
               <Plan
                 plan={plans.find((p) => p.id == selectedPlan)!}

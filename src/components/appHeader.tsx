@@ -1,6 +1,3 @@
-import { Input } from 'antd'
-
-const { Search } = Input
 const APP_PATH = import.meta.env.BASE_URL
 
 const Index = () => (

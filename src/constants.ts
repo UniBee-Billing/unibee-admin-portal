@@ -1,6 +1,3 @@
-import { Tag } from 'antd'
-import { ReactElement } from 'react'
-
 export enum PlanType {
   MainPlan = 1,
   Addon = 2,
@@ -98,11 +95,6 @@ export const METRICS_AGGREGATE_TYPE: { [key: number]: string } = {
   3: 'latest',
   4: 'max',
   5: 'sum'
-}
-
-export const GATEWAY_TYPE: { [key: number]: string } = {
-  1: 'Card',
-  2: 'Crypto'
 }
 
 export const DISCOUNT_CODE_STATUS: { [key: number]: string } = {
@@ -234,5 +226,5 @@ const PERMISSIONS = {
 }
 
 export const PERMISSION_LIST = Object.entries(PERMISSIONS)
-  .map(([k, v]) => v)
+  .map((values) => values[1])
   .sort((a, b) => a.order - b.order)

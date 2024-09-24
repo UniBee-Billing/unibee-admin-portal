@@ -1,6 +1,5 @@
-// import { EditFilled, MinusOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Col, Form, Input, message, Modal, Row } from 'antd'
-import React, { useState } from 'react'
+import { Button, Form, Input, message, Modal } from 'antd'
+import { useState } from 'react'
 import { markRefundAsSucceedReq } from '../../requests'
 
 const { TextArea } = Input
@@ -23,7 +22,7 @@ const Index = ({
 
   const onConfirm = async () => {
     setLoading(true)
-    const [res, err] = await markRefundAsSucceedReq(
+    const [_, err] = await markRefundAsSucceedReq(
       invoiceId,
       form.getFieldValue('reason')
     )
@@ -50,7 +49,7 @@ const Index = ({
       <div style={{ height: '12px' }}></div>
       <p>
         Are you sure you have refunded user's payment, and want to mark refund
-        status as <span className=" text-red-600">SUCCEEDED</span> ?
+        status as <span className="text-red-600">SUCCEEDED</span> ?
       </p>
       <Form
         form={form}

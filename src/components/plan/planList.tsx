@@ -13,21 +13,19 @@ import {
   Result,
   Space,
   Table,
-  Tabs,
   Tooltip,
   message
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 // import currency from 'currency.js'
-import Dinero, { Currency } from 'dinero.js'
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { PLAN_STATUS } from '../../constants'
 import { formatPlanPrice } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { copyPlanReq, getPlanList } from '../../requests'
 import '../../shared.css'
-import { IPlan } from '../../shared.types.d'
+import { IPlan } from '../../shared.types'
 import { PlanStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
@@ -110,7 +108,7 @@ const Index = ({
     setPlan(
       plans == null
         ? []
-        : plans.map((p: any) => ({
+        : plans.map((p: IPlan) => ({
             ...p.plan,
             metricPlanLimits: p.metricPlanLimits
           }))
@@ -157,7 +155,7 @@ const Index = ({
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s, plan) => PlanStatus(s), // (_, plan) => STATUS[plan.status],
+      render: (s) => PlanStatus(s), // (_, plan) => STATUS[plan.status],
       filters: PLAN_STATUS_FILTER
       // onFilter: (value, record) => record.status == value,
     },
@@ -165,7 +163,7 @@ const Index = ({
       title: 'Published',
       dataIndex: 'publishStatus',
       key: 'publishStatus',
-      render: (publishStatus, plan) =>
+      render: (publishStatus) =>
         publishStatus == 2 ? (
           <CheckCircleOutlined style={{ color: 'green' }} />
         ) : (
@@ -176,7 +174,7 @@ const Index = ({
       title: 'Allow Trial',
       dataIndex: 'trialDurationTime',
       key: 'trialDurationTime',
-      render: (trialDurationTime, plan) =>
+      render: (trialDurationTime) =>
         trialDurationTime > 0 ? (
           <CheckCircleOutlined style={{ color: 'green' }} />
         ) : (
@@ -186,7 +184,7 @@ const Index = ({
     {
       title: 'Billable metrics',
       dataIndex: 'metricPlanLimits',
-      render: (m, plan) => (null == m || 0 == m.length ? 'No' : m.length)
+      render: (m) => (null == m || 0 == m.length ? 'No' : m.length)
     },
     {
       title: 'External Id',
@@ -243,12 +241,7 @@ const Index = ({
     }
   ]
 
-  const onTableChange: TableProps<IPlan>['onChange'] = (
-    pagination,
-    filters,
-    sorter,
-    extra
-  ) => {
+  const onTableChange: TableProps<IPlan>['onChange'] = (_, filters) => {
     onPageChange(1, PAGE_SIZE)
     // console.log('params', pagination, filters, sorter, extra)
     setFilters(filters as TFilters)
@@ -284,7 +277,7 @@ const Index = ({
               indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
             }}
             onChange={onTableChange}
-            onRow={(record, rowIndex) => {
+            onRow={(record) => {
               return {
                 onClick: (event) => {
                   if (

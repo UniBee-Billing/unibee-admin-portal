@@ -69,7 +69,7 @@ const Index = ({
     // console.log('importing: ', importType, '///', f)
     // return
     setImporting(true)
-    const [res, err] = await importDataReq(f, importType)
+    const [_, err] = await importDataReq(f, importType)
     setImporting(false)
     evt.target.value = ''
     if (null != err) {
@@ -91,7 +91,7 @@ const Index = ({
       footer={null}
       closeIcon={null}
     >
-      <div className=" my-6">
+      <div className="my-6">
         <Steps
           direction="vertical"
           size="small"
@@ -109,7 +109,7 @@ const Index = ({
                 </Button>
               ),
               description: (
-                <span className=" text-xs text-gray-500">
+                <span className="text-xs text-gray-500">
                   To-be-imported data must comply to the structure in this
                   template file.
                 </span>
@@ -118,12 +118,12 @@ const Index = ({
             },
             {
               title: (
-                <span className=" text-lg text-gray-900">
+                <span className="text-lg text-gray-900">
                   Populate template file with your data
                 </span>
               ),
               description: (
-                <span className=" text-xs text-gray-500">
+                <span className="text-xs text-gray-500">
                   You cannot remove/modify column name in this file.
                 </span>
               ),
@@ -137,7 +137,7 @@ const Index = ({
                       className={`user-data-file-upload flex items-center ${importing ? 'disabled' : ''}`}
                     >
                       {importing ? <LoadingOutlined /> : <UploadOutlined />}{' '}
-                      <span className=" ml-2">Upload and import</span>
+                      <span className="ml-2">Upload and import</span>
                     </div>
                   </label>
                   <div className="ml-2 flex items-center text-sm text-gray-500">
@@ -158,19 +158,19 @@ const Index = ({
               ),
               description: (
                 <span className="text-xs text-gray-500">
-                  Max file size: <span className=" text-red-500">20M</span>
+                  Max file size: <span className="text-red-500">20M</span>
                 </span>
               ),
               status: 'process'
             },
             {
               title: (
-                <span className=" text-gray-900">
+                <span className="text-gray-900">
                   Open task list to check importing progress
                 </span>
               ),
               description: (
-                <span className=" text-xs text-gray-500">
+                <span className="text-xs text-gray-500">
                   In case of importing error, you can download the file you just
                   uploaded, each error will be explained in detail.
                 </span>
@@ -179,7 +179,7 @@ const Index = ({
             },
             {
               title: (
-                <span className=" text-gray-900">
+                <span className="text-gray-900">
                   Refresh the page to further ensure data are imported
                 </span>
               ),
@@ -187,7 +187,7 @@ const Index = ({
             }
           ]}
         />
-        <div className=" flex items-center justify-end gap-4">
+        <div className="flex items-center justify-end gap-4">
           <Button onClick={closeModal} disabled={importing}>
             Close
           </Button>

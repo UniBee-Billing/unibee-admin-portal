@@ -32,7 +32,7 @@ import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getDiscountCodeListReq } from '../../requests'
 import '../../shared.css'
-import { DiscountCode } from '../../shared.types.d'
+import { DiscountCode } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { DiscountCodeStatus } from '../ui/statusTag'
 
@@ -106,7 +106,7 @@ const Index = () => {
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'DiscountExport',
       payload
     })
@@ -191,7 +191,7 @@ const Index = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (createTime, code) => formatDate(createTime)
+      render: (createTime) => formatDate(createTime)
     },
     {
       title: 'Validity Range',
@@ -237,7 +237,7 @@ const Index = () => {
       ),
       width: 128,
       key: 'action',
-      render: (_, record) => (
+      render: (_) => (
         <Space size="middle" className="code-action-btn-wrapper">
           <Tooltip title="Edit">
             <Button
@@ -314,7 +314,7 @@ const Index = () => {
         onPageChange={onPageChange}
         clearFilters={clearFilters}
       />
-      <div className=" mb-4"></div>
+      <div className="mb-4"></div>
       <Table
         columns={columns}
         dataSource={codeList}
@@ -372,7 +372,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   goSearch: () => void
@@ -388,8 +388,8 @@ const Search = ({
   return (
     <div>
       <Form form={form} onFinish={goSearch} disabled={searching || exporting}>
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={3} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={3} className="font-bold text-gray-500">
             Code created
           </Col>
           <Col span={4}>
@@ -412,7 +412,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

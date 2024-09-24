@@ -11,18 +11,23 @@ import {
   DatePicker,
   Form,
   Input,
+  message,
   Radio,
   Row,
   Select,
   Spin,
   Tag,
-  Tooltip,
-  message
+  Tooltip
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
 import update from 'immutability-helper'
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd'
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult
+} from 'react-beautiful-dnd'
 import {
   exportDataReq,
   getExportFieldsWithMore,
@@ -35,12 +40,17 @@ import { useAppConfigStore } from '../../stores'
 import { fuzzyMatch } from './helpers'
 import './index.css'
 
+interface TExpTmplPayload {
+  reportTimeStart: number
+  reportTimeEnd: number
+}
+
 type TExpTmpl = {
   templateId: number
   name: string
   createTime: string
   task: TExportDataType
-  payload: any
+  payload: TExpTmplPayload
   exportColumns: string[]
   format: 'csv' | 'xlsx'
 }
@@ -135,12 +145,12 @@ const Index = () => {
       return
     }
     const { exportTmplRes, exportFieldsRes } = res
-    const { templates, total } = exportTmplRes
+    const { templates } = exportTmplRes
     setTemplates(templates ?? [])
-    let { columns, columnComments, columnHeaders } = exportFieldsRes
+    const { columns, columnComments, columnHeaders } = exportFieldsRes
     fieldComments.current = columnComments
     fieldHeaders.current = columnHeaders
-    columns = columns.map((c: string) => {
+    const parsedColumns = columns.map((c: string) => {
       const col = settableFields.find((f) => f.id == c)
       if (col != null) {
         return col
@@ -148,8 +158,8 @@ const Index = () => {
         return { name: c, id: c, node: null }
       }
     })
-    setAvailableFields(columns)
-    allFields.current = columns
+    setAvailableFields(parsedColumns)
+    allFields.current = parsedColumns
   }
 
   const AddCommentTip = ({
@@ -176,7 +186,7 @@ const Index = () => {
     (
       dateType: 'reportTimeStart' | 'reportTimeEnd'
     ): DatePickerProps['onChange'] =>
-    (date, dateString) => {
+    (date) => {
       if (dateType == 'reportTimeStart') {
         if (date != null) {
           date = date.hour(0).minute(0).second(0)
@@ -211,7 +221,7 @@ const Index = () => {
     // console.log('exporting...,', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'InvoiceExport',
       payload,
       exportColumns,
@@ -230,7 +240,7 @@ const Index = () => {
 
   const onSelectTmpl = (tmplId: number) => {
     const tmpl = templates.find((t) => t.templateId == tmplId)
-    if (tmpl == null) {
+    if (!tmpl) {
       return
     }
     setSelectedTmpl(tmplId)
@@ -304,7 +314,7 @@ const Index = () => {
       message.error(err2.message)
       return
     }
-    const { templates, total } = res2
+    const { templates } = res2
     setTemplates(templates)
   }
 
@@ -320,7 +330,7 @@ const Index = () => {
       payload.reportTimeEnd = reportTimeEnd.unix()
     }
     setLoading(true)
-    const [res, err] = await saveExportTmplReq({
+    const [_, err] = await saveExportTmplReq({
       name: templates.find((t) => t.templateId == selectedTmpl)!.name,
       templateId: selectedTmpl,
       task: 'InvoiceExport',
@@ -345,7 +355,7 @@ const Index = () => {
       return
     }
     {
-      const { templates, total } = res2
+      const { templates } = res2
       setTemplates(templates)
     }
   }
@@ -355,7 +365,7 @@ const Index = () => {
       return
     }
     setLoading(true)
-    const [res, err] = await removeExportTmplReq({
+    const [_, err] = await removeExportTmplReq({
       templateId: selectedTmpl
     })
     setLoading(false)
@@ -375,14 +385,18 @@ const Index = () => {
       return
     }
 
-    const { templates, total } = res2
+    const { templates } = res2
     setTemplates(templates ?? [])
     setSelectedTmpl(null)
   }
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result
-    console.log('dragEnd result :', result)
+
+    if (!destination) {
+      return
+    }
+
     if (
       destination.droppableId == 'available-fields' &&
       source.droppableId == 'exported-fields'
@@ -522,7 +536,7 @@ const Index = () => {
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className=" flex flex-wrap gap-2"
+                  className="flex flex-wrap gap-2"
                 >
                   {filteredFields.map(({ field, isHide }, idx) => (
                     <Draggable
@@ -530,7 +544,7 @@ const Index = () => {
                       draggableId={field.id.toString()}
                       index={idx}
                     >
-                      {(provided, snapshot) => (
+                      {(provided) => (
                         <div
                           className={`${isHide && 'hidden'}`}
                           {...provided.draggableProps}
@@ -558,8 +572,8 @@ const Index = () => {
             </Droppable>
           </div>
         </Spin>
-        <div className=" my-6 flex items-center justify-center">
-          <span className=" mr-2">Report from/to:</span>
+        <div className="my-6 flex items-center justify-center">
+          <span className="mr-2">Report from/to:</span>
           <DatePicker
             value={reportTimeStart}
             onChange={reportRangeChange('reportTimeStart')}
@@ -571,8 +585,8 @@ const Index = () => {
             onChange={reportRangeChange('reportTimeEnd')}
             disabled={loading || exporting}
           />
-          <div className=" mx-4">
-            <span className=" mx-2">Export format: </span>
+          <div className="mx-4">
+            <span className="mx-2">Export format: </span>
             <Radio.Group
               onChange={onExportFormatChange}
               value={exportFormat}
@@ -584,8 +598,8 @@ const Index = () => {
           </div>
         </div>
 
-        <Row className=" mb-2">
-          <Col span={8} className=" font-bold">
+        <Row className="mb-2">
+          <Col span={8} className="font-bold">
             Fields
           </Col>
           <Col span={12} className="font-bold">
@@ -596,7 +610,7 @@ const Index = () => {
             </Col> */}
         </Row>
         <div
-          className=" my-4 p-2"
+          className="my-4 p-2"
           style={{
             border: '1px solid #eee',
             borderRadius: '4px',
@@ -611,7 +625,7 @@ const Index = () => {
                 <Droppable droppableId="exported-fields">
                   {(provided, snapshot) => (
                     <div
-                      className="exported-fields  px-2"
+                      className="exported-fields px-2"
                       style={{
                         minHeight: '420px',
                         // maxHeight: '420px',
@@ -639,7 +653,7 @@ const Index = () => {
                                 {...provided.dragHandleProps}
                                 ref={provided.innerRef}
                               >
-                                <div className=" flex items-center">
+                                <div className="flex items-center">
                                   <Button
                                     size="small"
                                     icon={<DeleteOutlined />}
@@ -704,7 +718,7 @@ const Index = () => {
           </Form>
         </div>
       </DragDropContext>
-      <div className=" flex items-center justify-end gap-4">
+      <div className="flex items-center justify-end gap-4">
         <Button
           type="primary"
           onClick={exportReportReq}

@@ -2,7 +2,7 @@ import { Checkbox, Input } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import React, { useEffect, useState } from 'react'
 import { showAmount } from '../../helpers'
-import { IPlan } from '../../shared.types.d'
+import { IPlan } from '../../shared.types'
 
 const TIME_UNITS = [
   // in seconds
@@ -74,7 +74,7 @@ const Index = ({
       return null
     }
     return (
-      <div className=" text-sm text-gray-500">
+      <div className="text-sm text-gray-500">
         <div>Trial Price: {showAmount(amount, plan.currency)}</div>
         <div>
           Trial lengh:&nbsp;

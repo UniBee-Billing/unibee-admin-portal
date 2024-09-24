@@ -68,7 +68,7 @@ const Index = () => {
 
   const resend = (logId: number) => async () => {
     setResending(true)
-    const [resendRes, err] = await resendWebhookEvt(logId)
+    const [_, err] = await resendWebhookEvt(logId)
     setResending(false)
     if (err != null) {
       message.error(err.message)
@@ -85,7 +85,7 @@ const Index = () => {
     let parsedJson = ''
     try {
       parsedJson = JSON.stringify(JSON.parse(text), null, 2)
-    } catch (err) {
+    } catch {
       parsedJson = text
     }
 
@@ -222,7 +222,7 @@ const Index = () => {
       dataIndex: 'createTime',
       key: 'createTime',
       width: 120,
-      render: (d, plan) =>
+      render: (d) =>
         // dayjs(new Date(d * 1000)).format('YYYY-MMM-DD, HH:MM:ss')
         formatDate(d, true)
     },
@@ -278,7 +278,7 @@ const Index = () => {
         }}
       />
       <div className="flex w-full justify-end">
-        <div className="mx-0 my-4 flex w-3/6 items-center justify-between ">
+        <div className="mx-0 my-4 flex w-3/6 items-center justify-between">
           <Button onClick={goBack}>Go Back</Button>
           <Pagination
             current={page + 1} // back-end starts with 0, front-end starts with 1

@@ -13,7 +13,7 @@ import {
 } from 'antd'
 import { ReactElement, useEffect, useState } from 'react'
 import { getCountryListReq, saveUserProfileReq } from '../../requests'
-import { Country, IProfile } from '../../shared.types.d'
+import { Country, IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import PaymentSelector from '../ui/paymentSelector'
 import { UserStatus } from '../ui/statusTag'
@@ -77,7 +77,7 @@ const UserAccountTab = ({
         return
       }
       setCountryList(
-        list.map((c: any) => ({
+        list.map((c: IProfile) => ({
           code: c.countryCode,
           name: c.countryName
         }))
@@ -92,12 +92,12 @@ const UserAccountTab = ({
 
   const countryCode = Form.useWatch('countryCode', form)
   useEffect(() => {
-    countryCode &&
-      countryList.length > 0 &&
+    if (countryCode && countryList.length > 0) {
       form.setFieldValue(
         'countryName',
         countryList.find((c) => c.code == countryCode)!.name
       )
+    }
   }, [countryCode])
 
   const isCardPaymentSelected =
@@ -138,7 +138,7 @@ const UserAccountTab = ({
               <Col span={12}>
                 <Form.Item label="User Id / External Id" name="id">
                   <div>
-                    <span className="  text-gray-500">{`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}</span>
+                    <span className="text-gray-500">{`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}</span>
                     &nbsp;&nbsp;
                     {UserStatus(user.status)}
                   </div>

@@ -1,7 +1,6 @@
-name: Check code style and conventions 
+name: Check code style and conventions
 
-on:
-  push
+on: push
 
 jobs:
   check-code-style:
@@ -16,7 +15,10 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm i
+        run: yarn --frozen-lockfile
+
+      - name: Run prettier
+        run: yarn prettier
 
       - name: Run Lint
-        run: npm run lint:check
+        run: yarn lint

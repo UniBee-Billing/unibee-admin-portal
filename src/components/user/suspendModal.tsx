@@ -1,7 +1,7 @@
 import { Button, message, Modal } from 'antd'
 import React, { useState } from 'react'
 import { suspendUserReq } from '../../requests'
-import { IProfile } from '../../shared.types.d'
+import { IProfile } from '../../shared.types'
 import UserInfo from '../shared/userInfo'
 
 interface Props {
@@ -19,7 +19,7 @@ const Index = ({ user, closeModal, refresh, setRefreshSub }: Props) => {
       return
     }
     setLoading(true)
-    const [res, err] = await suspendUserReq(user.id as number)
+    const [_, err] = await suspendUserReq(user.id as number)
     setLoading(false)
     if (err != null) {
       message.error(err.message)

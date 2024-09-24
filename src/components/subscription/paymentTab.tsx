@@ -18,7 +18,6 @@ import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { ReactElement, useEffect, useState } from 'react'
 // import { ISubscriptionType } from "../../shared.types";
 import {
-  InfoCircleFilled,
   InfoCircleOutlined,
   LoadingOutlined,
   SyncOutlined
@@ -29,7 +28,7 @@ import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPaymentTimelineReq } from '../../requests'
 import '../../shared.css'
-import { IProfile, PaymentItem } from '../../shared.types.d'
+import { IProfile, PaymentItem } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import RefundInfoModal from '../payment/refundModal'
 import { PaymentStatus } from '../ui/statusTag'
@@ -142,23 +141,23 @@ const Index = ({
             <Popover
               placement="right"
               content={
-                <div className=" min-w-48 max-w-60">
+                <div className="min-w-48 max-w-60">
                   {pay.payment.authorizeReason != '' && (
                     <Row>
-                      <Col span={8} className=" text-xs text-gray-500">
+                      <Col span={8} className="text-xs text-gray-500">
                         Auth reason:
                       </Col>
-                      <Col span={16} className=" text-sm">
+                      <Col span={16} className="text-sm">
                         {pay.payment.authorizeReason}
                       </Col>
                     </Row>
                   )}
                   {pay.payment.failureReason != '' && (
                     <Row>
-                      <Col span={8} className=" text-xs text-gray-500">
+                      <Col span={8} className="text-xs text-gray-500">
                         Other:
                       </Col>
-                      <Col span={16} className=" text-sm">
+                      <Col span={16} className="text-sm">
                         {pay.payment.failureReason}
                       </Col>
                     </Row>
@@ -217,8 +216,8 @@ const Index = ({
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}subscription/${subId}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
           </div>
@@ -250,8 +249,8 @@ const Index = ({
           ''
         ) : (
           <div
-            onClick={(e) => navigate(`${APP_PATH}user/${userId}`)}
-            className=" w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
+            onClick={() => navigate(`${APP_PATH}user/${userId}`)}
+            className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {userId}
           </div>
@@ -261,7 +260,7 @@ const Index = ({
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, invoice) => formatDate(d, true)
+      render: (d) => formatDate(d, true)
     },
     {
       title: (
@@ -349,7 +348,7 @@ const Index = ({
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'TransactionExport',
       payload
     })
@@ -415,7 +414,7 @@ const Index = ({
           spinning: loading,
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
-        onRow={(record, rowIndex) => {
+        onRow={(_, rowIndex) => {
           return {
             onClick: (event) => {
               if (
@@ -467,7 +466,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   exportData: () => void
@@ -519,8 +518,8 @@ const Search = ({
         initialValues={DEFAULT_TERM}
         className="my-4"
       >
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={4} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
             Transaction created
           </Col>
           <Col span={4}>
@@ -543,7 +542,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

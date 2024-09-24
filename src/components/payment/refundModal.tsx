@@ -36,11 +36,7 @@ const Index = ({
     >
       <div style={{ height: '12px' }}></div>
       <Row style={{ margin: '8px 0' }}>
-        <Col
-          span={10}
-          style={{ fontWeight: 'bold' }}
-          className=" text-gray-600"
-        >
+        <Col span={10} style={{ fontWeight: 'bold' }} className="text-gray-600">
           Refund amount
         </Col>
         <Col span={14}>
@@ -48,32 +44,20 @@ const Index = ({
         </Col>
       </Row>
       <Row style={{ margin: '8px 0' }}>
-        <Col
-          span={10}
-          style={{ fontWeight: 'bold' }}
-          className=" text-gray-600"
-        >
+        <Col span={10} style={{ fontWeight: 'bold' }} className="text-gray-600">
           Refund reason
         </Col>
         <Col span={14}>{detail.refundComment}</Col>
       </Row>
       <Row style={{ margin: '8px 0' }}>
-        <Col
-          span={10}
-          style={{ fontWeight: 'bold' }}
-          className=" text-gray-600"
-        >
+        <Col span={10} style={{ fontWeight: 'bold' }} className="text-gray-600">
           Refund status
         </Col>
         <Col span={14}>{REFUND_STATUS[detail.status]}</Col>
       </Row>
 
       <Row style={{ margin: '8px 0' }}>
-        <Col
-          span={10}
-          style={{ fontWeight: 'bold' }}
-          className=" text-gray-600"
-        >
+        <Col span={10} style={{ fontWeight: 'bold' }} className="text-gray-600">
           Payment gateway
         </Col>
         <Col span={14}>
@@ -84,11 +68,7 @@ const Index = ({
         </Col>
       </Row>
       <Row style={{ margin: '8px 0' }}>
-        <Col
-          span={10}
-          style={{ fontWeight: 'bold' }}
-          className=" text-gray-600"
-        >
+        <Col span={10} style={{ fontWeight: 'bold' }} className="text-gray-600">
           Refund at
         </Col>
         <Col span={14}>
@@ -100,7 +80,7 @@ const Index = ({
           <Col
             span={10}
             style={{ fontWeight: 'bold' }}
-            className=" text-gray-600"
+            className="text-gray-600"
           >
             Original Invoice
           </Col>

@@ -9,7 +9,7 @@ import React, { CSSProperties, ReactElement, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { normalizeSub, showAmount } from '../../helpers'
 import { getSubDetailInProductReq } from '../../requests'
-import { IProfile, ISubscriptionType } from '../../shared.types.d'
+import { IProfile, ISubscriptionType } from '../../shared.types'
 import { SubscriptionStatus } from '../ui/statusTag'
 import ModalAssignSub from './assignSubModal'
 
@@ -248,7 +248,7 @@ const Index = ({
           userProfile == null ||
           userProfile?.status == 2
         } // user has active sub || user not exist || user is suspended
-        className=" my-4"
+        className="my-4"
       >
         Assign Subscription
       </Button>

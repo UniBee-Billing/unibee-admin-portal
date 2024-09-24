@@ -38,6 +38,7 @@ import {
   DiscountCode,
   IPlan,
   IPreview,
+  ISubAddon,
   ISubscriptionType
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
@@ -90,7 +91,7 @@ const Index = ({
   const toggleChangeSubStatusModal = () =>
     setChangeSubStatusModal(!changeSubStatusModal)
 
-  const onSimDateChange = async (date: Dayjs | null, dateString: string) => {
+  const onSimDateChange = async (_day: Dayjs | null, dateString: string) => {
     if (isProduction) {
       return
     }
@@ -314,7 +315,7 @@ const Index = ({
     } = subDetail
     const localActiveSub: ISubscriptionType = { ...subscription }
     localActiveSub.latestInvoice = latestInvoice
-    localActiveSub.addons = addons?.map((a: any) => ({
+    localActiveSub.addons = addons?.map((a: ISubAddon) => ({
       ...a.addonPlan,
       quantity: a.quantity,
       addonPlanId: a.addonPlan.id
@@ -328,7 +329,7 @@ const Index = ({
       ) {
         localActiveSub.unfinishedSubscriptionPendingUpdate.updateAddons =
           localActiveSub.unfinishedSubscriptionPendingUpdate.updateAddons.map(
-            (a: any) => ({
+            (a: ISubAddon) => ({
               ...a.addonPlan,
               quantity: a.quantity,
               addonPlanId: a.addonPlan.id
@@ -344,7 +345,7 @@ const Index = ({
     let plans: IPlan[] =
       planList.plans == null
         ? []
-        : planList.plans.map((p: any) => ({
+        : planList.plans.map((p: IPlan) => ({
             ...p.plan,
             addons: p.addons
           }))
@@ -375,7 +376,7 @@ const Index = ({
     setActiveSub(localActiveSub)
   }
 
-  const onDueDateChange = (date: Dayjs | null, dateStr: string) => {
+  const onDueDateChange = (_: Dayjs | null, dateStr: string) => {
     setNewDueDate(dateStr as string)
     toggleSetDueDateModal()
   }
@@ -414,7 +415,9 @@ const Index = ({
   }, [changePlanModal])
 
   useEffect(() => {
-    refreshSub && fetchData()
+    if (refreshSub) {
+      fetchData()
+    }
   }, [refreshSub])
 
   return (
@@ -593,7 +596,6 @@ interface ISubSectionProps {
 }
 const SubscriptionInfoSection = ({
   subInfo,
-  plans,
   onDueDateChange,
   refresh,
   toggleTerminateModal,
@@ -707,7 +709,7 @@ const SubscriptionInfoSection = ({
                 <div style={{ width: '280px' }}>
                   {subInfo?.addons.map((a, idx) => (
                     <Row key={idx}>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         {a.planName}
                       </Col>
                       <Col span={14}>
@@ -747,7 +749,7 @@ const SubscriptionInfoSection = ({
                 content={
                   <div style={{ width: '320px' }}>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Code
                       </Col>
                       <Col span={14}>
@@ -766,13 +768,13 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Name
                       </Col>
                       <Col span={14}>{subInfo.latestInvoice.discount.name}</Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Status
                       </Col>
                       <Col span={14}>
@@ -782,7 +784,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Billing Type
                       </Col>
                       <Col span={14}>
@@ -792,7 +794,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Discount Amt
                       </Col>
                       <Col span={14}>
@@ -800,7 +802,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Cycle limit
                       </Col>
                       <Col span={14}>
@@ -808,7 +810,7 @@ const SubscriptionInfoSection = ({
                       </Col>
                     </Row>
                     <Row>
-                      <Col span={10} className=" font-bold text-gray-500">
+                      <Col span={10} className="font-bold text-gray-500">
                         Valid range
                       </Col>
                       <Col span={14}>

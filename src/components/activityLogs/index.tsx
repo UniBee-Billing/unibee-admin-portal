@@ -1,4 +1,4 @@
-import { LoadingOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -7,19 +7,14 @@ import {
   Input,
   Pagination,
   Row,
-  Select,
-  Space,
   Table,
-  Tooltip,
   message
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CURRENCY } from '../../constants'
-import { getActivityLogsReq, getRoleListReq } from '../../requests'
-import { TActivityLogs } from '../../shared.types.d'
+import { getActivityLogsReq } from '../../requests'
+import { TActivityLogs } from '../../shared.types'
 
 import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
@@ -99,7 +94,7 @@ const Index = () => {
       title: 'Time',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d, log) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
+      render: (d) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
     },
     {
       title: 'Invoice Id',
@@ -197,7 +192,7 @@ const Index = () => {
         onPageChange={onPageChange}
         goSearch={goSearch}
       />
-      <div className=" h-4"></div>
+      <div className="h-4"></div>
       <Table
         columns={columns}
         dataSource={logs}
@@ -210,7 +205,7 @@ const Index = () => {
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
         onChange={onTableChange}
-        onRow={(record, rowIndex) => {
+        onRow={() => {
           return {
             onClick: (event) => {
               const tgt = event.target
@@ -245,6 +240,13 @@ const Index = () => {
 
 export default Index
 
+interface SearchParams {
+  form: FormInstance<unknown>
+  searching: boolean
+  goSearch: () => void
+  onPageChange: (page: number, pageSize: number) => void
+}
+
 const DEFAULT_TERM = {
   currency: 'EUR',
   status: [],
@@ -252,17 +254,7 @@ const DEFAULT_TERM = {
   amountEnd: ''
   // refunded: false,
 }
-const Search = ({
-  form,
-  searching,
-  goSearch,
-  onPageChange
-}: {
-  form: FormInstance<any>
-  searching: boolean
-  goSearch: () => void
-  onPageChange: (page: number, pageSize: number) => void
-}) => {
+const Search = ({ form, searching, goSearch, onPageChange }: SearchParams) => {
   const clear = () => {
     form.resetFields()
     onPageChange(1, PAGE_SIZE)
@@ -273,7 +265,7 @@ const Search = ({
     <div>
       <Form form={form} initialValues={DEFAULT_TERM} disabled={searching}>
         <Row className="my-2 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-600">
+          <Col span={2} className="font-bold text-gray-600">
             Billing admin
           </Col>
           <Col span={4}>
@@ -321,7 +313,7 @@ const Search = ({
         </Row>
 
         <Row className="my-2 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-600">
+          <Col span={2} className="font-bold text-gray-600">
             User
           </Col>
           <Col span={4}>
@@ -354,7 +346,7 @@ const Search = ({
         </Row>
 
         <Row className="my-2 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className=" font-bold text-gray-600">
+          <Col span={2} className="font-bold text-gray-600">
             Subscription Id{' '}
           </Col>
           <Col span={4}>

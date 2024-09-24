@@ -9,7 +9,7 @@ import 'react-quill/dist/quill.snow.css'
 import { CURRENCY } from '../../../constants'
 import { getAppKeysWithMore } from '../../../requests'
 // import '../../shared.css'
-import { TGateway } from '../../../shared.types.d'
+import { TGateway } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
 import ModalApiKey from './apiKeyModal'
 import ChangellyModal from './changellyModal'
@@ -113,11 +113,6 @@ const Index = () => {
         wireTransfer.minimumAmount /=
           CURRENCY[wireTransfer.currency].stripe_factor
       }
-      const changelly = gateways.find(
-        (g: TGateway) => g.gatewayName == 'changelly'
-      )
-      if (changelly != null) {
-      }
     }
     setGatewayList(gateways ?? [])
   }
@@ -172,7 +167,7 @@ const Index = () => {
           )}
         </Col>
         <Col span={10}>
-          <div className=" text-gray-500">
+          <div className="text-gray-500">
             Use this key to communicate safely with your App.
           </div>
         </Col>
@@ -208,7 +203,7 @@ const Index = () => {
           )}
         </Col>
         <Col span={10}>
-          <div className=" text-gray-500">
+          <div className="text-gray-500">
             Use this key to secure communication between Changelly and WebHook
             endpoint.
           </div>
@@ -232,7 +227,7 @@ const Index = () => {
           )}
         </Col>
         <Col span={10}>
-          <div className=" text-gray-500">
+          <div className="text-gray-500">
             Use this method to receive payment from bank transfer
           </div>
         </Col>
@@ -258,7 +253,7 @@ const Index = () => {
           )}
         </Col>
         <Col span={10}>
-          <div className=" text-gray-500">
+          <div className="text-gray-500">
             Use this key to calculate VAT for your payment.{' '}
           </div>
         </Col>
@@ -284,7 +279,7 @@ const Index = () => {
           )}
         </Col>
         <Col span={10}>
-          <div className=" text-gray-500">
+          <div className="text-gray-500">
             Use this key to send email to your customers.
           </div>
         </Col>
@@ -311,7 +306,7 @@ const Index = () => {
           )}
         </Col>
         <Col span={10}>
-          <div className=" text-gray-500">
+          <div className="text-gray-500">
             Use these server/client keys to track user behavior.
           </div>
         </Col>

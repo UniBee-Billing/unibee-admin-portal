@@ -2,7 +2,7 @@ import { Button, Form, Input, message, Modal } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import React, { useState } from 'react'
 import { saveProductReq } from '../../requests'
-import { IProduct } from '../../shared.types.d'
+import { IProduct } from '../../shared.types'
 
 interface Props {
   refresh: (p: IProduct) => void

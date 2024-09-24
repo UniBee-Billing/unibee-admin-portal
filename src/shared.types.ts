@@ -105,7 +105,7 @@ interface IProduct {
 
 interface IPlan {
   id: number
-  productId: number
+  plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
   planName: string
   description: string
@@ -133,11 +133,12 @@ interface IPlan {
   product: IProduct
 }
 
-interface ISubAddon extends IPlan {
+export interface ISubAddon extends IPlan {
   // when update subscription plan, I need to know which addons users have selected,
   // then apply them on the plan
   quantity: number
   addonPlanId: number
+  addonPlan: ISubAddon
 }
 
 interface IBillableMetrics {
@@ -151,6 +152,10 @@ interface IBillableMetrics {
   aggregationProperty: string
   gmtModify: string
   createTime: string
+}
+
+export interface SubscriptionWrapper extends ISubscriptionType {
+  subscription: ISubscriptionType
 }
 
 interface ISubscriptionType {
@@ -464,13 +469,18 @@ type TGateway = {
   }
 }
 
+export interface TRolePermission {
+  group: string
+  permissions: string[]
+}
+
 export type TRole = {
   id?: number
   localId: string
   createTime?: number
   merchantId?: number
   role: string
-  permissions: { group: string; permissions: string[] }[]
+  permissions: TRolePermission[]
 }
 
 export type TActivityLogs = {
@@ -516,6 +526,7 @@ export type {
   IBillableMetrics,
   IMerchantMemberProfile,
   IMerchantUserProfile,
+  InvoiceItem,
   IOneTimeHistoryItem,
   IPlan,
   IPreview,
@@ -523,15 +534,14 @@ export type {
   IProfile,
   ISubHistoryItem,
   ISubscriptionType,
-  InvoiceItem,
   PaymentItem,
   TAdminNote,
   TGateway,
   TInvoicePerm,
   TMerchantInfo,
+  TransactionItem,
   TRefund,
   TWebhook,
   TWebhookLogs,
-  TransactionItem,
   UserInvoice
 }

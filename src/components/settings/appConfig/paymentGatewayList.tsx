@@ -4,7 +4,7 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { Button, Col, Row, Tag } from 'antd'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { TGateway } from '../../../shared.types'
 // import { useAppConfigStore } from '../../stores';
 import GatewayModal from './paymentGatewayModal'
@@ -105,7 +105,7 @@ const Index = ({
             )}
           </Col>
           <Col span={10}>
-            <div className=" text-gray-500">{g.description}</div>
+            <div className="text-gray-500">{g.description}</div>
           </Col>
           <Col span={2}>
             <Button

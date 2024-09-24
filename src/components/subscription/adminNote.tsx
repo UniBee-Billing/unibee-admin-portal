@@ -20,7 +20,6 @@ const Index = ({
   const [submitting, setSubmitting] = useState(false)
   const [noteList, setNoteList] = useState<TAdminNote[]>([])
   const [note, setNote] = useState('')
-  const [page, setPage] = useState(0)
 
   const createNote = async () => {
     if (subscriptionId == null) {
@@ -31,7 +30,7 @@ const Index = ({
     }
 
     setSubmitting(true)
-    const [res, err] = await createAdminNoteReq({ subscriptionId, note })
+    const [_, err] = await createAdminNoteReq({ subscriptionId, note })
     setSubmitting(false)
     if (null != err) {
       message.error(err.message)
@@ -74,7 +73,7 @@ const Index = ({
   return (
     <div
       id="admin-note-wrapper"
-      className="absolute h-full rounded "
+      className="absolute h-full rounded"
       style={{
         width: '20%',
         right: pushed ? '-20%' : 0,
@@ -92,7 +91,7 @@ const Index = ({
         Admin side note
       </div>
       <div
-        className="mb-4 flex flex-col  px-2 text-gray-500"
+        className="mb-4 flex flex-col px-2 text-gray-500"
         style={{
           height: 'calc(100% - 200px)',
           overflowY: 'auto',

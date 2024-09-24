@@ -32,7 +32,12 @@ import { formatDate, formatPlanInterval, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getSublist } from '../../requests'
 import '../../shared.css'
-import { ISubscriptionType, TImportDataType } from '../../shared.types.d'
+import {
+  IPlan,
+  ISubscriptionType,
+  SubscriptionWrapper,
+  TImportDataType
+} from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus } from '../ui/statusTag'
@@ -80,7 +85,7 @@ const Index = () => {
     console.log('export tx params: ', payload)
     // return
     setExporting(true)
-    const [res, err] = await exportDataReq({
+    const [_, err] = await exportDataReq({
       task: 'SubscriptionExport',
       payload
     })
@@ -137,7 +142,7 @@ const Index = () => {
       render: (_, sub) => (
         <span>
           {`${sub.plan?.planName}`}{' '}
-          <span className=" text-xs text-gray-400">
+          <span className="text-xs text-gray-400">
             (
             {`${showAmount(sub.plan?.amount, sub.plan?.currency)}/${formatPlanInterval(sub.plan)}`}
             )
@@ -289,20 +294,22 @@ const Index = () => {
       return
     }
 
-    const list: ISubscriptionType[] = subscriptions.map((s: any) => {
-      return {
-        ...s.subscription,
-        plan: s.plan,
-        addons:
-          s.addons == null
-            ? []
-            : s.addons.map((a: any) => ({
-                ...a.addonPlan,
-                quantity: a.quantity
-              })),
-        user: s.user
+    const list: ISubscriptionType[] = subscriptions.map(
+      (s: SubscriptionWrapper) => {
+        return {
+          ...s.subscription,
+          plan: s.plan,
+          addons:
+            s.addons == null
+              ? []
+              : s.addons.map((a) => ({
+                  ...a.addonPlan,
+                  quantity: a.quantity
+                })),
+          user: s.user
+        }
       }
-    })
+    )
     setSubList(list)
     setTotal(total)
   }
@@ -323,21 +330,19 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { plans, total } = planList
+    const { plans } = planList
     planFilterRef.current =
       plans == null
         ? []
-        : plans.map((p: any) => ({
-            value: p.plan.id,
-            text: p.plan.planName
+        : plans.map((p: IPlan) => ({
+            value: p.plan?.id,
+            text: p.plan?.planName
           }))
   }
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
-    pagination,
-    filters,
-    sorter,
-    extra
+    _,
+    filters
   ) => {
     // console.log('params', pagination, filters, sorter, extra);
     // onPageChange(1, PAGE_SIZE)
@@ -426,7 +431,7 @@ const Index = () => {
         onPageChange={onPageChange}
         clearFilters={clearFilters}
       />
-      <div className=" mb-3"></div>
+      <div className="mb-3"></div>
       {loadingPlans ? (
         <Spin
           indicator={<LoadingOutlined spin />}
@@ -447,9 +452,9 @@ const Index = () => {
           rowClassName="clickable-tbl-row"
           pagination={false}
           onChange={onTableChange}
-          onRow={(record, rowIndex) => {
+          onRow={(record) => {
             return {
-              onClick: (event) => {
+              onClick: () => {
                 navigate(`${APP_PATH}subscription/${record.subscriptionId}`, {
                   state: { subscriptionId: record.subscriptionId }
                 })
@@ -498,7 +503,7 @@ const Search = ({
   onPageChange,
   clearFilters
 }: {
-  form: FormInstance<any>
+  form: FormInstance<unknown>
   searching: boolean
   exporting: boolean
   goSearch: () => void
@@ -522,8 +527,8 @@ const Search = ({
         initialValues={DEFAULT_TERM}
         disabled={searching || exporting}
       >
-        <Row className=" mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={4} className=" font-bold text-gray-500">
+        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
             Subscription created
           </Col>
           <Col span={4}>
@@ -546,7 +551,7 @@ const Search = ({
                   message: 'Must be later than start date.'
                 },
                 ({ getFieldValue }) => ({
-                  validator(rule, value) {
+                  validator(_, value) {
                     const start = getFieldValue('createTimeStart')
                     if (null == start || value == null) {
                       return Promise.resolve()

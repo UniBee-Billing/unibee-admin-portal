@@ -1,15 +1,15 @@
 import axios from 'axios'
-// import { useProfileStore } from "../stores";
 import { CURRENCY } from '../constants'
 import {
   DiscountCode,
   ExpiredError,
   IProfile,
+  ISubscriptionType,
   TExportDataType,
   TImportDataType,
   TMerchantInfo,
   TRole
-} from '../shared.types.d'
+} from '../shared.types'
 import { useMerchantInfoStore, useSessionStore } from '../stores'
 import { request } from './client'
 
@@ -46,22 +46,7 @@ type TSignupReq = {
 }
 export const signUpReq = async (body: TSignupReq) => {
   try {
-    const res = await request.post(`/merchant/auth/sso/register`, body)
-    return [null, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-// -------------
-
-type TSignupVerifyReq = {
-  email: string
-  verificationCode: string
-}
-export const signUpVerifyReq = async (body: TSignupVerifyReq) => {
-  try {
-    const res = await request.post(`/user/auth/sso/registerVerify`, body)
+    await request.post(`/merchant/auth/sso/register`, body)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -88,7 +73,7 @@ export const loginWithPasswordReq = async (body: TPassLogin) => {
 
 export const loginWithOTPReq = async (email: string) => {
   try {
-    const res = await request.post(`/merchant/auth/sso/loginOTP`, { email })
+    await request.post(`/merchant/auth/sso/loginOTP`, { email })
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -116,7 +101,7 @@ export const loginWithOTPVerifyReq = async (
 
 export const forgetPassReq = async (email: string) => {
   try {
-    const res = await request.post(`/merchant/auth/sso/passwordForgetOTP`, {
+    await request.post(`/merchant/auth/sso/passwordForgetOTP`, {
       email
     })
     return [null, null]
@@ -132,14 +117,11 @@ export const forgetPassVerifyReq = async (
   newPassword: string
 ) => {
   try {
-    const res = await request.post(
-      `/merchant/auth/sso/passwordForgetOTPVerify`,
-      {
-        email,
-        verificationCode,
-        newPassword
-      }
-    )
+    await request.post(`/merchant/auth/sso/passwordForgetOTPVerify`, {
+      email,
+      verificationCode,
+      newPassword
+    })
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -173,8 +155,7 @@ export const resetPassReq = async (
 export const logoutReq = async () => {
   const session = useSessionStore.getState()
   try {
-    const res = await request.post(`/merchant/member/logout`, {})
-    const code = res.data.code
+    await request.post(`/merchant/member/logout`, {})
     session.setSession({ expired: true, refresh: null })
     return [null, null]
   } catch (err) {
@@ -200,7 +181,7 @@ export const getAppConfigReq = async () => {
   }
 }
 
-export const getGatewayListReq = async () => {
+const getGatewayListReq = async () => {
   const session = useSessionStore.getState()
   try {
     const res = await request.get(`/merchant/gateway/list`)
@@ -410,7 +391,7 @@ export const getPlanList = async (
 
 // -----------------
 
-export const getPlanDetail = async (planId: number) => {
+const getPlanDetail = async (planId: number) => {
   const session = useSessionStore.getState()
   try {
     const res = await request.post('/merchant/plan/detail', {
@@ -422,7 +403,6 @@ export const getPlanDetail = async (planId: number) => {
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
     }
-    console.log('get plan detail: ', res.data.data)
     return [res.data.data.plan, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -481,7 +461,10 @@ export const getPlanDetailWithMore = async (
 }
 
 // create a new or save an existing plan
-export const savePlan = async (planDetail: any, isNew: boolean) => {
+export const savePlan = async (
+  planDetail: ISubscriptionType['plan'],
+  isNew: boolean
+) => {
   const url = isNew ? '/merchant/plan/new' : `/merchant/plan/edit`
   try {
     const res = await request.post(url, planDetail)
@@ -663,28 +646,7 @@ export const getSublist = async (body: TSubListReq, refreshCb: () => void) => {
 }
 // ------------
 
-export const getSubByUserReq = async (
-  userId: number,
-  refreshCb: () => void
-) => {
-  try {
-    const res = await request.get(
-      `/merchant/subscription/user_subscription_detail?userId=${userId}`
-    )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-
-export const getSubDetail = async (subscriptionId: string) => {
+const getSubDetail = async (subscriptionId: string) => {
   try {
     const res = await request.post(`/merchant/subscription/detail`, {
       subscriptionId
@@ -1025,22 +987,6 @@ type TGetSubTimelineReq = {
   createTimeStart?: number // used in /merchant/payment/timeline/list only
   createTimeEnd?: number // ditto
 }
-export const getSubTimelineReq = async (body: TGetSubTimelineReq) => {
-  const session = useSessionStore.getState()
-  try {
-    const res = await request.post(`/merchant/subscription/timeline_list`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data.subscriptionTimeLines, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
 
 // query params are the same as getSubTimelineReq
 export const getPaymentTimelineReq = async (
@@ -1093,28 +1039,6 @@ export const getPaymentTimelineReq = async (
       )
     }
     return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-
-export const getDetailPaymentListReq = async (
-  params: TGetSubTimelineReq,
-  refreshCb: () => void
-) => {
-  const { page, count } = params
-  try {
-    const res = await request.get(
-      `/merchant/payment/list?page=${page}&count=${count}`
-    )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data.paymentDetails, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1604,7 +1528,7 @@ export const toggleDiscountCodeActivateReq = async (
   }
 }
 // ----------
-export type TGetInvoicesReq = {
+type TGetInvoicesReq = {
   userId?: number
   page: number
   count: number
@@ -1879,26 +1803,6 @@ export const sendInvoiceInMailReq = async (invoiceId: string) => {
   }
 }
 
-export const downloadInvoice = (url: string) => {
-  if (url == null || url == '') {
-    return
-  }
-  axios({
-    url,
-    method: 'GET',
-    responseType: 'blob'
-  }).then((response) => {
-    const href = URL.createObjectURL(response.data)
-    const link = document.createElement('a')
-    link.href = href
-    link.setAttribute('download', 'invoice.pdf')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(href)
-  })
-}
-
 // ------------------
 type TUserList = {
   merchantId: number
@@ -1961,7 +1865,7 @@ export const importDataReq = async (file: File, task: TImportDataType) => {
 
 // this is used when page is loading (as part of getMerchantUserListWithMoreReq), no search params available
 // ??? I don't like this.
-export const getMerchantUserListReq = async (refreshCb?: () => void) => {
+const getMerchantUserListReq = async (refreshCb?: () => void) => {
   try {
     const res = await request.get('/merchant/member/list?page=0&count=10')
     if (res.data.code == 61 || res.data.code == 62) {
@@ -2101,7 +2005,7 @@ export const getMemberProfileReq = async (refreshCb?: () => void) => {
   }
 }
 
-export const getPaymentGatewayListReq = async () => {
+const getPaymentGatewayListReq = async () => {
   try {
     const res = await request.get(`/merchant/gateway/list`)
     if (res.data.code == 61 || res.data.code == 62) {
@@ -2252,10 +2156,12 @@ export const saveWebhookReq = async ({
       endpointId == null
         ? '/merchant/webhook/new_endpoint'
         : '/merchant/webhook/update_endpoint'
-    const body: any = { url, events }
-    if (endpointId != null) {
-      body.endpointId = endpointId
+    const body = {
+      url,
+      events,
+      endpointId: endpointId === null ? undefined : endpointId
     }
+
     const res = await request.post(actionUrl, body)
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -2404,7 +2310,6 @@ export const getActivityLogsReq = async (
 ) => {
   let term = ''
   for (const [key, value] of Object.entries(searchTerm)) {
-    console.log(key, value)
     term += `${key}=${value}&`
   }
   term = term.substring(0, term.length - 1)
@@ -2452,7 +2357,7 @@ export const exportDataReq = async ({
   format
 }: {
   task: TExportDataType
-  payload: any
+  payload: unknown
   exportColumns?: string[]
   format?: 'xlsx' | 'csv'
 }) => {
@@ -2476,11 +2381,7 @@ export const exportDataReq = async ({
   }
 }
 
-export const getExportFieldsReq = async ({
-  task
-}: {
-  task: TExportDataType
-}) => {
+const getExportFieldsReq = async ({ task }: { task: TExportDataType }) => {
   try {
     const res = await request.post(`/merchant/task/export_column_list`, {
       task
@@ -2558,7 +2459,7 @@ export const saveExportTmplReq = async ({
   name: string
   templateId?: number
   task: TExportDataType
-  payload?: any
+  payload?: unknown
   exportColumns?: string[]
   format?: 'xlsx' | 'csv'
 }) => {
@@ -2638,9 +2539,10 @@ export const saveProductReq = async ({
 }) => {
   const isNew = productId == null
   const url = `/merchant/product/${isNew ? 'new' : 'edit'}`
-  const body: any = { productName, description }
-  if (!isNew) {
-    body.productId = productId
+  const body = {
+    productName,
+    description,
+    productId: !isNew ? productId : undefined
   }
   try {
     const res = await request.post(url, body)

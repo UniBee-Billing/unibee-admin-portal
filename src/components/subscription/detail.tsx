@@ -1,9 +1,9 @@
-import type { DatePickerProps, TabsProps } from 'antd'
+import type { TabsProps } from 'antd'
 import { Button, Divider, Tabs, message } from 'antd'
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getUserProfile } from '../../requests'
-import { IProfile } from '../../shared.types.d'
+import { IProfile } from '../../shared.types'
 import UserInfoSection from '../shared/userInfo'
 import AdminNote from './adminNote'
 import './detail.css'
@@ -16,10 +16,6 @@ import UserAccount from './userAccountTab'
 const APP_PATH = import.meta.env.BASE_URL // import.meta.env.VITE_APP_PATH;
 
 const Index = () => {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [activeTab, setActiveTab] = useState(
-    searchParams.get('tab') ?? 'subscription'
-  )
   const navigate = useNavigate()
   const [userProfile, setUserProfile] = useState<IProfile | undefined>(
     undefined
@@ -33,11 +29,6 @@ const Index = () => {
   // <SubscriptionTab /> will get {refreshSub: true}, in its useEffect, do the refresh.
   const [refreshSub, setRefreshSub] = useState(false)
   const [adminNotePushed, setAdminNotePushed] = useState(true)
-
-  const onTabChange = (key: string) => {
-    setActiveTab(key)
-    setSearchParams({ tab: key })
-  }
 
   const fetchUserProfile = async () => {
     const [user, err] = await getUserProfile(userId as number, fetchUserProfile)

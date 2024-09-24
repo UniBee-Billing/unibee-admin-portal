@@ -1,4 +1,4 @@
-import { Button, Checkbox, Divider, Form, Input, message } from 'antd'
+import { Button, Form, Input, message } from 'antd'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import OtpInput from 'react-otp-input'
@@ -106,7 +106,7 @@ const Index = () => {
           marginTop: '100px'
         }}
       >
-        <h1 className=" mb-6 mt-9">Merchant Signup</h1>
+        <h1 className="mb-6 mt-9">Merchant Signup</h1>
         <>
           <div
             className="flex flex-col justify-center"
@@ -171,8 +171,8 @@ const Index = () => {
                     required: true,
                     message: 'Please input your Email!'
                   },
-                  ({ getFieldValue }) => ({
-                    validator(rule, value) {
+                  () => ({
+                    validator(_, value) {
                       if (
                         value != null &&
                         value != '' &&
@@ -209,8 +209,8 @@ const Index = () => {
                     required: true,
                     message: 'Please input your password!'
                   },
-                  ({ getFieldValue }) => ({
-                    validator(rule, value) {
+                  () => ({
+                    validator(_, value) {
                       if (!passwordSchema.validate(value)) {
                         return Promise.reject(
                           'At least 8 characters containing lowercase, uppercase, number and special character.'
@@ -234,7 +234,7 @@ const Index = () => {
                     message: 'Please retype your password!'
                   },
                   ({ getFieldValue }) => ({
-                    validator(rule, value) {
+                    validator(value) {
                       if (value == getFieldValue('password')) {
                         return Promise.resolve()
                       }

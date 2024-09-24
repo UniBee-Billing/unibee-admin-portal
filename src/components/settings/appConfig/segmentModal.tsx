@@ -1,4 +1,4 @@
-import { Button, Col, Input, Modal, Row, Spin, message } from 'antd'
+import { Button, Col, Input, Modal, Row, message } from 'antd'
 import { useState } from 'react'
 import { segmentSetupReq } from '../../../requests'
 const { TextArea } = Input
@@ -33,7 +33,7 @@ const Index = ({ closeModal, serverSideKey, refresh }: IProps) => {
       return
     }
     setLoading(true)
-    const [res, err] = await segmentSetupReq(serverKey, clientKey)
+    const [_, err] = await segmentSetupReq(serverKey, clientKey)
     if (err != null) {
       message.error(err.message)
       return
@@ -52,7 +52,7 @@ const Index = ({ closeModal, serverSideKey, refresh }: IProps) => {
         footer={null}
         closeIcon={null}
       >
-        <div className="my-6  w-full ">
+        <div className="my-6 w-full">
           <Row gutter={[16, 32]} style={{ marginBottom: '12px' }}>
             <Col span={5}>Server side key</Col>
             <Col span={19}>
@@ -76,7 +76,7 @@ const Index = ({ closeModal, serverSideKey, refresh }: IProps) => {
           <Row gutter={[16, 32]}>
             <Col span={5}></Col>
             <Col span={19}>
-              <div className=" text-xs text-gray-400">
+              <div className="text-xs text-gray-400">
                 For security reason, your user portal key won't show up here
                 after submit.
               </div>

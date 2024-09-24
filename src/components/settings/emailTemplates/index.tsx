@@ -13,7 +13,6 @@ type TEmailTmpl = {
   updatedAt: string
 }
 
-const RAW_TEXT2 = ' <ol><li>a</li><li>b</li><li>c</li></ol>'
 const RAW_TEXT = `
   <p>
   Dear [customer.name]:
@@ -131,7 +130,7 @@ const Index = () => {
       title: 'Updated at',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
-      render: (d, plan) => dayjs(new Date(d)).format('YYYY-MMM-DD')
+      render: (d) => dayjs(new Date(d)).format('YYYY-MMM-DD')
     },
     {
       title: 'Created by',
@@ -286,9 +285,9 @@ const Index = () => {
         rowKey={'id'}
         rowClassName="clickable-tbl-row"
         pagination={false}
-        onRow={(user, rowIndex) => {
+        onRow={() => {
           return {
-            onClick: (event) => {
+            onClick: () => {
               // console.log("row click: ", user, "///", rowIndex);
               toggleModal()
             }
