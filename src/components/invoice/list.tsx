@@ -1,4 +1,3 @@
-import React, {  } from 'react'
 import InvoiceList from '../subscription/invoicesTab'
 
 const Index = () => {
