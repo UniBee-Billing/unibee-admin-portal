@@ -96,6 +96,9 @@ const App: React.FC = () => {
   const [activeMenuItem, setActiveMenuItem] = useState<string[]>([
     window.location.pathname
   ])
+
+  console.info('v1.1.0')
+
   // const [openKeys, setOpenKeys] = useState<string[]>(["/subscription/list"]);
   // this is the default open keys after successful login.
   // const [openKeys, setOpenKeys] = useState<string[]>(["/subscription"]);
