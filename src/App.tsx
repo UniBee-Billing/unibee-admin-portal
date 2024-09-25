@@ -29,19 +29,18 @@ import {
   useSessionStore
 } from './stores'
 
-import InvoiceDetail from './components/invoice/detail'
-import InvoiceList from './components/invoice/list'
-import OutletPage from './components/outletPage'
-import PaymentDetail from './components/payment/detail'
-import PaymentList from './components/payment/list'
-import PlanDetail from './components/plan/detail'
-// import PricePlans from './components/pricePlans';
 import BillableMetricsDetail from './components/billableMetrics/detail'
 import BillableMetricsList from './components/billableMetrics/list'
 import DiscountCodeDetail from './components/discountCode/detail'
 import DiscountCodeList from './components/discountCode/list'
 import DiscountCodeUsage from './components/discountCode/usageDetail'
+import InvoiceDetail from './components/invoice/detail'
+import InvoiceList from './components/invoice/list'
+import OutletPage from './components/outletPage'
+import PaymentDetail from './components/payment/detail'
+import PaymentList from './components/payment/list'
 import PricePlanList from './components/plan'
+import PlanDetail from './components/plan/detail'
 import Settings from './components/settings/index'
 import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
@@ -378,16 +377,6 @@ const app_routes = [
       />
     )
   },
-  /* {
-    page: 'analytics',
-    route: (
-      <Route
-        key="analytics"
-        path={`${APP_PATH}analytics`}
-        Component={Dashboard}
-      />
-    )
-  }, */
   {
     page: 'configuration',
     route: (
