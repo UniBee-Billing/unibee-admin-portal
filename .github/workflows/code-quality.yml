@@ -22,3 +22,6 @@ jobs:
 
       - name: Run Lint
         run: yarn lint
+
+      - name: Run type checker
+        run: npx tsc
