@@ -234,7 +234,7 @@ const Index = () => {
                     message: 'Please retype your password!'
                   },
                   ({ getFieldValue }) => ({
-                    validator(value) {
+                    validator(_, value) {
                       if (value == getFieldValue('password')) {
                         return Promise.resolve()
                       }
