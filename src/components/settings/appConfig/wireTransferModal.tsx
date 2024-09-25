@@ -118,7 +118,7 @@ const Index = ({ closeModal, detail, refresh }: IProps) => {
                 message: 'Please input the minimum amount!'
               },
               () => ({
-                validator(value) {
+                validator(_, value) {
                   const num = Number(value)
                   if (isNaN(num) || num <= 0) {
                     return Promise.reject(`Please input a valid price (> 0).`)

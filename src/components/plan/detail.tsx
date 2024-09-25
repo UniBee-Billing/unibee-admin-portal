@@ -693,8 +693,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 message: 'Please input your plan price!'
               },
               ({ getFieldValue }) => ({
-                validator(value) {
+                validator(_, value) {
                   const num = Number(value)
+
                   if (isNaN(num) || num < 0) {
                     return Promise.reject(`Please input a valid price (> 0).`)
                   }
@@ -875,7 +876,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   message: 'Please input your trial price!'
                 },
                 ({ getFieldValue }) => ({
-                  validator(value) {
+                  validator(_, value) {
                     if (!enableTrialWatch) {
                       return Promise.resolve()
                     }
@@ -922,7 +923,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 message: 'Please input your trial length!'
               },
               () => ({
-                validator(value) {
+                validator(_, value) {
                   if (!enableTrialWatch) {
                     return Promise.resolve()
                   }

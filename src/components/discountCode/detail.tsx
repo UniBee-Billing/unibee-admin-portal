@@ -390,7 +390,7 @@ const Index = () => {
                 message: 'Please choose your discount amount!'
               },
               ({ getFieldValue }) => ({
-                validator(value) {
+                validator(_, value) {
                   if (watchDiscountType == 1) {
                     return Promise.resolve()
                   }
@@ -428,7 +428,7 @@ const Index = () => {
                 message: 'Please choose your discount percentage!'
               },
               () => ({
-                validator(value) {
+                validator(_, value) {
                   if (watchDiscountType == 2) {
                     // 2: fixed amount
                     return Promise.resolve()
@@ -461,7 +461,7 @@ const Index = () => {
                   message: 'Please input your cycleLimit!'
                 },
                 () => ({
-                  validator(value) {
+                  validator(_, value) {
                     const num = Number(value)
                     if (!Number.isInteger(num)) {
                       return Promise.reject(

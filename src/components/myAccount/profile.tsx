@@ -373,7 +373,7 @@ const ResetPassWithOldPass = ({
               message: 'Please retype your new password!'
             },
             ({ getFieldValue }) => ({
-              validator(value) {
+              validator(_, value) {
                 if (value == getFieldValue('newPassword')) {
                   return Promise.resolve()
                 }
