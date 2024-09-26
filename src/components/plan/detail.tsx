@@ -207,8 +207,9 @@ const Index = () => {
     )
     setSelectAddons(newAddons)
 
-    const newOnetimeAddons = addons.filter((a) => a.currency == planCurrency)
-    setSelectOnetime(newOnetimeAddons)
+    if (isNew) {
+      setSelectOnetime(addons.filter((a) => a.currency === planCurrency))
+    }
   }, [itvCountUnit, itvCountValue, planCurrency])
 
   const onSave = async (values: unknown) => {
