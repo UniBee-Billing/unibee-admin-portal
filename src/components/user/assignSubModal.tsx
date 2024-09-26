@@ -118,7 +118,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       body.startIncomplete = true
     }
     setLoading(true)
-    const [res, err] = await createSubscriptionReq(body)
+    const [_, err] = await createSubscriptionReq(body)
     setLoading(false)
 
     if (null != err) {

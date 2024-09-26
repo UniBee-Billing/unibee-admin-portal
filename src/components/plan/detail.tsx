@@ -366,15 +366,6 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     }
 
     const { planDetail, addonList, metricsList } = detailRes
-    console.log(
-      'res of planDetail/addonList/metricsList: ',
-      planDetail,
-      '//',
-      addonList,
-      '//',
-      metricsList
-    )
-
     const addons =
       addonList.plans == null ? [] : addonList.plans.map((p: IPlan) => p.plan)
     const regularAddons = addons.filter((p: IPlan) => p.type == 2)

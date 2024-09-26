@@ -307,10 +307,10 @@ const Index = () => {
     setFilters({ status: null, subStatus: null, planIds: null })
 
   const onTableChange: TableProps<IProfile>['onChange'] = (
-    pagination,
+    _pagination,
     filters,
-    sorter,
-    extra
+    _sorter,
+    _extra
   ) => {
     // onPageChange(1, PAGE_SIZE)
 

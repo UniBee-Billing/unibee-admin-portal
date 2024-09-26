@@ -160,10 +160,10 @@ const Index = () => {
   ]
 
   const onTableChange: TableProps<TActivityLogs>['onChange'] = (
-    pagination,
+    _pagination,
     filters,
-    sorter,
-    extra
+    _sorter,
+    _extra
   ) => {
     if (filters.status == null) {
       return
