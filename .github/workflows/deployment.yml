@@ -19,11 +19,19 @@ on:
 
 jobs:
   deploy:
+    env:
+      VERSION: ${{ inputs.environment == 'development' && format('{0}-{1}', inputs.version, 'dev') || inputs.version }}
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
+
+      - name: Add version log
+        run: |
+          echo "console.info('Version: ${{ env.VERSION }}')" >> src/main.tsx
+          echo "console.info('Build time', '`date "+%Y-%m-%d %H:%M:%S %Z"`')" >> src/main.tsx
+          echo "console.info('Notice: You are running a development version of the application. This version is not suitable for production use.')" >> src/main.tsx
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -36,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: unibee/admin-portal:${{ inputs.version }}-dev
+          tags: unibee/admin-portal:${{ env.VERSION }}
 
       - name: Build daily image and push
         uses: docker/build-push-action@v6
@@ -46,4 +54,4 @@ jobs:
 
       - name: Deploy to cluster
         if: inputs.environment == 'development'
-        run: 'curl --header "Content-Type: application/json" --request POST --data "{\"key\":\"${{ secrets.DEPLOYMENT_KEY }}\", \"deployment\":\"adminPortal\", \"imageTag\":\"${{ inputs.version }}-dev\"}" https://api.unibee.dev/cloud/cd/k8s/pod/restart'
+        run: 'curl --header "Content-Type: application/json" --request POST --data "{\"key\":\"${{ secrets.DEPLOYMENT_KEY }}\", \"deployment\":\"adminPortal\", \"imageTag\":\"${{ env.VERSION }}\"}" https://api.unibee.dev/cloud/cd/k8s/pod/restart'
