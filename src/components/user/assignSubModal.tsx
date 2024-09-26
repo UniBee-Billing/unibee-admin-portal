@@ -56,7 +56,6 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
 
   //const onGatewayChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
   const onGatewayChange = (gatewayId: number) => {
-    console.log('gateway changed in parent...', gatewayId)
     setGatewayId(gatewayId)
   }
 
@@ -100,7 +99,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       message.error('Please choose a payment method')
       return
     }
-    console.log('submitting: ', selectedPlan, '//', gatewayId, '//', user)
+
     // return
 
     const body: CreateSubScriptionBody = {
@@ -119,9 +118,9 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       body.startIncomplete = true
     }
     setLoading(true)
-    const [res, err] = await createSubscriptionReq(body)
+    const [_, err] = await createSubscriptionReq(body)
     setLoading(false)
-    console.log('create submit res: ', res)
+
     if (null != err) {
       message.error(err.message)
       return

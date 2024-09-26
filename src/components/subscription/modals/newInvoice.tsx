@@ -186,7 +186,6 @@ const Index = ({
   // what if user made some changes, then click 'create' to publish, backend still uses the old data before the local change.
   const onPublish = async () => {
     if (detail == null) {
-      console.log('publis new invoice, detail is null? ', detail)
       await onSave(true)()
       return
     }
@@ -313,7 +312,6 @@ const Index = ({
         }
       })
       setInvoiceList(newList)
-      console.log('after field change, new invoiceList: ', newList)
     }
 
   // to get a numerical value with 2 decimal points, but still not right

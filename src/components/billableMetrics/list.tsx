@@ -122,12 +122,11 @@ const Index = () => {
   ]
 
   const onTableChange: TableProps<IBillableMetrics>['onChange'] = (
-    pagination,
+    _pagination,
     filters,
-    sorter,
-    extra
+    _sorter,
+    _extra
   ) => {
-    console.log('params', pagination, filters, sorter, extra)
     if (filters.status == null) {
       return
     }
@@ -158,10 +157,9 @@ const Index = () => {
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
         onChange={onTableChange}
-        onRow={(record, rowIndex) => {
+        onRow={(record) => {
           return {
             onClick: () => {
-              console.log('row click: ', record, '///', rowIndex)
               navigate(`${APP_PATH}billable-metric/${record.id}`)
             }
           }

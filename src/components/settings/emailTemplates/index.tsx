@@ -288,7 +288,6 @@ const Index = () => {
         onRow={() => {
           return {
             onClick: () => {
-              // console.log("row click: ", user, "///", rowIndex);
               toggleModal()
             }
           }

@@ -243,7 +243,7 @@ const Index = ({
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters) => {
     onPageChange(1, PAGE_SIZE)
-    // console.log('params', pagination, filters, sorter, extra)
+
     setFilters(filters as TFilters)
   }
 

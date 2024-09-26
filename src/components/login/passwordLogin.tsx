@@ -89,7 +89,7 @@ const Index = ({
     // sessionStore.setSession({ expired: false, refresh: null })
 
     const [initRes, errInit] = await initializeReq()
-    console.log('initRes: ', initRes)
+
     setSubmitting(false)
     setLogging(false)
     if (null != errInit) {

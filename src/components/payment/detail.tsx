@@ -21,13 +21,13 @@ const Index = () => {
       return
     }
     setLoading(true)
-    const [paymentDetail, err] = await getPaymentDetailReq(paymentId, fetchData)
+    const [_, err] = await getPaymentDetailReq(paymentId, fetchData)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
       return
     }
-    console.log('payment detail res: ', paymentDetail)
+
     /*
     const { invoice } = res
     normalizeAmt([invoice])

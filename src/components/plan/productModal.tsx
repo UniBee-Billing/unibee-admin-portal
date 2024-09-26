@@ -17,7 +17,7 @@ const Index = ({ closeModal, isNew, refresh, detail }: Props) => {
 
   const onSave = async () => {
     const body = form.getFieldsValue()
-    console.log('form body: ', body)
+
     body.productId = body.id
     // return
     setLoading(true)
@@ -27,7 +27,7 @@ const Index = ({ closeModal, isNew, refresh, detail }: Props) => {
       message.error(err.message)
       return
     }
-    console.log('saving product res: ', res.product)
+
     refresh(res.product)
     message.success('Product saved')
     closeModal()

@@ -161,7 +161,7 @@ const Index = ({
       for (let i = 0; i < plan.addons.length; i++) {
         if (plan.addons[i].checked) {
           const q = Number(plan.addons[i].quantity)
-          console.log('q: ', q)
+
           if (!Number.isInteger(q) || q <= 0) {
             isValid = false
             break
@@ -190,7 +190,7 @@ const Index = ({
       plan != null && plan.addons != null
         ? plan.addons.filter((a) => a.checked)
         : []
-    console.log('active sub addon bfr preview: ', addons)
+
     const [previewRes, err] = await createPreviewReq(
       activeSub!.subscriptionId,
       selectedPlan as number,
@@ -296,7 +296,6 @@ const Index = ({
     const [detailRes, err] = await getSubDetailWithMore(subId, fetchData)
     setLoading(false)
     if (refreshSub) {
-      console.log('refreshing sub triggered by parent')
       setRefreshSub(false)
     }
 
@@ -304,7 +303,7 @@ const Index = ({
       message.error(err.message)
       return
     }
-    console.log('detailRes: ', detailRes)
+
     const { subDetail, planList } = detailRes
     const {
       user,
@@ -338,7 +337,6 @@ const Index = ({
       }
     }
 
-    console.log('active sub: ', localActiveSub, '//user: ', user)
     setSelectedPlan(subDetail.plan.id)
     setUserId(user.id)
 

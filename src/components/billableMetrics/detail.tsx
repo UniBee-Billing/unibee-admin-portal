@@ -47,7 +47,6 @@ const Index = () => {
   const watchAggreProps = Form.useWatch('aggregationProperty', form)
 
   const onSave = async () => {
-    console.log('form values: ', form.getFieldsValue())
     let m
     if (isNew) {
       m = JSON.parse(JSON.stringify(form.getFieldsValue()))

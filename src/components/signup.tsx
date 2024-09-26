@@ -31,14 +31,12 @@ const Index = () => {
   // submit basic signup ingo
   const onSubmitBasicInfo = async () => {
     setErrMsg('')
-    console.log('submit basic info: ', form.getFieldsValue())
     // return
     setSubmitting(true)
     setResending(true)
-    const [res, err] = await signUpReq(form.getFieldsValue())
+    const [_, err] = await signUpReq(form.getFieldsValue())
     setSubmitting(false)
     setResending(false)
-    console.log('signup res: ', res)
     if (null != err) {
       message.error(err.message)
       return
@@ -61,7 +59,6 @@ const Index = () => {
       })
       .then((res) => {
         setSubmitting(false)
-        console.log('reg res: ', res)
         if (res.data.code != 0) {
           throw new Error(res.data.message)
         }
@@ -71,7 +68,6 @@ const Index = () => {
       })
       .catch((err) => {
         setSubmitting(false)
-        console.log('reg err: ', err)
         setErrMsg(err.message)
       })
   }

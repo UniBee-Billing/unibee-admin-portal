@@ -51,7 +51,7 @@ const Index = () => {
     formData.append('file', file)
     setUploading(true)
     const [logoUrl, err] = await uploadLogoReq(formData)
-    console.log('logo urll: ', logoUrl, '//', err)
+
     setUploading(false)
     if (err != null) {
       message.error(err.message)

@@ -82,7 +82,7 @@ const Index = () => {
       return
     }
     payload = { ...payload, ...filters }
-    console.log('export tx params: ', payload)
+
     // return
     setExporting(true)
     const [_, err] = await exportDataReq({
@@ -344,7 +344,6 @@ const Index = () => {
     _,
     filters
   ) => {
-    // console.log('params', pagination, filters, sorter, extra);
     // onPageChange(1, PAGE_SIZE)
     setFilters(filters as TFilters)
   }
@@ -393,7 +392,7 @@ const Index = () => {
     }
     searchTerm.amountStart = amtFrom
     searchTerm.amountEnd = amtTo
-    console.log('search term:  ', searchTerm)
+
     return searchTerm
   }
 

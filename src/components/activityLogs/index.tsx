@@ -38,7 +38,7 @@ const Index = () => {
         (searchTerms[k] == undefined || searchTerms[k].trim() == '') &&
         delete searchTerms[k]
     )
-    console.log('search term: ', searchTerms)
+
     // return
     const params = { page, count: PAGE_SIZE, ...searchTerms }
     setLoading(true)
@@ -160,12 +160,11 @@ const Index = () => {
   ]
 
   const onTableChange: TableProps<TActivityLogs>['onChange'] = (
-    pagination,
+    _pagination,
     filters,
-    sorter,
-    extra
+    _sorter,
+    _extra
   ) => {
-    console.log('params', pagination, filters, sorter, extra)
     if (filters.status == null) {
       return
     }

@@ -86,7 +86,6 @@ const Index = () => {
       return
     }
     const { discount, planList } = res
-    // console.log('code/plan: ', discount, '//', planList)
 
     // if discount.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
     let plans =
@@ -163,7 +162,6 @@ const Index = () => {
       code.discountAmount = toFixedNumber(code.discountAmount, 2)
     }
 
-    // console.log('sumbtting: ', code)
     // return
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
     setLoading(true)

@@ -51,7 +51,6 @@ export const daysBetweenDate = (
 ) => {
   const d1 = new Date(start).getTime(),
     d2 = new Date(end).getTime()
-  // console.log("d1/d2: ", d1, "//", d2);
   return Math.ceil(Math.abs((d1 - d2) / (1000 * 60 * 60 * 24)))
 }
 

@@ -97,8 +97,6 @@ const App: React.FC = () => {
     window.location.pathname
   ])
 
-  console.info('v1.1.0')
-
   // const [openKeys, setOpenKeys] = useState<string[]>(["/subscription/list"]);
   // this is the default open keys after successful login.
   // const [openKeys, setOpenKeys] = useState<string[]>(["/subscription"]);
@@ -131,7 +129,6 @@ const App: React.FC = () => {
       (p) => p.permissions.length > 0 && accessiblePages.push(p.group)
     )
   )
-  // console.log('accessible pages: ', accessiblePages)
 
   if (!profileStore.isOwner) {
     items = items.filter(
@@ -232,9 +229,8 @@ const App: React.FC = () => {
         (navigationEntries[0] as PerformanceNavigationTiming).type === 'reload'
       ) {
         const [initRes, errInit] = await initializeReq()
-        console.log('page reloaded, with initRes: ', initRes)
+
         if (null != errInit) {
-          console.log('init err: ', errInit)
           return
         }
         const { appConfig, gateways, merchantInfo, products } = initRes

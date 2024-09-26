@@ -95,7 +95,7 @@ const Index = () => {
     if (end != null) {
       searchTerms.createTimeEnd = end.hour(23).minute(59).second(59).unix()
     }
-    console.log('search term: ', searchTerms)
+
     return searchTerms
   }
 
@@ -149,7 +149,7 @@ const Index = () => {
   const exportData = async () => {
     let payload = normalizeSearchTerms()
     payload = { ...payload, ...filters }
-    console.log('export user params: ', payload)
+
     // return
     setExporting(true)
     const [_, err] = await exportDataReq({ task: 'UserExport', payload })
@@ -307,13 +307,13 @@ const Index = () => {
     setFilters({ status: null, subStatus: null, planIds: null })
 
   const onTableChange: TableProps<IProfile>['onChange'] = (
-    pagination,
+    _pagination,
     filters,
-    sorter,
-    extra
+    _sorter,
+    _extra
   ) => {
     // onPageChange(1, PAGE_SIZE)
-    console.log('table changed params', pagination, filters, sorter, extra)
+
     setFilters(filters as TFilters)
   }
 

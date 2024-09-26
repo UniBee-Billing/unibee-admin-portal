@@ -33,7 +33,7 @@ const Index = ({ userId }: { userId: number }) => {
       message.error(err.message)
       return
     }
-    console.log('onetime his res: ', res)
+
     const { paymentItems, total } = res
     setOneTimeHistory(paymentItems ?? [])
     setTotal(total)
