@@ -141,7 +141,7 @@ const Index = ({
       if (end != null) {
         searchTerm.createTimeEnd = end.hour(23).minute(59).second(59).unix()
       }
-      console.log('search term:  ', searchTerm)
+
       // return
       let amtFrom = searchTerm.amountStart,
         amtTo = searchTerm.amountEnd
@@ -159,7 +159,6 @@ const Index = ({
           return null
         }
       }
-      console.log('amtFrom/to ', amtFrom, '//', amtTo)
 
       if (
         typeof amtFrom == 'number' &&
@@ -171,7 +170,6 @@ const Index = ({
       }
       searchTerm.amountStart = amtFrom
       searchTerm.amountEnd = amtTo
-      console.log('searchTerm: ', searchTerm)
     }
     if (user != null) {
       searchTerm.userId = user.id as number
@@ -210,7 +208,7 @@ const Index = ({
       return
     }
     payload = { ...payload, ...filters }
-    console.log('export iv params: ', payload)
+
     // return
     setExporting(true)
     const [_, err] = await exportDataReq({ task: 'InvoiceExport', payload })

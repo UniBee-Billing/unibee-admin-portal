@@ -37,8 +37,6 @@ const Index = () => {
 
   const goBack = () => navigate(`${APP_PATH}discount-code/list`)
 
-  console.log('codeId: ', codeId)
-
   const columns: ColumnsType<DiscountCodeUsage> = [
     {
       title: 'Code',
@@ -155,7 +153,7 @@ const Index = () => {
       searchTerms,
       refreshCb: fetchData
     })
-    console.log('code usage detail list: ', res)
+
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -268,7 +266,7 @@ const Search = ({
       return
     }
     payload.id = id
-    console.log('export tx params: ', payload)
+
     // return
     setExporting(true)
     const [_, err] = await exportDataReq({

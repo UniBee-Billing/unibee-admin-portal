@@ -8,7 +8,7 @@ export default tslint.config({
   ignores: ['dist', 'public', 'node_modules'],
   extends: [eslint.configs.recommended, ...tslint.configs.recommended],
   rules: {
-    'no-console': 'warn',
+    'no-console': 'error',
     '@typescript-eslint/no-unused-vars': [
       'error',
       {

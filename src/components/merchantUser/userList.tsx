@@ -84,7 +84,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    console.log('get merchantUser AND roleList: ', res)
+
     const { merchantUserListRes, roleListRes } = res
     const { merchantMembers, total } = merchantUserListRes
     setUsers(merchantMembers ?? [])
@@ -108,7 +108,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    console.log('get merchant user list: ', res)
+
     const { merchantMembers, total } = res
     setUsers(merchantMembers ?? [])
     setTotal(total)

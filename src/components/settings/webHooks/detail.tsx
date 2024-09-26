@@ -33,7 +33,6 @@ const Index = ({
   const [eventList, setEventList] = useState<string[]>([]) // this is to populate the event <Select />, not used for update.
 
   const onConfirm = async () => {
-    // console.log('form v: ', form.getFieldsValue())
     setSubmitting(true)
     const [_, err] = await saveWebhookReq(form.getFieldsValue())
     if (err != null) {

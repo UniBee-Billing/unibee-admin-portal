@@ -67,7 +67,7 @@ const Index = () => {
     const [productRes, productErr] = await getProductDetailReq(
       Number(productId)
     )
-    console.log('get product detail res: ', productRes, '//', productErr)
+
     if (null != productErr || productRes.product == null) {
       productList.push({
         id: productId,

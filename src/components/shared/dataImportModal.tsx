@@ -30,21 +30,18 @@ const Index = ({
 
   const downloadTemplate: { [key in TImportDataType]: () => void } = {
     UserImport: () => {
-      console.log('user data import')
       downloadStaticFile(
         'https://api.unibee.top/import/template/user_import',
         'user_import_template.xlsx'
       )
     },
     ActiveSubscriptionImport: () => {
-      console.log('active sub import')
       downloadStaticFile(
         'https://api.unibee.top/import/template/active_subscription_import',
         'active_subscription_import_template.xlsx'
       )
     },
     HistorySubscriptionImport: () => {
-      console.log('history sub import')
       downloadStaticFile(
         'https://api.unibee.top/import/template/history_subscription_import',
         'subscription_history_import_template.xlsx'
@@ -55,7 +52,6 @@ const Index = ({
   const onFileChange: React.ChangeEventHandler<HTMLInputElement> = async (
     evt
   ) => {
-    console.log('file change: ', evt)
     if (evt.target.files == null) {
       return
     }
@@ -66,7 +62,7 @@ const Index = ({
     }
     setFileStat({ name: f.name, size: f.size })
     // evt.preventDefault()
-    // console.log('importing: ', importType, '///', f)
+
     // return
     setImporting(true)
     const [_, err] = await importDataReq(f, importType)

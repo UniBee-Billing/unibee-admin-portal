@@ -153,7 +153,6 @@ const InvoiceMatch = ({
   list: UserInvoice[] | null
   goToDetail: (url: string) => void
 }) => {
-  // console.log("inv list: ", list);
   return (
     <>
       <Row
@@ -213,7 +212,6 @@ const InvoiceMatch = ({
               // style={{ height: "32px", margin: "6px 0" }}
               className="clickable-item"
               key={iv.id}
-              // onClick={() => console.log("iv clicked: ", iv)}
               onClick={() => goToDetail(`invoice/${iv.invoiceId}`)}
             >
               <Col
@@ -294,7 +292,6 @@ const AccountMatch = ({
   list: IAccountInfo[] | null
   goToDetail: (url: string) => void
 }) => {
-  // console.log("acc matched: ", list);
   return (
     <>
       <Row

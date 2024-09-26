@@ -218,7 +218,6 @@ const Index = () => {
       return
     }
 
-    // console.log('exporting...,', payload)
     // return
     setExporting(true)
     const [_, err] = await exportDataReq({
@@ -401,7 +400,6 @@ const Index = () => {
       destination.droppableId == 'available-fields' &&
       source.droppableId == 'exported-fields'
     ) {
-      console.log('no support for moving back')
       return
     }
 
@@ -411,7 +409,7 @@ const Index = () => {
       destination.droppableId == 'exported-fields'
     ) {
       // reordering in export-fields
-      console.log('reordering...')
+
       if (destination.index == source.index) {
         // you are not dragging anything
         return
@@ -419,13 +417,11 @@ const Index = () => {
       const srcItem = fields[source.index]
       let newFields = fields
       if (destination.index > source.index) {
-        console.log('move down')
         newFields = update(fields, {
           $splice: [[destination.index + 1, 0, srcItem]]
         })
         newFields = update(newFields, { $splice: [[source.index, 1]] })
       } else {
-        console.log('move up')
         newFields = update(fields, {
           $splice: [[destination.index, 0, srcItem]]
         })
@@ -437,7 +433,6 @@ const Index = () => {
     }
 
     if (destination.droppableId == null) {
-      console.log('no droppableId found')
       return
     }
 

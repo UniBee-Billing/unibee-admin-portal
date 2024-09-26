@@ -86,7 +86,7 @@ const Index = () => {
       { page, count: PAGE_SIZE, ...searchTerm, ...filters },
       fetchData
     )
-    console.log('code list: ', res)
+
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -103,7 +103,7 @@ const Index = () => {
       return
     }
     payload = { ...payload, ...filters }
-    console.log('export tx params: ', payload)
+
     // return
     setExporting(true)
     const [_, err] = await exportDataReq({
@@ -296,7 +296,7 @@ const Index = () => {
     extra
   ) => {
     // onPageChange(1, PAGE_SIZE)
-    console.log('table changed params', pagination, filters, sorter, extra)
+
     setFilters(filters as TFilters)
   }
 

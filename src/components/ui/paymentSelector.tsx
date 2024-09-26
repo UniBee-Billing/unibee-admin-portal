@@ -88,9 +88,8 @@ const Index = ({
     if (disabled) {
       return
     }
-    console.log('label clicked')
+
     if (e.target instanceof HTMLInputElement) {
-      console.log('radio inside label clicked..', e.target.value)
       onSelect(Number(e.target.value))
     }
   }

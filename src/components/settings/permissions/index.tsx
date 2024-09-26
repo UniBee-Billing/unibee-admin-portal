@@ -53,7 +53,6 @@ const Index = () => {
   }
 
   const onSave = (r: TRole) => async () => {
-    console.log('saving....: ', r)
     if (r.role == null || r.role.trim() == '') {
       message.error('Role name must not be empty')
       setErrLocalId(r.localId)
@@ -126,9 +125,8 @@ const Index = () => {
 
   const onPermChange =
     (localId: string, group: string) => (checked: boolean) => {
-      console.log('localId/grp: ', localId, '//', group, '//', checked)
       const rowIdx = roles.findIndex((r) => r.localId == localId)
-      console.log('rowIdx: ', rowIdx)
+
       if (rowIdx == -1) {
         return
       }
@@ -136,7 +134,7 @@ const Index = () => {
         roles[rowIdx].permissions == null
           ? -1
           : roles[rowIdx].permissions.findIndex((p) => p.group == group)
-      console.log('colIdx: ', colIdx)
+
       let newRoles = roles
       if (colIdx == -1) {
         if (newRoles[rowIdx].permissions == null) {
@@ -160,7 +158,7 @@ const Index = () => {
           }
         })
       }
-      console.log('new roles: ', newRoles)
+
       setRoles(newRoles)
     }
 

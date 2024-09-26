@@ -12,7 +12,6 @@ interface Props {
 }
 
 const Index = ({ detail, closeModal }: Props) => {
-  console.log('invoice detai: ', detail)
   const [loading] = useState(false)
   // const appConfigStore = useAppConfigStore();
   if (detail != null && detail.lines) {

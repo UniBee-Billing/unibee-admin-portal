@@ -38,7 +38,7 @@ const Index = () => {
         (searchTerms[k] == undefined || searchTerms[k].trim() == '') &&
         delete searchTerms[k]
     )
-    console.log('search term: ', searchTerms)
+
     // return
     const params = { page, count: PAGE_SIZE, ...searchTerms }
     setLoading(true)
@@ -165,7 +165,6 @@ const Index = () => {
     sorter,
     extra
   ) => {
-    console.log('params', pagination, filters, sorter, extra)
     if (filters.status == null) {
       return
     }

@@ -127,7 +127,6 @@ const Index = () => {
     sorter,
     extra
   ) => {
-    console.log('params', pagination, filters, sorter, extra)
     if (filters.status == null) {
       return
     }
@@ -161,7 +160,6 @@ const Index = () => {
         onRow={(record, rowIndex) => {
           return {
             onClick: () => {
-              console.log('row click: ', record, '///', rowIndex)
               navigate(`${APP_PATH}billable-metric/${record.id}`)
             }
           }

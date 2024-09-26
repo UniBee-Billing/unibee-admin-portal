@@ -53,7 +53,7 @@ const UserAccountTab = ({
     if (gatewayId != undefined) {
       body.gatewayId = gatewayId
     }
-    console.log('user profile: ', body)
+
     // return
     setLoading(true)
     const [res, err] = await saveUserProfileReq(body)

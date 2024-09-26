@@ -125,7 +125,7 @@ const Index = () => {
   const [searchParams, _] = useSearchParams()
   const productId = useRef(parseInt(searchParams.get('productId') ?? '0'))
   const productsStore = useProductListStore()
-  console.log('productsStore: ', productsStore.list)
+
   const productDetail = productsStore.list.find(
     (p) => p.id == productId.current
   )
@@ -287,8 +287,6 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     m = m.filter((metric: Metric) => !isNaN(metric.metricLimit))
     f.metricLimits = m
 
-    console.log('saving...: ', f)
-
     setLoading(true)
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
@@ -296,7 +294,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       message.error(err.message)
       return
     }
-    console.log('saving plan res: ', updatedPlan)
+
     message.success(`Plan ${isNew ? 'created' : 'saved'}`)
     productId.current = updatedPlan.productId
     if (isNew) {

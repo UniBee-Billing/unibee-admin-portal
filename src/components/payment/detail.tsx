@@ -27,7 +27,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    console.log('payment detail res: ', paymentDetail)
+
     /*
     const { invoice } = res
     normalizeAmt([invoice])

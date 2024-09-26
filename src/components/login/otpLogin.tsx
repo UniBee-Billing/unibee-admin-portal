@@ -114,7 +114,6 @@ const MailForm = ({
       setSubmitting(false)
       setLogging(false)
       if (err instanceof Error) {
-        console.log('err sending mailaddress: ', err.message)
         setErrMsg(err.message)
       } else {
         setErrMsg('Unknown error')

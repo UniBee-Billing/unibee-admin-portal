@@ -12,7 +12,6 @@ interface Props {
 const Index = ({ subInfo, closeModal, refresh }: Props) => {
   const [loading, setLoading] = useState(false)
   const onConfirm = async () => {
-    console.log('cancelling ....', subInfo?.subscriptionId)
     setLoading(true)
     const [_, err] = await cancelSubReq(subInfo?.subscriptionId as string)
     setLoading(false)
