@@ -47,7 +47,7 @@ const colStyle: CSSProperties = { fontWeight: 'bold' }
 
 type TAnalyticsRecord = {
   amount: number
-  amountType: string // mrr | new_mrr |
+  amountType: string // mrr | new_mrr | upgrade_mrr | downgrade_mrr | arr | reactivation_mrr |
   currency: string
   id: number
   merchantId: number
@@ -85,8 +85,6 @@ const Index = () => {
   useEffect(() => {
     getList()
   }, [])
-
-  // useInterval(getList, 6000)
 
   return (
     <div>
