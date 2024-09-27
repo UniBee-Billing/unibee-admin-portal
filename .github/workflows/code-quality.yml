@@ -25,3 +25,6 @@ jobs:
 
       - name: Run type checker
         run: npx tsc
+
+      - name: Run test cases
+        run: yarn test

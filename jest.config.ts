@@ -10,7 +10,6 @@ const config: Config = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
-  // testEnvironment: 'jsdom',
   roots: ['<rootDir>/specs'],
   transform: {
     '^.+\\.(ts|tsx)$': [
