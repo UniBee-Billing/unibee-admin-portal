@@ -529,7 +529,6 @@ const Index = ({
                   maxLength={64}
                   placeholder="Max characters: 64"
                   value={refundReason}
-                  disabled={loading}
                   onChange={onRefundReasonChange}
                 />
               </div>
@@ -538,7 +537,6 @@ const Index = ({
                 <div className="mr-4">Refund Amt:</div>
                 <Input
                   style={{ width: '100px' }}
-                  disabled={loading}
                   prefix={CURRENCY[currency].symbol}
                   placeholder={`≤ ${getTotal(invoiceList)}`}
                   value={refundAmt}
