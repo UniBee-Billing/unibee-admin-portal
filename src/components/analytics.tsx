@@ -88,7 +88,7 @@ const Index = () => {
 
   return (
     <div>
-      <div className=" mb-4 flex justify-end">
+      <div className="mb-4 flex justify-end">
         <Button onClick={getList} disabled={loading}>
           Refresh
         </Button>
