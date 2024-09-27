@@ -426,7 +426,8 @@ const Index = ({
 
           <Tooltip title="Send invoice">
             <Button
-              onClick={toggleNewInvoiceModal}
+              // onClick={toggleNewInvoiceModal}
+              onClick={toggleInvoiceDetailModal}
               icon={<MailOutlined />}
               style={{ border: 'unset' }}
               disabled={!getInvoicePermission(invoice).sendable}
