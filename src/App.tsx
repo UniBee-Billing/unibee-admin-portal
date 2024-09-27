@@ -29,6 +29,7 @@ import {
   useSessionStore
 } from './stores'
 
+import Analytics from './components/analytics'
 import BillableMetricsDetail from './components/billableMetrics/detail'
 import BillableMetricsList from './components/billableMetrics/list'
 import DiscountCodeDetail from './components/discountCode/detail'
@@ -490,6 +491,16 @@ const app_routes = [
           element={<DiscountCodeUsage />}
         />
       </Route>
+    )
+  },
+  {
+    page: 'analytics',
+    route: (
+      <Route
+        key="analytics"
+        path={`${APP_PATH}analytics`}
+        Component={Analytics}
+      />
     )
   },
   {
