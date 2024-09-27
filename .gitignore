@@ -25,3 +25,6 @@ dist-ssr
 
 dump
 publish_main.sh
+
+# Unit tests
+coverage
