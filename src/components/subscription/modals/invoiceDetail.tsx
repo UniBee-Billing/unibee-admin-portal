@@ -17,8 +17,7 @@ interface Props {
 }
 
 const Index = ({ detail, closeModal }: Props) => {
-  const [loading] = useState(false)
-  // const appConfigStore = useAppConfigStore();
+  const [loading, setLoading] = useState(false)
   if (detail != null && detail.lines) {
     detail.lines.forEach((item) => {
       item.id = ramdonString(8)
