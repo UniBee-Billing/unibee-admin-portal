@@ -29,7 +29,6 @@ import {
   useSessionStore
 } from './stores'
 
-import Analytics from './components/analytics'
 import BillableMetricsDetail from './components/billableMetrics/detail'
 import BillableMetricsList from './components/billableMetrics/list'
 import DiscountCodeDetail from './components/discountCode/detail'
@@ -117,7 +116,6 @@ const App: React.FC = () => {
     getItem('Transaction', '/transaction/list', <TransactionOutlined />),
     getItem('User List', '/user/list', <IdcardOutlined />),
     getItem('Admin List', '/admin/list', <TeamOutlined />),
-    // getItem('Analytics', '/analytics', <PieChartOutlined />),
     getItem('My Account', '/my-account', <IdcardOutlined />),
     getItem('Report', '/report', <BarChartOutlined />),
     getItem('Configuration', '/configuration', <SettingOutlined />),
@@ -496,16 +494,6 @@ const app_routes = [
           element={<DiscountCodeUsage />}
         />
       </Route>
-    )
-  },
-  {
-    page: 'analytics',
-    route: (
-      <Route
-        key="analytics"
-        path={`${APP_PATH}analytics`}
-        Component={Analytics}
-      />
     )
   },
   {
