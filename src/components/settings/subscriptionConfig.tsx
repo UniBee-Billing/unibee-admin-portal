@@ -15,14 +15,21 @@ interface SubscriptionConfig {
 
 interface ConfigItemProps {
   title: string
+  description?: string
 }
 
 const ConfigItem = ({
   title,
+  description,
   children
 }: PropsWithChildren<ConfigItemProps>) => (
   <div className="flex w-full items-center justify-between">
-    <div>{title}</div>
+    <div>
+      <div className="text-sm">{title}</div>
+      {description && (
+        <div className="text-xs text-gray-400">{description}</div>
+      )}
+    </div>
     <div>{children}</div>
   </div>
 )
@@ -55,7 +62,9 @@ export const SubscriptionConfig = () => {
 
   const configs = [
     {
-      title: 'Should downgrade effect immediately',
+      title: 'Immediate Downgrade',
+      description:
+        'By default, the downgrades takes effect at the end of the period',
       component: (
         <Config.Switch
           loading={loading}
@@ -67,7 +76,8 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Upgrade proration',
+      title: 'Prorated Upgrade Invoices',
+      description: 'Upgrades will generate prorated invoice by default',
       component: (
         <Config.Switch
           loading={loading}
@@ -77,7 +87,9 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Incomplete expire time',
+      title: ' Incomplete Status Duration',
+      description:
+        'The period during which subscription remains in “incomplete”',
       component: (
         <Config.InputNumber
           loading={loading}
@@ -88,7 +100,8 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Invoice email',
+      title: 'Enable Invoice Email',
+      description: 'Toggle to send invoice email to customers',
       component: (
         <Config.Switch
           loading={loading}
@@ -98,7 +111,9 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Automatic payment period',
+      title: 'Auto-Charge Start Time Before Period End (Default: 2)',
+      description:
+        'Time Difference for Auto-Payment Activation Before Period End',
       component: (
         <Config.InputNumber
           loading={loading}
@@ -111,7 +126,8 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Show zero invoice',
+      title: 'Display Invoices With Zero Amount',
+      description: 'Invoice With Zero Amount will hidden in list by default',
       component: (
         <Config.Switch
           loading={loading}
@@ -124,9 +140,9 @@ export const SubscriptionConfig = () => {
 
   return (
     <List>
-      {configs.map(({ component, title }) => (
+      {configs.map(({ component, title, description }) => (
         <List.Item>
-          <ConfigItem key={title} title={title}>
+          <ConfigItem key={title} title={title} description={description}>
             {component}
           </ConfigItem>
         </List.Item>
