@@ -7,6 +7,7 @@ import '../../shared.css'
 import AppConfig from './appConfig'
 import EmailTemplates from './emailTemplates'
 import Permissions from './permissions'
+import { SubscriptionConfig } from './subscriptionConfig'
 import WebhookList from './webHooks/list'
 
 const Index = () => {
@@ -39,6 +40,11 @@ const Index = () => {
       key: 'webhook',
       label: 'Webhook',
       children: <WebhookList />
+    },
+    {
+      key: 'Subscription Config',
+      label: 'Subscription Config',
+      children: <SubscriptionConfig />
     }
   ]
   const onTabChange = (key: string) => {
