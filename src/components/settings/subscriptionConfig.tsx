@@ -111,7 +111,7 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Auto-Charge Start Time Before Period End (Default: 2)',
+      title: 'Auto-Charge Start Time Before Period End (Default 2 hours)',
       description:
         'Time Difference for Auto-Payment Activation Before Period End',
       component: (
