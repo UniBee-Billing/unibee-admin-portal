@@ -1,4 +1,4 @@
-import { List } from 'antd'
+import { List, message } from 'antd'
 import { PropsWithChildren } from 'react'
 import { useFetch } from '../../hooks'
 import { request } from '../../requests/client'
@@ -52,8 +52,11 @@ export const SubscriptionConfig = () => {
         payload: Partial<SubscriptionConfig>,
         data: SubscriptionConfig
       ) => {
-        request.post('/merchant/subscription/config/update', payload)
+        await request.post('/merchant/subscription/config/update', payload)
         return data
+      },
+      onError: (err) => {
+        message.error(err.message)
       }
     }
   )

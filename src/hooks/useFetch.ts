@@ -6,6 +6,7 @@ interface DataSetterOptions<T> {
   optimistic: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateRemoteSourceFunction: (payload: any, data: T) => Promise<T>
+  onError: (err: Error) => void
 }
 
 export const useFetch = <T>(
@@ -31,6 +32,7 @@ export const useFetch = <T>(
 
       if (err !== null) {
         setError(err)
+        options?.onError?.(err)
       }
 
       setLoading(false)
