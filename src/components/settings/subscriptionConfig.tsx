@@ -65,9 +65,9 @@ export const SubscriptionConfig = () => {
 
   const configs = [
     {
-      title: 'Immediate Downgrade',
+      title: 'Enable Immediate Downgrade',
       description:
-        'By default, the downgrades takes effect at the end of the period',
+        'By default, downgrades in UniBee take effect at the end of the current billing cycle. Enabling Immediate Downgrade allows users to apply a downgrade as soon as they request it, without waiting for the cycle to end',
       component: (
         <Config.Switch
           loading={loading}
@@ -80,7 +80,8 @@ export const SubscriptionConfig = () => {
     },
     {
       title: 'Prorated Upgrade Invoices',
-      description: 'Upgrades will generate prorated invoice by default',
+      description:
+        'By default, upgrades will automatically generate a prorated invoice based on the remaining billing period',
       component: (
         <Config.Switch
           loading={loading}
@@ -92,7 +93,7 @@ export const SubscriptionConfig = () => {
     {
       title: ' Incomplete Status Duration',
       description:
-        'The period during which subscription remains in “incomplete”',
+        'The duration for which a subscription remains in the "incomplete" status',
       component: (
         <Config.InputNumber
           loading={loading}
@@ -103,8 +104,9 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Enable Invoice Email',
-      description: 'Toggle to send invoice email to customers',
+      title: 'Enable UniBee Billing Emails',
+      description:
+        'Turn this on to automatically send billing emails to your users',
       component: (
         <Config.Switch
           loading={loading}
@@ -116,7 +118,7 @@ export const SubscriptionConfig = () => {
     {
       title: 'Auto-Charge Start Time Before Period End (Default 2 hours)',
       description:
-        'Time Difference for Auto-Payment Activation Before Period End',
+        'The time interval before the period ends when auto-payment is triggered. Default set up is 2 hours in UniBee',
       component: (
         <Config.InputNumber
           loading={loading}
@@ -129,8 +131,9 @@ export const SubscriptionConfig = () => {
       )
     },
     {
-      title: 'Display Invoices With Zero Amount',
-      description: 'Invoice With Zero Amount will hidden in list by default',
+      title: 'Hide Zero Value Invoices',
+      description:
+        'By default, UniBee generates and displays invoices with a zero balance. Enable this option to hide invoices with a value of zero',
       component: (
         <Config.Switch
           loading={loading}
