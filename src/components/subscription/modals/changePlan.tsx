@@ -1,4 +1,5 @@
 import { Button, Divider, Modal, Select, Tag } from 'antd'
+import { useMemo } from 'react'
 import HiddenIcon from '../../../assets/hidden.svg?react'
 import { IPlan, ISubscriptionType } from '../../../shared.types'
 import Plan from '../plan'
@@ -32,6 +33,11 @@ const ChangePlan = ({
   onCancel,
   onConfirm
 }: Props) => {
+  const sameProductPlans = useMemo(
+    () => plans.filter((plan) => subInfo?.productId === plan.productId),
+    [plans, subInfo]
+  )
+
   if (selectedPlanId == null) {
     return null
   }
@@ -55,7 +61,7 @@ const ChangePlan = ({
           style={{ width: 300 }}
           value={selectedPlanId}
           onChange={setSelectedPlan}
-          options={plans.map((p) => ({
+          options={sameProductPlans.map((p) => ({
             label:
               subInfo?.planId == p.id ? (
                 <div className="flex w-full items-center justify-between">
