@@ -53,6 +53,9 @@ export const SubscriptionConfig = () => {
         data: SubscriptionConfig
       ) => {
         await request.post('/merchant/subscription/config/update', payload)
+
+        message.success('The changes has been applied')
+
         return data
       },
       onError: (err) => {
