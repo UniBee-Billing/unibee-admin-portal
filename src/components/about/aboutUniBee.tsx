@@ -1,6 +1,7 @@
 import { Alert, Button, ConfigProvider, Modal } from 'antd'
 import React, { useState } from 'react'
 import { useLicense, useVersion } from '../../hooks/useVersion'
+import { useProfileStore } from '../../stores'
 import { withWeakTextLoading, writeClipboardText } from '../../utils'
 import { ContactCard } from './ContactCard'
 
@@ -25,25 +26,18 @@ export const AboutUniBee: React.FC = () => {
     licenseName,
     error: fetchLicenseError
   } = useLicense()
-
-  const showModal = () => {
-    setOpen(true)
-  }
-
-  const handleCancel = () => {
-    setOpen(false)
-  }
+  const profile = useProfileStore()
 
   return (
     <ConfigProvider modal={{ styles: modalStyle }}>
       <div
-        onClick={() => showModal()}
+        onClick={() => setOpen(true)}
         className="mb-1 mt-4 cursor-pointer text-gray-50 transition duration-300 hover:opacity-75"
         color="default"
       >
         About UniBee
       </div>
-      <Modal open={open} onCancel={handleCancel} footer={[]}>
+      <Modal open={open} onCancel={() => setOpen(false)} footer={[]}>
         {(fetchVersionError || fetchLicenseError) && (
           <Alert
             className="mt-6"
@@ -57,6 +51,7 @@ export const AboutUniBee: React.FC = () => {
           <div className="mt-1 text-xs opacity-60">
             {withWeakTextLoading(version, loadingVersion)}
           </div>
+          <div className="mt-1 text-xs opacity-60">{profile.email}</div>
           <div className="mt-1 text-xs opacity-60">
             {withWeakTextLoading(licenseName, loadingLicense)}
           </div>
