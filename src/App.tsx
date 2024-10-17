@@ -48,6 +48,7 @@ import SubscriptionList from './components/subscription/list'
 import CustomerDetail from './components/user/detail'
 import CustomerList from './components/user/list'
 // import Users from "./components/userList";
+import { AboutUniBee } from './components/about/aboutUniBee'
 import ActivityLogs from './components/activityLogs'
 import AppSearch from './components/appSearch'
 import Login from './components/login'
@@ -304,7 +305,11 @@ const App: React.FC = () => {
                       ))}
                 </div>
               </div>
-              <div onClick={logout} className="my-4 cursor-pointer">
+              <AboutUniBee></AboutUniBee>
+              <div
+                onClick={logout}
+                className="my-4 cursor-pointer text-red-400"
+              >
                 <LogoutOutlined />
                 &nbsp;&nbsp;Logout
               </div>

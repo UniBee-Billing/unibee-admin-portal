@@ -1,2 +1,5 @@
+export * from './clipboard'
 export * from './error'
 export * from './is'
+export * from './loading'
+export * from './version'
