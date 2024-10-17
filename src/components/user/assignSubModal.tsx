@@ -260,14 +260,6 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 </Col>
               </Row>
             </div>
-            {/* <div className="my-3 flex items-center gap-3">
-              <span>Require payment</span>
-              <Switch checked={requirePayment} onChange={setRequirePayment} />
-            </div>
-            <div className=" flex items-center gap-3">
-              <span>Include unpublished</span>
-              <Switch checked={includeUnpublished} onChange={onIncludeChange} />
-        </div>*/}
           </div>
         </div>
       </div>
