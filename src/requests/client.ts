@@ -1,5 +1,19 @@
 import axios from 'axios'
 
+enum ResponseCode {
+  SESSION_EXPIRED = 61,
+  INVALID_PERMISSION = 62,
+  SUCCESS = 0
+}
+
+export interface Response<T> {
+  data: T
+  code: ResponseCode
+  message: string
+  redirect: string
+  requestId: string
+}
+
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 60000
@@ -18,14 +32,22 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
   (responseConfig) => {
+    const { data } = responseConfig
+
+    // If the Content-Type is not application/json, we don't need to check the response
+    if (typeof data === 'string') {
+      return responseConfig
+    }
+
     if (
-      responseConfig.data.code !== 0 &&
-      responseConfig.data.code !== 61 &&
-      responseConfig.data.code !== 62
+      data.code !== ResponseCode.SUCCESS &&
+      data.code !== ResponseCode.SESSION_EXPIRED &&
+      data.code !== ResponseCode.INVALID_PERMISSION
     ) {
       return Promise.reject(new Error(responseConfig.data.message))
     }
-    if (responseConfig.data.code === 62) {
+
+    if (data.code === ResponseCode.INVALID_PERMISSION) {
       window.redirectToLogin = true
     }
     return responseConfig
