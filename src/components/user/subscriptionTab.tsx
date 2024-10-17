@@ -5,13 +5,13 @@ import {
 } from '@ant-design/icons'
 import { Button, Col, Empty, Popover, Row, Spin, Tooltip, message } from 'antd'
 import dayjs from 'dayjs'
-import React, { CSSProperties, ReactElement, useEffect, useState } from 'react'
+import { CSSProperties, ReactElement, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { normalizeSub, showAmount } from '../../helpers'
 import { getSubDetailInProductReq } from '../../requests'
 import { IProfile, ISubscriptionType } from '../../shared.types'
 import { SubscriptionStatus } from '../ui/statusTag'
-import ModalAssignSub from './assignSubModal'
+import ModalAssignSub from './assignSub/assignSubModal'
 
 const rowStyle: CSSProperties = {
   display: 'flex',

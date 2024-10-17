@@ -1,16 +1,16 @@
 import { Button, Col, Divider, message, Modal, Row, Select, Switch } from 'antd'
 import update from 'immutability-helper'
 import { useEffect, useState } from 'react'
-import HiddenIcon from '../../assets/hidden.svg?react'
 import {
   createSubscriptionReq,
   getPlanList,
   TPlanListBody
-} from '../../requests'
-import { IPlan, IProfile } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
-import Plan from '../subscription/plan'
-import PaymentMethodSelector from '../ui/paymentSelector'
+} from '../../../requests'
+import { IPlan, IProfile } from '../../../shared.types'
+import { useAppConfigStore } from '../../../stores'
+import HiddenIcon from '../../assets/hidden.svg?react'
+import Plan from '../../subscription/plan'
+import PaymentMethodSelector from '../../ui/paymentSelector'
 
 interface Props {
   user: IProfile
