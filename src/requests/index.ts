@@ -2629,7 +2629,7 @@ export const getProductDetailReq = async (productId: number) => {
 export const getAnalyticsReportReq = async () => {
   try {
     const res = await request.get(
-      `https://api.unibee.top/analytics-api/analytics`
+      `/merchant/invoice/revenues`
     )
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
