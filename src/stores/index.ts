@@ -40,7 +40,9 @@ const INITIAL_PROFILE: IProfile = {
   whatsAPP: '',
   otherSocialInfo: '',
   token: '',
-  language: 'en'
+  language: 'en',
+  zipCode: '',
+  city: ''
 }
 
 interface ProfileSlice extends IProfile {
