@@ -1,16 +1,25 @@
 import { Button, Col, Divider, message, Modal, Row, Select, Switch } from 'antd'
 import update from 'immutability-helper'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import HiddenIcon from '../../../assets/hidden.svg?react'
+import { showAmount } from '../../../helpers'
 import {
+  BusinessUserData,
   createSubscriptionReq,
   getPlanList,
-  TPlanListBody
+  TPlanListBody,
+  UserData
 } from '../../../requests'
-import { IPlan, IProfile } from '../../../shared.types'
+import { request, Response } from '../../../requests/client'
+import { AccountType, IPlan, IProfile } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
-import HiddenIcon from '../../assets/hidden.svg?react'
+import { isEmpty, safeRun } from '../../../utils'
 import Plan from '../../subscription/plan'
 import PaymentMethodSelector from '../../ui/paymentSelector'
+import { AccountTypeForm, AccountTypeFormInstance } from './accountTypeForm'
+import { BusinessAccountValues } from './businessAccountForm'
+import { CheckoutItem } from './checkoutItem'
+import { PernsonalAccountValues } from './personalAccountForm'
 
 interface Props {
   user: IProfile
@@ -25,29 +34,53 @@ interface CreateSubScriptionBody {
   userId: number
   startIncomplete: boolean
   trialEnd?: number
+  user: UserData & Partial<BusinessUserData>
+  vatCountryCode: string | undefined
+  vatNumber: string | undefined
+  discountCode: string | undefined
 }
+
+export interface PreviewData {
+  taxPercentage: number
+  totalAmount: number
+  originAmount: number
+  discountMessage: string
+}
+
+type AccountValues = Pick<PernsonalAccountValues, 'country'> &
+  Pick<BusinessAccountValues, 'vat' | 'discountCode'>
 
 const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const appConfig = useAppConfigStore()
+  const accountTypeFormRef = useRef<AccountTypeFormInstance>(null)
   const [loading, setLoading] = useState(false)
   const [plans, setPlans] = useState<IPlan[]>([])
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null)
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null)
   const [requirePayment, setRequirePayment] = useState(true)
   const [includeUnpublished, setIncludeUnpublished] = useState(false)
+  const [accountType, setAccountType] = useState(user.type)
+  const [previewData, setPreviewData] = useState<PreviewData | undefined>()
+  const [accountFormValues, setAccountFormValues] = useState<
+    AccountValues | undefined
+  >()
   const onIncludeChange = (checked: boolean) => {
     if (!checked) {
       if (
-        selectedPlan != null &&
+        selectedPlanId != null &&
         plans
           .filter((p) => p.publishStatus == 2)
-          .findIndex((p) => p.id == selectedPlan) == -1
+          .findIndex((p) => p.id == selectedPlanId) == -1
       ) {
         // if selected plan doesn't exist in published plans, reset it to null
-        setSelectedPlan(null)
+        setSelectedPlanId(null)
       }
     }
     setIncludeUnpublished(!includeUnpublished)
   }
+  const selectedPlan = useMemo(
+    () => plans.find(({ id }) => id === selectedPlanId),
+    [selectedPlanId, plans]
+  )
 
   // set card payment as default gateway
   const [gatewayId, setGatewayId] = useState<undefined | number>(
@@ -64,7 +97,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     quantity: number | null, // null means: don't update this field, keep its original value. I don't want to define 2 fn to do similar jobs.
     checked: boolean | null // ditto
   ) => {
-    const planIdx = plans.findIndex((p) => p.id == selectedPlan)
+    const planIdx = plans.findIndex((p) => p.id == selectedPlanId)
     if (planIdx == -1) {
       return
     }
@@ -91,7 +124,9 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   }
 
   const onSubmit = async () => {
-    if (selectedPlan == null) {
+    const values = await accountTypeFormRef.current?.submit()
+
+    if (selectedPlanId == null) {
       message.error('Please choose a plan')
       return
     }
@@ -100,15 +135,45 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       return
     }
 
-    // return
+    const {
+      country,
+      address,
+      companyName,
+      vat,
+      postalCode,
+      registrationNumber,
+      city
+    } = values!
 
+    const personalUserData = {
+      email: user.email,
+      countryCode: country,
+      type: accountType
+    }
+    const userData =
+      accountType === AccountType.PERSONAL
+        ? personalUserData
+        : {
+            ...personalUserData,
+            address,
+            companyName,
+            zipCode: postalCode,
+            vatNumber: vat,
+            registrationNumber,
+            city
+          }
     const body: CreateSubScriptionBody = {
-      planId: selectedPlan,
+      planId: selectedPlanId,
       gatewayId: gatewayId,
       userId: user.id!,
-      startIncomplete: false
+      startIncomplete: false,
+      user: userData,
+      vatNumber: accountFormValues?.vat,
+      vatCountryCode: accountFormValues?.country,
+      discountCode: accountFormValues?.discountCode
     }
-    // requirementPayment is mainly used for internal employees, defaut length is 5yr
+
+    // requirementPayment is mainly used for internal employees, default length is 5yr
     if (!requirePayment) {
       const fiveYearFromNow = new Date(
         new Date().setFullYear(new Date().getFullYear() + 5)
@@ -117,14 +182,18 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     } else {
       body.startIncomplete = true
     }
+
     setLoading(true)
+
     const [_, err] = await createSubscriptionReq(body)
+
     setLoading(false)
 
     if (null != err) {
       message.error(err.message)
       return
     }
+
     message.success('Subscription created')
     closeModal()
     refresh()
@@ -140,7 +209,9 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     }
 
     setLoading(true)
+
     const [res, err] = await getPlanList(body, fetchPlan)
+
     setLoading(false)
 
     if (err != null) {
@@ -158,9 +229,58 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     )
   }
 
+  const updatePrice = useCallback(
+    async (countryCode: string, discountCode?: string, vatNumber?: string) => {
+      if (!selectedPlanId) {
+        return
+      }
+
+      setLoading(true)
+
+      const [data, err] = await safeRun(() =>
+        request.post<Response<PreviewData>>(
+          '/merchant/subscription/create_preview',
+          {
+            planId: selectedPlanId,
+            vatNumber,
+            vatCountryCode: countryCode,
+            discountCode
+          }
+        )
+      )
+
+      setLoading(false)
+
+      if (err) {
+        message.error(err.message)
+        return
+      }
+
+      const previewData = data?.data?.data
+
+      setPreviewData(previewData)
+    },
+    [selectedPlanId]
+  )
+
   useEffect(() => {
     fetchPlan()
   }, [])
+
+  useEffect(() => {
+    if (!accountFormValues?.country) {
+      return
+    }
+
+    const values = accountFormValues as BusinessAccountValues
+
+    updatePrice(accountFormValues.country, values?.discountCode, values?.vat)
+  }, [
+    accountFormValues?.country,
+    accountFormValues?.discountCode,
+    accountFormValues?.vat,
+    updatePrice
+  ])
 
   return (
     <Modal
@@ -196,69 +316,114 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
             onSelect={onGatewayChange}
             disabled={loading}
           />
-        </div>
-        <div className="w-3/6">
-          <div className="mx-3 my-6 flex items-center justify-center">
-            <Select
-              loading={loading}
-              disabled={loading}
-              style={{ width: 260 }}
-              value={selectedPlan}
-              onChange={setSelectedPlan}
-              options={plans
-                .filter((p) =>
-                  includeUnpublished ? true : p.publishStatus == 2
-                )
-                .map((p) => ({
-                  value: p.id,
-                  label: (
-                    <div key={p.id} className="flex items-center">
-                      <span>{p.planName}</span>
-                      {p.publishStatus == 1 && (
-                        <div
-                          className="absolute flex h-4 w-4"
-                          style={{ right: '14px' }}
-                        >
-                          <HiddenIcon />
-                        </div>
-                      )}
-                    </div>
-                  )
-                }))}
-            />
-          </div>
+          <div className="mt-4">
+            <div className="mb-2 font-bold">Account type</div>
 
-          <div className="mb-12 flex flex-col items-center justify-center">
-            {selectedPlan != null && (
-              <Plan
-                plan={plans.find((p) => p.id == selectedPlan)!}
-                selectedPlan={selectedPlan}
-                setSelectedPlan={setSelectedPlan}
-                onAddonChange={onAddonChange}
-                isActive={false}
+            <AccountTypeForm
+              loading={loading}
+              previewData={previewData}
+              onFormValuesChange={(values, accountType) => {
+                setAccountFormValues(values as AccountValues)
+                setAccountType(accountType)
+              }}
+              ref={accountTypeFormRef}
+              user={user}
+            ></AccountTypeForm>
+          </div>
+        </div>
+
+        <div className="ml-1">
+          <div>
+            <div className="my-6 flex flex-col justify-center">
+              <div className="mb-2 font-bold">Choose Plan</div>
+              <Select
+                loading={loading}
+                disabled={loading}
+                style={{ width: 260 }}
+                value={selectedPlanId}
+                onChange={setSelectedPlanId}
+                options={plans
+                  .filter((p) =>
+                    includeUnpublished ? true : p.publishStatus == 2
+                  )
+                  .map((p) => ({
+                    value: p.id,
+                    label: (
+                      <div key={p.id} className="flex items-center">
+                        <span>{p.planName}</span>
+                        {p.publishStatus == 1 && (
+                          <div
+                            className="absolute flex h-4 w-4"
+                            style={{ right: '14px' }}
+                          >
+                            <HiddenIcon />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }))}
               />
-            )}
-            <div className="w-full" style={{ padding: '0 40px' }}>
-              <Row style={{ margin: '12px 0' }}>
-                <Col span={18}>Require payment</Col>
-                <Col span={6}>
-                  <Switch
-                    disabled={loading}
-                    checked={requirePayment}
-                    onChange={setRequirePayment}
+            </div>
+
+            <div className="mb-12 flex flex-col items-center justify-center">
+              {selectedPlanId != null && (
+                <Plan
+                  plan={plans.find((p) => p.id == selectedPlanId)!}
+                  selectedPlan={selectedPlanId}
+                  setSelectedPlan={setSelectedPlanId}
+                  onAddonChange={onAddonChange}
+                  isActive={false}
+                />
+              )}
+              <div className="w-full">
+                <Row style={{ margin: '12px 0' }}>
+                  <Col span={18}>Require payment</Col>
+                  <Col span={6}>
+                    <Switch
+                      disabled={loading}
+                      checked={requirePayment}
+                      onChange={setRequirePayment}
+                    />
+                  </Col>
+                </Row>
+                <Row>
+                  <Col span={18}>Include unpublished plans</Col>
+                  <Col span={6}>
+                    <Switch
+                      disabled={loading}
+                      checked={includeUnpublished}
+                      onChange={onIncludeChange}
+                    />
+                  </Col>
+                </Row>
+                <div className="my-8 h-[1px] w-full bg-gray-100"></div>
+                <CheckoutItem
+                  label="Sub Total"
+                  loading={loading}
+                  value={showAmount(
+                    previewData?.originAmount,
+                    selectedPlan?.currency
+                  )}
+                />
+                {previewData && (
+                  <CheckoutItem
+                    loading={loading}
+                    label="Tax"
+                    value={`${previewData?.taxPercentage ?? 0 / 100}%`}
                   />
-                </Col>
-              </Row>
-              <Row>
-                <Col span={18}>Include unpublished plans</Col>
-                <Col span={6}>
-                  <Switch
-                    disabled={loading}
-                    checked={includeUnpublished}
-                    onChange={onIncludeChange}
-                  />
-                </Col>
-              </Row>
+                )}
+                {previewData && (
+                  <div className="my-8 h-[1px] w-full bg-gray-100"></div>
+                )}
+                <CheckoutItem
+                  loading={loading}
+                  label="Total"
+                  value={showAmount(
+                    previewData?.totalAmount,
+                    selectedPlan?.currency
+                  )}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -277,7 +442,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
           type="primary"
           onClick={onSubmit}
           loading={loading}
-          disabled={loading}
+          disabled={loading || isEmpty(selectedPlan)}
         >
           OK
         </Button>

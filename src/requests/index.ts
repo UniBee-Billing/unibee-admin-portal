@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { CURRENCY } from '../constants'
 import {
+  AccountType,
   DiscountCode,
   ExpiredError,
   IProfile,
@@ -875,6 +876,20 @@ export const updateSubscription = async (
     return [null, e]
   }
 }
+
+export interface BusinessUserData {
+  address: string
+  companyName: string
+  zipCode: string
+  vatNumber: string
+  registrationNumber: string
+}
+
+export interface UserData {
+  type: AccountType
+  countryCode: string
+}
+
 type TCreateSubReq = {
   planId: number
   gatewayId: number
@@ -884,7 +899,12 @@ type TCreateSubReq = {
   confirmTotalAmount?: number
   confirmCurrency?: string
   startIncomplete?: boolean
+  user: UserData & Partial<BusinessUserData>
+  vatCountryCode: string | undefined
+  vatNumber: string | undefined
+  discountCode: string | undefined
 }
+
 export const createSubscriptionReq = async ({
   planId,
   gatewayId,
@@ -893,7 +913,11 @@ export const createSubscriptionReq = async ({
   addons,
   confirmCurrency,
   confirmTotalAmount,
-  startIncomplete
+  startIncomplete,
+  user,
+  vatCountryCode,
+  vatNumber,
+  discountCode
 }: TCreateSubReq) => {
   try {
     const res = await request.post(`/merchant/subscription/create_submit`, {
@@ -905,7 +929,11 @@ export const createSubscriptionReq = async ({
       addonParams: addons,
       confirmTotalAmount,
       confirmCurrency,
-      startIncomplete
+      startIncomplete,
+      user,
+      vatCountryCode,
+      vatNumber,
+      discountCode
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })

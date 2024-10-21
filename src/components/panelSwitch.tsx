@@ -11,7 +11,10 @@ interface PanelSwirtchProps {
 // Use display:none instead of unmounting the component to keep the state and avoid re-rendering
 export const PanelSwitch = ({ panels, activeKey }: PanelSwirtchProps) =>
   Object.keys(panels).map((mappedKey) => (
-    <div className={mappedKey === activeKey.toString() ? 'block' : 'hidden'}>
+    <div
+      key={mappedKey}
+      className={mappedKey === activeKey.toString() ? 'block' : 'hidden'}
+    >
       {panels[mappedKey]}
     </div>
   ))
