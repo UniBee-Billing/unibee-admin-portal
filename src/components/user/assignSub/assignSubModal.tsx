@@ -29,7 +29,11 @@ import {
   WithDoubleConfirmFields
 } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
-import { isEmpty, safeRun } from '../../../utils'
+import {
+  isEmpty,
+  safeRun,
+  useDebouncedCallbackWithDefault
+} from '../../../utils'
 import Plan from '../../subscription/plan'
 import PaymentMethodSelector from '../../ui/paymentSelector'
 import { AccountTypeForm, AccountTypeFormInstance } from './accountTypeForm'
@@ -323,6 +327,10 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     [selectedPlanId, user.id, gatewayId]
   )
 
+  const debouncedUpdateDiscountCode = useDebouncedCallbackWithDefault(
+    (value: string) => setDiscountCode(value)
+  )
+
   useEffect(() => {
     fetchPlan()
   }, [])
@@ -403,7 +411,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 help={previewData?.discountMessage}
               >
                 <Input
-                  onChange={(e) => setDiscountCode(e.target.value)}
+                  onChange={(e) => debouncedUpdateDiscountCode(e.target.value)}
                   placeholder="Discount code"
                 />
               </Form.Item>
