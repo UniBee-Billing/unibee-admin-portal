@@ -12,7 +12,6 @@ export type BusinessAccountValues = {
   address: string
   registrationNumber: string
   vat: string
-  discountCode: string
 }
 
 export interface BusinessAccountFormProps {

@@ -58,11 +58,8 @@ export const AccountTypeForm = forwardRef<
   }
 
   const validate = async () => {
-    if (
-      !!previewData?.vatNumberValidateMessage ||
-      !!previewData?.discountMessage
-    ) {
-      throw new Error('Invalid discount code or VAT number')
+    if (previewData?.vatNumberValidateMessage) {
+      throw new Error('Invalid VAT number')
     }
 
     await formRef.current?.validateFields()

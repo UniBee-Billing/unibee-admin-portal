@@ -79,7 +79,7 @@ export interface PreviewData {
 }
 
 type AccountValues = Pick<PernsonalAccountValues, 'country'> &
-  Pick<BusinessAccountValues, 'vat' | 'discountCode'>
+  Pick<BusinessAccountValues, 'vat'>
 
 const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const appConfig = useAppConfigStore()
@@ -177,6 +177,11 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       return
     }
 
+    if (previewData.discountMessage) {
+      message.error(previewData.discountMessage)
+      return
+    }
+
     if (selectedPlanId == null) {
       message.error('Please choose a plan')
       return
@@ -221,7 +226,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       user: userData,
       vatNumber: accountFormValues?.vat,
       vatCountryCode: accountFormValues?.country,
-      discountCode: accountFormValues?.discountCode,
+      discountCode: discountCode,
       confirmTotalAmount: previewData.totalAmount,
       confirmCurrency: selectedPlan!.currency
     }
@@ -395,7 +400,6 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 validateStatus={getValidStatusByMessage(
                   previewData?.discountMessage
                 )}
-                hasFeedback
                 help={previewData?.discountMessage}
               >
                 <Input
