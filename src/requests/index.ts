@@ -2629,8 +2629,10 @@ export const getProductDetailReq = async (productId: number) => {
 export const getAnalyticsReportReq = async () => {
   try {
     const res = await request.get(
-      `/merchant/invoice/revenues`
+      // `/merchant/invoice/revenues`
+      'http://localhost:8888/analytics/revenue'
     )
+    console.log('revenue res: ', res)
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
       throw new ExpiredError(
