@@ -16,8 +16,8 @@ export const CheckoutItem = ({
   valueStyle
 }: CheckoutItemProps) =>
   value && (
-    <div className="flex items-center justify-between">
-      <span className={`text-lg ${labelStyle}`}>{label}</span>
+    <div className="my-2 flex items-center justify-between">
+      <span className={labelStyle}>{label}</span>
       {loading ? (
         <Skeleton.Input style={{ height: 20 }} active />
       ) : (

@@ -70,6 +70,7 @@ type VATNumberValidateResult = {
 interface InvoicePreviewData {
   taxAmount: number
   subscriptionAmountExcludingTax: number
+  discountAmount: number
 }
 
 export interface PreviewData {
@@ -478,8 +479,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 </Row>
                 <div className="my-8 h-[1px] w-full bg-gray-100"></div>
                 <CheckoutItem
-                  label="Sub Total"
-                  labelStyle="text-gray-500"
+                  label="Subtotal"
                   loading={loading}
                   value={formatAmount(
                     previewData?.invoice.subscriptionAmountExcludingTax
@@ -488,15 +488,20 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 {selectedPlanId && (
                   <CheckoutItem
                     loading={loading}
-                    labelStyle="text-gray-500"
                     label={`Tax(${parsedTax}%)`}
                     value={formatAmount(previewData?.invoice.taxAmount)}
                   />
                 )}
+                <CheckoutItem
+                  label="Discounted amount"
+                  loading={loading}
+                  value={formatAmount(previewData?.invoice.discountAmount)}
+                />
                 {selectedPlanId && (
                   <div className="my-8 h-[1px] w-full bg-gray-100"></div>
                 )}
                 <CheckoutItem
+                  labelStyle="text-lg"
                   loading={loading}
                   label="Total"
                   value={formatAmount(previewData?.totalAmount)}
