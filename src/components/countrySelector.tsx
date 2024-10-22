@@ -29,6 +29,12 @@ export const CountrySelector = ({
   return (
     <Select
       loading={loading}
+      showSearch
+      filterOption={(input, option) =>
+        ((option?.label as string) ?? '')
+          .toLowerCase()
+          .includes(input.toLowerCase())
+      }
       placeholder="Select a country"
       onChange={handleCountryChange}
       options={options}
