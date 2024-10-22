@@ -125,7 +125,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
 
   const formatAmount = useCallback(
     (amount: number | undefined) =>
-      selectedPlan && amount
+      selectedPlan && !isEmpty(amount)
         ? showAmount(amount, selectedPlan.currency)
         : undefined,
     [selectedPlan]
