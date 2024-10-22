@@ -25,6 +25,9 @@ export interface BusinessAccountFormProps {
   ): void
 }
 
+const getValidStatusByMessage = (message: string | undefined) =>
+  message ? 'error' : ''
+
 export const BusinessAccountForm = forwardRef<
   FormInstance,
   BusinessAccountFormProps
@@ -90,14 +93,22 @@ export const BusinessAccountForm = forwardRef<
         <Input placeholder="Registration number"></Input>
       </Form.Item>
 
-      <Form.Item label="VAT" name="vat" initialValue={user.vATNumber}>
+      <Form.Item
+        label="VAT"
+        name="vat"
+        initialValue={user.vATNumber}
+        validateStatus={getValidStatusByMessage(
+          previewData?.vatNumberValidateMessage
+        )}
+        help={previewData?.vatNumberValidateMessage}
+      >
         <Input placeholder="VAT"></Input>
       </Form.Item>
 
       <Form.Item
         label="Discount code"
         name="discountCode"
-        validateStatus={previewData?.discountMessage ? 'error' : ''}
+        validateStatus={getValidStatusByMessage(previewData?.discountMessage)}
         hasFeedback
         help={previewData?.discountMessage}
       >

@@ -57,9 +57,20 @@ export const AccountTypeForm = forwardRef<
     setSelectedAccountType(user.type)
   }
 
+  const validate = async () => {
+    if (
+      !!previewData?.vatNumberValidateMessage ||
+      !!previewData?.discountMessage
+    ) {
+      throw new Error('Invalid discount code or VAT number')
+    }
+
+    await formRef.current?.validateFields()
+  }
+
   useImperativeHandle(ref, () => ({
     submit: async () => {
-      await formRef.current?.validateFields()
+      await validate()
 
       return formRef.current?.getFieldsValue()
     }

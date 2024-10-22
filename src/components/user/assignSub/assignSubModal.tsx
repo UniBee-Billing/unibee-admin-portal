@@ -40,11 +40,17 @@ interface CreateSubScriptionBody {
   discountCode: string | undefined
 }
 
+type VATNumberValidateResult = {
+  isValid: boolean
+}
+
 export interface PreviewData {
   taxPercentage: number
   totalAmount: number
   originAmount: number
   discountMessage: string
+  vatNumberValidate: VATNumberValidateResult
+  vatNumberValidateMessage: string
 }
 
 type AccountValues = Pick<PernsonalAccountValues, 'country'> &
@@ -405,14 +411,14 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                     selectedPlan?.currency
                   )}
                 />
-                {previewData && (
+                {selectedPlanId && (
                   <CheckoutItem
                     loading={loading}
                     label="Tax"
                     value={`${previewData?.taxPercentage ?? 0 / 100}%`}
                   />
                 )}
-                {previewData && (
+                {selectedPlanId && (
                   <div className="my-8 h-[1px] w-full bg-gray-100"></div>
                 )}
                 <CheckoutItem
