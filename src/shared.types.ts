@@ -7,6 +7,11 @@ export enum AccountType {
   BUSINESS
 }
 
+export type WithDoubleConfirmFields<T> = {
+  confirmTotalAmount: number
+  confirmCurrency: string
+} & T
+
 // this is end user profile
 interface IProfile {
   zipCode: string

@@ -1,4 +1,15 @@
-import { Button, Col, Divider, message, Modal, Row, Select, Switch } from 'antd'
+import {
+  Button,
+  Col,
+  Divider,
+  Form,
+  Input,
+  message,
+  Modal,
+  Row,
+  Select,
+  Switch
+} from 'antd'
 import update from 'immutability-helper'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import HiddenIcon from '../../../assets/hidden.svg?react'
@@ -11,13 +22,21 @@ import {
   UserData
 } from '../../../requests'
 import { request, Response } from '../../../requests/client'
-import { AccountType, IPlan, IProfile } from '../../../shared.types'
+import {
+  AccountType,
+  IPlan,
+  IProfile,
+  WithDoubleConfirmFields
+} from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
 import { isEmpty, safeRun } from '../../../utils'
 import Plan from '../../subscription/plan'
 import PaymentMethodSelector from '../../ui/paymentSelector'
 import { AccountTypeForm, AccountTypeFormInstance } from './accountTypeForm'
-import { BusinessAccountValues } from './businessAccountForm'
+import {
+  BusinessAccountValues,
+  getValidStatusByMessage
+} from './businessAccountForm'
 import { CheckoutItem } from './checkoutItem'
 import { PernsonalAccountValues } from './personalAccountForm'
 
@@ -44,6 +63,11 @@ type VATNumberValidateResult = {
   isValid: boolean
 }
 
+interface InvoicePreviewData {
+  taxAmount: number
+  subscriptionAmountExcludingTax: number
+}
+
 export interface PreviewData {
   taxPercentage: number
   totalAmount: number
@@ -51,6 +75,7 @@ export interface PreviewData {
   discountMessage: string
   vatNumberValidate: VATNumberValidateResult
   vatNumberValidateMessage: string
+  invoice: InvoicePreviewData
 }
 
 type AccountValues = Pick<PernsonalAccountValues, 'country'> &
@@ -66,6 +91,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const [includeUnpublished, setIncludeUnpublished] = useState(false)
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
+  const [discountCode, setDiscountCode] = useState<string | undefined>()
   const [accountFormValues, setAccountFormValues] = useState<
     AccountValues | undefined
   >()
@@ -86,6 +112,18 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const selectedPlan = useMemo(
     () => plans.find(({ id }) => id === selectedPlanId),
     [selectedPlanId, plans]
+  )
+  const parsedTax = useMemo(
+    () => (previewData?.taxPercentage ?? 0) / 100,
+    [previewData]
+  )
+
+  const formatAmount = useCallback(
+    (amount: number | undefined) =>
+      selectedPlan && amount
+        ? showAmount(amount, selectedPlan.currency)
+        : undefined,
+    [selectedPlan]
   )
 
   // set card payment as default gateway
@@ -132,6 +170,13 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const onSubmit = async () => {
     const values = await accountTypeFormRef.current?.submit()
 
+    if (!previewData) {
+      message.error(
+        'Please wait for the price to be calculated before proceeding with the payment'
+      )
+      return
+    }
+
     if (selectedPlanId == null) {
       message.error('Please choose a plan')
       return
@@ -168,7 +213,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
             registrationNumber,
             city
           }
-    const body: CreateSubScriptionBody = {
+    const body: WithDoubleConfirmFields<CreateSubScriptionBody> = {
       planId: selectedPlanId,
       gatewayId: gatewayId,
       userId: user.id!,
@@ -176,7 +221,9 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       user: userData,
       vatNumber: accountFormValues?.vat,
       vatCountryCode: accountFormValues?.country,
-      discountCode: accountFormValues?.discountCode
+      discountCode: accountFormValues?.discountCode,
+      confirmTotalAmount: previewData.totalAmount,
+      confirmCurrency: selectedPlan!.currency
     }
 
     // requirementPayment is mainly used for internal employees, default length is 5yr
@@ -248,6 +295,8 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
           '/merchant/subscription/create_preview',
           {
             planId: selectedPlanId,
+            gatewayId,
+            userId: user.id,
             vatNumber,
             vatCountryCode: countryCode,
             discountCode
@@ -266,7 +315,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
 
       setPreviewData(previewData)
     },
-    [selectedPlanId]
+    [selectedPlanId, user.id, gatewayId]
   )
 
   useEffect(() => {
@@ -280,10 +329,10 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
 
     const values = accountFormValues as BusinessAccountValues
 
-    updatePrice(accountFormValues.country, values?.discountCode, values?.vat)
+    updatePrice(accountFormValues.country, discountCode, values?.vat)
   }, [
     accountFormValues?.country,
-    accountFormValues?.discountCode,
+    discountCode,
     accountFormValues?.vat,
     updatePrice
   ])
@@ -341,6 +390,19 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
         <div className="ml-1">
           <div>
             <div className="my-6 flex flex-col justify-center">
+              <div className="mb-2 font-bold">Discount code</div>
+              <Form.Item
+                validateStatus={getValidStatusByMessage(
+                  previewData?.discountMessage
+                )}
+                hasFeedback
+                help={previewData?.discountMessage}
+              >
+                <Input
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                  placeholder="Discount code"
+                />
+              </Form.Item>
               <div className="mb-2 font-bold">Choose Plan</div>
               <Select
                 loading={loading}
@@ -405,17 +467,18 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 <div className="my-8 h-[1px] w-full bg-gray-100"></div>
                 <CheckoutItem
                   label="Sub Total"
+                  labelStyle="text-gray-500"
                   loading={loading}
-                  value={showAmount(
-                    previewData?.originAmount,
-                    selectedPlan?.currency
+                  value={formatAmount(
+                    previewData?.invoice.subscriptionAmountExcludingTax
                   )}
                 />
                 {selectedPlanId && (
                   <CheckoutItem
                     loading={loading}
-                    label="Tax"
-                    value={`${previewData?.taxPercentage ?? 0 / 100}%`}
+                    labelStyle="text-gray-500"
+                    label={`Tax(${parsedTax}%)`}
+                    value={formatAmount(previewData?.invoice.taxAmount)}
                   />
                 )}
                 {selectedPlanId && (
@@ -424,10 +487,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 <CheckoutItem
                   loading={loading}
                   label="Total"
-                  value={showAmount(
-                    previewData?.totalAmount,
-                    selectedPlan?.currency
-                  )}
+                  value={formatAmount(previewData?.totalAmount)}
                 />
               </div>
             </div>
