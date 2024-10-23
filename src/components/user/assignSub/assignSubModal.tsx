@@ -73,6 +73,17 @@ interface InvoicePreviewData {
   discountAmount: number
 }
 
+enum DiscountType {
+  PERCENTAGE = 1,
+  AMOUNT
+}
+
+interface DiscountData {
+  discountAmount: number
+  discountPercentage: number
+  discountType: DiscountType
+}
+
 export interface PreviewData {
   taxPercentage: number
   totalAmount: number
@@ -81,6 +92,7 @@ export interface PreviewData {
   vatNumberValidate: VATNumberValidateResult
   vatNumberValidateMessage: string
   invoice: InvoicePreviewData
+  discount: DiscountData | null
 }
 
 type AccountValues = Pick<PernsonalAccountValues, 'country'> &
@@ -129,6 +141,26 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
         ? showAmount(amount, selectedPlan.currency)
         : undefined,
     [selectedPlan]
+  )
+
+  const formattedDiscountValue = useMemo(() => {
+    const discount = previewData?.discount
+
+    if (!discount) {
+      return
+    }
+
+    return discount.discountType === DiscountType.PERCENTAGE
+      ? `${discount.discountPercentage / 100}%`
+      : showAmount(discount.discountAmount, selectedPlan?.currency)
+  }, [selectedPlan, previewData])
+
+  const formattedDiscountLabel = useMemo(
+    () =>
+      previewData?.discount?.discountType === DiscountType.PERCENTAGE
+        ? 'Discounted percentage'
+        : 'Discounted amount',
+    [previewData]
   )
 
   // set card payment as default gateway
@@ -493,9 +525,9 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                   />
                 )}
                 <CheckoutItem
-                  label="Discounted amount"
+                  label={formattedDiscountLabel}
                   loading={loading}
-                  value={formatAmount(previewData?.invoice.discountAmount)}
+                  value={formattedDiscountValue}
                 />
                 {selectedPlanId && (
                   <div className="my-8 h-[1px] w-full bg-gray-100"></div>
