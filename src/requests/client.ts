@@ -19,7 +19,23 @@ const request = axios.create({
   timeout: 60000
 })
 
+const analyticsRequest = axios.create({
+  baseURL: import.meta.env.VITE_ANALYTICS_API_URL,
+  timeout: 60000
+})
+
 request.interceptors.request.use(
+  (requestConfig) => {
+    const token = localStorage.getItem('merchantToken')
+    requestConfig.headers.Authorization = token // to be declared as: `Bearer ${token}`;
+    return requestConfig
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+analyticsRequest.interceptors.request.use(
   (requestConfig) => {
     const token = localStorage.getItem('merchantToken')
     requestConfig.headers.Authorization = token // to be declared as: `Bearer ${token}`;
@@ -57,4 +73,31 @@ request.interceptors.response.use(
   }
 )
 
-export { request }
+analyticsRequest.interceptors.response.use(
+  (responseConfig) => {
+    const { data } = responseConfig
+
+    // If the Content-Type is not application/json, we don't need to check the response
+    if (typeof data === 'string') {
+      return responseConfig
+    }
+
+    if (
+      data.code !== ResponseCode.SUCCESS &&
+      data.code !== ResponseCode.SESSION_EXPIRED &&
+      data.code !== ResponseCode.INVALID_PERMISSION
+    ) {
+      return Promise.reject(new Error(responseConfig.data.message))
+    }
+
+    if (data.code === ResponseCode.INVALID_PERMISSION) {
+      window.redirectToLogin = true
+    }
+    return responseConfig
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+export { analyticsRequest, request }
