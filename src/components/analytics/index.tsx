@@ -1,9 +1,8 @@
 import { LoadingOutlined } from '@ant-design/icons'
-import { Form, message, Skeleton, Spin } from 'antd'
+import { Button, message, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { getRevenueReq } from '../../requests'
-import '../../shared.css'
 
 type TRevenueAndUser = {
   id: number
@@ -17,9 +16,13 @@ type TRevenueAndUser = {
 }
 
 const Index = () => {
-  const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [revenue, setRevenue] = useState<TRevenueAndUser | null>(null)
+
+  const goToApp = () => {
+    const url = window.location.origin + '/analytics/'
+    window.open(url, '_blank')
+  }
 
   const getRevenue = async () => {
     setLoading(true)
@@ -60,6 +63,12 @@ const Index = () => {
           </div>
           <div className="text-xl">Revenues</div>
         </div>
+      </div>
+
+      <div className=" flex justify-center">
+        <Button onClick={goToApp} type="link">
+          Go to Analytics App to vew more data
+        </Button>
       </div>
 
       <div className="flex justify-end">

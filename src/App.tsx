@@ -115,7 +115,7 @@ const App: React.FC = () => {
     getItem('Subscription', '/subscription/list', <PieChartOutlined />),
     getItem('Invoice', '/invoice/list', <PieChartOutlined />),
     getItem('Transaction', '/transaction/list', <TransactionOutlined />),
-    getItem('Analytics', '/analytics', <ProfileOutlined />),
+    getItem('Analytics', '/revenue', <ProfileOutlined />),
     getItem('User List', '/user/list', <IdcardOutlined />),
     getItem('Admin List', '/admin/list', <TeamOutlined />),
     getItem('My Account', '/my-account', <IdcardOutlined />),
@@ -200,8 +200,8 @@ const App: React.FC = () => {
       setActiveMenuItem(['/configuration'])
     } else if (pathItems[0] == 'activity-logs') {
       setActiveMenuItem(['/activity-logs'])
-    } else if (pathItems[0] == 'analytics') {
-      setActiveMenuItem(['/analytics'])
+    } else if (pathItems[0] == 'revenue') {
+      setActiveMenuItem(['/revenue'])
     } else if (pathItems[0] == 'report') {
       setActiveMenuItem(['/report'])
     } else {
@@ -591,7 +591,7 @@ const app_routes = [
     route: (
       <Route
         key="analytics"
-        path={`${APP_PATH}analytics`}
+        path={`${APP_PATH}revenue`}
         element={<Analytics />}
       />
     )

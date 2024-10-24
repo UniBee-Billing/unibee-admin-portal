@@ -20,7 +20,7 @@ const request = axios.create({
 })
 
 const analyticsRequest = axios.create({
-  baseURL: import.meta.env.VITE_ANALYTICS_API_URL,
+  baseURL: import.meta.env.VITE_UNIBEE_ANALYTICS_API_URL,
   timeout: 60000
 })
 
