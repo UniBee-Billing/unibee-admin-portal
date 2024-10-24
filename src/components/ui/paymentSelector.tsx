@@ -70,7 +70,6 @@ const Index = ({
   disabled
 }: {
   selected: number | undefined
-  // onSelect: React.ChangeEventHandler<HTMLInputElement>
   onSelect: (v: number) => void
   disabled?: boolean
 }) => {
@@ -103,32 +102,28 @@ const Index = ({
 
   return (
     <div className="flex flex-col gap-3">
-      {gateways.map((g) => {
-        return (
-          <label
-            onClick={onLabelClick}
-            key={g.gatewayId}
-            htmlFor={`payment-${g.gatewayName}`}
-            className={`flex h-12 w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between rounded border border-solid ${selected == g.gatewayId ? 'border-blue-500' : 'border-gray-200'} px-2`}
-          >
-            <div className="flex">
-              <input
-                type="radio"
-                name={`payment-${g.gatewayName}`}
-                id={`payment-${g.gatewayName}`}
-                value={g.gatewayId}
-                checked={g.gatewayId == selected}
-                onChange={onChange}
-                disabled={disabled}
-              />
-              <div className="ml-2 flex justify-between">{g.label}</div>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              {g.logo}
-            </div>
-          </label>
-        )
-      })}
+      {gateways.map(({ gatewayId, gatewayName, label, logo }) => (
+        <label
+          onClick={onLabelClick}
+          key={gatewayId}
+          htmlFor={`payment-${gatewayName}`}
+          className={`flex h-12 w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between rounded border border-solid ${selected == gatewayId ? 'border-blue-500' : 'border-gray-200'} px-2`}
+        >
+          <div className="flex">
+            <input
+              type="radio"
+              name={`payment-${gatewayName}`}
+              id={`payment-${gatewayName}`}
+              value={gatewayId}
+              checked={gatewayId === selected}
+              onChange={onChange}
+              disabled={disabled}
+            />
+            <div className="ml-2 flex justify-between">{label}</div>
+          </div>
+          <div className="flex items-center justify-center gap-2">{logo}</div>
+        </label>
+      ))}
     </div>
   )
 }
