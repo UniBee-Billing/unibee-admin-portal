@@ -41,12 +41,12 @@ const Index = () => {
 
   return (
     <div>
-      <div className=" flex justify-end text-2xl font-bold text-blue-500">
+      <div className="flex justify-end text-2xl font-bold text-blue-500">
         {revenue != null && dayjs(revenue.timeFrame * 1000).format('YYYY-MMM')}
       </div>
-      <div className="my-8 flex h-60 justify-center gap-32 ">
+      <div className="my-8 flex h-60 justify-center gap-32">
         <div className="flex flex-col items-center justify-between">
-          <div className=" text-6xl text-gray-700">
+          <div className="text-6xl text-gray-700">
             {loading && (
               <Spin indicator={<LoadingOutlined spin />} size="large" />
             )}
@@ -55,7 +55,7 @@ const Index = () => {
           <div className="text-xl">Active users</div>
         </div>
         <div className="flex flex-col items-center justify-between">
-          <div className=" text-6xl text-gray-700">
+          <div className="text-6xl text-gray-700">
             {loading && (
               <Spin indicator={<LoadingOutlined spin />} size="large" />
             )}
@@ -65,7 +65,7 @@ const Index = () => {
         </div>
       </div>
 
-      <div className=" flex justify-center">
+      <div className="flex justify-center">
         <Button onClick={goToApp} type="link">
           Go to Analytics App to vew more data
         </Button>
