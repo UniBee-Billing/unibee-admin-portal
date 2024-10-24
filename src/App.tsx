@@ -29,19 +29,18 @@ import {
   useSessionStore
 } from './stores'
 
-import InvoiceDetail from './components/invoice/detail'
-import InvoiceList from './components/invoice/list'
-import OutletPage from './components/outletPage'
-import PaymentDetail from './components/payment/detail'
-import PaymentList from './components/payment/list'
-import PlanDetail from './components/plan/detail'
-// import PricePlans from './components/pricePlans';
 import BillableMetricsDetail from './components/billableMetrics/detail'
 import BillableMetricsList from './components/billableMetrics/list'
 import DiscountCodeDetail from './components/discountCode/detail'
 import DiscountCodeList from './components/discountCode/list'
 import DiscountCodeUsage from './components/discountCode/usageDetail'
+import InvoiceDetail from './components/invoice/detail'
+import InvoiceList from './components/invoice/list'
+import OutletPage from './components/outletPage'
+import PaymentDetail from './components/payment/detail'
+import PaymentList from './components/payment/list'
 import PricePlanList from './components/plan'
+import PlanDetail from './components/plan/detail'
 import Settings from './components/settings/index'
 import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
@@ -50,6 +49,7 @@ import CustomerList from './components/user/list'
 // import Users from "./components/userList";
 import { AboutUniBee } from './components/about/aboutUniBee'
 import ActivityLogs from './components/activityLogs'
+import Analytics from './components/analytics'
 import AppSearch from './components/appSearch'
 import Login from './components/login'
 import LoginModal from './components/login/LoginModal'
@@ -115,9 +115,9 @@ const App: React.FC = () => {
     getItem('Subscription', '/subscription/list', <PieChartOutlined />),
     getItem('Invoice', '/invoice/list', <PieChartOutlined />),
     getItem('Transaction', '/transaction/list', <TransactionOutlined />),
+    getItem('Analytics', '/revenue', <ProfileOutlined />),
     getItem('User List', '/user/list', <IdcardOutlined />),
     getItem('Admin List', '/admin/list', <TeamOutlined />),
-    // getItem('Analytics', '/analytics', <PieChartOutlined />),
     getItem('My Account', '/my-account', <IdcardOutlined />),
     getItem('Report', '/report', <BarChartOutlined />),
     getItem('Configuration', '/configuration', <SettingOutlined />),
@@ -200,6 +200,8 @@ const App: React.FC = () => {
       setActiveMenuItem(['/configuration'])
     } else if (pathItems[0] == 'activity-logs') {
       setActiveMenuItem(['/activity-logs'])
+    } else if (pathItems[0] == 'revenue') {
+      setActiveMenuItem(['/revenue'])
     } else if (pathItems[0] == 'report') {
       setActiveMenuItem(['/report'])
     } else {
@@ -383,16 +385,6 @@ const app_routes = [
       />
     )
   },
-  /* {
-    page: 'analytics',
-    route: (
-      <Route
-        key="analytics"
-        path={`${APP_PATH}analytics`}
-        Component={Dashboard}
-      />
-    )
-  }, */
   {
     page: 'configuration',
     route: (
@@ -591,6 +583,16 @@ const app_routes = [
         key="activity-logs"
         path={`${APP_PATH}activity-logs`}
         element={<ActivityLogs />}
+      />
+    )
+  },
+  {
+    page: 'analytics',
+    route: (
+      <Route
+        key="analytics"
+        path={`${APP_PATH}revenue`}
+        element={<Analytics />}
       />
     )
   },

@@ -12,7 +12,7 @@ import {
   TRole
 } from '../shared.types'
 import { useMerchantInfoStore, useSessionStore } from '../stores'
-import { request } from './client'
+import { analyticsRequest, request } from './client'
 
 const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
@@ -2613,6 +2613,22 @@ export const getProductDetailReq = async (productId: number) => {
         productId
       }
     )
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getRevenueReq = async () => {
+  try {
+    const res = await analyticsRequest.get('/revenue')
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
       throw new ExpiredError(
