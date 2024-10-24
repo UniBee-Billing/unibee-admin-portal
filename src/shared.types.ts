@@ -2,10 +2,21 @@
 import { Dayjs } from 'dayjs'
 import { Currency } from 'dinero.js'
 
+export enum AccountType {
+  PERSONAL = 1,
+  BUSINESS
+}
+
+export type WithDoubleConfirmFields<T> = {
+  confirmTotalAmount: number
+  confirmCurrency: string
+} & T
+
 // this is end user profile
 interface IProfile {
+  zipCode: string
   address: string
-  // country: string;
+  city: string
   countryCode: string
   countryName: string
   companyName: string
@@ -19,7 +30,7 @@ interface IProfile {
   lastName: string
   id: number | null
   externalUserId: string
-  type: 1 | 2 // 1: individual, 2: business
+  type: AccountType
   status: number // 0-Active, 2-Frozen
   phone: string
   mobile: string

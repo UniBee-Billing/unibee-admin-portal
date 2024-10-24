@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { CURRENCY } from '../constants'
 import {
+  AccountType,
   DiscountCode,
   ExpiredError,
   IProfile,
@@ -11,7 +12,7 @@ import {
   TRole
 } from '../shared.types'
 import { useMerchantInfoStore, useSessionStore } from '../stores'
-import { request } from './client'
+import { analyticsRequest, request } from './client'
 
 const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
@@ -875,6 +876,20 @@ export const updateSubscription = async (
     return [null, e]
   }
 }
+
+export interface BusinessUserData {
+  address: string
+  companyName: string
+  zipCode: string
+  vatNumber: string
+  registrationNumber: string
+}
+
+export interface UserData {
+  type: AccountType
+  countryCode: string
+}
+
 type TCreateSubReq = {
   planId: number
   gatewayId: number
@@ -884,7 +899,12 @@ type TCreateSubReq = {
   confirmTotalAmount?: number
   confirmCurrency?: string
   startIncomplete?: boolean
+  user: UserData & Partial<BusinessUserData>
+  vatCountryCode: string | undefined
+  vatNumber: string | undefined
+  discountCode: string | undefined
 }
+
 export const createSubscriptionReq = async ({
   planId,
   gatewayId,
@@ -893,7 +913,11 @@ export const createSubscriptionReq = async ({
   addons,
   confirmCurrency,
   confirmTotalAmount,
-  startIncomplete
+  startIncomplete,
+  user,
+  vatCountryCode,
+  vatNumber,
+  discountCode
 }: TCreateSubReq) => {
   try {
     const res = await request.post(`/merchant/subscription/create_submit`, {
@@ -905,7 +929,11 @@ export const createSubscriptionReq = async ({
       addonParams: addons,
       confirmTotalAmount,
       confirmCurrency,
-      startIncomplete
+      startIncomplete,
+      user,
+      vatCountryCode,
+      vatNumber,
+      discountCode
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -2585,6 +2613,22 @@ export const getProductDetailReq = async (productId: number) => {
         productId
       }
     )
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getRevenueReq = async () => {
+  try {
+    const res = await analyticsRequest.get('/revenue')
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
       throw new ExpiredError(

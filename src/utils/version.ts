@@ -1,4 +1,6 @@
 import { ReactNode } from 'react'
+import { request } from '../requests/client'
+import { safe } from './error'
 
 type VersionControlTarget<T> = ReactNode | (() => T)
 
@@ -15,3 +17,9 @@ export const isVisible = <T>(
 
 export const premium = <T>(target: VersionControlTarget<T>) =>
   isVisible(target, false)
+
+export const getAPIServerVersion = safe(async () => {
+  const { data } = await request('/version')
+
+  return data
+})

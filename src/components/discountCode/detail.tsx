@@ -432,7 +432,7 @@ const Index = () => {
                     return Promise.resolve()
                   }
                   const num = Number(value)
-                  if (isNaN(num) || num <= 0 || num >= 100) {
+                  if (isNaN(num) || num <= 0 || num > 100) {
                     return Promise.reject(
                       'Please input a valid percentage number between 0 ~ 100.'
                     )

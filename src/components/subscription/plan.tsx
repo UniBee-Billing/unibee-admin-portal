@@ -77,7 +77,7 @@ const Index = ({
       <div className="text-sm text-gray-500">
         <div>Trial Price: {showAmount(amount, plan.currency)}</div>
         <div>
-          Trial lengh:&nbsp;
+          Trial length:&nbsp;
           {durationTime}&nbsp;
           {TIME_UNITS.find((u) => u.value == lengthUnit)?.label}
         </div>

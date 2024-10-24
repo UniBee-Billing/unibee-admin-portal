@@ -1,4 +1,4 @@
-import { panic, safe } from '../../src/utils'
+import { panic, safe } from '../../src/utils/error'
 
 describe('Error handling test suite', () => {
   it('should return [value, null] when no error is thrown', async () => {

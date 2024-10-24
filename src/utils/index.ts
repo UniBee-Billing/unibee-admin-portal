@@ -1,2 +1,6 @@
+export * from './clipboard'
+export * from './debounce'
 export * from './error'
 export * from './is'
+export * from './loading'
+export * from './version'
