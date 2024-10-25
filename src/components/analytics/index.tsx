@@ -1,7 +1,8 @@
 import { LoadingOutlined } from '@ant-design/icons'
-import { Button, message, Spin } from 'antd'
+import { Button, message, Modal, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
+import { useLicense } from '../../hooks/useVersion'
 import { getRevenueReq } from '../../requests'
 
 type TRevenueAndUser = {
@@ -17,11 +18,24 @@ type TRevenueAndUser = {
 
 const Index = () => {
   const [loading, setLoading] = useState(false)
+  const [showPopup, setShowPopup] = useState(false)
+  const togglePopup = () => setShowPopup(!showPopup)
+
   const [revenue, setRevenue] = useState<TRevenueAndUser | null>(null)
+  const {
+    loading: loadingLicense,
+    isActivePremium,
+    isExpiredPremium,
+    error: fetchLicenseError
+  } = useLicense()
 
   const goToApp = () => {
-    const url = window.location.origin + '/analytics/'
-    window.open(url, '_blank')
+    if (isActivePremium && !isExpiredPremium) {
+      const url = window.location.origin + '/analytics/'
+      window.open(url, '_blank')
+      return
+    }
+    togglePopup()
   }
 
   const getRevenue = async () => {
@@ -41,10 +55,16 @@ const Index = () => {
 
   return (
     <div>
+      <Modal open={showPopup} onCancel={togglePopup} footer={null} width={580}>
+        <p className="my-8 text-lg">
+          This is a premium feature. Contact us if you want to upgrade.
+        </p>
+        <div className="flex justify-center">Contact us at help@unibee.dev</div>
+      </Modal>
       <div className="flex justify-end text-2xl font-bold text-blue-500">
         {revenue != null && dayjs(revenue.timeFrame * 1000).format('YYYY-MMM')}
       </div>
-      <div className="my-8 flex h-60 justify-center gap-32">
+      <div className="my-8 flex h-56 justify-center gap-32">
         <div className="flex flex-col items-center justify-between">
           <div className="text-6xl text-gray-700">
             {loading && (
@@ -66,8 +86,13 @@ const Index = () => {
       </div>
 
       <div className="flex justify-center">
-        <Button onClick={goToApp} type="link">
-          Go to Analytics App to vew more data
+        <Button
+          onClick={goToApp}
+          loading={loadingLicense}
+          disabled={loadingLicense || fetchLicenseError != undefined}
+          type="link"
+        >
+          Detailed Subscription Analytics
         </Button>
       </div>
 
