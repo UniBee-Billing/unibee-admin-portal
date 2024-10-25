@@ -208,7 +208,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
               city
             }
 
-      return {
+      const submitData = {
         planId: selectedPlanId,
         gatewayId: gatewayId,
         userId: user.id!,
@@ -218,8 +218,29 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
         vatCountryCode: country,
         discountCode: discountCode
       }
+
+      if (!requirePayment) {
+        const fiveYearFromNow = new Date(
+          new Date().setFullYear(new Date().getFullYear() + 5)
+        )
+
+        return {
+          ...submitData,
+          trialEnd: Math.round(fiveYearFromNow.getTime() / 1000)
+        }
+      }
+
+      return { ...submitData, startIncomplete: true }
     },
-    [selectedPlanId, gatewayId, user, accountType, discountCode, user]
+    [
+      selectedPlanId,
+      gatewayId,
+      user,
+      accountType,
+      discountCode,
+      user,
+      requirePayment
+    ]
   )
 
   const onAddonChange = (
