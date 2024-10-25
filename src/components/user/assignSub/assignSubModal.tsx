@@ -96,7 +96,9 @@ export interface PreviewData {
 }
 
 type AccountValues = Pick<PernsonalAccountValues, 'country'> &
-  Pick<BusinessAccountValues, 'vat'>
+  BusinessAccountValues
+
+const TRIGGER_PREVIEW_FIELDS = ['country', 'vat', 'discountCode']
 
 const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const appConfig = useAppConfigStore()
@@ -111,6 +113,9 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const [discountCode, setDiscountCode] = useState<string | undefined>()
   const [accountFormValues, setAccountFormValues] = useState<
     AccountValues | undefined
+  >()
+  const [accountFormChangedKey, setAccountFormChangedKey] = useState<
+    string | undefined
   >()
   const onIncludeChange = (checked: boolean) => {
     if (!checked) {
@@ -173,6 +178,50 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     setGatewayId(gatewayId)
   }
 
+  const getSubmitData = useCallback(
+    (values?: AccountValues) => {
+      const {
+        country,
+        address,
+        companyName,
+        vat,
+        postalCode,
+        registrationNumber,
+        city
+      } = values ?? {}
+
+      const personalUserData = {
+        email: user.email,
+        countryCode: country,
+        type: accountType
+      }
+      const userData =
+        accountType === AccountType.PERSONAL
+          ? personalUserData
+          : {
+              ...personalUserData,
+              address,
+              companyName,
+              zipCode: postalCode,
+              vatNumber: vat,
+              registrationNumber,
+              city
+            }
+
+      return {
+        planId: selectedPlanId,
+        gatewayId: gatewayId,
+        userId: user.id!,
+        startIncomplete: false,
+        user: userData,
+        vatNumber: vat,
+        vatCountryCode: country,
+        discountCode: discountCode
+      }
+    },
+    [selectedPlanId, gatewayId, user, accountType, discountCode, user]
+  )
+
   const onAddonChange = (
     addonId: number,
     quantity: number | null, // null means: don't update this field, keep its original value. I don't want to define 2 fn to do similar jobs.
@@ -228,55 +277,13 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       return
     }
 
-    const {
-      country,
-      address,
-      companyName,
-      vat,
-      postalCode,
-      registrationNumber,
-      city
-    } = values!
+    const submitData = getSubmitData(values)
 
-    const personalUserData = {
-      email: user.email,
-      countryCode: country,
-      type: accountType
-    }
-    const userData =
-      accountType === AccountType.PERSONAL
-        ? personalUserData
-        : {
-            ...personalUserData,
-            address,
-            companyName,
-            zipCode: postalCode,
-            vatNumber: vat,
-            registrationNumber,
-            city
-          }
-    const body: WithDoubleConfirmFields<CreateSubScriptionBody> = {
-      planId: selectedPlanId,
-      gatewayId: gatewayId,
-      userId: user.id!,
-      startIncomplete: false,
-      user: userData,
-      vatNumber: accountFormValues?.vat,
-      vatCountryCode: accountFormValues?.country,
-      discountCode: discountCode,
-      confirmTotalAmount: previewData.totalAmount,
-      confirmCurrency: selectedPlan!.currency
-    }
-
-    // requirementPayment is mainly used for internal employees, default length is 5yr
-    if (!requirePayment) {
-      const fiveYearFromNow = new Date(
-        new Date().setFullYear(new Date().getFullYear() + 5)
-      )
-      body.trialEnd = Math.round(fiveYearFromNow.getTime() / 1000)
-    } else {
-      body.startIncomplete = true
-    }
+    const body = {
+      ...submitData,
+      confirmTotalAmount: previewData?.totalAmount,
+      confirmCurrency: selectedPlan?.currency
+    } as WithDoubleConfirmFields<CreateSubScriptionBody>
 
     setLoading(true)
 
@@ -325,24 +332,14 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   }
 
   const updatePrice = useCallback(
-    async (countryCode: string, discountCode?: string, vatNumber?: string) => {
-      if (!selectedPlanId) {
-        return
-      }
-
+    async (accountFormValues?: AccountValues) => {
       setLoading(true)
 
+      const submitData = getSubmitData(accountFormValues)
       const [data, err] = await safeRun(() =>
         request.post<Response<PreviewData>>(
           '/merchant/subscription/create_preview',
-          {
-            planId: selectedPlanId,
-            gatewayId,
-            userId: user.id,
-            vatNumber,
-            vatCountryCode: countryCode,
-            discountCode
-          }
+          submitData
         )
       )
 
@@ -357,7 +354,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
 
       setPreviewData(previewData)
     },
-    [selectedPlanId, user.id, gatewayId]
+    [getSubmitData]
   )
 
   const debouncedUpdateDiscountCode = useDebouncedCallbackWithDefault(
@@ -365,23 +362,20 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   )
 
   useEffect(() => {
-    fetchPlan()
-  }, [])
-
-  useEffect(() => {
-    if (!accountFormValues?.country) {
+    if (
+      !selectedPlanId ||
+      (accountFormChangedKey &&
+        !TRIGGER_PREVIEW_FIELDS.includes(accountFormChangedKey))
+    ) {
       return
     }
 
-    const values = accountFormValues as BusinessAccountValues
+    updatePrice(accountFormValues)
+  }, [selectedPlanId, accountFormValues, accountFormChangedKey, updatePrice])
 
-    updatePrice(accountFormValues.country, discountCode, values?.vat)
-  }, [
-    accountFormValues?.country,
-    discountCode,
-    accountFormValues?.vat,
-    updatePrice
-  ])
+  useEffect(() => {
+    fetchPlan()
+  }, [])
 
   return (
     <Modal
@@ -423,9 +417,12 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
             <AccountTypeForm
               loading={loading}
               previewData={previewData}
-              onFormValuesChange={(values, accountType) => {
-                setAccountFormValues(values as AccountValues)
+              onFormValuesChange={(changedValues, values, accountType) => {
+                const [changedKey] = Object.keys(changedValues)
+
                 setAccountType(accountType)
+                setAccountFormValues(values as AccountValues)
+                setAccountFormChangedKey(changedKey)
               }}
               ref={accountTypeFormRef}
               user={user}

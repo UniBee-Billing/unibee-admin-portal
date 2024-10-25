@@ -26,6 +26,7 @@ interface AccountTypeProps {
   loading: boolean
   previewData: PreviewData | undefined
   onFormValuesChange(
+    changedValues: Record<string, unknown>,
     values: BusinessAccountValues | PernsonalAccountValues,
     accountType: AccountType
   ): void
@@ -74,8 +75,8 @@ export const AccountTypeForm = forwardRef<
   }))
 
   const updateFormValues = useDebouncedCallback(
-    (values, selectedAccountType) => {
-      onFormValuesChange(values, selectedAccountType)
+    (changedValues, values, selectedAccountType) => {
+      onFormValuesChange(changedValues, values, selectedAccountType)
     },
     500,
     {
@@ -87,7 +88,7 @@ export const AccountTypeForm = forwardRef<
   useEffect(() => {
     const values = formRef.current?.getFieldsValue()
 
-    onFormValuesChange(values, selectedAccountType)
+    onFormValuesChange({}, values, selectedAccountType)
   }, [formRef, selectedAccountType])
 
   const FORM_DISPATCHER = {
@@ -97,8 +98,8 @@ export const AccountTypeForm = forwardRef<
         previewData={previewData}
         user={user}
         loading={loading}
-        onValuesChange={(_, values) =>
-          updateFormValues(values, selectedAccountType)
+        onValuesChange={(changedValues, values) =>
+          updateFormValues(changedValues, values, selectedAccountType)
         }
       />
     ),
@@ -107,8 +108,8 @@ export const AccountTypeForm = forwardRef<
         ref={pernsonalAccountFormRef}
         loading={loading}
         user={user}
-        onValuesChange={(_, values) =>
-          updateFormValues(values, selectedAccountType)
+        onValuesChange={(changedValues, values) =>
+          updateFormValues(changedValues, values, selectedAccountType)
         }
       />
     )
