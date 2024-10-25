@@ -18,7 +18,6 @@ type TRevenueAndUser = {
   activeUserCount: number
   updatedAt: Date
 }
-console.log('screenshot: ', screenshot)
 
 const Index = () => {
   const [loading, setLoading] = useState(false)
