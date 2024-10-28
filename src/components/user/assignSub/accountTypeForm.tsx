@@ -40,7 +40,9 @@ export const AccountTypeForm = forwardRef<
   AccountTypeFormInstance,
   AccountTypeProps
 >(({ user, onFormValuesChange, loading, previewData }, ref) => {
-  const [prevAccountType, setPrevAccountType] = useState(user.type)
+  const [prevAccountType, setPrevAccountType] = useState(
+    user.type ?? AccountType.PERSONAL
+  )
   const [selectedAccountType, setSelectedAccountType] =
     useState(prevAccountType)
   const businessAccountFormRef = useRef<FormInstance>(null)

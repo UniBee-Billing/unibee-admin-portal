@@ -6,8 +6,6 @@ import screenshot from '../../assets/AnalyticsScreenshot.png'
 import { useLicense } from '../../hooks/useVersion'
 import { getRevenueReq } from '../../requests'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 type TRevenueAndUser = {
   id: number
   merchantId: number
