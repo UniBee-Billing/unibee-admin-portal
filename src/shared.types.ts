@@ -3,7 +3,8 @@ import { Dayjs } from 'dayjs'
 import { Currency } from 'dinero.js'
 
 export enum AccountType {
-  PERSONAL = 1,
+  NONE,
+  PERSONAL,
   BUSINESS
 }
 

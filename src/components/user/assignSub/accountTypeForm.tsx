@@ -40,8 +40,8 @@ export const AccountTypeForm = forwardRef<
   AccountTypeFormInstance,
   AccountTypeProps
 >(({ user, onFormValuesChange, loading, previewData }, ref) => {
-  const [prevAccountType, setPrevAccountType] = useState(
-    user.type ?? AccountType.PERSONAL
+  const [prevAccountType, setPrevAccountType] = useState<AccountType>(
+    user.type === AccountType.NONE ? AccountType.PERSONAL : user.type
   )
   const [selectedAccountType, setSelectedAccountType] =
     useState(prevAccountType)
@@ -55,7 +55,7 @@ export const AccountTypeForm = forwardRef<
     [selectedAccountType]
   )
 
-  if (prevAccountType !== user.type) {
+  if (prevAccountType !== user.type && user.type !== AccountType.NONE) {
     setPrevAccountType(user.type)
     setSelectedAccountType(user.type)
   }
