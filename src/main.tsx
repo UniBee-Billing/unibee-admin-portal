@@ -5,11 +5,10 @@ import App from './App.tsx'
 import './global.css'
 import './main.css'
 
+const BASE_URL = import.meta.env.BASE_URL
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
+  <BrowserRouter basename={BASE_URL}>
     <App />
   </BrowserRouter>
 )
-// react-beautiful-dnd throw errors if StrictMode is on
-/* <React.StrictMode> */
-/* </React.StrictMode> */

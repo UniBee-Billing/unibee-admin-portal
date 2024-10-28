@@ -1,8 +1,8 @@
 import { Alert, Button, ConfigProvider, Modal } from 'antd'
 import React, { useState } from 'react'
-import { useLicense, useVersion } from '../../hooks/useVersion'
-import { useProfileStore } from '../../stores'
-import { withWeakTextLoading, writeClipboardText } from '../../utils'
+import { useLicense, useVersion } from '../../../hooks/useVersion'
+import { useProfileStore } from '../../../stores'
+import { withWeakTextLoading, writeClipboardText } from '../../../utils'
 import { ContactCard } from './ContactCard'
 
 const modalStyle = {
@@ -32,7 +32,7 @@ export const AboutUniBee: React.FC = () => {
     <ConfigProvider modal={{ styles: modalStyle }}>
       <div
         onClick={() => setOpen(true)}
-        className="mb-1 mt-4 cursor-pointer text-gray-50 transition duration-300 hover:opacity-75"
+        className="mb-1 mt-4 cursor-pointer transition duration-300 hover:opacity-75"
         color="default"
       >
         About UniBee

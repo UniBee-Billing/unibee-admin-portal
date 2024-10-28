@@ -1,5 +1,7 @@
+export * from './useAccessiblePages'
 export * from './useCopyContent'
 export * from './useCountdown'
 export * from './useCountries'
+export * from './useDefaultPage'
 export * from './useFetch'
 export * from './usePagination'
