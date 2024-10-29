@@ -19,7 +19,6 @@ import { IProduct, ISubAddon, ISubHistoryItem } from '../../shared.types'
 import { SubHistoryStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
-const APP_PATH = import.meta.env.BASE_URL
 
 const Index = ({ userId }: { userId: number }) => {
   const navigate = useNavigate()
@@ -87,7 +86,7 @@ const Index = ({ userId }: { userId: number }) => {
         ) : (
           <div
             className="w-full overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-            onClick={() => navigate(`${APP_PATH}plan/${record.plan.id}`)}
+            onClick={() => navigate(`/plan/${record.plan.id}`)}
           >
             {record.plan.planName}
           </div>
@@ -168,7 +167,7 @@ const Index = ({ userId }: { userId: number }) => {
         ) : (
           <div
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
+            onClick={() => navigate(`/subscription/${subId}`)}
           >
             {subId}
           </div>
@@ -185,7 +184,7 @@ const Index = ({ userId }: { userId: number }) => {
         ) : (
           <div
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-            onClick={() => navigate(`${APP_PATH}invoice/${invoiceId}`)}
+            onClick={() => navigate(`/invoice/${invoiceId}`)}
           >
             {invoiceId}
           </div>

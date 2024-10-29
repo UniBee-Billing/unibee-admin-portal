@@ -34,7 +34,6 @@ import RefundInfoModal from '../payment/refundModal'
 import { PaymentStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
-const APP_PATH = import.meta.env.BASE_URL
 const STATUS_FILTER = Object.entries(PAYMENT_STATUS).map((s) => {
   const [value, text] = s
   return { value: Number(value), text }
@@ -216,7 +215,7 @@ const Index = ({
           ''
         ) : (
           <div
-            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
+            onClick={() => navigate(`/subscription/${subId}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
@@ -232,7 +231,7 @@ const Index = ({
           ''
         ) : (
           <Button
-            onClick={() => navigate(`${APP_PATH}invoice/${ivId}`)}
+            onClick={() => navigate(`/invoice/${ivId}`)}
             type="link"
             style={{ padding: 0 }}
           >
@@ -249,7 +248,7 @@ const Index = ({
           ''
         ) : (
           <div
-            onClick={() => navigate(`${APP_PATH}user/${userId}`)}
+            onClick={() => navigate(`/user/${userId}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {userId}

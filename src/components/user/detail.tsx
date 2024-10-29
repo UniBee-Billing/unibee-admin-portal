@@ -9,11 +9,9 @@ import TransactionTab from '../subscription/paymentTab'
 import UserAccountTab from '../subscription/userAccountTab'
 import ProductList from './productList'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 const GoBackBtn = () => {
   const navigate = useNavigate()
-  const goBack = () => navigate(`${APP_PATH}user/list`)
+  const goBack = () => navigate(`/user/list`)
   return <Button onClick={goBack}>Go back</Button>
 }
 

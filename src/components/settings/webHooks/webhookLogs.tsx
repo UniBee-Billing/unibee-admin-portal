@@ -25,7 +25,6 @@ import { getWebhookLogs, resendWebhookEvt } from '../../../requests'
 import { TWebhookLogs } from '../../../shared.types'
 SyntaxHighlighter.registerLanguage('json', json)
 
-const APP_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 
 const Index = () => {
@@ -258,7 +257,7 @@ const Index = () => {
     }
   ]
 
-  const goBack = () => navigate(`${APP_PATH}configuration?tab=webhook`)
+  const goBack = () => navigate(`/configuration?tab=webhook`)
 
   useEffect(() => {
     fetchData()

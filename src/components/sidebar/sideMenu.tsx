@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAccessiblePages } from '../../hooks/useAccessiblePages'
 import { APP_ROUTES } from '../../routes'
 import { useProfileStore } from '../../stores'
-import { basePathName } from '../../utils'
+import { basePathName, trimEnvBasePath } from '../../utils'
 
 const MENU_ITEMS: ItemType<MenuItemType>[] = [
   { label: 'Product and Plan', key: 'plan', icon: <DesktopOutlined /> },
@@ -80,28 +80,16 @@ export const SideMenu = (props: MenuProps) => {
     [profileStore.isOwner, accessiblePages]
   )
 
-  // if (!profileStore.isOwner) {
-  //   items = items.filter(
-  //     (i) =>
-  //       accessiblePages.findIndex(
-  //         (a) => a == (i?.key as string).split('/')[1]
-  //       ) != -1
-  //   )
-  // }
-
   useLayoutEffect(() => {
-    setActiveMenuItem([window.location.pathname])
-  }, [])
+    setActiveMenuItem([basePathName(trimEnvBasePath(window.location.pathname))])
+  }, [window.location.pathname])
 
   return (
     <Menu
       theme="light"
       mode="inline"
       selectedKeys={activeMenuItem}
-      onClick={(e) => {
-        setActiveMenuItem([e.key])
-        navigate(e.key)
-      }}
+      onClick={(e) => navigate(e.key)}
       defaultSelectedKeys={['/plan/list']}
       items={items}
       style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}

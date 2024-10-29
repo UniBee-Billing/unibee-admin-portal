@@ -20,7 +20,6 @@ import { exportDataReq, getDiscountCodeUsageDetailReq } from '../../requests'
 import { DiscountCodeUsage } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 
-const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
 const PAGE_SIZE = 10
 
 const Index = () => {
@@ -35,7 +34,7 @@ const Index = () => {
     []
   )
 
-  const goBack = () => navigate(`${APP_PATH}discount-code/list`)
+  const goBack = () => navigate(`/discount-code/list`)
 
   const columns: ColumnsType<DiscountCodeUsage> = [
     {
@@ -49,7 +48,7 @@ const Index = () => {
       key: 'plan',
       render: (plan) => (
         <div
-          onClick={() => navigate(`${APP_PATH}plan/${plan.id}`)}
+          onClick={() => navigate(`/plan/${plan.id}`)}
           className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
         >
           {plan.planName}
@@ -71,7 +70,7 @@ const Index = () => {
           ''
         ) : (
           <div
-            onClick={() => navigate(`${APP_PATH}user/${user.id}`)}
+            onClick={() => navigate(`/user/${user.id}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {`${user.firstName} ${user.lastName}`}
@@ -93,7 +92,7 @@ const Index = () => {
           ''
         ) : (
           <div
-            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
+            onClick={() => navigate(`/subscription/${subId}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
             {subId}
@@ -109,7 +108,7 @@ const Index = () => {
           ''
         ) : (
           <Button
-            onClick={() => navigate(`${APP_PATH}invoice/${ivId}`)}
+            onClick={() => navigate(`/invoice/${ivId}`)}
             type="link"
             style={{ padding: 0 }}
           >

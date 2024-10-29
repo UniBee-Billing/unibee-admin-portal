@@ -25,7 +25,7 @@ import {
   message
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CURRENCY, SUBSCRIPTION_STATUS } from '../../constants'
 import { formatDate, formatPlanInterval, showAmount } from '../../helpers'
@@ -42,7 +42,6 @@ import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus } from '../ui/statusTag'
 
-const APP_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const SUB_STATUS_FILTER = Object.keys(SUBSCRIPTION_STATUS)
   .map((s) => ({
@@ -454,7 +453,7 @@ const Index = () => {
           onRow={(record) => {
             return {
               onClick: () => {
-                navigate(`${APP_PATH}subscription/${record.subscriptionId}`, {
+                navigate(`/subscription/${record.subscriptionId}`, {
                   state: { subscriptionId: record.subscriptionId }
                 })
               }

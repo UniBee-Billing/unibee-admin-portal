@@ -9,7 +9,6 @@ import { useAppConfigStore } from '../stores'
 import AppFooter from './appFooter'
 import AppHeader from './appHeader'
 
-const APP_PATH = import.meta.env.BASE_URL
 const API_URL = import.meta.env.VITE_API_URL
 
 const Index = () => {
@@ -26,7 +25,7 @@ const Index = () => {
     setOtp(value.toUpperCase())
   }
 
-  const goLogin = () => navigate(`${APP_PATH}login`)
+  const goLogin = () => navigate('login')
 
   // submit basic signup ingo
   const onSubmitBasicInfo = async () => {
@@ -62,7 +61,7 @@ const Index = () => {
         if (res.data.code != 0) {
           throw new Error(res.data.message)
         }
-        navigate(`${APP_PATH}login`, {
+        navigate('login', {
           state: { msg: 'Thanks for your sign-up.' }
         })
       })

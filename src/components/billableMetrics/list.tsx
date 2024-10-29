@@ -12,7 +12,6 @@ import { usePagination } from '../../hooks'
 import '../../shared.css'
 
 const PAGE_SIZE = 10
-const APP_PATH = import.meta.env.BASE_URL
 
 const Index = () => {
   const navigate = useNavigate()
@@ -37,7 +36,7 @@ const Index = () => {
   const onNewMetrics = () => {
     onPageChange(1, 100)
     // setPage(0) // if user are on page 3, after creating new plan, they'll be redirected back to page 1,so the newly created plan will be shown on the top
-    navigate(`${APP_PATH}billable-metric/new`)
+    navigate(`/billable-metric/new`)
   }
 
   const columns: ColumnsType<IBillableMetrics> = [
@@ -160,7 +159,7 @@ const Index = () => {
         onRow={(record) => {
           return {
             onClick: () => {
-              navigate(`${APP_PATH}billable-metric/${record.id}`)
+              navigate(`/billable-metric/${record.id}`)
             }
           }
         }}

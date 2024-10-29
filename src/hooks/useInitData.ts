@@ -22,7 +22,7 @@ export const useInitDataCallback = () => {
     ) {
       const [initRes, errInit] = await initializeReq()
 
-      if (!errInit) {
+      if (errInit) {
         return
       }
 

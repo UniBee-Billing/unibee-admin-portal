@@ -13,7 +13,6 @@ import MarkAsPaidModal from './markAsPaidModal'
 import MarkAsRefundedModal from './markAsRefundedModal'
 // import InvoiceItemsModal from '../subscription/modals/newInvoice' // obsolete
 
-const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
 const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -47,11 +46,9 @@ const Index = () => {
   // I have to deley 2.5s after refresh, then show the pdf file.
   const [delayingPreview, setDelayingPreview] = useState(false)
 
-  const goBack = () => navigate(`${APP_PATH}invoice/list`)
-  const goToUser = (userId: number) => () =>
-    navigate(`${APP_PATH}user/${userId}`)
-  const goToSub = (subId: string) => () =>
-    navigate(`${APP_PATH}subscription/${subId}`)
+  const goBack = () => navigate(`/invoice/list`)
+  const goToUser = (userId: number) => () => navigate(`/user/${userId}`)
+  const goToSub = (subId: string) => () => navigate(`/subscription/${subId}`)
 
   const fetchData = async () => {
     const pathName = window.location.pathname.split('/')

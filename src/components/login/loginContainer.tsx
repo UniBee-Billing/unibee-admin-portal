@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom'
 import OTPLogin from './otpLogin'
 import PasswordLogin from './passwordLogin'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 const Index = ({
   triggeredByExpired,
   initialEmail
@@ -28,7 +26,7 @@ const Index = ({
 
   const onLoginTypeChange = (e: RadioChangeEvent) =>
     setLoginType(e.target.value)
-  const goSignup = () => navigate(`${APP_PATH}signup`)
+  const goSignup = () => navigate(`/signup`)
 
   return (
     <div className="flex h-full items-center justify-center">

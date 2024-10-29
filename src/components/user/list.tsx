@@ -40,7 +40,6 @@ import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
 import CreateUserModal from './createUserModal'
 import './list.css'
 
-const APP_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const STATUS_FILTER = Object.entries(USER_STATUS).map((s) => {
   const [value, text] = s
@@ -217,7 +216,7 @@ const Index = () => {
         <div
           className="btn-user-with-subid w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           onClick={() => {
-            navigate(`${APP_PATH}subscription/${subId}`)
+            navigate(`/subscription/${subId}`)
           }}
         >
           {subId}
@@ -385,7 +384,7 @@ const Index = () => {
                 ) {
                   return
                 }
-                navigate(`${APP_PATH}user/${user.id}`)
+                navigate(`/user/${user.id}`)
               }
             }
           }}

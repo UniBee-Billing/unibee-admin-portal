@@ -51,8 +51,6 @@ import ResumeSubModal from './modals/resumeSub'
 import TerminateSubModal from './modals/terminateSub'
 import UpdateSubPreviewModal from './modals/updateSubPreview'
 
-const APP_PATH = import.meta.env.BASE_URL // import.meta.env.VITE_APP_PATH;
-
 const Index = ({
   setUserId,
   setRefreshSub,
@@ -604,9 +602,8 @@ const SubscriptionInfoSection = ({
 }: ISubSectionProps) => {
   const navigate = useNavigate()
   const appConfigStore = useAppConfigStore()
-  const goToPlan = (planId: number) => navigate(`${APP_PATH}plan/${planId}`)
-  const goToDiscount = (codeId: number) =>
-    navigate(`${APP_PATH}discount-code/${codeId}`)
+  const goToPlan = (planId: number) => navigate(`/plan/${planId}`)
+  const goToDiscount = (codeId: number) => navigate(`/discount-code/${codeId}`)
   const discountAmt = (code: DiscountCode) => {
     if (code.discountType == 1) {
       // percentage

@@ -6,12 +6,10 @@ import { getPaymentDetailReq } from '../../requests'
 // import MarkAsPaidModal from './markAsPaidModal'
 // import InvoiceItemsModal from '../subscription/modals/newInvoice' // obsolete
 
-const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
-
 const Index = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const goBack = () => navigate(`${APP_PATH}transaction/list`)
+  const goBack = () => navigate(`/transaction/list`)
 
   const fetchData = async () => {
     const pathName = window.location.pathname.split('/')

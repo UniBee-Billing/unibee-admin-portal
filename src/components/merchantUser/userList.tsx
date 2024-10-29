@@ -298,7 +298,7 @@ const Index = () => {
                 toggleSuspendModal()
                 return
               }
-              // navigate(`${APP_PATH}admin/${user.id}`)
+              // navigate(`/admin/${user.id}`)
             }
           }
         }}

@@ -8,8 +8,6 @@ import { showAmount } from '../../helpers'
 import { TRefund } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 interface Props {
   detail: TRefund
   originalInvoiceId: string | undefined
@@ -88,9 +86,7 @@ const Index = ({
             <Button
               type="link"
               style={{ padding: 0 }}
-              onClick={() =>
-                navigate(`${APP_PATH}invoice/${originalInvoiceId}`)
-              }
+              onClick={() => navigate(`/invoice/${originalInvoiceId}`)}
             >
               {originalInvoiceId}
             </Button>

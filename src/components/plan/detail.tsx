@@ -39,7 +39,6 @@ import { IBillableMetrics, IPlan } from '../../shared.types'
 import { useProductListStore } from '../../stores'
 import { PlanStatus } from '../ui/statusTag'
 
-const APP_PATH = import.meta.env.BASE_URL
 const getAmount = (amt: number, currency: string) =>
   amt / CURRENCY[currency].stripe_factor
 
@@ -299,14 +298,11 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     message.success(`Plan ${isNew ? 'created' : 'saved'}`)
     productId.current = updatedPlan.productId
     if (isNew) {
-      navigate(
-        `${APP_PATH}plan/${updatedPlan.id}?productId=${updatedPlan.productId}`,
-        {
-          replace: true
-        }
-      )
+      navigate(`/plan/${updatedPlan.id}?productId=${updatedPlan.productId}`, {
+        replace: true
+      })
     } else {
-      // navigate(`${APP_PATH}plan/list`)
+      // navigate(`/plan/list`)
     }
   }
 
@@ -349,7 +345,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     }
     message.success('Plan deleted')
     navigate(
-      `${APP_PATH}plan/list?productId=${isProductValid ? productId.current : 0}` // no need to do isValid check, only valid can be deleted.
+      `/plan/list?productId=${isProductValid ? productId.current : 0}` // no need to do isValid check, only valid can be deleted.
     )
   }
 
@@ -1098,7 +1094,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 <Button
                   onClick={() =>
                     navigate(
-                      `${APP_PATH}plan/list?productId=${isProductValid ? productId.current : 0}`
+                      `/plan/list?productId=${isProductValid ? productId.current : 0}`
                     )
                   }
                   disabled={loading || activating}

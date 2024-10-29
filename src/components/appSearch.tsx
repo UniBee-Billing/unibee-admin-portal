@@ -11,7 +11,6 @@ import { IProfile, UserInvoice } from '../shared.types'
 import './appSearch.css'
 
 const { Search } = Input
-const APP_PATH = import.meta.env.BASE_URL
 
 interface IAccountInfo extends IProfile {
   subscriptionId: string
@@ -33,7 +32,7 @@ const Index = () => {
 
   const goToDetail = (pageId: string) => {
     hide()
-    navigate(`${APP_PATH}${pageId}`)
+    navigate(`/${pageId}`)
   }
 
   const onEnter = async () => {

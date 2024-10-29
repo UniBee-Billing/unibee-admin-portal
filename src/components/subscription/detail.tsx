@@ -13,8 +13,6 @@ import SubscriptionTab from './subscription'
 // import SubscriptionList from './subscriptionList'
 import UserAccount from './userAccountTab'
 
-const APP_PATH = import.meta.env.BASE_URL // import.meta.env.VITE_APP_PATH;
-
 const Index = () => {
   const navigate = useNavigate()
   const [userProfile, setUserProfile] = useState<IProfile | undefined>(
@@ -107,7 +105,7 @@ const Index = () => {
           onChange={() => {}}
         />
         <div className="mt-4 flex items-center justify-center">
-          <Button onClick={() => navigate(`${APP_PATH}subscription/list`)}>
+          <Button onClick={() => navigate(`/subscription/list`)}>
             Go Back
           </Button>
         </div>

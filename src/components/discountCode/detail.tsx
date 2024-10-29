@@ -30,7 +30,6 @@ import { DiscountCode, IPlan } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
 import { DiscountCodeStatus } from '../ui/statusTag'
 
-const APP_PATH = import.meta.env.BASE_URL // if not specified in build command, default is /
 const { RangePicker } = DatePicker
 
 const NEW_CODE: DiscountCode = {
@@ -65,9 +64,9 @@ const Index = () => {
   const watchCurrency = Form.useWatch('currency', form)
   const watchPlanIds = Form.useWatch('planIds', form)
 
-  const goBack = () => navigate(`${APP_PATH}discount-code/list`)
+  const goBack = () => navigate(`/discount-code/list`)
   const goToUsageDetail = () =>
-    navigate(`${APP_PATH}discount-code/${codeId}/usage-detail`)
+    navigate(`/discount-code/${codeId}/usage-detail`)
 
   // for editing code, need to fetch code detail and planList
   const fetchData = async () => {

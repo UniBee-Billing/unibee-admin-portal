@@ -293,7 +293,7 @@ const Index = () => {
               ) {
                 return
               }
-              navigate(`${APP_PATH}plan/${record.id}`)
+              navigate(`/plan/${record.id}`)
             }
           }
         }} */

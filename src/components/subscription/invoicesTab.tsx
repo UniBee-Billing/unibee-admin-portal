@@ -45,7 +45,6 @@ import InvoiceDetailModal from './modals/invoiceDetail'
 import NewInvoiceModal from './modals/newInvoice'
 
 const PAGE_SIZE = 10
-const APP_PATH = import.meta.env.BASE_URL
 const STATUS_FILTER = Object.entries(INVOICE_STATUS).map((s) => {
   const [value, text] = s
   return { value: Number(value), text }
@@ -238,7 +237,7 @@ const Index = ({
       key: 'invoiceId',
       render: (ivId) => (
         <Button
-          onClick={() => navigate(`${APP_PATH}invoice/${ivId}`)}
+          onClick={() => navigate(`/invoice/${ivId}`)}
           type="link"
           style={{ padding: 0 }}
           className="btn-invoiceid-wrapper"

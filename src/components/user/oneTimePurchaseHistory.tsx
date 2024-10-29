@@ -9,7 +9,6 @@ import { getOneTimePaymentHistoryReq } from '../../requests'
 import { IOneTimeHistoryItem } from '../../shared.types'
 import { PaymentStatus } from '../ui/statusTag'
 
-const APP_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 
 const Index = ({ userId }: { userId: number }) => {
@@ -74,7 +73,7 @@ const Index = ({ userId }: { userId: number }) => {
         ) : (
           <div
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
+            onClick={() => navigate(`/subscription/${subId}`)}
           >
             {subId}
           </div>
@@ -95,7 +94,7 @@ const Index = ({ userId }: { userId: number }) => {
         ) : (
           <div
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-            onClick={() => navigate(`${APP_PATH}invoice/${ivId}`)}
+            onClick={() => navigate(`/invoice/${ivId}`)}
           >
             {ivId}
           </div>

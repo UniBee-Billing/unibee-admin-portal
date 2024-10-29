@@ -37,7 +37,6 @@ import { useAppConfigStore } from '../../stores'
 import { DiscountCodeStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
-const APP_PATH = import.meta.env.BASE_URL
 
 const CODE_STATUS_FILTER = Object.entries(DISCOUNT_CODE_STATUS).map((s) => {
   const [value, text] = s
@@ -77,7 +76,7 @@ const Index = () => {
 
   const onNewCode = () => {
     onPageChange(1, 100)
-    navigate(`${APP_PATH}discount-code/new`)
+    navigate(`/discount-code/new`)
   }
   const fetchData = async () => {
     const searchTerm = normalizeSearchTerms()
@@ -334,10 +333,10 @@ const Index = () => {
                 tgt instanceof Element &&
                 tgt.closest('.btn-code-usage-detail')
               ) {
-                navigate(`${APP_PATH}discount-code/${code.id}/usage-detail`)
+                navigate(`/discount-code/${code.id}/usage-detail`)
                 return
               }
-              navigate(`${APP_PATH}discount-code/${code.id}`, {
+              navigate(`/discount-code/${code.id}`, {
                 state: codeList[rowIndex as number]
               })
             }

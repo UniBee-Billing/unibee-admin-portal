@@ -19,7 +19,6 @@ import { METRICS_AGGREGATE_TYPE } from '../../constants'
 import { useCopyContent } from '../../hooks'
 import { getMetricDetailReq, saveMetricsReq } from '../../requests'
 const { TextArea } = Input
-const APP_PATH = import.meta.env.BASE_URL
 
 SyntaxHighlighter.registerLanguage('bash', bash)
 const AGGR_TYPE_SELECT_OPT = Object.keys(METRICS_AGGREGATE_TYPE)
@@ -70,7 +69,7 @@ const Index = () => {
     }
     message.success(`Metrics ${isNew ? 'created' : 'updated'}.`)
     setTimeout(() => {
-      navigate(`${APP_PATH}billable-metric/list`)
+      navigate(`/billable-metric/list`)
     }, 1500)
   }
 
@@ -251,7 +250,7 @@ const Index = () => {
 
             <div className="my-12 flex justify-center gap-5">
               <Button
-                onClick={() => navigate(`${APP_PATH}billable-metric/list`)}
+                onClick={() => navigate(`/billable-metric/list`)}
                 disabled={loading}
               >
                 Go Back

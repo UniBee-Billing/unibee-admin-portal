@@ -29,7 +29,6 @@ import { IPlan } from '../../shared.types'
 import { PlanStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
-const APP_PATH = import.meta.env.BASE_URL
 const PLAN_STATUS_FILTER = Object.keys(PLAN_STATUS)
   .map((s) => ({
     text: PLAN_STATUS[Number(s)],
@@ -67,7 +66,7 @@ const Index = ({
   })
 
   const goToDetail = (planId: number) =>
-    navigate(`${APP_PATH}plan/${planId}?productId=${productId}`)
+    navigate(`/plan/${planId}?productId=${productId}`)
   const copyPlan = async (planId: number) => {
     setCopyingPlan(true)
     const [newPlan, err] = await copyPlanReq(planId)
@@ -82,7 +81,7 @@ const Index = ({
   const onNewPlan = () => {
     // setPage(0) // if user are on page 3, after creating new plan, they'll be redirected back to page 1,so the newly created plan will be shown on the top
     onPageChange(1, 100)
-    navigate(`${APP_PATH}plan/new?productId=${productId}`)
+    navigate(`/plan/new?productId=${productId}`)
   }
 
   const fetchPlan = async () => {
@@ -286,9 +285,7 @@ const Index = ({
                   ) {
                     return
                   }
-                  navigate(
-                    `${APP_PATH}plan/${record.id}?productId=${productId}`
-                  )
+                  navigate(`/plan/${record.id}?productId=${productId}`)
                 }
               }
             }}

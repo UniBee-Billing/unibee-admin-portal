@@ -14,8 +14,6 @@ import { TWebhook } from '../../../shared.types'
 // import '../../shared.css'
 import WebhookDetail from './detail'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 const Index = () => {
   const navigate = useNavigate()
   // const appConfigStore = useAppConfigStore();
@@ -170,7 +168,7 @@ const Index = () => {
               } else {
                 // toggleLogModal()
                 navigate(
-                  `${APP_PATH}configuration/webhook-logs/${webhookList[rowIndex as number].id}`
+                  `/configuration/webhook-logs/${webhookList[rowIndex as number].id}`
                 )
               }
             }

@@ -21,7 +21,6 @@ import { usePagination } from '../../hooks'
 import '../../shared.css'
 
 const PAGE_SIZE = 10
-const APP_PATH = import.meta.env.BASE_URL
 
 const Index = () => {
   const navigate = useNavigate()
@@ -82,7 +81,7 @@ const Index = () => {
         ) : (
           <Button
             type="link"
-            onClick={() => navigate(`${APP_PATH}user/${userId}`)}
+            onClick={() => navigate(`/user/${userId}`)}
             className="log-key-info-id"
             style={{ padding: 0 }}
           >
@@ -105,7 +104,7 @@ const Index = () => {
           '―'
         ) : (
           <Button
-            onClick={() => navigate(`${APP_PATH}invoice/${invoiceId}`)}
+            onClick={() => navigate(`/invoice/${invoiceId}`)}
             type="link"
             className="log-key-info-id"
             style={{ padding: 0 }}
@@ -123,7 +122,7 @@ const Index = () => {
           '―'
         ) : (
           <Button
-            onClick={() => navigate(`${APP_PATH}plan/${planId}`)}
+            onClick={() => navigate(`/plan/${planId}`)}
             type="link"
             className="log-key-info-id"
             style={{ padding: 0 }}
@@ -142,7 +141,7 @@ const Index = () => {
           '―'
         ) : (
           <Button
-            onClick={() => navigate(`${APP_PATH}subscription/${subId}`)}
+            onClick={() => navigate(`/subscription/${subId}`)}
             type="link"
             className="log-key-info-id"
             style={{
@@ -208,7 +207,7 @@ const Index = () => {
           return {
             onClick: (event) => {
               const tgt = event.target
-              // navigate(`${APP_PATH}billable-metric/${record.id}`)
+
               if (
                 tgt instanceof HTMLElement &&
                 tgt.classList.contains('log-key-info-id')
