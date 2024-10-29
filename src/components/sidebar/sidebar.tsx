@@ -23,7 +23,7 @@ export const Sidebar = () => {
 
   return (
     <Layout.Sider
-      theme="light"
+      theme="dark"
       collapsible
       collapsed={collapsed}
       onCollapse={(value) => setCollapsed(value)}

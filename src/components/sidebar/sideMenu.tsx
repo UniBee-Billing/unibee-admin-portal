@@ -86,7 +86,7 @@ export const SideMenu = (props: MenuProps) => {
 
   return (
     <Menu
-      theme="light"
+      theme="dark"
       mode="inline"
       selectedKeys={activeMenuItem}
       onClick={(e) => navigate(e.key)}
