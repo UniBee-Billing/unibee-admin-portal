@@ -66,14 +66,14 @@ const Index = () => {
       dataIndex: 'user',
       key: 'user',
       render: (user) =>
-        user == null ? (
+        !user ? (
           ''
         ) : (
           <div
             onClick={() => navigate(`/user/${user.id}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
-            {`${user.firstName} ${user.lastName}`}
+            {user.email}
           </div>
         )
     },
