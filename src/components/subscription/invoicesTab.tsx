@@ -316,6 +316,7 @@ const Index = ({
       title: 'User',
       dataIndex: 'userAccount',
       key: 'userName',
+      width: 130,
       // hidden: embeddingMode,
       // "hidden" is supported in higher version of antd, but that version broke many other things,
       // like <DatePicker />
