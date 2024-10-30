@@ -32,7 +32,7 @@ export const AboutUniBee: React.FC = () => {
     <ConfigProvider modal={{ styles: modalStyle }}>
       <div
         onClick={() => setOpen(true)}
-        className="mb-1 mt-4 cursor-pointer transition duration-300 hover:opacity-75"
+        className="mb-1 mt-4 cursor-pointer text-white transition duration-300 hover:opacity-75"
         color="default"
       >
         About UniBee

@@ -35,8 +35,8 @@ export const Sidebar = () => {
         </div>
         <div className="flex flex-col items-center">
           <div className="flex flex-col items-center">
-            <div className="text-xs">{profile.email}</div>
-            <div className="">{`${profile.firstName} ${profile.lastName}`}</div>
+            <div className="text-xs text-white">{profile.email}</div>
+            <div className="text-white">{`${profile.firstName} ${profile.lastName}`}</div>
             <div className="text-xs text-gray-400">{role}</div>
           </div>
           <AboutUniBee />
