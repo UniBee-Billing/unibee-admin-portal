@@ -79,7 +79,9 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
           </Row>
           <Row gutter={[16, 32]} style={{ marginBottom: '12px' }}>
             <Col span={4}>
-              {gatewayDetail?.gatewayName == 'paypal' ? 'Secret' : 'Privat Key'}
+              {gatewayDetail?.gatewayName == 'paypal'
+                ? 'Secret'
+                : 'Private Key'}
             </Col>
             <Col span={20}>
               <TextArea

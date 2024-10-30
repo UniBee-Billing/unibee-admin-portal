@@ -17,8 +17,8 @@ import {
   BusinessAccountValues
 } from './businessAccountForm'
 import {
-  PernsonalAccountForm,
-  PernsonalAccountValues
+  PersonalAccountForm,
+  PersonalAccountValues
 } from './personalAccountForm'
 
 interface AccountTypeProps {
@@ -27,13 +27,13 @@ interface AccountTypeProps {
   previewData: PreviewData | undefined
   onFormValuesChange(
     changedValues: Record<string, unknown>,
-    values: BusinessAccountValues | PernsonalAccountValues,
+    values: BusinessAccountValues | PersonalAccountValues,
     accountType: AccountType
   ): void
 }
 
 export interface AccountTypeFormInstance {
-  submit: () => Promise<BusinessAccountValues & PernsonalAccountValues>
+  submit: () => Promise<BusinessAccountValues & PersonalAccountValues>
 }
 
 export const AccountTypeForm = forwardRef<
@@ -46,12 +46,12 @@ export const AccountTypeForm = forwardRef<
   const [selectedAccountType, setSelectedAccountType] =
     useState(prevAccountType)
   const businessAccountFormRef = useRef<FormInstance>(null)
-  const pernsonalAccountFormRef = useRef<FormInstance>(null)
+  const personalAccountFormRef = useRef<FormInstance>(null)
   const formRef = useMemo(
     () =>
       selectedAccountType === AccountType.BUSINESS
         ? businessAccountFormRef
-        : pernsonalAccountFormRef,
+        : personalAccountFormRef,
     [selectedAccountType]
   )
 
@@ -106,8 +106,8 @@ export const AccountTypeForm = forwardRef<
       />
     ),
     [AccountType.PERSONAL]: (
-      <PernsonalAccountForm
-        ref={pernsonalAccountFormRef}
+      <PersonalAccountForm
+        ref={personalAccountFormRef}
         loading={loading}
         user={user}
         onValuesChange={(changedValues, values) =>

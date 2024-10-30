@@ -3,22 +3,22 @@ import { forwardRef } from 'react'
 import { IProfile } from '../../../shared.types'
 import { CountrySelector } from '../../countrySelector'
 
-export type PernsonalAccountValues = {
+export type PersonalAccountValues = {
   country: string
 }
 
-interface PernsonalAccountFormProps {
+interface PersonalAccountFormProps {
   user: IProfile
   loading: boolean
   onValuesChange(
     changesValue: Record<string, unknown>,
-    values: PernsonalAccountValues
+    values: PersonalAccountValues
   ): void
 }
 
-export const PernsonalAccountForm = forwardRef<
+export const PersonalAccountForm = forwardRef<
   FormInstance,
-  PernsonalAccountFormProps
+  PersonalAccountFormProps
 >(({ user, onValuesChange, loading }, ref) => (
   <Form
     ref={ref}

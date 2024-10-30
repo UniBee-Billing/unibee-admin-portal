@@ -65,7 +65,7 @@ const Index = ({
       lengthUnit = unit
       durationTime = val
       // setTrialLengthUnit(unit)
-      //  trialDemand?: 'paymentMethod' | '' | boolean // backe
+      //  trialDemand?: 'paymentMethod' | '' | boolean // back
       requireCardInfo = trialDemand == 'paymentMethod' ? true : false
       //   cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UX, front-end use <Switch />
       autoRenew = cancelAtTrialEnd == 1 ? false : true

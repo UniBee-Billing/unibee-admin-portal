@@ -18,12 +18,12 @@ import Table, { ColumnsType } from 'antd/es/table'
 import update from 'immutability-helper'
 import { ChangeEventHandler, useEffect, useState } from 'react'
 import { PERMISSION_LIST } from '../../../constants'
-import { ramdonString } from '../../../helpers'
+import { randomString } from '../../../helpers'
 import { deleteRoleReq, getRoleListReq, saveRoleReq } from '../../../requests'
 import { TRole, TRolePermission } from '../../../shared.types'
 
 const OWNER_ROLE: TRole = {
-  localId: ramdonString(8),
+  localId: randomString(8),
   id: -1, // this is locally defined, not from backend, just to prevent name conflict, and notify users there is a builtin owner role.
   role: 'Owner',
   permissions: PERMISSION_LIST.map((p) => ({
@@ -94,7 +94,7 @@ const Index = () => {
 
   const onNewRole = () => {
     const newRole: TRole = {
-      localId: ramdonString(8),
+      localId: randomString(8),
       role: '',
       permissions: []
     }

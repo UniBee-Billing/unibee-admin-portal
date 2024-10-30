@@ -95,9 +95,9 @@ const Index = () => {
           fetchData()
         }}
       >
-        test deayling pdf previw
+        test dealing pdf preview
       </Button> */}{' '}
-      {/* test dealying feature */}
+      {/* test dealing feature */}
       <Spin
         spinning={loading}
         indicator={
@@ -173,7 +173,7 @@ const Index = () => {
           {/* 
             status == 2 (processing) is used mainly for wire-transfer payment/refund, crypto refund,
             in which cases, payment/refund status updates are not provided by 3rd party API,
-            admin have to check them offline, then update their status manully.
+            admin have to check them offline, then update their status manually.
           */}
           {/* invoiceDetail != null &&
             invoiceDetail.status == 2 &&

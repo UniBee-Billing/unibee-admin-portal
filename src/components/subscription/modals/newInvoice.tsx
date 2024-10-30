@@ -3,7 +3,7 @@ import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
 import update from 'immutability-helper'
 import { useState } from 'react'
 import { CURRENCY } from '../../../constants'
-import { ramdonString, showAmount } from '../../../helpers'
+import { randomString, showAmount } from '../../../helpers'
 import {
   createInvoiceReq,
   deleteInvoiceReq,
@@ -21,7 +21,7 @@ import {
 } from '../../../shared.types'
 
 const newPlaceholderItem = (): InvoiceItem => ({
-  id: ramdonString(8),
+  id: randomString(8),
   description: '',
   amount: 0,
   unitAmountExcludingTax: '', // item price with single unit
@@ -56,7 +56,7 @@ const Index = ({
   // const appConfigStore = useAppConfigStore();
   if (detail != null) {
     detail.lines?.forEach((item) => {
-      item.id = ramdonString(8)
+      item.id = randomString(8)
     })
   }
 
@@ -261,9 +261,9 @@ const Index = ({
       message.error(err.message)
       return
     }
-    message.success('Refund request created.') // does user get refund immeidately? or there is a pending process
+    message.success('Refund request created.') // does user get refund immediately? or there is a pending process
     // for stripe/paypal, most of times, refund will be done immediately
-    // for crypto/wire_transfer, refund invoice is in processig status, admin has to mark them as paid.
+    // for crypto/wire_transfer, refund invoice is in processing status, admin has to mark them as paid.
     closeModal()
     refresh()
   }

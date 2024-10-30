@@ -11,7 +11,7 @@ import {
   message
 } from 'antd'
 import { useEffect, useState } from 'react'
-import { ramdonString } from '../../../helpers'
+import { randomString } from '../../../helpers'
 import {
   deleteWebhookReq,
   getEventListReq,
@@ -110,7 +110,7 @@ const Index = ({
                 },
                 () => ({
                   validator(_, value) {
-                    // if (urlRegx.test(value)) {
+                    // if (urlRegex.test(value)) {
                     // return Promise.resolve()
                     // }
                     const lowCase = value.toLowerCase()
@@ -142,7 +142,7 @@ const Index = ({
                       fields.map((field, index) => {
                         return (
                           <div
-                            key={ramdonString(8)}
+                            key={randomString(8)}
                             className="flex items-center"
                             style={{ marginBottom: '12px' }}
                           >

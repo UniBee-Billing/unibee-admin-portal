@@ -40,7 +40,7 @@ const Index = ({
 
   const sendMailaddress = async () => {
     if (email.trim() == '' || !emailValidate(email)) {
-      setErrMailMsg('Invalid email adderss!')
+      setErrMailMsg('Invalid email address!')
       return Promise.reject(new Error('Invalid email address'))
     }
 

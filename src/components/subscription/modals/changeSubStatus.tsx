@@ -24,7 +24,7 @@ const Index = ({ subInfo, closeModal, refresh }: Props) => {
       return
     }
     if (incompleteDate == null) {
-      message.error('Plese select a date later than today')
+      message.error('Please select a date later than today')
       return
     }
 

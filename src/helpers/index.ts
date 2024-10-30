@@ -91,7 +91,7 @@ export const formatPlanPrice = (plan: IPlan) => {
   0: "Initiating", // this status only exist for a very short period, users/admin won't even know it exist
   1: "Pending", // admin manually create an invoice, ready for edit, but not published yet, users won't see it, won't receive email
   // in pending, admin can also delete the invoice
-  2: "Pocessing", // admin has published the invoice, user will receive a mail with payment link
+  2: "Processing", // admin has published the invoice, user will receive a mail with payment link
   3: "Paid", // user paid the invoice
   4: "Failed", // user not pay the invoice before it get expired
   5: "Cancelled", // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
@@ -175,7 +175,7 @@ export const toFixedNumber = (num: number, digits: number, base?: number) => {
   return Math.round(num * pow) / pow
 }
 
-export const ramdonString = (length: number | null) => {
+export const randomString = (length: number | null) => {
   if (length == null || length <= 0) {
     length = 8
   }
@@ -258,7 +258,7 @@ type SubDetail = Pick<
   subscription: ISubscriptionType
 }
 
-// subscription data returned from backend need to be re-constructred before front-end use
+// subscription data returned from backend need to be re-constructed before front-end use
 // make sure subDetail is the returned subscription data from backend.
 // in general, it's of the structure: {addons, gateway, plan, subscription, user, unfinishedSubscriptionPendingUpdate}
 export const normalizeSub = (

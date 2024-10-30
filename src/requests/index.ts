@@ -774,7 +774,7 @@ export const getOneTimePaymentHistoryReq = async ({
   }
 }
 
-// new user has choosen a sub plan, but not paid yet, before the payment due date, user and admin can cancel it.
+// new user has choose a sub plan, but not paid yet, before the payment due date, user and admin can cancel it.
 // this fn is for this purpose only, this call only work for sub.status == created.
 // it's not the same as terminate an active sub,
 export const cancelSubReq = async (subscriptionId: string) => {
@@ -1641,7 +1641,7 @@ export const markInvoiceAsPaidReq = async (
 
 // if wire-transfer payment need to be refunded, refund status also need to be marked manually.
 // Same goes to Crypto. Many crypto gateway has no refund API, so admin need to manually refund the crypto, check its status,
-// then manually mark refund as suceeded.
+// then manually mark refund as successful.
 export const markRefundAsSucceedReq = async (
   invoiceId: string,
   reason: string

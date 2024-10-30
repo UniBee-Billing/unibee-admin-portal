@@ -20,7 +20,7 @@ const Index = () => {
   )
   const [userId, setUserId] = useState<number | null>(null) // subscription obj has user account data, and admin can update it in AccountTab.
   // and the user data on subscription obj might be obsolete,
-  // so I use userId from subscription Obj, use this userId to run getUserProfile(userId), even after admin update the user info in AccontTab, re-call getUserProfile
+  // so I use userId from subscription Obj, use this userId to run getUserProfile(userId), even after admin update the user info in AccountTab, re-call getUserProfile
 
   // when user account is suspended, subscription tab need to be refreshed
   // current component is their parent, so after fetchUserProfile finish running, it setRefreshSub(true)
@@ -57,8 +57,8 @@ const Index = () => {
         <UserAccount
           user={userProfile}
           setUserProfile={setUserProfile}
-          refresh={fetchUserProfile} // this is to refresh the user profle page
-          setRefreshSub={setRefreshSub} // after admin suspended a user, subscriptin tab also need to refresh, just call setRefreshSub(true)
+          refresh={fetchUserProfile} // this is to refresh the user profile page
+          setRefreshSub={setRefreshSub} // after admin suspended a user, subscription tab also need to refresh, just call setRefreshSub(true)
         />
       )
     },

@@ -6,7 +6,7 @@ import { ISubscriptionType } from '../../../shared.types'
 interface Props {
   isOpen: boolean
   loading: boolean
-  terminateMode: 1 | 2 | null // 1: immediat, 2: end of this billing cycle, null: not selected
+  terminateMode: 1 | 2 | null // 1: immediate, 2: end of this billing cycle, null: not selected
   setTerminateMode: (mode: 1 | 2 | null) => void
   subInfo: ISubscriptionType | null
   onCancel: () => void

@@ -654,7 +654,7 @@ const SubscriptionInfoSection = ({
               </span>
             </Tooltip>
           )}
-          {/* == 1: payment is pending (wait for user to finishe the payment), 7: incomplete */}
+          {/* == 1: payment is pending (wait for user to finished the payment), 7: incomplete */}
           {subInfo && (subInfo.status == 1 || subInfo.status == 7) && (
             <Tooltip title="Cancel">
               <span

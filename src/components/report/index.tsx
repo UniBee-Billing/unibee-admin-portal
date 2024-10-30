@@ -438,7 +438,7 @@ const Index = () => {
 
     // item is dragged from source to dst
     // remove item from source
-    const newAvailables = update(availableFields, {
+    const newAvailable = update(availableFields, {
       $splice: [[source.index, 1]]
     })
 
@@ -453,8 +453,8 @@ const Index = () => {
         ]
       ]
     })
-
-    setAvailableFields(newAvailables)
+    // Available
+    setAvailableFields(newAvailable)
     setFields(newFields)
   }
 

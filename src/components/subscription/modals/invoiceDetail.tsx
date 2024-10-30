@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { REFUND_STATUS } from '../../../constants'
 import {
   getInvoicePermission,
-  ramdonString,
+  randomString,
   showAmount
 } from '../../../helpers'
 import { sendInvoiceInMailReq } from '../../../requests'
@@ -21,7 +21,7 @@ const Index = ({ detail, closeModal }: Props) => {
   // const appConfigStore = useAppConfigStore();
   if (detail != null && detail.lines) {
     detail.lines.forEach((item) => {
-      item.id = ramdonString(8)
+      item.id = randomString(8)
     })
   }
 

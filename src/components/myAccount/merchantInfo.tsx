@@ -33,7 +33,7 @@ const Index = () => {
     setLogoUrl(merchantInfo.merchant.companyLogo)
   }
 
-  const onFileUplaod = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     let file
     if (event.target.files && event.target.files.length > 0) {
       file = event.target.files[0]
@@ -154,7 +154,7 @@ const Index = () => {
             <input
               type="file"
               accept="image/png, image/gif, image/jpeg"
-              onChange={onFileUplaod}
+              onChange={onFileUpload}
               id="companyLogoURL"
               name="companyLogoURL"
               style={{ display: 'none' }}
@@ -215,7 +215,7 @@ const Index = () => {
                   loading={submitting || uploading}
                   disabled={submitting || uploading}
                 >
-                  {uploading ? 'Uploading' : submitting ? 'Submiting' : 'Save'}
+                  {uploading ? 'Uploading' : submitting ? 'Submitting' : 'Save'}
                 </Button>
               )}
             </div>

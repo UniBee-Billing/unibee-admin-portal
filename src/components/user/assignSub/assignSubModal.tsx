@@ -42,7 +42,7 @@ import {
   getValidStatusByMessage
 } from './businessAccountForm'
 import { CheckoutItem } from './checkoutItem'
-import { PernsonalAccountValues } from './personalAccountForm'
+import { PersonalAccountValues } from './personalAccountForm'
 
 interface Props {
   user: IProfile
@@ -95,7 +95,7 @@ export interface PreviewData {
   discount: DiscountData | null
 }
 
-type AccountValues = Pick<PernsonalAccountValues, 'country'> &
+type AccountValues = Pick<PersonalAccountValues, 'country'> &
   BusinessAccountValues
 
 const TRIGGER_PREVIEW_FIELDS = ['country', 'vat', 'discountCode']

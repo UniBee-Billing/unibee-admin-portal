@@ -24,7 +24,7 @@ import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
   isValidMap,
-  ramdonString,
+  randomString,
   showAmount,
   toFixedNumber
 } from '../../helpers'
@@ -81,7 +81,7 @@ const NEW_PLAN: TNewPlan = {
   intervalCount: 1,
   status: 1, // 1: editing，2: active, 3: inactive，4: expired
   publishStatus: 1, //  // 1: unpublished(not visible to users), 2: published(users could see and choose this plan)
-  type: 1, // 1: main, 2: add-on, 3: one-time pyment addon
+  type: 1, // 1: main, 2: add-on, 3: one-time payment addon
   imageUrl: 'http://www.google.com',
   homeUrl: 'http://www.google.com',
   addonIds: [],
@@ -146,7 +146,7 @@ const Index = () => {
   const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([]) // all the billable metrics, not used for edit, but used in <Select /> for user to choose.
   const [selectedMetrics, setSelectedMetrics] = useState<TMetricsItem[]>([
     // metrics are hard to let form handle change, I have to manually handle it
-    { localId: ramdonString(8) }
+    { localId: randomString(8) }
   ])
   const [trialLengthUnit, setTrialLengthUnit] = useState(
     TIME_UNITS.find((u) => u.label == 'days')?.value
@@ -434,7 +434,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       const [val, unit] = secondsToUnit(planDetail.plan.trialDurationTime)
       planDetail.plan.trialDurationTime = val
       setTrialLengthUnit(unit)
-      //  trialDemand?: 'paymentMethod' | '' | boolean // backe
+      //  trialDemand?: 'paymentMethod' | '' | boolean // back
       planDetail.plan.trialDemand =
         planDetail.plan.trialDemand == 'paymentMethod' ? true : false
       //   cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UX, front-end use <Switch />
@@ -457,9 +457,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     const metrics =
       null == planDetail.metricPlanLimits ||
       planDetail.metricPlanLimits.length == 0
-        ? [{ localId: ramdonString(8) }]
+        ? [{ localId: randomString(8) }]
         : planDetail.metricPlanLimits.map((m: Metric) => ({
-            localId: ramdonString(8),
+            localId: randomString(8),
             metricId: m.metricId,
             metricLimit: m.metricLimit
           }))
@@ -498,7 +498,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     if (formDisabled) {
       return
     }
-    const m: TMetricsItem = { localId: ramdonString(8) }
+    const m: TMetricsItem = { localId: randomString(8) }
     setSelectedMetrics(update(selectedMetrics, { $push: [m] }))
   }
 
@@ -543,7 +543,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       const obj = JSON.parse(metadata)
       form.setFieldValue('metadata', JSON.stringify(obj, null, 4))
     } catch {
-      message.error('Invalid custome data.')
+      message.error('Invalid custom data.')
       return
     }
   }
