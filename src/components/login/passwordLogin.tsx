@@ -19,8 +19,6 @@ import {
 } from '../../stores'
 import ForgetPasswordForm from './forgetPasswordForm'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 const Index = ({
   email,
   onEmailChange,
@@ -113,7 +111,7 @@ const Index = ({
       message.success('Login succeeded')
     } else {
       sessionStore.setSession({ expired: false, refresh: null })
-      navigate(`${APP_PATH}`)
+      navigate('/')
     }
   }
 

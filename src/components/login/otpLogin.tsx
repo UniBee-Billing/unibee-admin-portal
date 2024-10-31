@@ -18,8 +18,6 @@ import {
   useSessionStore
 } from '../../stores'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 const Index = ({
   email,
   onEmailChange,
@@ -241,7 +239,7 @@ const OTPForm = ({
       message.success('Login succeeded')
     } else {
       sessionStore.setSession({ expired: false, refresh: null })
-      navigate(`${APP_PATH}`)
+      navigate('/')
     }
   }
 

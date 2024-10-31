@@ -33,8 +33,6 @@ import {
 } from '../../stores'
 import ResetPasswordWithOTP from '../login/forgetPasswordForm'
 
-const APP_PATH = import.meta.env.BASE_URL
-
 const Index = () => {
   const profileStore = useProfileStore()
   const [form] = Form.useForm()
@@ -213,7 +211,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
     localStorage.removeItem('session')
     localStorage.removeItem('profile')
     localStorage.removeItem('permissions')
-    navigate(`${APP_PATH}login`, {
+    navigate('/login', {
       state: { msg: 'Password reset succeeded, please relogin.' }
     })
   }
