@@ -2628,9 +2628,17 @@ export const getProductDetailReq = async (productId: number) => {
   }
 }
 
+<<<<<<< HEAD
 export const getRevenueReq = async () => {
   try {
     const res = await analyticsRequest.get('/revenue')
+=======
+export const getAnalyticsReportReq = async () => {
+  try {
+    const res = await request.get(
+      `https://api.unibee.top/analytics-api/analytics`
+    )
+>>>>>>> 6764988 (feat: add hidden analytics page)
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
       throw new ExpiredError(
