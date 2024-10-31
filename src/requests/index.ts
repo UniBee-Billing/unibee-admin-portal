@@ -2636,7 +2636,7 @@ export const getRevenueReq = async () => {
 export const getAnalyticsReportReq = async () => {
   try {
     const res = await request.get(
-      `https://api.unibee.top/analytics-api/analytics`
+      `/merchant/invoice/revenues`
     )
 >>>>>>> 6764988 (feat: add hidden analytics page)
     if (res.data.code == 61 || res.data.code == 62) {
