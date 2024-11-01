@@ -140,8 +140,10 @@ export const SubscriptionConfig = () => {
       component: (
         <Config.Switch
           loading={loading}
-          value={data?.showZeroInvoice}
-          update={(checked) => updateData({ showZeroInvoice: checked })}
+          value={!data?.showZeroInvoice}
+          update={(isHideZeroInvoice) =>
+            updateData({ showZeroInvoice: !isHideZeroInvoice })
+          }
         />
       )
     }
