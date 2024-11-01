@@ -63,7 +63,7 @@ const Index = ({
   const [plans, setPlans] = useState<IPlan[]>([])
   const [selectedPlan, setSelectedPlan] = useState<null | number>(null) // null: not selected
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
-  const [confirmming, setConfirming] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const [dueDateModal, setDueDateModal] = useState(false)
   const [newDueDate, setNewDueDate] = useState('')
   const [changePlanModal, setChangePlanModal] = useState(false)
@@ -531,11 +531,11 @@ const Index = ({
         onAddonChange={onAddonChange}
         onCancel={toggleChangPlanModal}
         onConfirm={openPreviewModal}
-        loading={confirmming}
+        loading={confirming}
       />
       <UpdateSubPreviewModal
         isOpen={previewModalOpen}
-        loading={confirmming}
+        loading={confirming}
         previewInfo={preview}
         onCancel={togglePreviewModal}
         onConfirm={onConfirm}

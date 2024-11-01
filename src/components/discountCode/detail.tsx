@@ -193,7 +193,7 @@ const Index = () => {
     if (code == null || code.id == null) {
       return
     }
-    // status: 1 (editing), 2(active), 3(deactive), 4(expired)
+    // status: 1 (editing), 2(active), 3(deactivate), 4(expired)
     const action =
       code.status == 1 || code.status == 3
         ? 'activate'
