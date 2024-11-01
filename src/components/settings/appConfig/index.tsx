@@ -4,15 +4,15 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { Button, Col, Row, Tag, message } from 'antd'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
 import { CURRENCY } from '../../../constants'
 import { getAppKeysWithMore } from '../../../requests'
-// import '../../shared.css'
 import { TGateway } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
 import ModalApiKey from './apiKeyModal'
 import ChangellyModal from './changellyModal'
+import { PaymentCallbackLinkEditModal } from './paymentCallbackLinkEditModal'
 import PaymentGatewayList from './paymentGatewayList'
 import SegmentModal from './segmentModal'
 import ModalSendgridKeyModal from './sendGridKeyModal'
@@ -43,6 +43,13 @@ const Index = () => {
   const [wireTransferModalOpen, setWireTransferModalOpen] = useState(false)
   const [changellyModalOpen, setChangellyModalOpen] = useState(false)
   const [segmentModalOpen, setSegmentModalOpen] = useState(false)
+  const [
+    isOpenPaymentCallbackLinkEditModal,
+    setIsOpenPaymentCallbackLinkEditModal
+  ] = useState(false)
+  const [paymentCallbackLink, setPaymentCallbackLink] = useState<
+    string | undefined
+  >()
 
   const [keys, setKeys] = useState({
     openApiKey: '',
@@ -66,6 +73,7 @@ const Index = () => {
   const getAppKeys = async () => {
     setLoadingKeys(true)
     const [res, err] = await getAppKeysWithMore(getAppKeys)
+
     setLoadingKeys(false)
     if (null != err) {
       message.error(err.message)
@@ -78,8 +86,12 @@ const Index = () => {
       sendGridKey,
       vatSenseKey,
       segmentServerSideKey,
-      segmentUserPortalKey
+      segmentUserPortalKey,
+      merchant
     } = merchantInfo
+
+    setPaymentCallbackLink(merchant.host)
+
     const k = {
       openApiKey: '',
       sendGridKey: '',
@@ -123,6 +135,11 @@ const Index = () => {
 
   return (
     <div style={{ margin: '32px 0' }}>
+      <PaymentCallbackLinkEditModal
+        isOpen={isOpenPaymentCallbackLinkEditModal}
+        hide={() => setIsOpenPaymentCallbackLinkEditModal(false)}
+        defaultValue={paymentCallbackLink ?? ''}
+      />
       {apiKeyModalOpen && <ModalApiKey closeModal={toggleKeyModal} />}
       {sendgridKeyModalOpen && (
         <ModalSendgridKeyModal closeModal={toggleSendgridModal} />
@@ -312,6 +329,32 @@ const Index = () => {
         </Col>
         <Col span={2}>
           <Button onClick={toggleSegmentModal} disabled={loadingKeys}>
+            Edit
+          </Button>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 32]} style={{ marginBottom: '16px' }}>
+        <Col span={4}>Payment callback link</Col>
+        <Col span={2}>
+          {!paymentCallbackLink ? (
+            <LoadingTag />
+          ) : paymentCallbackLink !== '' ? (
+            <SetTag />
+          ) : (
+            <NotSetTag />
+          )}
+        </Col>
+        <Col span={10}>
+          <div className="text-gray-500">
+            Configure target URL to which user will be redirected after payment
+          </div>
+        </Col>
+        <Col span={2}>
+          <Button
+            onClick={() => setIsOpenPaymentCallbackLinkEditModal(true)}
+            disabled={loadingKeys}
+          >
             Edit
           </Button>
         </Col>
