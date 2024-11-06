@@ -17,6 +17,7 @@ export const LoginModal = ({ email, isOpen }: LoginModalProps) => {
       open={isOpen}
       footer={false}
       closeIcon={null}
+      zIndex={2000}
     >
       <LoginContainer triggeredByExpired={true} initialEmail={email} />
     </Modal>

@@ -1,4 +1,5 @@
-import { Tag } from 'antd'
+import { InfoCircleOutlined } from '@ant-design/icons'
+import { Tag, Tooltip } from 'antd'
 import React, { ReactElement } from 'react'
 import {
   DISCOUNT_CODE_STATUS,
@@ -33,19 +34,37 @@ const SubHistoryStatus = (statusId: number) => SUB_HISTORY_STATUS[statusId]
 
 const IV_STATUS: { [key: number]: ReactElement } = {
   0: <span>Initiating</span>, // this status only exist for a very short period, users/admin won't even know it exist
-  1: <Tag color="magenta">{INVOICE_STATUS[1]}</Tag>, // 1: pending
-  2: <Tag color="blue">{INVOICE_STATUS[2]}</Tag>, // 2: processing
-  3: <Tag color="#87d068">{INVOICE_STATUS[3]}</Tag>, // 3: paid
+  1: (
+    <div>
+      <Tag color="magenta">{INVOICE_STATUS[1]}</Tag>
+      <Tooltip title="You can still edit/delete this draft, user won't receive this invoice until you 'create' it.">
+        <InfoCircleOutlined />
+      </Tooltip>
+    </div>
+  ), // 1: draft
+  2: <Tag color="blue">{INVOICE_STATUS[2]}</Tag>, // 2: awaiting payment/refund
+  3: <Tag color="#87d068">{INVOICE_STATUS[3]}</Tag>, // 3: paid/refunded
   4: <Tag color="red">{INVOICE_STATUS[4]}</Tag>, // 4: failed
   5: <Tag color="purple">{INVOICE_STATUS[5]}</Tag>, // 5: cancellled
   6: <Tag color="cyan">{INVOICE_STATUS[6]}</Tag> // reversed???
 }
-const InvoiceStatus = (statusId: number, isRefund?: boolean) =>
-  statusId == 3 && isRefund ? ( // status == 3 means invoice Paid, for refund invoice, description should be Refunded
-    <Tag color="#87d068">Refunded</Tag>
-  ) : (
-    IV_STATUS[statusId]
-  )
+const InvoiceStatus = (statusId: number, isRefund?: boolean) => {
+  if (statusId == 3 && isRefund) {
+    // show 'refunded', status == 3 means invoice Paid, for refund invoice, description should be Refunded
+    return <Tag color="#87d068">Refunded</Tag>
+  } else if (statusId == 3) {
+    // show 'paid'
+    return <Tag color="#87d068">{INVOICE_STATUS[3]}</Tag>
+  } else if (statusId == 2 && isRefund) {
+    // show 'Awaiting refund'
+    return <Tag color="blue">Awaiting refund</Tag>
+  } else if (statusId == 2) {
+    // show 'Awaiting payment'
+    return <Tag color="blue">{INVOICE_STATUS[2]}</Tag>
+  } else {
+    return IV_STATUS[statusId]
+  }
+}
 
 const PLAN_STATUS_TAG: { [key: number]: ReactElement } = {
   1: <Tag color="blue">{PLAN_STATUS[1]}</Tag>,

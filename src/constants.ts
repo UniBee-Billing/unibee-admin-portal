@@ -74,9 +74,8 @@ export const CURRENCY: {
 
 export const INVOICE_STATUS: { [key: number]: string } = {
   0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist
-  1: 'Pending', // admin manually create an invoice, ready for edit, but not published yet, users won't see it, won't receive email.
-  // in pending, admin can also delete the invoice
-  2: 'Processing', // admin has published the invoice, user will receive a mail with payment link. Admin can revoke the invoice if user hasn't made the payment.
+  1: 'Draft', // admin manually create an invoice, for edit/delete, but users won't receive this invoice.
+  2: 'Awaiting payment', // admin has clicked the 'create' button in invoice editing modal, user will receive a mail with payment link. Admin can revoke the invoice if user hasn't made the payment.
   3: 'Paid', // user paid the invoice
   4: 'Failed', // user not pay the invoice before it get expired
   5: 'Cancelled', // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
@@ -125,8 +124,8 @@ export const PAYMENT_TYPE: { [key: number]: string } = {
 }
 
 export const REFUND_STATUS: { [key: number]: string } = {
-  10: 'Pending',
-  20: 'Succeeded',
+  10: 'Awaiting refund',
+  20: 'Refunded',
   30: 'Failed',
   40: 'Cancelled'
 }
