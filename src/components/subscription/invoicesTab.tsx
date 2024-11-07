@@ -250,7 +250,7 @@ const Index = ({
       title: 'Amount',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
-      width: 150,
+      width: 160,
       render: (amt, iv) => (
         <div className="flex items-center">
           <div className={iv.refund == null ? '' : 'text-red-500'}>

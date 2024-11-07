@@ -36,7 +36,7 @@ const IV_STATUS: { [key: number]: ReactElement } = {
   0: <span>Initiating</span>, // this status only exist for a very short period, users/admin won't even know it exist
   1: (
     <div>
-      <Tag color="magenta">{INVOICE_STATUS[1]}</Tag>
+      <Tag color="gray">{INVOICE_STATUS[1]}</Tag>
       <Tooltip title="You can still edit/delete this draft, user won't receive this invoice until you 'create' it.">
         <InfoCircleOutlined />
       </Tooltip>
@@ -44,7 +44,14 @@ const IV_STATUS: { [key: number]: ReactElement } = {
   ), // 1: draft
   2: <Tag color="blue">{INVOICE_STATUS[2]}</Tag>, // 2: awaiting payment/refund
   3: <Tag color="#87d068">{INVOICE_STATUS[3]}</Tag>, // 3: paid/refunded
-  4: <Tag color="red">{INVOICE_STATUS[4]}</Tag>, // 4: failed
+  4: (
+    <div>
+      <Tag color="red">{INVOICE_STATUS[4]}</Tag>
+      <Tooltip title="User didn't finish the payment on time.">
+        <InfoCircleOutlined />
+      </Tooltip>
+    </div>
+  ), // 4: failed
   5: <Tag color="purple">{INVOICE_STATUS[5]}</Tag>, // 5: cancellled
   6: <Tag color="cyan">{INVOICE_STATUS[6]}</Tag> // reversed???
 }
