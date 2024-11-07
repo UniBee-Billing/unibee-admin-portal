@@ -115,7 +115,8 @@ export const DISCOUNT_CODE_TYPE: { [key: number]: string } = {
 export const PAYMENT_STATUS: { [key: number]: string } = {
   0: 'Pending',
   1: 'Succeeded',
-  2: 'Failed'
+  2: 'Failed',
+  3: 'Cancelled'
 }
 
 export const PAYMENT_TYPE: { [key: number]: string } = {

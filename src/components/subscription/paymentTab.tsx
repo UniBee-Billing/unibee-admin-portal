@@ -100,7 +100,6 @@ const Index = ({
       return
     }
     const { paymentTimeLines, total } = res
-
     setPaymentList(paymentTimeLines ?? [])
     setTotal(total)
   }

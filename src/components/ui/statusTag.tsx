@@ -86,7 +86,8 @@ const DiscountCodeStatus = (statusId: number) =>
 const PAYMENT_STATUS_TAG: { [key: number]: ReactElement } = {
   0: <Tag color="blue">{PAYMENT_STATUS[0]}</Tag>, // pending
   1: <Tag color="#87d068">{PAYMENT_STATUS[1]}</Tag>, // succeeded
-  2: <Tag color="purple">{PAYMENT_STATUS[2]}</Tag> // failed
+  2: <Tag color="purple">{PAYMENT_STATUS[2]}</Tag>, // failed
+  3: <Tag color="red">{PAYMENT_STATUS[3]}</Tag> // cancelled
 }
 const PaymentStatus = (statusId: number) => PAYMENT_STATUS_TAG[statusId]
 
