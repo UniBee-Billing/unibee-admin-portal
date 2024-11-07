@@ -163,7 +163,7 @@ const Index = () => {
     isNew || plan?.status == 1 || (plan?.status == 2 && plan.publishStatus == 1) // isNew || plan editing || (active && unpublished)
 
   let formDisabled =
-    (plan?.status == 2 && plan.publishStatus == 2) || productDetail == null // (plan active && published) or productId is invalid
+    (plan?.status == 2 && plan.publishStatus == 2) || productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
   const selectAfter = (
     <Select
@@ -205,7 +205,7 @@ const Index = () => {
   }, [itvCountUnit, itvCountValue, planCurrency])
 
   const onSave = async (values: unknown) => {
-    if (productDetail == null) {
+    if (productDetail === null) {
       return
     }
     const f = JSON.parse(JSON.stringify(values))
@@ -1085,7 +1085,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 >
                   <Button
                     danger
-                    disabled={loading || activating || productDetail == null}
+                    disabled={loading || activating || productDetail === null}
                   >
                     Delete
                   </Button>
@@ -1107,7 +1107,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   htmlType="submit"
                   loading={loading}
                   disabled={
-                    loading || activating || !savable || productDetail == null
+                    loading || activating || !savable || productDetail === null
                   }
                 >
                   Save
@@ -1121,7 +1121,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                       plan.status != 1 ||
                       activating ||
                       loading ||
-                      productDetail == null
+                      productDetail === null
                     }
                   >
                     Activate
