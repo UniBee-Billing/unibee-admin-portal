@@ -87,7 +87,7 @@ const DISCOUNT_CODE_STATUS_TAG: { [key: number]: ReactElement } = {
   3: <Tag color="purple">{DISCOUNT_CODE_STATUS[3]}</Tag>,
   4: <Tag color="red">{DISCOUNT_CODE_STATUS[4]}</Tag>
 }
-const DiscountCodeStatus = (statusId: number) =>
+const getDiscountCodeStatusTagById = (statusId: number) =>
   DISCOUNT_CODE_STATUS_TAG[statusId]
 
 const PAYMENT_STATUS_TAG: { [key: number]: ReactElement } = {
@@ -120,7 +120,7 @@ const TASK_STATUS_TAG: { [key: number]: ReactElement } = {
 const TaskStatus = (statusId: number) => TASK_STATUS_TAG[statusId]
 
 export {
-  DiscountCodeStatus,
+  getDiscountCodeStatusTagById,
   InvoiceStatus,
   MerchantUserStatus,
   PaymentStatus,

@@ -4,13 +4,14 @@ import {
   DatePicker,
   Form,
   Input,
+  InputNumber,
   Popconfirm,
   Select,
   Spin,
   message
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CURRENCY } from '../../constants'
 import {
@@ -28,11 +29,12 @@ import {
 } from '../../requests'
 import { DiscountCode, IPlan } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
-import { DiscountCodeStatus } from '../ui/statusTag'
+import { getDiscountCodeStatusTagById } from '../ui/statusTag'
+import { UpdateDiscountCodeQuantityModal } from './updateDiscountCodeQuantityModal'
 
 const { RangePicker } = DatePicker
 
-const NEW_CODE: DiscountCode = {
+const DEFAULT_CODE: DiscountCode = {
   merchantId: useMerchantInfoStore.getState().id,
   name: '',
   code: '',
@@ -45,7 +47,15 @@ const NEW_CODE: DiscountCode = {
   startTime: 0,
   endTime: 0,
   validityRange: [null, null],
-  planIds: []
+  planIds: [],
+  quantity: 1
+}
+
+enum DiscountCodeStatus {
+  EDITING = 1,
+  ACTIVE,
+  DEACTIVATE,
+  EXPIRED
 }
 
 const Index = () => {
@@ -54,15 +64,26 @@ const Index = () => {
   const isNew = codeId == null
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [code, setCode] = useState<DiscountCode | null>(isNew ? NEW_CODE : null)
+  const [code, setCode] = useState<DiscountCode | null>(
+    isNew ? DEFAULT_CODE : null
+  )
   const [planList, setPlanList] = useState<IPlan[]>([])
   const planListRef = useRef<IPlan[]>([])
+  const [
+    isOpenUpdateDiscountCodeQuantityModal,
+    setIsOpenUpdateDiscountCodeQuantityModal
+  ] = useState(false)
   const [form] = Form.useForm()
 
   const watchDiscountType = Form.useWatch('discountType', form)
   const watchBillingType = Form.useWatch('billingType', form)
   const watchCurrency = Form.useWatch('currency', form)
   const watchPlanIds = Form.useWatch('planIds', form)
+
+  const isCodeActive = useMemo(
+    () => code?.status === DiscountCodeStatus.ACTIVE,
+    [code]
+  )
 
   const goBack = () => navigate(`/discount-code/list`)
   const goToUsageDetail = () =>
@@ -131,9 +152,11 @@ const Index = () => {
     const { plans } = res
     // if NEW_CODE.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
     let planList = plans == null ? [] : plans.map((p: IPlan) => p.plan)
-    if (NEW_CODE.discountType == 2) {
+    if (DEFAULT_CODE.discountType == 2) {
       // fixed amt
-      planList = planList.filter((p: IPlan) => p.currency == NEW_CODE.currency)
+      planList = planList.filter(
+        (p: IPlan) => p.currency == DEFAULT_CODE.currency
+      )
     }
     setPlanList(planList)
     planListRef.current = plans == null ? [] : plans.map((p: IPlan) => p.plan)
@@ -195,9 +218,10 @@ const Index = () => {
     }
     // status: 1 (editing), 2(active), 3(deactivate), 4(expired)
     const action =
-      code.status == 1 || code.status == 3
+      code.status == DiscountCodeStatus.EDITING ||
+      code.status == DiscountCodeStatus.DEACTIVATE
         ? 'activate'
-        : code.status == 2
+        : code.status == DiscountCodeStatus.ACTIVE
           ? 'deactivate'
           : ''
     if (action == '') {
@@ -214,15 +238,7 @@ const Index = () => {
     goBack()
   }
 
-  const savable = () => {
-    if (isNew) {
-      return true
-    }
-    if (code != null && code.status != null && code.status == 1) {
-      return true
-    }
-    return false
-  }
+  const savable = useMemo(() => isNew || code?.status === 1, [code])
 
   const getPlanLabel = (planId: number) => {
     const p = planListRef.current.find((p) => p.id == planId)
@@ -265,19 +281,23 @@ const Index = () => {
         }
         fullscreen
       />
+      {code?.id && (
+        <UpdateDiscountCodeQuantityModal
+          discountId={code?.id}
+          close={() => setIsOpenUpdateDiscountCodeQuantityModal(false)}
+          onSuccess={(delta) => (code.quantity += delta)}
+          open={isOpenUpdateDiscountCodeQuantityModal}
+        />
+      )}
       {code && (
         <Form
           form={form}
           onFinish={onSave}
-          // labelCol={{ span: 4 }}
           labelCol={{ flex: '160px' }}
-          // wrapperCol={{ span: 20 }}
           wrapperCol={{ flex: 1 }}
           colon={false}
-          // layout="horizontal"
-          // disabled={componentDisabled}
-          // style={{ maxWidth: 1024 }}
           initialValues={code}
+          disabled={isCodeActive}
         >
           {!isNew && (
             <Form.Item label="ID" name="id" hidden>
@@ -316,7 +336,7 @@ const Index = () => {
           </Form.Item>
           {!isNew && (
             <Form.Item label="Status">
-              {DiscountCodeStatus(code.status as number)}
+              {getDiscountCodeStatusTagById(code.status as number)}
             </Form.Item>
           )}
           <Form.Item
@@ -355,6 +375,31 @@ const Index = () => {
                 { value: 2, label: 'Fixed amount' }
               ]}
             />
+          </Form.Item>
+
+          <Form.Item
+            label="Quantity"
+            name="quantity"
+            rules={[
+              {
+                required: true,
+                message: 'Please input valid quantity'
+              }
+            ]}
+          >
+            {isCodeActive ? (
+              <div>
+                <span className="mr-2">{code.quantity}</span>
+                <Button
+                  disabled={!code?.id}
+                  onClick={() => setIsOpenUpdateDiscountCodeQuantityModal(true)}
+                >
+                  Update
+                </Button>
+              </div>
+            ) : (
+              <InputNumber min="1" style={{ width: 180 }} />
+            )}
           </Form.Item>
 
           <Form.Item
@@ -443,7 +488,7 @@ const Index = () => {
           >
             <Input
               style={{ width: 180 }}
-              disabled={watchDiscountType == 2}
+              disabled={watchDiscountType == 2 || isCodeActive}
               suffix="%"
             />
           </Form.Item>
@@ -583,9 +628,11 @@ const Index = () => {
               </Button>
             )}
 
-          <Button onClick={form.submit} type="primary" disabled={!savable()}>
-            Save
-          </Button>
+          {!isCodeActive && (
+            <Button onClick={form.submit} type="primary" disabled={!savable}>
+              Save
+            </Button>
+          )}
         </div>
       </div>
     </div>

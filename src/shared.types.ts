@@ -271,6 +271,7 @@ type DiscountCode = {
   validityRange: [Dayjs | null, Dayjs | null]
   createTime?: number
   planIds?: number[] // this code applies to these plan only
+  quantity: number
   metadata?: {
     [key: string]: string
   }

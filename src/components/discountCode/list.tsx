@@ -34,7 +34,7 @@ import { exportDataReq, getDiscountCodeListReq } from '../../requests'
 import '../../shared.css'
 import { DiscountCode } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
-import { DiscountCodeStatus } from '../ui/statusTag'
+import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
 
@@ -136,7 +136,7 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s) => DiscountCodeStatus(s), // STATUS[s]
+      render: (statusId) => getDiscountCodeStatusTagById(statusId), // STATUS[s]
       filters: CODE_STATUS_FILTER,
       filteredValue: filters.status
     },

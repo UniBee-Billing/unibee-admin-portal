@@ -11,11 +11,11 @@ import {
   Col,
   DatePicker,
   Divider,
+  message,
   Popover,
   Row,
   Spin,
-  Tooltip,
-  message
+  Tooltip
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
 import update from 'immutability-helper'
@@ -42,7 +42,10 @@ import {
   ISubscriptionType
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
-import { DiscountCodeStatus, SubscriptionStatus } from '../ui/statusTag'
+import {
+  getDiscountCodeStatusTagById,
+  SubscriptionStatus
+} from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'
 import ChangePlanModal from './modals/changePlan'
 import ChangeSubStatusModal from './modals/changeSubStatus'
@@ -773,7 +776,7 @@ const SubscriptionInfoSection = ({
                         Status
                       </Col>
                       <Col span={14}>
-                        {DiscountCodeStatus(
+                        {getDiscountCodeStatusTagById(
                           subInfo.latestInvoice.discount.status as number
                         )}
                       </Col>
