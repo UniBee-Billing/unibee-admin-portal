@@ -444,13 +444,15 @@ export const getPlanDetailWithMore = async (
   const [
     [planDetail, errDetail],
     [addonList, addonErr],
-    [metricsList, errMetrics]
+    [metricsList, errMetrics],
+    [productList, errProduct]
   ] = await Promise.all([
     planDetailRes,
     getPlanList({ type: [2, 3], status: [2], page: 0, count: 150 }, null), // type: [2,3] -> [addon, one-time-pay], status: 2 -> active
-    getMetricsListReq(null)
+    getMetricsListReq(null),
+    getProductListReq()
   ])
-  const err = errDetail || addonErr || errMetrics
+  const err = errDetail || addonErr || errMetrics || errProduct
   if (null != err) {
     if (err instanceof ExpiredError) {
       session.setSession({ expired: true, refresh: refreshCb })
@@ -458,7 +460,7 @@ export const getPlanDetailWithMore = async (
     return [null, err]
   }
 
-  return [{ planDetail, addonList, metricsList }, null]
+  return [{ planDetail, addonList, metricsList, productList }, null]
 }
 
 // create a new or save an existing plan
@@ -2540,7 +2542,7 @@ export const removeExportTmplReq = async ({
 export const getProductListReq = async (count?: number, page?: number) => {
   try {
     const res = await request.post(`/merchant/product/list`, {
-      count: count ?? 30,
+      count: count ?? 60,
       page: page ?? 0
     })
     if (res.data.code == 61 || res.data.code == 62) {

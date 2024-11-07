@@ -116,6 +116,11 @@ const Index = ({
 
   const columns: ColumnsType<IPlan> = [
     {
+      title: 'Plan Id',
+      dataIndex: 'id',
+      key: 'id'
+    },
+    {
       title: 'Name',
       dataIndex: 'planName',
       key: 'planName'

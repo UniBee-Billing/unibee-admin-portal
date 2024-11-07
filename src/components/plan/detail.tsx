@@ -35,8 +35,7 @@ import {
   savePlan,
   togglePublishReq
 } from '../../requests'
-import { IBillableMetrics, IPlan } from '../../shared.types'
-import { useProductListStore } from '../../stores'
+import { IBillableMetrics, IPlan, IProduct } from '../../shared.types'
 import { PlanStatus } from '../ui/statusTag'
 
 const getAmount = (amt: number, currency: string) =>
@@ -123,13 +122,7 @@ const Index = () => {
   const isNew = planId == null
   const [searchParams, _] = useSearchParams()
   const productId = useRef(parseInt(searchParams.get('productId') ?? '0'))
-  const productsStore = useProductListStore()
-
-  const productDetail = productsStore.list.find(
-    (p) => p.id == productId.current
-  )
-  const isProductValid = productDetail != null
-
+  const [productDetail, setProductDetail] = useState<IProduct | null>(null)
   const [loading, setLoading] = useState(false)
   const [activating, setActivating] = useState(false)
   const [publishing, setPublishing] = useState(false) // when toggling publish/unpublish
@@ -170,7 +163,7 @@ const Index = () => {
     isNew || plan?.status == 1 || (plan?.status == 2 && plan.publishStatus == 1) // isNew || plan editing || (active && unpublished)
 
   let formDisabled =
-    (plan?.status == 2 && plan.publishStatus == 2) || !isProductValid // (plan active && published) or productId is invalid
+    (plan?.status == 2 && plan.publishStatus == 2) || productDetail == null // (plan active && published) or productId is invalid
 
   const selectAfter = (
     <Select
@@ -212,7 +205,7 @@ const Index = () => {
   }, [itvCountUnit, itvCountValue, planCurrency])
 
   const onSave = async (values: unknown) => {
-    if (!isProductValid) {
+    if (productDetail == null) {
       return
     }
     const f = JSON.parse(JSON.stringify(values))
@@ -345,7 +338,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     }
     message.success('Plan deleted')
     navigate(
-      `/plan/list?productId=${isProductValid ? productId.current : 0}` // no need to do isValid check, only valid can be deleted.
+      `/plan/list?productId=${productDetail != null ? productDetail.id : 0}`
     )
   }
 
@@ -362,7 +355,15 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       return
     }
 
-    const { planDetail, addonList, metricsList } = detailRes
+    const { planDetail, addonList, metricsList, productList } = detailRes
+    if (productList.products != null) {
+      const productDetail = productList.products.find(
+        (p: IProduct) => p.id == productId.current
+      )
+      if (productDetail != undefined) {
+        setProductDetail(productDetail)
+      }
+    }
     const addons =
       addonList.plans == null
         ? []
@@ -579,7 +580,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
 
           <Form.Item label="Product name">
             <span>
-              {isProductValid ? (
+              {productDetail != null ? (
                 productDetail?.productName
               ) : (
                 <Tag color="red">Invalid product</Tag>
@@ -1084,7 +1085,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 >
                   <Button
                     danger
-                    disabled={loading || activating || !isProductValid}
+                    disabled={loading || activating || productDetail == null}
                   >
                     Delete
                   </Button>
@@ -1094,7 +1095,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 <Button
                   onClick={() =>
                     navigate(
-                      `/plan/list?productId=${isProductValid ? productId.current : 0}`
+                      `/plan/list?productId=${productDetail != null ? productDetail.id : 0}`
                     )
                   }
                   disabled={loading || activating}
@@ -1106,7 +1107,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                   htmlType="submit"
                   loading={loading}
                   disabled={
-                    loading || activating || !savable || !isProductValid
+                    loading || activating || !savable || productDetail == null
                   }
                 >
                   Save
@@ -1120,7 +1121,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                       plan.status != 1 ||
                       activating ||
                       loading ||
-                      !isProductValid
+                      productDetail == null
                     }
                   >
                     Activate
