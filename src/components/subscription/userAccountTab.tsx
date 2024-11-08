@@ -90,6 +90,7 @@ const UserAccountTab = ({
     if (user != null) setGatewayId(user.gatewayId)
   }, [user])
 
+  const userType = Form.useWatch('type', form)
   const countryCode = Form.useWatch('countryCode', form)
   useEffect(() => {
     if (countryCode && countryList.length > 0) {
@@ -155,30 +156,12 @@ const UserAccountTab = ({
             </Row>
             <Row>
               <Col span={12}>
-                <Form.Item
-                  label="First name"
-                  name="firstName"
-                  rules={[
-                    {
-                      required: true,
-                      message: 'Please input your first name!'
-                    }
-                  ]}
-                >
+                <Form.Item label="First name" name="firstName">
                   <Input style={{ width: '300px' }} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  label="Last name"
-                  name="lastName"
-                  rules={[
-                    {
-                      required: true,
-                      message: 'Please input your last name!'
-                    }
-                  ]}
-                >
+                <Form.Item label="Last name" name="lastName">
                   <Input style={{ width: '300px' }} />
                 </Form.Item>
               </Col>
@@ -221,7 +204,7 @@ const UserAccountTab = ({
                   name="city"
                   rules={[
                     {
-                      required: user.type == 2, // biz user
+                      required: userType === 2, // biz user
                       message: 'Please input your city!'
                     }
                   ]}
@@ -235,7 +218,7 @@ const UserAccountTab = ({
                   name="zipCode"
                   rules={[
                     {
-                      required: user.type == 2, // biz user
+                      required: userType === 2, // biz user
                       message: 'Please input your ZIP code!'
                     }
                   ]}
@@ -251,7 +234,7 @@ const UserAccountTab = ({
                   name="address"
                   rules={[
                     {
-                      required: true,
+                      required: userType === 2, // biz user,
                       message: 'Please input your billing address!'
                     }
                   ]}
@@ -265,7 +248,7 @@ const UserAccountTab = ({
                   name="companyName"
                   rules={[
                     {
-                      required: user.type == 2, // biz user
+                      required: userType === 2, // biz user
                       message: 'Please input your company name!'
                     }
                   ]}
