@@ -187,6 +187,12 @@ const Index = () => {
       }
     },
     {
+      title: 'Usage count',
+      dataIndex: 'quantityUsed',
+      key: 'quantityUsed',
+      render: (count) => count
+    },
+    {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
