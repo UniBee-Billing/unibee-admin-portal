@@ -10,8 +10,8 @@ interface UpdateDiscountCodeQuantityModalProps extends ModalProps {
 }
 
 const HELP_TEXT_COLOR_MAP = {
-  increase: 'text-green-500',
-  decrease: 'text-yellow-500'
+  increased: 'text-green-500',
+  decreased: 'text-yellow-500'
 }
 
 const createUpdateFetcher =
@@ -35,7 +35,7 @@ export const UpdateDiscountCodeQuantityModal = (
 ) => {
   const [quantityDelta, setQuantityDelta] = useState(0)
   const { isLoading, withLoading } = useLoading()
-  const helpTextVerb = quantityDelta > 0 ? 'increase' : 'decrease'
+  const helpTextVerb = quantityDelta > 0 ? 'increased' : 'decreased'
   const isQuantityChanged = quantityDelta !== 0
   const helpText = !isQuantityChanged
     ? 'The inventory has not changed'
