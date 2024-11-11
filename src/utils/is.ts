@@ -1,4 +1,5 @@
-export const isEmpty = (target: unknown) =>
-  target === null || target === undefined
+export const isEmpty = <T>(
+  target: T | undefined | null
+): target is undefined | null => target === null || target === undefined
 
 export const isValidNumber = (num: number) => !Number.isNaN(num)
