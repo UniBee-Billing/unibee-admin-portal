@@ -67,6 +67,7 @@ export const UpdateDiscountCodeQuantityModal = (
   return (
     <Modal
       title="Update discount code quantity"
+      onCancel={() => props.close()}
       {...props}
       footer={[
         <Button key="cancel" onClick={() => props.close()} loading={isLoading}>
