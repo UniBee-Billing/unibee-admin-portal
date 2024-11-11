@@ -27,7 +27,7 @@ const increaseDiscountCodeQuantity = createUpdateFetcher(
 )
 
 const decreaseDiscountCodeQuantity = createUpdateFetcher(
-  'merchant/discount/decrease_quantity'
+  '/merchant/discount/decrease_quantity'
 )
 
 export const UpdateDiscountCodeQuantityModal = (

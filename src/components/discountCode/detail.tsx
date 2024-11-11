@@ -11,7 +11,7 @@ import {
   message
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CURRENCY } from '../../constants'
 import {
@@ -29,10 +29,19 @@ import {
 } from '../../requests'
 import { DiscountCode, IPlan } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
+import { isEmpty } from '../../utils'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
+import { formatQuantity } from './helpers'
 import { UpdateDiscountCodeQuantityModal } from './updateDiscountCodeQuantityModal'
 
 const { RangePicker } = DatePicker
+
+enum DiscountCodeStatus {
+  EDITING = 1,
+  ACTIVE,
+  DEACTIVATE,
+  EXPIRED
+}
 
 const DEFAULT_CODE: DiscountCode = {
   merchantId: useMerchantInfoStore.getState().id,
@@ -48,20 +57,13 @@ const DEFAULT_CODE: DiscountCode = {
   endTime: 0,
   validityRange: [null, null],
   planIds: [],
-  quantity: 1
-}
-
-enum DiscountCodeStatus {
-  EDITING = 1,
-  ACTIVE,
-  DEACTIVATE,
-  EXPIRED
+  quantity: 0
 }
 
 const Index = () => {
   const params = useParams()
   const codeId = params.discountCodeId
-  const isNew = codeId == null
+  const isNew = isEmpty(codeId)
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [code, setCode] = useState<DiscountCode | null>(
@@ -80,9 +82,40 @@ const Index = () => {
   const watchCurrency = Form.useWatch('currency', form)
   const watchPlanIds = Form.useWatch('planIds', form)
 
-  const isCodeActive = useMemo(
-    () => code?.status === DiscountCodeStatus.ACTIVE,
-    [code]
+  const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
+    () => ({
+      [DiscountCodeStatus.ACTIVE]: (
+        <div>
+          <span className="mr-2">{formatQuantity(code?.quantity ?? 0)}</span>
+          <Button
+            disabled={!code?.id}
+            onClick={() => setIsOpenUpdateDiscountCodeQuantityModal(true)}
+          >
+            Update
+          </Button>
+        </div>
+      ),
+      [DiscountCodeStatus.EXPIRED]: (
+        <InputNumber
+          style={{ width: 180 }}
+          defaultValue={code?.quantity}
+          disabled
+        />
+      )
+    }),
+    [code?.quantity, code?.id]
+  )
+
+  const renderedQuantityItems = useMemo(
+    () =>
+      RENDERED_QUANTITY_ITEMS_MAP[code?.status ?? -1] ?? (
+        <InputNumber
+          min="0"
+          style={{ width: 180 }}
+          defaultValue={code?.quantity.toString()}
+        />
+      ),
+    [code?.status, code?.quantity]
   )
 
   const goBack = () => navigate(`/discount-code/list`)
@@ -184,16 +217,26 @@ const Index = () => {
       code.discountAmount = toFixedNumber(code.discountAmount, 2)
     }
 
-    // return
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
+
     setLoading(true)
-    const [_, err] = await method(code)
+
+    const [data, err] = await method(code)
+
     setLoading(false)
-    if (null != err) {
+
+    if (err) {
       message.error(err.message)
       return
     }
+
     message.success(`Discount code ${isNew ? 'created' : 'updated'}`)
+
+    if (isNew) {
+      navigate(`/discount-code/${data.discount.id}`)
+      return
+    }
+
     goBack()
   }
 
@@ -216,7 +259,7 @@ const Index = () => {
     if (code == null || code.id == null) {
       return
     }
-    // status: 1 (editing), 2(active), 3(deactivate), 4(expired)
+
     const action =
       code.status == DiscountCodeStatus.EDITING ||
       code.status == DiscountCodeStatus.DEACTIVATE
@@ -224,6 +267,7 @@ const Index = () => {
         : code.status == DiscountCodeStatus.ACTIVE
           ? 'deactivate'
           : ''
+
     if (action == '') {
       return
     }
@@ -238,7 +282,10 @@ const Index = () => {
     goBack()
   }
 
-  const savable = useMemo(() => isNew || code?.status === 1, [code])
+  const editable = useMemo(
+    () => isNew || code?.status === DiscountCodeStatus.EDITING,
+    [code]
+  )
 
   const getPlanLabel = (planId: number) => {
     const p = planListRef.current.find((p) => p.id == planId)
@@ -254,7 +301,7 @@ const Index = () => {
     } else {
       fetchData()
     }
-  }, [])
+  }, [isNew])
 
   useEffect(() => {
     if (watchBillingType == 1) {
@@ -297,7 +344,7 @@ const Index = () => {
           wrapperCol={{ flex: 1 }}
           colon={false}
           initialValues={code}
-          disabled={isCodeActive}
+          disabled={!editable}
         >
           {!isNew && (
             <Form.Item label="ID" name="id" hidden>
@@ -386,20 +433,9 @@ const Index = () => {
                 message: 'Please input valid quantity'
               }
             ]}
+            extra={'If quantity is 0, it means the quantity is unlimited.'}
           >
-            {isCodeActive ? (
-              <div>
-                <span className="mr-2">{code.quantity}</span>
-                <Button
-                  disabled={!code?.id}
-                  onClick={() => setIsOpenUpdateDiscountCodeQuantityModal(true)}
-                >
-                  Update
-                </Button>
-              </div>
-            ) : (
-              <InputNumber min="1" style={{ width: 180 }} />
-            )}
+            {renderedQuantityItems}
           </Form.Item>
 
           <Form.Item
@@ -488,12 +524,16 @@ const Index = () => {
           >
             <Input
               style={{ width: 180 }}
-              disabled={watchDiscountType == 2 || isCodeActive}
+              disabled={watchDiscountType == 2 || !editable}
               suffix="%"
             />
           </Form.Item>
 
-          <Form.Item label="Cycle Limit">
+          <Form.Item
+            label="Cycle Limit"
+            extra="How many billing cycles this discount code can be applied on a
+              recurring subscription (0 means no-limit)."
+          >
             <Form.Item
               noStyle
               name="cycleLimit"
@@ -523,13 +563,6 @@ const Index = () => {
               <Input style={{ width: 180 }} disabled={watchBillingType == 1} />
               {/* 1: one-time use */}
             </Form.Item>
-            <span
-              className="ml-2 text-xs text-gray-400"
-              // style={{ top: '-45px', left: '340px', width: '620px' }}
-            >
-              How many billing cycles this discount code can be applied on a
-              recurring subscription (0 means no-limit).
-            </span>
           </Form.Item>
 
           <Form.Item
@@ -581,6 +614,7 @@ const Index = () => {
                 }
               })
             ]}
+            extra="If no plan is selected, the discount code will be applied to all plans."
           >
             <Select
               mode="multiple"
@@ -628,8 +662,8 @@ const Index = () => {
               </Button>
             )}
 
-          {!isCodeActive && (
-            <Button onClick={form.submit} type="primary" disabled={!savable}>
+          {editable && (
+            <Button onClick={form.submit} type="primary">
               Save
             </Button>
           )}
