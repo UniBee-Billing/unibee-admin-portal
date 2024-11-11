@@ -188,15 +188,20 @@ const Index = () => {
       }
     },
     {
-      title: 'Usage count',
-      dataIndex: 'quantityUsed',
-      key: 'quantityUsed'
-    },
-    {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
       render: (quantity: number) => formatQuantity(quantity)
+    },
+    {
+      title: 'Remaining Quantity',
+      dataIndex: 'liveQuantity',
+      key: 'liveQuantity'
+    },
+    {
+      title: 'Usage count',
+      dataIndex: 'quantityUsed',
+      key: 'quantityUsed'
     },
     {
       title: 'Created at',
