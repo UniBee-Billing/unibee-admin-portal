@@ -60,6 +60,15 @@ const DEFAULT_CODE: DiscountCode = {
   quantity: 0
 }
 
+const CAN_EDIT_ITEM_STATUSES = [
+  DiscountCodeStatus.EDITING,
+  DiscountCodeStatus.ACTIVE,
+  DiscountCodeStatus.DEACTIVATE
+]
+
+const canActiveItemEdit = (status?: DiscountCodeStatus) =>
+  status ? CAN_EDIT_ITEM_STATUSES.includes(status) : true
+
 const Index = () => {
   const params = useParams()
   const codeId = params.discountCodeId
@@ -282,10 +291,12 @@ const Index = () => {
     goBack()
   }
 
-  const editable = useMemo(
+  const formEditable = useMemo(
     () => isNew || code?.status === DiscountCodeStatus.EDITING,
-    [code]
+    [code?.status]
   )
+
+  const isAllFormItemsDisabled = code?.status === DiscountCodeStatus.EXPIRED
 
   const getPlanLabel = (planId: number) => {
     const p = planListRef.current.find((p) => p.id == planId)
@@ -344,7 +355,7 @@ const Index = () => {
           wrapperCol={{ flex: 1 }}
           colon={false}
           initialValues={code}
-          disabled={!editable}
+          disabled={!formEditable}
         >
           {!isNew && (
             <Form.Item label="ID" name="id" hidden>
@@ -449,7 +460,7 @@ const Index = () => {
             ]}
           >
             <Select
-              disabled={watchDiscountType == 1}
+              disabled={watchDiscountType == 1 || !formEditable}
               style={{ width: 180 }}
               options={[
                 { value: 'EUR', label: 'EUR' },
@@ -493,7 +504,7 @@ const Index = () => {
                   ? ''
                   : CURRENCY[watchCurrency].symbol
               }
-              disabled={watchDiscountType == 1}
+              disabled={watchDiscountType == 1 || !formEditable}
             />
           </Form.Item>
 
@@ -524,7 +535,7 @@ const Index = () => {
           >
             <Input
               style={{ width: 180 }}
-              disabled={watchDiscountType == 2 || !editable}
+              disabled={watchDiscountType == 2 || !formEditable}
               suffix="%"
             />
           </Form.Item>
@@ -588,7 +599,7 @@ const Index = () => {
               })
             ]}
           >
-            <RangePicker showTime />
+            <RangePicker showTime disabled={!canActiveItemEdit(code?.status)} />
           </Form.Item>
 
           <Form.Item
@@ -618,6 +629,7 @@ const Index = () => {
           >
             <Select
               mode="multiple"
+              disabled={!canActiveItemEdit(code?.status)}
               allowClear
               style={{ width: '100%' }}
               options={planList.map((p) => ({
@@ -662,7 +674,7 @@ const Index = () => {
               </Button>
             )}
 
-          {editable && (
+          {!isAllFormItemsDisabled && (
             <Button onClick={form.submit} type="primary">
               Save
             </Button>
