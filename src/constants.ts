@@ -34,7 +34,7 @@ export const SUBSCRIPTION_STATUS: { [key: number]: string } = {
 }
 
 export const SUBSCRIPTION_HISTORY_STATUS: { [key: number]: string } = {
-  1: 'Processing',
+  1: 'Active',
   2: 'Finished',
   3: 'Cancelled',
   4: 'Expired'

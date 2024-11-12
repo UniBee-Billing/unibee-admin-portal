@@ -25,8 +25,8 @@ const SUB_STATUS: { [key: number]: ReactElement } = {
 const SubscriptionStatus = (statusId: number) => SUB_STATUS[statusId]
 
 const SUB_HISTORY_STATUS: { [key: number]: ReactElement } = {
-  1: <Tag color="blue">{SUBSCRIPTION_HISTORY_STATUS[1]}</Tag>, // 1: processing
-  2: <Tag color="#87d068">{SUBSCRIPTION_HISTORY_STATUS[2]}</Tag>, // 2: finished
+  1: <Tag color="#87d068">{SUBSCRIPTION_HISTORY_STATUS[1]}</Tag>, // 1: active
+  2: <Tag color="blue">{SUBSCRIPTION_HISTORY_STATUS[2]}</Tag>, // 2: finished
   3: <Tag color="purple">{SUBSCRIPTION_HISTORY_STATUS[3]}</Tag>, // 3: cancelled
   4: <Tag color="red">{SUBSCRIPTION_HISTORY_STATUS[4]}</Tag> // 4: expired
 }
