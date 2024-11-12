@@ -351,7 +351,7 @@ const Index = () => {
         <Form
           form={form}
           onFinish={onSave}
-          labelCol={{ flex: '160px' }}
+          labelCol={{ flex: '180px' }}
           wrapperCol={{ flex: 1 }}
           colon={false}
           initialValues={code}
