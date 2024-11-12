@@ -1,7 +1,22 @@
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
+import {
+  InfoCircleOutlined,
+  MinusOutlined,
+  PlusOutlined
+} from '@ant-design/icons'
+import {
+  Button,
+  Col,
+  Divider,
+  Input,
+  Modal,
+  Popover,
+  Row,
+  Select,
+  message
+} from 'antd'
 import update from 'immutability-helper'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CURRENCY } from '../../../constants'
 import { randomString, showAmount } from '../../../helpers'
 import {
@@ -35,7 +50,7 @@ const newPlaceholderItem = (): InvoiceItem => ({
 interface Props {
   user: IProfile | undefined
   isOpen: boolean
-  detail: UserInvoice | null // null means new user, no data available
+  detail: UserInvoice | null // null means creating new empty invoice, non-null means: creating refund invoice or editing invoice.
   permission: TInvoicePerm
   refundMode: boolean
   // items: InvoiceItem[] | null;
@@ -52,6 +67,7 @@ const Index = ({
   closeModal,
   refresh
 }: Props) => {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   // const appConfigStore = useAppConfigStore();
   if (detail != null) {
@@ -237,10 +253,9 @@ const Index = ({
       message.error('Please input refund reason with less than 64 characters')
       return
     }
-
     const amt = Number(refundAmt)
-    const total = getTotal(invoiceList, true)
-    if (isNaN(amt) || amt > (total as number)) {
+    // const total = getSubTotal(invoiceList, true)
+    if (isNaN(amt) || amt > detail.totalAmount) {
       message.error(
         'Refund amount must be less than or equal to invoice amount'
       )
@@ -320,13 +335,11 @@ const Index = ({
   // line1: 33.93 * 35
   // line2: 77.95 * 3
   // we get: 1421.3999999999
-  const getTotal = (
+  //
+  const getSubTotal = (
     invoices: InvoiceItem[],
     asNumber?: boolean
   ): string | number => {
-    // if (asNumber == null) {
-    // asNumber = false;
-    // }
     if (invoices == null) {
       invoices = []
     }
@@ -335,7 +348,7 @@ const Index = ({
         accu +
         Math.round(
           (Number(curr.unitAmountExcludingTax) * (curr.quantity as number) +
-            Number(curr.tax) +
+            // Number(curr.tax) +
             Number.EPSILON) *
             100
         ) /
@@ -355,9 +368,41 @@ const Index = ({
     return asNumber ? total : showAmount(total, currency, true)
   }
 
+  const getVATAmt = (asNumber: boolean) => {
+    if (detail !== null) {
+      return asNumber
+        ? detail.taxAmount
+        : showAmount(detail.taxAmount, currency, true)
+    }
+    const tax = Number(taxPercentage)
+    if (isNaN(tax) || tax < 0) {
+      return asNumber ? 0 : showAmount(0, currency, true)
+    }
+    const amt = ((getSubTotal(invoiceList, true) as number) * tax) / 100
+    return asNumber ? amt : showAmount(amt, currency, true)
+  }
+
+  const getTotal = (asNumber: boolean) => {
+    if (detail !== null) {
+      return asNumber
+        ? detail.totalAmount
+        : showAmount(detail.totalAmount, detail.currency, true)
+    }
+    const total =
+      (getSubTotal(invoiceList, true) as number) + (getVATAmt(true) as number)
+    return asNumber ? total : showAmount(total, currency, true)
+  }
+
+  const goToDiscountCode = () => {
+    if (detail === null || detail.discount === null) {
+      return
+    }
+    navigate(`/discount-code/${detail.discount?.id}`)
+  }
+
   return (
     <Modal
-      title="Invoice Detail"
+      title={refundMode ? 'Refund invoice detail' : 'New invoice Detail'}
       open={isOpen}
       width={'820px'}
       footer={null}
@@ -414,7 +459,6 @@ const Index = ({
           )}
         </Col>
       </Row>
-
       <Row style={{ display: 'flex', alignItems: 'center' }}>
         <Col span={10}>
           <span style={{ fontWeight: 'bold' }}>Item description</span>
@@ -424,14 +468,14 @@ const Index = ({
           {/* <div style={{ fontWeight: 'bold' }}>(exclude Tax)</div> */}
         </Col>
         <Col span={1}></Col>
-        <Col span={3}>
+        <Col span={5}>
           <span style={{ fontWeight: 'bold' }}>Quantity</span>
         </Col>
-        <Col span={2}>
+        {/* <Col span={2}>
           <span style={{ fontWeight: 'bold' }}>Tax</span>
-        </Col>
+        </Col> */}
         <Col span={3}>
-          <span style={{ fontWeight: 'bold' }}>Total</span>
+          <span style={{ fontWeight: 'bold' }}>Subtotal</span>
         </Col>
         {permission.editable && (
           <Col span={1}>
@@ -486,7 +530,7 @@ const Index = ({
             <Col span={1} style={{ fontSize: '18px' }}>
               ×
             </Col>
-            <Col span={3}>
+            <Col span={5}>
               {!permission.editable ? (
                 <span>{v.quantity}</span>
               ) : (
@@ -498,8 +542,8 @@ const Index = ({
                 />
               )}
             </Col>
-            <Col span={2}>{`${CURRENCY[currency].symbol} ${v.tax}`}</Col>
-            <Col span={3}>{getTotal([invoiceList[i]])}</Col>
+            {/* <Col span={2}>{`${CURRENCY[currency].symbol} ${v.tax}`}</Col> */}
+            <Col span={3}>{getSubTotal([invoiceList[i]])}</Col>
             {permission.editable && (
               <Col span={1}>
                 <div
@@ -518,50 +562,150 @@ const Index = ({
         ))}
       <Divider />
 
-      <Row className="flex items-center">
-        <Col span={20}>
-          {refundMode && (
-            <div className="mr-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="mr-2">Refund Reason:</div>
-                <Input
-                  style={{ width: '256px' }}
-                  maxLength={64}
-                  placeholder="Max characters: 64"
-                  value={refundReason}
-                  disabled={loading}
-                  onChange={onRefundReasonChange}
-                />
-              </div>
+      {refundMode && (
+        <Row className="flex items-center">
+          <Col span={14}> </Col>
+          <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
+            Total Discounted
+          </Col>
+          <Col className="text-red-800" span={4}>
+            {` ${detail?.discountAmount !== undefined && detail?.discountAmount > 0 ? '-' : ''}${showAmount(detail?.discountAmount, detail?.currency, true)}`}
+            {detail?.discount !== null && (
+              <Popover
+                placement="top"
+                title="Coupon code detail"
+                content={
+                  <div style={{ width: '280px' }}>
+                    <Row>
+                      <Col span={10} className="font-bold text-gray-800">
+                        Code
+                      </Col>
+                      <Col span={14}>
+                        <span
+                          onClick={goToDiscountCode}
+                          className="text-blue-500 hover:cursor-pointer"
+                        >
+                          {detail?.discount?.code}
+                        </span>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col span={10} className="font-bold text-gray-800">
+                        Billing type
+                      </Col>
+                      <Col span={14}>
+                        {detail?.discount?.billingType === 1
+                          ? 'One-time'
+                          : 'Recurring'}
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col span={10} className="font-bold text-gray-800">
+                        Discount type
+                      </Col>
+                      <Col span={14}>
+                        {detail?.discount?.discountType === 1
+                          ? 'Percentage'
+                          : 'Fixed amount'}
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col span={10} className="font-bold text-gray-800">
+                        Cycle limit
+                      </Col>
+                      <Col span={14}>{detail?.discount?.cycleLimit}</Col>
+                    </Row>
+                    <Row>
+                      <Col span={10} className="font-bold text-gray-800">
+                        Discount amt
+                      </Col>
+                      <Col span={14}>
+                        {detail?.discount?.discountType === 1
+                          ? `${detail?.discount?.discountPercentage / 100}%`
+                          : detail?.discount?.discountAmount}
+                      </Col>
+                    </Row>
+                  </div>
+                }
+              >
+                <span style={{ marginLeft: '8px', cursor: 'pointer' }}>
+                  <InfoCircleOutlined />
+                </span>
+              </Popover>
+            )}
+          </Col>
+        </Row>
+      )}
 
-              <div className="flex items-center">
-                <div className="mr-4">Refund Amt:</div>
-                <Input
-                  style={{ width: '100px' }}
-                  disabled={loading}
-                  prefix={CURRENCY[currency].symbol}
-                  placeholder={`≤ ${getTotal(invoiceList)}`}
-                  value={refundAmt}
-                  onChange={onRefundAmtChange}
-                />
-              </div>
-            </div>
-          )}
+      <Row className="my-2">
+        <Col span={16}> </Col>
+        <Col span={4} className="text-lg text-gray-700">
+          VAT(
+          {detail === null
+            ? `${taxPercentage}%`
+            : `${detail.taxPercentage / 100}%`}
+          )
         </Col>
-        <Col span={4}>
-          <span style={{ fontWeight: 'bold' }}>{getTotal(invoiceList)}</span>
-          {detail != null && detail.link != '' && detail.link != null && (
-            <a
-              href={detail.link}
-              target="_blank"
-              style={{ fontSize: '11px', marginLeft: '4px', color: '#757575' }}
-              rel="noreferrer"
-            >
-              Payment Link
-            </a>
-          )}
+        <Col span={4} className="text-lg text-gray-700">
+          {getVATAmt(false)}
         </Col>
       </Row>
+
+      {
+        <Row className="my-2">
+          <Col span={16}> </Col>
+          <Col span={4} className="text-lg text-gray-700">
+            Total
+          </Col>
+          <Col span={4} className="text-lg text-gray-700">
+            <span style={{ fontWeight: 'bold' }}>{getTotal(false)}</span>
+            {detail != null && detail.link != '' && detail.link != null && (
+              <a
+                href={detail.link}
+                target="_blank"
+                style={{
+                  fontSize: '11px',
+                  marginLeft: '4px',
+                  color: '#757575'
+                }}
+                rel="noreferrer"
+              >
+                Payment Link
+              </a>
+            )}
+          </Col>
+        </Row>
+      }
+      {refundMode && (
+        <Row className="my-6 flex items-center">
+          <Col span={16}>
+            <div className="flex items-center">
+              <div className="mr-2">Refund Reason:</div>
+              <Input
+                style={{ width: '288px' }}
+                maxLength={64}
+                placeholder="Max characters: 64"
+                value={refundReason}
+                disabled={loading}
+                onChange={onRefundReasonChange}
+              />
+            </div>
+          </Col>
+          <Col span={8}>
+            <div className="flex items-center">
+              <div className="mr-4">Refund Amount:</div>
+              <Input
+                style={{ width: '100px' }}
+                disabled={loading}
+                prefix={CURRENCY[currency].symbol}
+                placeholder={`≤ ${showAmount(detail?.totalAmount, detail?.currency, true)}`}
+                value={refundAmt}
+                onChange={onRefundAmtChange}
+              />
+            </div>
+          </Col>
+        </Row>
+      )}
 
       <div className="mt-6 flex items-center justify-between gap-4">
         {permission.deletable ? (
