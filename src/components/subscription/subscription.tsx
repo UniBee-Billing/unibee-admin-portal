@@ -42,6 +42,7 @@ import {
   ISubscriptionType
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
+import CouponPopover from '../ui/couponPopover'
 import {
   getDiscountCodeStatusTagById,
   SubscriptionStatus
@@ -737,95 +738,15 @@ const SubscriptionInfoSection = ({
               subInfo.latestInvoice.discountAmount as number,
               subInfo.latestInvoice.currency
             )}
-
           {subInfo &&
             subInfo.latestInvoice &&
             subInfo.latestInvoice.discount && (
-              <Popover
-                placement="top"
-                title="Discount code info"
-                content={
-                  <div style={{ width: '320px' }}>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-500">
-                        Code
-                      </Col>
-                      <Col span={14}>
-                        <Button
-                          type="link"
-                          size="small"
-                          style={{ padding: 0 }}
-                          onClick={() =>
-                            goToDiscount(
-                              subInfo.latestInvoice?.discount?.id as number
-                            )
-                          }
-                        >
-                          {subInfo.latestInvoice.discount.code}
-                        </Button>{' '}
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-500">
-                        Name
-                      </Col>
-                      <Col span={14}>{subInfo.latestInvoice.discount.name}</Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-500">
-                        Status
-                      </Col>
-                      <Col span={14}>
-                        {getDiscountCodeStatusTagById(
-                          subInfo.latestInvoice.discount.status as number
-                        )}
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-500">
-                        Billing Type
-                      </Col>
-                      <Col span={14}>
-                        {subInfo.latestInvoice.discount.billingType === 1
-                          ? 'One-time use'
-                          : 'Recurring'}
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-500">
-                        Discount Amt
-                      </Col>
-                      <Col span={14}>
-                        {discountAmt(subInfo.latestInvoice.discount)}
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-500">
-                        Cycle limit
-                      </Col>
-                      <Col span={14}>
-                        {subInfo.latestInvoice.discount.cycleLimit}
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-500">
-                        Valid range
-                      </Col>
-                      <Col span={14}>
-                        {`${dayjs(
-                          subInfo.latestInvoice.discount.startTime * 1000
-                        ).format(
-                          'YYYY-MMM-DD'
-                        )} ~ ${dayjs(subInfo.latestInvoice.discount.endTime * 1000).format('YYYY-MMM-DD')} `}
-                      </Col>
-                    </Row>
-                  </div>
+              <CouponPopover
+                coupon={subInfo.latestInvoice.discount}
+                goToDetail={() =>
+                  goToDiscount(subInfo.latestInvoice?.discount?.id as number)
                 }
-              >
-                <span style={{ marginLeft: '8px', cursor: 'pointer' }}>
-                  <InfoCircleOutlined />
-                </span>
-              </Popover>
+              />
             )}
         </Col>
 

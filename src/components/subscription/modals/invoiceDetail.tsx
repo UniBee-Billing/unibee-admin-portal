@@ -1,6 +1,7 @@
 import { Button, Col, Divider, message, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { REFUND_STATUS } from '../../../constants'
 import {
   getInvoicePermission,
@@ -9,6 +10,7 @@ import {
 } from '../../../helpers'
 import { sendInvoiceInMailReq } from '../../../requests'
 import { InvoiceItem, IProfile, UserInvoice } from '../../../shared.types'
+import CouponPopover from '../../ui/couponPopover'
 
 interface Props {
   user: IProfile | undefined
@@ -17,6 +19,7 @@ interface Props {
 }
 
 const Index = ({ detail, closeModal }: Props) => {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   // const appConfigStore = useAppConfigStore();
   if (detail != null && detail.lines) {
@@ -53,6 +56,13 @@ const Index = ({ detail, closeModal }: Props) => {
     closeModal()
   }
 
+  const goToCouponDetail = () => {
+    if (detail === null || detail.discount === null) {
+      return
+    }
+    navigate(`/discount-code/${detail.discount?.id}`)
+  }
+
   return (
     <Modal
       title="Invoice Detail"
@@ -81,7 +91,7 @@ const Index = ({ detail, closeModal }: Props) => {
         <Col span={6}>{detail.invoiceName}</Col>
         <Col span={6}>{getUserName(detail)}</Col>
         <Col span={8}>{detail.gateway.gatewayName}</Col>
-        <Col span={4}>{detail.refund != null ? 'Yes' : 'No'}</Col>
+        <Col span={4}>{detail.refund !== null ? 'Yes' : 'No'}</Col>
       </Row>
       {detail.refund && (
         <div style={{ margin: '22px 0' }}>
@@ -117,7 +127,6 @@ const Index = ({ detail, closeModal }: Props) => {
         </Col>
         <Col span={4}>
           <div style={{ fontWeight: 'bold' }}>Amount</div>
-          <div style={{ fontWeight: 'bold' }}>(excl tax)</div>
         </Col>
         <Col span={1}></Col>
         <Col span={3}>
@@ -156,10 +165,19 @@ const Index = ({ detail, closeModal }: Props) => {
         <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
           Total Discounted
         </Col>
-        <Col
-          className="text-red-800"
-          span={4}
-        >{`${detail.discountAmount != null && detail.discountAmount > 0 ? showAmount(-1 * detail.discountAmount, detail.currency, true) : showAmount(0, detail.currency)}`}</Col>
+        <Col className="text-red-800" span={4}>
+          {detail.discount !== null ? (
+            <span>
+              {showAmount(detail.discountAmount, detail.currency, true)}
+              <CouponPopover
+                coupon={detail.discount}
+                goToDetail={goToCouponDetail}
+              />
+            </span>
+          ) : (
+            showAmount(0, detail.currency)
+          )}
+        </Col>
       </Row>
       <Row>
         <Col span={14}> </Col>
