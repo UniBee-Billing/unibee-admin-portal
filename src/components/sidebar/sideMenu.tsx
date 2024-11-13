@@ -9,7 +9,7 @@ import {
   TransactionOutlined
 } from '@ant-design/icons'
 import { Menu, MenuProps } from 'antd'
-import { ItemType, MenuItemType } from 'antd/es/menu/hooks/useItems'
+import { ItemType, MenuItemType } from 'antd/es/menu/interface'
 import { useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAccessiblePages } from '../../hooks/useAccessiblePages'

@@ -89,7 +89,10 @@ const Index = ({
   const toggleChangeSubStatusModal = () =>
     setChangeSubStatusModal(!changeSubStatusModal)
 
-  const onSimDateChange = async (_day: Dayjs | null, dateString: string) => {
+  const onSimDateChange = async (
+    _day: Dayjs | null,
+    dateString: string | string[]
+  ) => {
     if (isProduction) {
       return
     }
@@ -372,7 +375,7 @@ const Index = ({
     setActiveSub(localActiveSub)
   }
 
-  const onDueDateChange = (_: Dayjs | null, dateStr: string) => {
+  const onDueDateChange = (_: Dayjs | null, dateStr: string | string[]) => {
     setNewDueDate(dateStr as string)
     toggleSetDueDateModal()
   }
@@ -466,10 +469,10 @@ const Index = ({
                   ? new Date()
                   : new Date(activeSub!.testClock! * 1000)
               )}
-              onChange={onSimDateChange}
+              onChange={(date, dateStr) => onSimDateChange(date, dateStr)}
               open={simDateOpen}
               onBlur={toggleSimDateOpen}
-              disabledDate={(d) =>
+              disabledDate={(d: dayjs.Dayjs) =>
                 d.isBefore(
                   null == activeSub ||
                     null == activeSub.testClock ||
@@ -558,7 +561,7 @@ const Index = ({
       <SubscriptionInfoSection
         subInfo={activeSub}
         plans={plans}
-        onDueDateChange={onDueDateChange}
+        onDueDateChange={(date, dateStr) => onDueDateChange(date, dateStr)}
         refresh={fetchData}
         toggleTerminateModal={toggleTerminateModal}
         toggleResumeSubModal={toggleResumeSubModal}
@@ -582,7 +585,7 @@ const colStyle: CSSProperties = { fontWeight: 'bold' }
 interface ISubSectionProps {
   subInfo: ISubscriptionType | null
   plans: IPlan[]
-  onDueDateChange: (date: Dayjs | null, dateStr: string) => void
+  onDueDateChange: (date: Dayjs | null, dateStr: string | string[]) => void
   refresh: () => void
   toggleTerminateModal: () => void
   toggleResumeSubModal: () => void
@@ -766,9 +769,9 @@ const SubscriptionInfoSection = ({
             <DatePicker
               format="YYYY-MMM-DD"
               allowClear={false}
-              onChange={onDueDateChange}
+              onChange={(date, dateStr) => onDueDateChange(date, dateStr)}
               value={dayjs(new Date(subInfo.currentPeriodEnd * 1000))}
-              disabledDate={(d) =>
+              disabledDate={(d: dayjs.Dayjs) =>
                 d.isBefore(
                   new Date(
                     subInfo?.currentPeriodEnd * 1000 + 1000 * 60 * 60 * 24
