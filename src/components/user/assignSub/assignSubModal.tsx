@@ -111,12 +111,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
-  const [accountFormValues, setAccountFormValues] = useState<
-    AccountValues | undefined
-  >()
-  const [accountFormChangedKey, setAccountFormChangedKey] = useState<
-    string | undefined
-  >()
+  const accountFormValues = useRef<AccountValues | undefined>()
   const onIncludeChange = (checked: boolean) => {
     if (!checked) {
       if (
@@ -352,47 +347,43 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     )
   }
 
-  const updatePrice = useCallback(
-    async (accountFormValues?: AccountValues) => {
-      setLoading(true)
+  const updatePrice = useCallback(async () => {
+    setLoading(true)
 
-      const submitData = getSubmitData(accountFormValues)
-      const [data, err] = await safeRun(() =>
-        request.post<Response<PreviewData>>(
-          '/merchant/subscription/create_preview',
-          submitData
-        )
+    const submitData = getSubmitData(accountFormValues.current)
+    const [data, err] = await safeRun(() =>
+      request.post<Response<PreviewData>>(
+        '/merchant/subscription/create_preview',
+        submitData
       )
+    )
 
-      setLoading(false)
+    setLoading(false)
 
-      if (err) {
-        message.error(err.message)
-        return
-      }
-
-      const previewData = data?.data?.data
-
-      setPreviewData(previewData)
-    },
-    [getSubmitData]
-  )
-
-  const debouncedUpdateDiscountCode = useDebouncedCallbackWithDefault(
-    (value: string) => setDiscountCode(value)
-  )
-
-  useEffect(() => {
-    if (
-      !selectedPlanId ||
-      (accountFormChangedKey &&
-        !TRIGGER_PREVIEW_FIELDS.includes(accountFormChangedKey))
-    ) {
+    if (err) {
+      message.error(err.message)
       return
     }
 
-    updatePrice(accountFormValues)
-  }, [selectedPlanId, accountFormValues, accountFormChangedKey, updatePrice])
+    const previewData = data?.data?.data
+
+    setPreviewData(previewData)
+  }, [getSubmitData])
+
+  const debouncedUpdateDiscountCode = useDebouncedCallbackWithDefault(
+    (value: string) => {
+      setDiscountCode(value)
+      updatePrice()
+    }
+  )
+
+  useEffect(() => {
+    if (!selectedPlanId) {
+      return
+    }
+
+    updatePrice()
+  }, [selectedPlanId, updatePrice])
 
   useEffect(() => {
     fetchPlan()
@@ -442,8 +433,14 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
                 const [changedKey] = Object.keys(changedValues)
 
                 setAccountType(accountType)
-                setAccountFormValues(values as AccountValues)
-                setAccountFormChangedKey(changedKey)
+                accountFormValues.current = values as AccountValues
+
+                if (
+                  TRIGGER_PREVIEW_FIELDS.includes(changedKey) &&
+                  selectedPlanId
+                ) {
+                  updatePrice()
+                }
               }}
               ref={accountTypeFormRef}
               user={user}

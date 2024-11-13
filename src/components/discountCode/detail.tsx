@@ -351,7 +351,7 @@ const Index = () => {
         <Form
           form={form}
           onFinish={onSave}
-          labelCol={{ flex: '160px' }}
+          labelCol={{ flex: '180px' }}
           wrapperCol={{ flex: 1 }}
           colon={false}
           initialValues={code}
@@ -571,13 +571,16 @@ const Index = () => {
                 })
               ]}
             >
-              <Input style={{ width: 180 }} disabled={watchBillingType == 1} />
+              <Input
+                style={{ width: 180 }}
+                disabled={watchBillingType == 1 || !formEditable}
+              />
               {/* 1: one-time use */}
             </Form.Item>
           </Form.Item>
 
           <Form.Item
-            label="Valid Date Range"
+            label="Code Apply Date Range"
             name="validityRange"
             rules={[
               {
