@@ -12,13 +12,14 @@ import {
   message
 } from 'antd'
 import { ColumnsType } from 'antd/es/table'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getDiscountCodeUsageDetailReq } from '../../requests'
 import { DiscountCodeUsage } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
+import { formatDiscountCodeStatus, formatRecurringStatus } from './helpers'
 
 const PAGE_SIZE = 10
 
@@ -82,6 +83,18 @@ const Index = () => {
       dataIndex: 'createTime',
       key: 'createTime',
       render: (usedAt) => formatDate(usedAt, true)
+    },
+    {
+      title: 'Recurring',
+      dataIndex: 'recurring',
+      key: 'recurring',
+      render: (recurring) => formatRecurringStatus(recurring)
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => formatDiscountCodeStatus(status)
     },
     {
       title: 'Subscription Id',

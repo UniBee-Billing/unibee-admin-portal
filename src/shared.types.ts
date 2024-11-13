@@ -277,6 +277,11 @@ type DiscountCode = {
   }
 }
 
+export enum DiscountCodeUsageStatus {
+  FINISHED = 1,
+  ROLLBACK
+}
+
 type DiscountCodeUsage = {
   id: number
   merchantId: number
@@ -289,6 +294,7 @@ type DiscountCodeUsage = {
   createTime: number
   applyAmount: number
   currency: string
+  status: DiscountCodeUsageStatus
 }
 
 type TransactionItem = {

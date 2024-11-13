@@ -21,7 +21,7 @@ import {
 } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import dayjs from 'dayjs'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   DISCOUNT_CODE_BILLING_TYPE,
@@ -35,7 +35,7 @@ import '../../shared.css'
 import { DiscountCode } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
-import { formatQuantity } from './helpers'
+import { formatNumberByZeroUnLimitedRule, formatQuantity } from './helpers'
 
 const PAGE_SIZE = 10
 
@@ -181,7 +181,7 @@ const Index = () => {
           return '1'
         } else if (code.billingType == 2) {
           // recurring
-          return lim === 0 ? 'Unlimited' : lim
+          return formatNumberByZeroUnLimitedRule(lim)
         } else {
           return lim
         }
@@ -196,7 +196,10 @@ const Index = () => {
     {
       title: 'Remaining Quantity',
       dataIndex: 'liveQuantity',
-      key: 'liveQuantity'
+      key: 'liveQuantity',
+      render: (remainingQuantity, code) =>
+        // If quantity is 0, the remaining quantity should display unlimited.
+        code.quantity === 0 ? 'Unlimited' : remainingQuantity
     },
     {
       title: 'Usage count',
