@@ -18,7 +18,7 @@
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.2.2",
     "@tanstack/react-query": "^5.36.0",
-    "antd": "~5.12.5",
+    "antd": "^5.22.0",
     "axios": "^1.6.3",
     "currency.js": "^2.0.4",
     "dinero.js": "^1.9.1",
