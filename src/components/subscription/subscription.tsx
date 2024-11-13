@@ -43,10 +43,7 @@ import {
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CouponPopover from '../ui/couponPopover'
-import {
-  getDiscountCodeStatusTagById,
-  SubscriptionStatus
-} from '../ui/statusTag'
+import { SubscriptionStatus } from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'
 import ChangePlanModal from './modals/changePlan'
 import ChangeSubStatusModal from './modals/changeSubStatus'
@@ -608,17 +605,7 @@ const SubscriptionInfoSection = ({
   const appConfigStore = useAppConfigStore()
   const goToPlan = (planId: number) => navigate(`/plan/${planId}`)
   const goToDiscount = (codeId: number) => navigate(`/discount-code/${codeId}`)
-  const discountAmt = (code: DiscountCode) => {
-    if (code.discountType == 1) {
-      // percentage
-      return `${code.discountPercentage / 100} %`
-    } else if (code.discountType == 2) {
-      // fixed amt
-      return showAmount(code.discountAmount, code.currency)
-    } else {
-      return ''
-    }
-  }
+
   return (
     <>
       <Row style={rowStyle}>
