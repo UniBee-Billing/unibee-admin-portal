@@ -1,6 +1,7 @@
 import { InfoCircleOutlined } from '@ant-design/icons'
 import { Col, Popover, Row } from 'antd'
 import dayjs from 'dayjs'
+import { isEmpty } from 'lodash'
 import { showAmount } from '../../helpers'
 import { DiscountCode } from '../../shared.types'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
@@ -10,9 +11,9 @@ const Index = ({
   coupon
 }: {
   goToDetail: () => void
-  coupon: DiscountCode | null | undefined
+  coupon?: DiscountCode
 }) => {
-  if (coupon === null || coupon === undefined) {
+  if (isEmpty(coupon)) {
     return null
   }
   return (
