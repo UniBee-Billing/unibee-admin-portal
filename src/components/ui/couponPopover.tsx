@@ -1,0 +1,97 @@
+import { InfoCircleOutlined } from '@ant-design/icons'
+import { Col, Popover, Row } from 'antd'
+import dayjs from 'dayjs'
+import { showAmount } from '../../helpers'
+import { DiscountCode } from '../../shared.types'
+import { getDiscountCodeStatusTagById } from '../ui/statusTag'
+
+const Index = ({
+  goToDetail,
+  coupon
+}: {
+  goToDetail: () => void
+  coupon: DiscountCode | null | undefined
+}) => {
+  if (coupon === null || coupon === undefined) {
+    return null
+  }
+  return (
+    <Popover
+      placement="top"
+      title="Coupon code detail"
+      content={
+        <div style={{ width: '280px' }}>
+          <Row>
+            <Col span={10} className="font-bold text-gray-800">
+              Code
+            </Col>
+            <Col span={14}>
+              <span
+                onClick={goToDetail}
+                className="text-blue-500 hover:cursor-pointer"
+              >
+                {coupon.code}
+              </span>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={10} className="font-bold text-gray-800">
+              Status
+            </Col>
+            <Col span={14}>
+              {getDiscountCodeStatusTagById(coupon.status as number)}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={10} className="font-bold text-gray-800">
+              Billing type
+            </Col>
+            <Col span={14}>
+              {coupon.billingType === 1 ? 'One-time' : 'Recurring'}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={10} className="font-bold text-gray-800">
+              Discount type
+            </Col>
+            <Col span={14}>
+              {coupon.discountType === 1 ? 'Percentage' : 'Fixed amount'}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={10} className="font-bold text-gray-800">
+              Cycle limit
+            </Col>
+            <Col span={14}>{coupon.cycleLimit}</Col>
+          </Row>
+          <Row>
+            <Col span={10} className="font-bold text-gray-800">
+              Discount amt
+            </Col>
+            <Col span={14}>
+              {coupon.discountType === 1
+                ? `${coupon.discountPercentage / 100}%`
+                : showAmount(coupon.discountAmount, coupon.currency)}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={10} className="font-bold text-gray-800">
+              Valid range
+            </Col>
+            <Col span={14}>
+              {`${dayjs(coupon.startTime * 1000).format(
+                'YYYY-MMM-DD'
+              )} ~ ${dayjs(coupon.endTime * 1000).format('YYYY-MMM-DD')} `}
+            </Col>
+          </Row>
+        </div>
+      }
+    >
+      <span style={{ marginLeft: '8px', cursor: 'pointer' }}>
+        <InfoCircleOutlined />
+      </span>
+    </Popover>
+  )
+}
+
+export default Index

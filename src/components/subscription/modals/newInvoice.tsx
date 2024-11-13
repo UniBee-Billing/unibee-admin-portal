@@ -34,6 +34,7 @@ import {
   TInvoicePerm,
   UserInvoice
 } from '../../../shared.types'
+import CouponPopover from '../../ui/couponPopover'
 
 const newPlaceholderItem = (): InvoiceItem => ({
   id: randomString(8),
@@ -570,69 +571,10 @@ const Index = ({
           </Col>
           <Col className="text-red-800" span={4}>
             {` ${detail?.discountAmount !== undefined && detail?.discountAmount > 0 ? '-' : ''}${showAmount(detail?.discountAmount, detail?.currency, true)}`}
-            {detail?.discount !== null && (
-              <Popover
-                placement="top"
-                title="Coupon code detail"
-                content={
-                  <div style={{ width: '280px' }}>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-800">
-                        Code
-                      </Col>
-                      <Col span={14}>
-                        <span
-                          onClick={goToDiscountCode}
-                          className="text-blue-500 hover:cursor-pointer"
-                        >
-                          {detail?.discount?.code}
-                        </span>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-800">
-                        Billing type
-                      </Col>
-                      <Col span={14}>
-                        {detail?.discount?.billingType === 1
-                          ? 'One-time'
-                          : 'Recurring'}
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-800">
-                        Discount type
-                      </Col>
-                      <Col span={14}>
-                        {detail?.discount?.discountType === 1
-                          ? 'Percentage'
-                          : 'Fixed amount'}
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-800">
-                        Cycle limit
-                      </Col>
-                      <Col span={14}>{detail?.discount?.cycleLimit}</Col>
-                    </Row>
-                    <Row>
-                      <Col span={10} className="font-bold text-gray-800">
-                        Discount amt
-                      </Col>
-                      <Col span={14}>
-                        {detail?.discount?.discountType === 1
-                          ? `${detail?.discount?.discountPercentage / 100}%`
-                          : detail?.discount?.discountAmount}
-                      </Col>
-                    </Row>
-                  </div>
-                }
-              >
-                <span style={{ marginLeft: '8px', cursor: 'pointer' }}>
-                  <InfoCircleOutlined />
-                </span>
-              </Popover>
-            )}
+            <CouponPopover
+              coupon={detail?.discount}
+              goToDetail={goToDiscountCode}
+            />
           </Col>
         </Row>
       )}
