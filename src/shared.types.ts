@@ -342,7 +342,7 @@ type InvoiceItem = {
   tax: number | string // tax amount
   taxPercentage: number | string // tax rate
   unitAmountExcludingTax: number | string
-  discountAmount?: number
+  discountAmount: number
   originAmount?: number
 }
 
@@ -381,7 +381,7 @@ interface UserInvoice {
   createTime: number
   createFrom: string
   originAmount?: number
-  discountAmount?: number
+  discountAmount: number
   discount?: DiscountCode
   totalAmount: number
   taxAmount: number

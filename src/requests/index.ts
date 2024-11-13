@@ -1682,8 +1682,7 @@ type TInvoiceItems = {
   description: string
   quantity: number
 }
-// admin manually create an invoice, still editable until the publishInvoice() is called.
-// before that, customers won't see(or receive) this invoice.
+// admin manually create a draft invoice
 export const createInvoiceReq = async (body: TCreateInvoiceReq) => {
   body.lines = body.invoiceItems
   try {
@@ -1702,7 +1701,7 @@ export const createInvoiceReq = async (body: TCreateInvoiceReq) => {
 }
 // -------------
 
-// before publish, admin can still edit and save.
+// admin edit and save the draft invoice.
 type TSaveInvoiceReq = {
   invoiceId: string
   taxPercentage: number
@@ -1770,7 +1769,7 @@ export const publishInvoiceReq = async (body: TPublishInvoiceReq) => {
   }
 }
 
-// admin can cancel the invoice(make it invalid) before user make the payment.
+// admin can cancel the invoice(make it invalid) before user finish the payment.
 export const revokeInvoiceReq = async (invoiceId: string) => {
   try {
     const res = await request.post(`/merchant/invoice/cancel`, {

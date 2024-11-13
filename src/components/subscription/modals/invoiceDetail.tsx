@@ -168,7 +168,7 @@ const Index = ({ detail, closeModal }: Props) => {
         <Col className="text-red-800" span={4}>
           {detail.discount !== null ? (
             <span>
-              {showAmount(detail.discountAmount, detail.currency, true)}
+              {`${showAmount(detail.discountAmount * -1, detail.currency, true)}`}
               <CouponPopover
                 coupon={detail.discount}
                 goToDetail={goToCouponDetail}
