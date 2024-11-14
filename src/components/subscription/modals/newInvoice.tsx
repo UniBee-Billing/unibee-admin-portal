@@ -28,23 +28,24 @@ const newPlaceholderItem = (): InvoiceItem => ({
   amount: 0,
   unitAmountExcludingTax: '', // item price with single unit
   amountExcludingTax: 0, // item price with quantity multiplied
+  discountAmount: 0,
   quantity: '1',
   currency: 'EUR',
   tax: 0,
   taxPercentage: 0
 })
 
+// this component is used for creating new invoice(including refund invoice) or editing existing draft invoice.
 interface Props {
   user: IProfile | undefined
   isOpen: boolean
-  detail: UserInvoice | null // null means creating new empty invoice, non-null means: creating refund invoice or editing invoice.
+  detail: UserInvoice | null // null means creating a draft invoice, non-null means: creating refund invoice or editing a draft invoice, in these cases, invoice object already exist.
   permission: TInvoicePerm
   refundMode: boolean
   // items: InvoiceItem[] | null;
   closeModal: () => void
   refresh: () => void
 }
-
 const Index = ({
   user,
   isOpen,
@@ -56,7 +57,6 @@ const Index = ({
 }: Props) => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  // const appConfigStore = useAppConfigStore();
   if (detail != null) {
     detail.lines?.forEach((item) => {
       item.id = randomString(8)
@@ -71,8 +71,9 @@ const Index = ({
       ? 'EUR'
       : detail.lines[0].currency // assume all invoice items have the same currencies.
   const [currency, setCurrency] = useState(defaultCurrency)
-  const taxPercentageTmp = detail == null ? '' : detail.taxPercentage / 100
-  const [taxPercentage, setTaxScale] = useState<string>(taxPercentageTmp + '')
+  const [taxPercentage, setTaxScale] = useState<string>(
+    detail == null ? '' : detail.taxPercentage / 100 + ''
+  )
   const [invoiceName, setInvoiceName] = useState(
     detail == null ? '' : detail.invoiceName
   )
@@ -143,6 +144,7 @@ const Index = ({
     return true
   }
 
+  // click the "Save" button
   const onSave = (isFinished: boolean) => async () => {
     if (!validateFields()) {
       return
@@ -156,7 +158,7 @@ const Index = ({
     setLoading(true)
     let _saveInvoiceRes, err
     if (detail == null) {
-      // creating a new invoice
+      // creating a draft invoice from scratch
       ;[_saveInvoiceRes, err] = await createInvoiceReq({
         userId: user!.id as number,
         taxPercentage: Number(taxPercentage) * 100,
@@ -166,10 +168,10 @@ const Index = ({
         finish: isFinished
       })
     } else {
-      // saving an invoice
+      // saving an existing draft invoice
       ;[_saveInvoiceRes, err] = await saveInvoiceReq({
         invoiceId: detail.invoiceId,
-        taxPercentage: Number(taxPercentage) / 100,
+        taxPercentage: Number(taxPercentage) * 100,
         currency: detail.currency,
         name: invoiceName,
         invoiceItems
@@ -187,7 +189,8 @@ const Index = ({
 
   // ----------------
   // what if user made some changes, then click 'create' to publish, backend still uses the old data before the local change.
-  const onPublish = async () => {
+  // click the "Create" button
+  const onCreate = async () => {
     if (detail == null) {
       await onSave(true)()
       return
@@ -241,7 +244,6 @@ const Index = ({
       return
     }
     const amt = Number(refundAmt)
-    // const total = getSubTotal(invoiceList, true)
     if (isNaN(amt) || amt > detail.totalAmount) {
       message.error(
         'Refund amount must be less than or equal to invoice amount'
@@ -316,13 +318,6 @@ const Index = ({
       setInvoiceList(newList)
     }
 
-  // to get a numerical value with 2 decimal points, but still not right
-  // https://stackoverflow.com/questions/11832914/how-to-round-to-at-most-2-decimal-places-if-necessary
-  // TODO:
-  // line1: 33.93 * 35
-  // line2: 77.95 * 3
-  // we get: 1421.3999999999
-  //
   const getSubTotal = (
     invoices: InvoiceItem[],
     asNumber?: boolean
@@ -335,7 +330,6 @@ const Index = ({
         accu +
         Math.round(
           (Number(curr.unitAmountExcludingTax) * (curr.quantity as number) +
-            // Number(curr.tax) +
             Number.EPSILON) *
             100
         ) /
@@ -346,37 +340,45 @@ const Index = ({
       if (asNumber) {
         return 0
       } else return ''
-      // return "";
     }
 
     total = Math.round((total + Number.EPSILON) * 100) / 100
     // 3rd argument is 'whether ignoreFactor',
-    // readonly: false, is used when admin need to create a new invoice, $100 need to be shown as $100, no factor considered
     return asNumber ? total : showAmount(total, currency, true)
   }
 
   const getVATAmt = (asNumber: boolean) => {
-    if (detail !== null) {
+    // in refund mode, total/tax are calculated in BE, FE doesn't need to do anything
+    if (refundMode) {
       return asNumber
-        ? detail.taxAmount
-        : showAmount(detail.taxAmount, currency, true)
+        ? detail?.taxAmount
+        : showAmount(detail?.taxAmount, detail?.currency, true)
     }
+    // when creating/editing a draft invoice, totalAmt/tax need to be calculated in real-time(reading from tax input, amount field, )
     const tax = Number(taxPercentage)
     if (isNaN(tax) || tax < 0) {
       return asNumber ? 0 : showAmount(0, currency, true)
     }
-    const amt = ((getSubTotal(invoiceList, true) as number) * tax) / 100
+    const amt =
+      Math.round(
+        (((getSubTotal(invoiceList, true) as number) * tax) / 100 +
+          Number.EPSILON) *
+          100
+      ) / 100
     return asNumber ? amt : showAmount(amt, currency, true)
   }
 
   const getTotal = (asNumber: boolean) => {
-    if (detail !== null) {
+    // in refund mode, total/tax are calculated in BE, FE doesn't need to do anything
+    if (refundMode) {
       return asNumber
-        ? detail.totalAmount
-        : showAmount(detail.totalAmount, detail.currency, true)
+        ? detail?.totalAmount
+        : showAmount(detail?.totalAmount, detail?.currency, true)
     }
-    const total =
+    // when creating/editing a draft invoice, total/tax need to be calculated in real-time(reading from tax input, amount field, )
+    let total =
       (getSubTotal(invoiceList, true) as number) + (getVATAmt(true) as number)
+    total = Math.round((total + Number.EPSILON) * 100) / 100
     return asNumber ? total : showAmount(total, currency, true)
   }
 
@@ -569,10 +571,7 @@ const Index = ({
         <Col span={16}> </Col>
         <Col span={4} className="text-lg text-gray-700">
           VAT(
-          {detail === null
-            ? `${taxPercentage}%`
-            : `${detail.taxPercentage / 100}%`}
-          )
+          {`${taxPercentage}%`})
         </Col>
         <Col span={4} className="text-lg text-gray-700">
           {getVATAmt(false)}
@@ -692,7 +691,7 @@ const Index = ({
             </Button>
           )}
           {permission.publishable && (
-            <Button onClick={onPublish} loading={loading} disabled={loading}>
+            <Button onClick={onCreate} loading={loading} disabled={loading}>
               Create
             </Button>
           )}
