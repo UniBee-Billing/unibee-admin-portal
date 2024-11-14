@@ -49,7 +49,7 @@ import ChangeSubStatusModal from './modals/changeSubStatus'
 import ExtendSubModal from './modals/extendSub'
 import ResumeSubModal from './modals/resumeSub'
 import TerminateSubModal from './modals/terminateSub'
-import UpdateSubPreviewModal from './modals/updateSubPreview'
+import { UpdateSubPreviewModal } from './modals/updateSubPreview'
 
 const Index = ({
   setUserId,

@@ -1,9 +1,11 @@
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Modal, Row, Spin } from 'antd'
+import { isObject } from 'lodash'
+import { PropsWithChildren } from 'react'
 import { showAmount } from '../../../helpers'
 import { IPreview } from '../../../shared.types'
 
-interface Props {
+interface UpdateSubPreviewProps {
   isOpen: boolean
   loading: boolean
   previewInfo: IPreview | null
@@ -11,115 +13,149 @@ interface Props {
   onConfirm: () => void
 }
 
-const updateSubPreview = ({
+const Placeholder = () => (
+  <div className="flex h-full w-full items-center justify-center">
+    <Spin
+      spinning={true}
+      indicator={<LoadingOutlined style={{ fontSize: '32px' }} spin />}
+    />
+  </div>
+)
+
+const HEADERS = [
+  'Item description',
+  'Amount\n(exclude Tax)',
+  'Quantity',
+  'Discount amount',
+  'Tax',
+  'Total'
+]
+const TEMPLATE_SPANS = [8, 4, 3, 4, 2, 3]
+
+type BaseTemplateValue = string | number
+
+type TemplateValue =
+  | BaseTemplateValue
+  | {
+      className: string
+      value: BaseTemplateValue
+    }
+
+const applyTemplate = (
+  values: TemplateValue[],
+  isBold: boolean | undefined = false
+) => (
+  <Row gutter={16}>
+    {TEMPLATE_SPANS.map((span, index) => {
+      const { value, className } = isObject(values[index])
+        ? values[index]
+        : { value: values[index], className: isBold ? 'font-bold' : '' }
+
+      return (
+        <Col key={value} span={span} className={className}>
+          {value}
+        </Col>
+      )
+    })}
+  </Row>
+)
+
+const Headers = () => applyTemplate(HEADERS, true)
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+const DividerLine = ({ children }: PropsWithChildren<{}>) => (
+  <Divider plain style={{ margin: '8px 0', color: '#757575' }}>
+    {children}
+  </Divider>
+)
+
+interface InvoiceItemProps {
+  lines: IPreview['nextPeriodInvoice']['lines']
+}
+
+const InvoiceItem = ({ lines }: InvoiceItemProps) =>
+  lines.map(
+    ({
+      description,
+      unitAmountExcludingTax,
+      currency,
+      quantity,
+      discountAmount,
+      tax,
+      amount
+    }) =>
+      applyTemplate([
+        description,
+        showAmount(unitAmountExcludingTax as number, currency),
+        quantity,
+        !discountAmount ? '-' : showAmount(discountAmount as number, currency),
+        showAmount(tax as number, currency),
+        showAmount(amount as number, currency)
+      ])
+  )
+
+interface TotalConfirmProps {
+  value: string
+  className: string
+}
+
+const TotalConfirm = ({ value, className }: TotalConfirmProps) => (
+  <div className={className}>
+    {applyTemplate(new Array(TEMPLATE_SPANS.length - 1).concat(value), true)}
+  </div>
+)
+
+export const UpdateSubPreviewModal = ({
   isOpen,
   loading,
   previewInfo,
   onCancel,
   onConfirm
-}: Props) => {
+}: UpdateSubPreviewProps) => {
   return (
     <Modal
       title="Subscription Update Preview"
       open={isOpen}
-      width={'820px'}
-      footer={null}
-      closeIcon={null}
+      footer={[
+        <Button disabled={loading} onClick={onCancel}>
+          Cancel
+        </Button>,
+        <Button
+          type="primary"
+          onClick={onConfirm}
+          loading={loading}
+          disabled={loading}
+        >
+          Confirm
+        </Button>
+      ]}
+      width={1100} // AntD not support fit-content width for modal in current version
     >
-      {previewInfo == null ? (
-        <div className="flex h-full w-full items-center justify-center">
-          <Spin
-            spinning={true}
-            indicator={<LoadingOutlined style={{ fontSize: '32px' }} spin />}
-          />
-        </div>
+      {!previewInfo ? (
+        <Placeholder />
       ) : (
         <>
-          <Row style={{ display: 'flex', alignItems: 'center' }}>
-            <Col span={10}>
-              <span style={{ fontWeight: 'bold' }}>Item description</span>
-            </Col>
-            <Col span={4}>
-              <div style={{ fontWeight: 'bold' }}>Amount</div>
-              <div style={{ fontWeight: 'bold' }}>(exclude Tax)</div>
-            </Col>
-            <Col span={1}></Col>
-            <Col span={3}>
-              <span style={{ fontWeight: 'bold' }}>Quantity</span>
-            </Col>
-            <Col span={2}>
-              <span style={{ fontWeight: 'bold' }}>Tax</span>
-            </Col>
-            <Col span={3}>
-              <span style={{ fontWeight: 'bold' }}>Total</span>
-            </Col>
-          </Row>
-          <Divider plain style={{ margin: '8px 0', color: '#757575' }}>
-            ↓ Next billing period invoices ↓
-          </Divider>
-          {previewInfo.nextPeriodInvoice.lines.map((i, idx) => (
-            <Row key={idx}>
-              <Col span={10}>{i.description} </Col>
-              <Col span={4}>
-                {showAmount(i.unitAmountExcludingTax as number, i.currency)}
-              </Col>
-              <Col span={1}></Col>
-              <Col span={3}>{i.quantity}</Col>
-              <Col span={2}>{showAmount(i.tax as number, i.currency)}</Col>
-              <Col span={3}>{showAmount(i.amount as number, i.currency)}</Col>
-            </Row>
-          ))}
-          <Row>
-            <Col span={20}></Col>
-            <Col span={2} style={{ fontWeight: 'bold' }}>
-              {showAmount(
-                previewInfo.nextPeriodInvoice.totalAmount,
-                previewInfo.nextPeriodInvoice.currency
-              )}
-            </Col>
-          </Row>
-
-          <Divider plain style={{ margin: '8px 0', color: '#757575' }}>
-            ↓ Current billing period invoices ↓
-          </Divider>
-          {previewInfo.invoice.lines.map((i, idx) => (
-            <Row key={idx}>
-              <Col span={10}>{i.description} </Col>
-              <Col span={4}>
-                {showAmount(i.unitAmountExcludingTax as number, i.currency)}
-              </Col>
-              <Col span={1}></Col>
-              <Col span={3}>{i.quantity}</Col>
-              <Col span={2}>{showAmount(i.tax as number, i.currency)}</Col>
-              <Col span={3}>{showAmount(i.amount as number, i.currency)}</Col>
-            </Row>
-          ))}
-          <Row>
-            <Col span={20}></Col>
-            <Col span={2} style={{ fontWeight: 'bold' }}>
-              {showAmount(
-                previewInfo.invoice.totalAmount,
-                previewInfo.invoice.currency
-              )}
-            </Col>
-          </Row>
-          <div className="mx-0 my-4 flex justify-end gap-4">
-            <Button disabled={loading} onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              onClick={onConfirm}
-              loading={loading}
-              disabled={loading}
-            >
-              Confirm
-            </Button>
-          </div>
+          <Headers />
+          <DividerLine>↓ Next billing period invoices ↓</DividerLine>
+          <InvoiceItem lines={previewInfo.nextPeriodInvoice.lines} />
+          <TotalConfirm
+            className="mt-2"
+            value={showAmount(
+              previewInfo.nextPeriodInvoice.totalAmount,
+              previewInfo.nextPeriodInvoice.currency
+            )}
+          />
+          <DividerLine>↓ Current billing period invoices ↓</DividerLine>
+          <InvoiceItem lines={previewInfo.invoice.lines} />
+          <TotalConfirm
+            className="mt-2"
+            value={showAmount(
+              previewInfo.invoice.totalAmount,
+              previewInfo.invoice.currency
+            )}
+          />
         </>
       )}
     </Modal>
   )
 }
-
-export default updateSubPreview
