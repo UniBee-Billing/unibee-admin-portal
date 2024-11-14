@@ -348,7 +348,7 @@ const Index = ({
   }
 
   const getVATAmt = (asNumber: boolean) => {
-    // in refund mode, total/tax are calculated in BE, FE doens't need to do anything
+    // in refund mode, total/tax are calculated in BE, FE doesn't need to do anything
     if (refundMode) {
       return asNumber
         ? detail?.taxAmount
