@@ -318,13 +318,6 @@ const Index = ({
       setInvoiceList(newList)
     }
 
-  // to get a numerical value with 2 decimal points, but still not right
-  // https://stackoverflow.com/questions/11832914/how-to-round-to-at-most-2-decimal-places-if-necessary
-  // TODO:
-  // line1: 33.93 * 35
-  // line2: 77.95 * 3
-  // we get: 1421.3999999999
-  //
   const getSubTotal = (
     invoices: InvoiceItem[],
     asNumber?: boolean
@@ -366,20 +359,26 @@ const Index = ({
     if (isNaN(tax) || tax < 0) {
       return asNumber ? 0 : showAmount(0, currency, true)
     }
-    const amt = ((getSubTotal(invoiceList, true) as number) * tax) / 100
+    const amt =
+      Math.round(
+        (((getSubTotal(invoiceList, true) as number) * tax) / 100 +
+          Number.EPSILON) *
+          100
+      ) / 100
     return asNumber ? amt : showAmount(amt, currency, true)
   }
 
   const getTotal = (asNumber: boolean) => {
-    // in refund mode, total/tax are calculated in BE, FE doens't need to do anything
+    // in refund mode, total/tax are calculated in BE, FE doesn't need to do anything
     if (refundMode) {
       return asNumber
         ? detail?.totalAmount
         : showAmount(detail?.totalAmount, detail?.currency, true)
     }
     // when creating/editing a draft invoice, total/tax need to be calculated in real-time(reading from tax input, amount field, )
-    const total =
+    let total =
       (getSubTotal(invoiceList, true) as number) + (getVATAmt(true) as number)
+    total = Math.round((total + Number.EPSILON) * 100) / 100
     return asNumber ? total : showAmount(total, currency, true)
   }
 
