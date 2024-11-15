@@ -471,7 +471,6 @@ const Index = ({
               )}
               onChange={(date, dateStr) => onSimDateChange(date, dateStr)}
               open={simDateOpen}
-              onBlur={toggleSimDateOpen}
               disabledDate={(d: dayjs.Dayjs) =>
                 d.isBefore(
                   null == activeSub ||
