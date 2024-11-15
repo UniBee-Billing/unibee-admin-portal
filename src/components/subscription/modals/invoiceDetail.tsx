@@ -203,15 +203,13 @@ const Index = ({ detail, closeModal }: Props) => {
           style={{ fontSize: '18px', fontWeight: 'bold' }}
           className="text-gray-600"
           span={4}
-        >{`${showAmount(detail.totalAmount, detail.currency, true)}`}</Col>
-      </Row>
-      {/* <Row className="flex items-center">
-        <Col span={20}></Col>
-        <Col span={4}>
-          <span style={{ fontWeight: 'bold' }}>{getTotal(invoiceList)}</span>
-          total with payment link
+        >
+          {`${showAmount(detail.totalAmount, detail.currency, true)}`}
+          <div>
+            <InvoiceLink invoice={detail} />
+          </div>
         </Col>
-      </Row> */}
+      </Row>
       <div className="mt-6 flex items-center justify-end gap-4">
         <div className="flex w-full justify-between gap-4">
           <Button
@@ -231,3 +229,26 @@ const Index = ({ detail, closeModal }: Props) => {
 }
 
 export default Index
+
+const InvoiceLink = ({ invoice }: { invoice: UserInvoice }) => {
+  let label = ''
+  if (invoice.status === 2) {
+    // Awaiting payment
+    label = 'Payment link'
+  } else if (invoice.status === 3) {
+    // Paid or refunded
+    label = 'Invoice link'
+  } else {
+    return null
+  }
+  return (
+    <a
+      href={invoice.link}
+      target="_blank"
+      className="text-sm text-gray-400"
+      rel="noreferrer"
+    >
+      {label}
+    </a>
+  )
+}
