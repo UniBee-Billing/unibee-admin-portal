@@ -26,8 +26,9 @@ interface IPLanProps {
   plan: IPlan
   selectedPlan: number | null
   isActive: boolean // whether current plan is the one user has subscribed(Y: highlight it)
-  setSelectedPlan: (p: number) => void
-  onAddonChange: (
+  isThumbnail?: boolean
+  setSelectedPlan?: (p: number) => void
+  onAddonChange?: (
     addonId: number,
     quantity: number | null,
     checked: boolean | null
@@ -39,14 +40,15 @@ const Index = ({
   selectedPlan,
   isActive,
   setSelectedPlan,
-  onAddonChange
+  onAddonChange,
+  isThumbnail = false
 }: IPLanProps) => {
   const [totalAmount, setTotalAmount] = useState(0)
   const addonCheck = (addonId: number) => (e: CheckboxChangeEvent) => {
-    onAddonChange(addonId, null, e.target.checked)
+    onAddonChange?.(addonId, null, e.target.checked)
   }
   const addonQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onAddonChange(Number(e.target.id), Number(e.target.value), null)
+    onAddonChange?.(Number(e.target.id), Number(e.target.value), null)
   }
 
   const trialInfo = () => {
@@ -105,7 +107,7 @@ const Index = ({
   return (
     <div>
       <div
-        onClick={() => setSelectedPlan(plan.id)}
+        onClick={() => setSelectedPlan?.(plan.id)}
         className="flex h-80 w-64 cursor-pointer flex-col items-center justify-center gap-6 rounded-md px-2 py-2"
         style={{
           border: `1px solid ${isActive ? 'orange' : '#BDBDBD'}`,
@@ -122,7 +124,7 @@ const Index = ({
         <div style={{ fontSize: '28px' }}>{plan.planName}</div>
         <div>{plan.description}</div>
 
-        {plan.addons && (
+        {!isThumbnail && plan.addons && (
           <div className="flex flex-col gap-2">
             {plan.addons.map((a) => (
               <div
