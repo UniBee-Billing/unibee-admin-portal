@@ -586,20 +586,6 @@ const Index = ({
           </Col>
           <Col span={4} className="text-lg text-gray-700">
             <span style={{ fontWeight: 'bold' }}>{getTotal(false)}</span>
-            {detail != null && detail.link != '' && detail.link != null && (
-              <a
-                href={detail.link}
-                target="_blank"
-                style={{
-                  fontSize: '11px',
-                  marginLeft: '4px',
-                  color: '#757575'
-                }}
-                rel="noreferrer"
-              >
-                Payment Link
-              </a>
-            )}
           </Col>
         </Row>
       }
