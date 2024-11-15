@@ -16,6 +16,7 @@ export const useLoading = () => {
 
   return {
     isLoading,
-    withLoading
+    withLoading,
+    setIsLoading
   }
 }

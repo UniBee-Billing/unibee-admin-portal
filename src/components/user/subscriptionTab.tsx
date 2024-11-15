@@ -11,7 +11,7 @@ import { normalizeSub, showAmount } from '../../helpers'
 import { getSubDetailInProductReq } from '../../requests'
 import { IProfile, ISubscriptionType } from '../../shared.types'
 import { SubscriptionStatus } from '../ui/statusTag'
-import ModalAssignSub from './assignSub/assignSubModal'
+import { AssignSubscriptionModal } from './assignSub/assignSubModal'
 
 const rowStyle: CSSProperties = {
   display: 'flex',
@@ -76,7 +76,7 @@ const Index = ({
   return (
     <div>
       {assignSubModalOpen && userProfile != null && (
-        <ModalAssignSub
+        <AssignSubscriptionModal
           user={userProfile}
           productId={productId}
           closeModal={toggleAssignSub}

@@ -8,6 +8,10 @@ export enum AccountType {
   BUSINESS
 }
 
+export type WithStyle<T> = T & {
+  className?: string
+}
+
 export type WithDoubleConfirmFields<T> = {
   confirmTotalAmount: number
   confirmCurrency: string

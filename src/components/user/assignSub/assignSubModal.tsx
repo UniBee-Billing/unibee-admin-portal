@@ -1,24 +1,11 @@
-import {
-  Button,
-  Col,
-  Divider,
-  Form,
-  Input,
-  message,
-  Modal,
-  Row,
-  Select,
-  Switch
-} from 'antd'
-import update from 'immutability-helper'
+import { Button, Form, Input, message, Modal, Switch } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import HiddenIcon from '../../../assets/hidden.svg?react'
 import { showAmount } from '../../../helpers'
+import { useLoading } from '../../../hooks'
+import { PublishStatus } from '../../../hooks/usePlans'
 import {
   BusinessUserData,
   createSubscriptionReq,
-  getPlanList,
-  TPlanListBody,
   UserData
 } from '../../../requests'
 import { request, Response } from '../../../requests/client'
@@ -29,11 +16,7 @@ import {
   WithDoubleConfirmFields
 } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
-import {
-  isEmpty,
-  safeRun,
-  useDebouncedCallbackWithDefault
-} from '../../../utils'
+import { isEmpty, useDebouncedCallbackWithDefault } from '../../../utils'
 import Plan from '../../subscription/plan'
 import PaymentMethodSelector from '../../ui/paymentSelector'
 import { AccountTypeForm, AccountTypeFormInstance } from './accountTypeForm'
@@ -42,7 +25,10 @@ import {
   getValidStatusByMessage
 } from './businessAccountForm'
 import { CheckoutItem } from './checkoutItem'
+import { InfoItem } from './infoItem'
 import { PersonalAccountValues } from './personalAccountForm'
+import { PlanSelector } from './planSelector'
+import { UserInfoCard } from './userInfoCard'
 
 interface Props {
   user: IProfile
@@ -100,36 +86,26 @@ type AccountValues = Pick<PersonalAccountValues, 'country'> &
 
 const TRIGGER_PREVIEW_FIELDS = ['country', 'vat', 'discountCode']
 
-const Index = ({ user, productId, closeModal, refresh }: Props) => {
+export const AssignSubscriptionModal = ({
+  user,
+  productId,
+  closeModal,
+  refresh
+}: Props) => {
   const appConfig = useAppConfigStore()
   const accountTypeFormRef = useRef<AccountTypeFormInstance>(null)
-  const [loading, setLoading] = useState(false)
-  const [plans, setPlans] = useState<IPlan[]>([])
-  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null)
+  const { isLoading, withLoading } = useLoading()
+  const [gatewayId, setGatewayId] = useState<undefined | number>(
+    appConfig.gateway.find((g) => g.gatewayName === 'stripe')?.gatewayId
+  )
+  const [selectedPlan, setSelectedPlan] = useState<IPlan | undefined>()
   const [requirePayment, setRequirePayment] = useState(true)
-  const [includeUnpublished, setIncludeUnpublished] = useState(false)
+  const [includeUnpublishedPlan, setIncludeUnpublishedPlan] = useState(false)
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
   const accountFormValues = useRef<AccountValues | undefined>()
-  const onIncludeChange = (checked: boolean) => {
-    if (!checked) {
-      if (
-        selectedPlanId != null &&
-        plans
-          .filter((p) => p.publishStatus == 2)
-          .findIndex((p) => p.id == selectedPlanId) == -1
-      ) {
-        // if selected plan doesn't exist in published plans, reset it to null
-        setSelectedPlanId(null)
-      }
-    }
-    setIncludeUnpublished(!includeUnpublished)
-  }
-  const selectedPlan = useMemo(
-    () => plans.find(({ id }) => id === selectedPlanId),
-    [selectedPlanId, plans]
-  )
+
   const parsedTax = useMemo(
     () => (previewData?.taxPercentage ?? 0) / 100,
     [previewData]
@@ -163,16 +139,6 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     [previewData]
   )
 
-  // set card payment as default gateway
-  const [gatewayId, setGatewayId] = useState<undefined | number>(
-    appConfig.gateway.find((g) => g.gatewayName == 'stripe')?.gatewayId
-  )
-
-  //const onGatewayChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-  const onGatewayChange = (gatewayId: number) => {
-    setGatewayId(gatewayId)
-  }
-
   const getSubmitData = useCallback(
     (values?: AccountValues) => {
       const {
@@ -204,7 +170,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
             }
 
       const submitData = {
-        planId: selectedPlanId,
+        planId: selectedPlan?.id,
         gatewayId: gatewayId,
         userId: user.id!,
         startIncomplete: false,
@@ -228,7 +194,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       return { ...submitData, startIncomplete: true }
     },
     [
-      selectedPlanId,
+      selectedPlan,
       gatewayId,
       user,
       accountType,
@@ -237,37 +203,6 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       requirePayment
     ]
   )
-
-  const onAddonChange = (
-    addonId: number,
-    quantity: number | null, // null means: don't update this field, keep its original value. I don't want to define 2 fn to do similar jobs.
-    checked: boolean | null // ditto
-  ) => {
-    const planIdx = plans.findIndex((p) => p.id == selectedPlanId)
-    if (planIdx == -1) {
-      return
-    }
-    const addonIdx = plans[planIdx].addons!.findIndex((a) => a.id == addonId)
-    if (addonIdx == -1) {
-      return
-    }
-
-    let newPlans = plans
-    if (quantity == null) {
-      newPlans = update(plans, {
-        [planIdx]: {
-          addons: { [addonIdx]: { checked: { $set: checked as boolean } } }
-        }
-      })
-    } else if (checked == null) {
-      newPlans = update(plans, {
-        [planIdx]: {
-          addons: { [addonIdx]: { quantity: { $set: quantity as number } } }
-        }
-      })
-    }
-    setPlans(newPlans)
-  }
 
   const onSubmit = async () => {
     const values = await accountTypeFormRef.current?.submit()
@@ -284,11 +219,11 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       return
     }
 
-    if (selectedPlanId == null) {
+    if (!selectedPlan) {
       message.error('Please choose a plan')
       return
     }
-    if (gatewayId == undefined) {
+    if (!gatewayId) {
       message.error('Please choose a payment method')
       return
     }
@@ -301,13 +236,9 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
       confirmCurrency: selectedPlan?.currency
     } as WithDoubleConfirmFields<CreateSubScriptionBody>
 
-    setLoading(true)
+    const [_, err] = await withLoading(async () => createSubscriptionReq(body))
 
-    const [_, err] = await createSubscriptionReq(body)
-
-    setLoading(false)
-
-    if (null != err) {
+    if (err) {
       message.error(err.message)
       return
     }
@@ -317,48 +248,15 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
     refresh()
   }
 
-  const fetchPlan = async () => {
-    const body: TPlanListBody = {
-      type: [1], // main plan
-      status: [2], // active
-      productIds: [productId],
-      page: 0,
-      count: 150
-    }
-
-    setLoading(true)
-
-    const [res, err] = await getPlanList(body, fetchPlan)
-
-    setLoading(false)
-
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    const { plans } = res
-    setPlans(
-      plans == null
-        ? []
-        : plans.map((p: IPlan) => ({
-            ...p.plan,
-            metricPlanLimits: p.metricPlanLimits
-          }))
-    )
-  }
-
   const updatePrice = useCallback(async () => {
-    setLoading(true)
+    const [data, err] = await withLoading(async () => {
+      const submitData = getSubmitData(accountFormValues.current)
 
-    const submitData = getSubmitData(accountFormValues.current)
-    const [data, err] = await safeRun(() =>
-      request.post<Response<PreviewData>>(
+      return request.post<Response<PreviewData>>(
         '/merchant/subscription/create_preview',
         submitData
       )
-    )
-
-    setLoading(false)
+    })
 
     if (err) {
       message.error(err.message)
@@ -371,63 +269,54 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
   }, [getSubmitData])
 
   const debouncedUpdateDiscountCode = useDebouncedCallbackWithDefault(
-    (value: string) => {
-      setDiscountCode(value)
-      updatePrice()
-    }
+    (value: string) => setDiscountCode(value)
   )
 
   useEffect(() => {
-    if (!selectedPlanId) {
+    if (!selectedPlan) {
       return
     }
 
     updatePrice()
-  }, [selectedPlanId, updatePrice])
+  }, [selectedPlan, updatePrice])
 
-  useEffect(() => {
-    fetchPlan()
-  }, [])
+  const planSelectorFilterPredicate = useCallback(
+    (plan: IPlan | undefined) =>
+      includeUnpublishedPlan || plan?.publishStatus === PublishStatus.PUBLISHED,
+    [includeUnpublishedPlan]
+  )
 
   return (
     <Modal
-      title="Assign subscription"
+      title="Choose a subscription plan"
       open={true}
       width={'720px'}
-      footer={null}
+      footer={[
+        <Button onClick={closeModal} disabled={isLoading}>
+          Cancel
+        </Button>,
+        <Button
+          type="primary"
+          onClick={onSubmit}
+          loading={isLoading}
+          disabled={isLoading || isEmpty(selectedPlan)}
+        >
+          OK
+        </Button>
+      ]}
       closeIcon={null}
     >
-      <Divider>Choose a subscription plan</Divider>
-      <div className="flex justify-between">
-        <div className="my-6 w-3/6">
-          <Row gutter={[16, 48]}>
-            <Col span={7} className="font-bold text-gray-700">
-              UserId
-            </Col>
-            <Col span={17}>{user.id}</Col>
-          </Row>
-          <Row gutter={[16, 48]}>
-            <Col span={7} className="font-bold text-gray-700">
-              User name
-            </Col>
-            <Col span={17}>{`${user.firstName} ${user.lastName}`}</Col>
-          </Row>
-          <Row gutter={[16, 48]} className="mb-4">
-            <Col span={7} className="font-bold text-gray-700">
-              Email
-            </Col>
-            <Col span={17}>{user.email}</Col>
-          </Row>
+      <div className="my-6 flex justify-between">
+        <div className="mr-16 flex-1">
+          <UserInfoCard user={user} className="mb-6" />
           <PaymentMethodSelector
             selected={gatewayId}
-            onSelect={onGatewayChange}
-            disabled={loading}
+            onSelect={setGatewayId}
+            disabled={isLoading}
           />
-          <div className="mt-4">
-            <div className="mb-2 font-bold">Account type</div>
-
+          <InfoItem title="Account type" className="mt-6">
             <AccountTypeForm
-              loading={loading}
+              loading={isLoading}
               previewData={previewData}
               onFormValuesChange={(changedValues, values, accountType) => {
                 const [changedKey] = Object.keys(changedValues)
@@ -437,7 +326,7 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
 
                 if (
                   TRIGGER_PREVIEW_FIELDS.includes(changedKey) &&
-                  selectedPlanId
+                  selectedPlan
                 ) {
                   updatePrice()
                 }
@@ -445,140 +334,91 @@ const Index = ({ user, productId, closeModal, refresh }: Props) => {
               ref={accountTypeFormRef}
               user={user}
             ></AccountTypeForm>
-          </div>
+          </InfoItem>
         </div>
 
-        <div className="ml-1">
-          <div>
-            <div className="my-6 flex flex-col justify-center">
-              <div className="mb-2 font-bold">Discount code</div>
-              <Form.Item
-                validateStatus={getValidStatusByMessage(
-                  previewData?.discountMessage
-                )}
-                help={previewData?.discountMessage}
-              >
-                <Input
-                  onChange={(e) => debouncedUpdateDiscountCode(e.target.value)}
-                  placeholder="Discount code"
-                />
-              </Form.Item>
-              <div className="mb-2 font-bold">Choose Plan</div>
-              <Select
-                loading={loading}
-                disabled={loading}
-                style={{ width: 260 }}
-                value={selectedPlanId}
-                onChange={setSelectedPlanId}
-                options={plans
-                  .filter((p) =>
-                    includeUnpublished ? true : p.publishStatus == 2
-                  )
-                  .map((p) => ({
-                    value: p.id,
-                    label: (
-                      <div key={p.id} className="flex items-center">
-                        <span>{p.planName}</span>
-                        {p.publishStatus == 1 && (
-                          <div
-                            className="absolute flex h-4 w-4"
-                            style={{ right: '14px' }}
-                          >
-                            <HiddenIcon />
-                          </div>
-                        )}
-                      </div>
-                    )
-                  }))}
+        <div className="flex-1">
+          <InfoItem title="Discount code">
+            <Form.Item
+              validateStatus={getValidStatusByMessage(
+                previewData?.discountMessage
+              )}
+              help={previewData?.discountMessage}
+            >
+              <Input
+                onChange={(e) => debouncedUpdateDiscountCode(e.target.value)}
+                placeholder="Discount code"
+              />
+            </Form.Item>
+          </InfoItem>
+          <InfoItem title="Choose plan">
+            <PlanSelector
+              onPlanSelected={setSelectedPlan}
+              filterPredicate={planSelectorFilterPredicate}
+              productId={productId.toString()}
+            />
+          </InfoItem>
+          {selectedPlan && (
+            <div className="mt-8 flex justify-center">
+              <Plan
+                plan={selectedPlan}
+                selectedPlan={selectedPlan.id}
+                isThumbnail
+                isActive={false}
               />
             </div>
-
-            <div className="mb-12 flex flex-col items-center justify-center">
-              {selectedPlanId != null && (
-                <Plan
-                  plan={plans.find((p) => p.id == selectedPlanId)!}
-                  selectedPlan={selectedPlanId}
-                  setSelectedPlan={setSelectedPlanId}
-                  onAddonChange={onAddonChange}
-                  isActive={false}
-                />
-              )}
-              <div className="w-full">
-                <Row style={{ margin: '12px 0' }}>
-                  <Col span={18}>Require payment</Col>
-                  <Col span={6}>
-                    <Switch
-                      disabled={loading}
-                      checked={requirePayment}
-                      onChange={setRequirePayment}
-                    />
-                  </Col>
-                </Row>
-                <Row>
-                  <Col span={18}>Include unpublished plans</Col>
-                  <Col span={6}>
-                    <Switch
-                      disabled={loading}
-                      checked={includeUnpublished}
-                      onChange={onIncludeChange}
-                    />
-                  </Col>
-                </Row>
-                <div className="my-8 h-[1px] w-full bg-gray-100"></div>
-                <CheckoutItem
-                  label="Subtotal"
-                  loading={loading}
-                  value={formatAmount(
-                    previewData?.invoice.subscriptionAmountExcludingTax
-                  )}
-                />
-                {selectedPlanId && (
-                  <CheckoutItem
-                    loading={loading}
-                    label={`Tax(${parsedTax}%)`}
-                    value={formatAmount(previewData?.invoice.taxAmount)}
-                  />
-                )}
-                <CheckoutItem
-                  label={formattedDiscountLabel}
-                  loading={loading}
-                  value={formattedDiscountValue}
-                />
-                {selectedPlanId && (
-                  <div className="my-8 h-[1px] w-full bg-gray-100"></div>
-                )}
-                <CheckoutItem
-                  labelStyle="text-lg"
-                  loading={loading}
-                  label="Total"
-                  value={formatAmount(previewData?.totalAmount)}
-                />
-              </div>
-            </div>
+          )}
+          <div className="mt-8">
+            <InfoItem title="Require payment" horizontal isBold={false}>
+              <Switch
+                value={requirePayment}
+                onChange={(switched) => setRequirePayment(switched)}
+              />
+            </InfoItem>
+            <InfoItem
+              title="Include unpublished plans"
+              horizontal
+              isBold={false}
+              className="mt-2"
+            >
+              <Switch
+                value={includeUnpublishedPlan}
+                onChange={(switched) => setIncludeUnpublishedPlan(switched)}
+              />
+            </InfoItem>
           </div>
-        </div>
-      </div>
 
-      <div
-        className="flex items-center justify-end gap-4"
-        style={{
-          marginTop: '24px'
-        }}
-      >
-        <Button onClick={closeModal} disabled={loading}>
-          Cancel
-        </Button>
-        <Button
-          type="primary"
-          onClick={onSubmit}
-          loading={loading}
-          disabled={loading || isEmpty(selectedPlan)}
-        >
-          OK
-        </Button>
+          <div className="my-8 h-[1px] w-full bg-gray-100"></div>
+          <CheckoutItem
+            label="Subtotal"
+            loading={isLoading}
+            value={formatAmount(
+              previewData?.invoice.subscriptionAmountExcludingTax
+            )}
+          />
+          {selectedPlan && (
+            <CheckoutItem
+              loading={isLoading}
+              label={`Tax(${parsedTax}%)`}
+              value={formatAmount(previewData?.invoice.taxAmount)}
+            />
+          )}
+          <CheckoutItem
+            label={formattedDiscountLabel}
+            loading={isLoading}
+            value={formattedDiscountValue}
+          />
+          {selectedPlan && (
+            <div className="my-8 h-[1px] w-full bg-gray-100"></div>
+          )}
+          <CheckoutItem
+            labelStyle="text-lg"
+            loading={isLoading}
+            label="Total"
+            value={formatAmount(previewData?.totalAmount)}
+          />
+        </div>
       </div>
     </Modal>
   )
 }
-
-export default Index
