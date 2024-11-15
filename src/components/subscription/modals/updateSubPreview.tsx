@@ -22,15 +22,7 @@ const Placeholder = () => (
   </div>
 )
 
-const HEADERS = [
-  'Item description',
-  'Amount\n(exclude Tax)',
-  'Quantity',
-  'Discount amount',
-  'Tax',
-  'Total'
-]
-const TEMPLATE_SPANS = [8, 4, 3, 4, 2, 3]
+const TEMPLATE_SPANS = [12, 4, 3, 2, 3]
 
 type BaseTemplateValue = string | number
 
@@ -41,10 +33,12 @@ type TemplateValue =
       value: BaseTemplateValue
     }
 
-const applyTemplate = (
-  values: TemplateValue[],
-  isBold: boolean | undefined = false
-) => (
+interface InvoiceTemplateProps {
+  values: TemplateValue[]
+  isBold?: boolean
+}
+
+const InvoiceTemplate = ({ values, isBold }: InvoiceTemplateProps) => (
   <Row gutter={16}>
     {TEMPLATE_SPANS.map((span, index) => {
       const { value, className } = isObject(values[index])
@@ -60,7 +54,18 @@ const applyTemplate = (
   </Row>
 )
 
-const Headers = () => applyTemplate(HEADERS, true)
+const Headers = () => (
+  <InvoiceTemplate
+    isBold
+    values={[
+      'Item description',
+      'Amount\n(exclude Tax)',
+      'Quantity',
+      'Tax',
+      'Total'
+    ]}
+  />
+)
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 const DividerLine = ({ children }: PropsWithChildren<{}>) => (
@@ -80,18 +85,20 @@ const InvoiceItem = ({ lines }: InvoiceItemProps) =>
       unitAmountExcludingTax,
       currency,
       quantity,
-      discountAmount,
       tax,
       amount
-    }) =>
-      applyTemplate([
-        description,
-        showAmount(unitAmountExcludingTax as number, currency),
-        quantity,
-        !discountAmount ? '-' : showAmount(discountAmount as number, currency),
-        showAmount(tax as number, currency),
-        showAmount(amount as number, currency)
-      ])
+    }) => (
+      <InvoiceTemplate
+        key={description}
+        values={[
+          description,
+          showAmount(unitAmountExcludingTax as number, currency),
+          quantity,
+          showAmount(tax as number, currency),
+          showAmount(amount as number, currency)
+        ]}
+      />
+    )
   )
 
 interface TotalConfirmProps {
@@ -101,7 +108,10 @@ interface TotalConfirmProps {
 
 const TotalConfirm = ({ value, className }: TotalConfirmProps) => (
   <div className={className}>
-    {applyTemplate(new Array(TEMPLATE_SPANS.length - 1).concat(value), true)}
+    <InvoiceTemplate
+      values={new Array(TEMPLATE_SPANS.length - 1).concat(value)}
+      isBold
+    />
   </div>
 )
 
@@ -116,6 +126,7 @@ export const UpdateSubPreviewModal = ({
     <Modal
       title="Subscription Update Preview"
       open={isOpen}
+      onCancel={onCancel}
       footer={[
         <Button disabled={loading} onClick={onCancel}>
           Cancel
@@ -129,12 +140,12 @@ export const UpdateSubPreviewModal = ({
           Confirm
         </Button>
       ]}
-      width={1100} // AntD not support fit-content width for modal in current version
+      width={800} // AntD not support fit-content width for modal in current version
     >
       {!previewInfo ? (
         <Placeholder />
       ) : (
-        <>
+        <div className="mb-4">
           <Headers />
           <DividerLine>↓ Next billing period invoices ↓</DividerLine>
           <InvoiceItem lines={previewInfo.nextPeriodInvoice.lines} />
@@ -154,7 +165,7 @@ export const UpdateSubPreviewModal = ({
               previewInfo.invoice.currency
             )}
           />
-        </>
+        </div>
       )}
     </Modal>
   )
