@@ -4,6 +4,7 @@ import Dinero from 'dinero.js'
 import passwordValidator from 'password-validator'
 import { CURRENCY } from '../constants'
 import {
+  DiscountCode,
   IPlan,
   ISubscriptionType,
   TInvoicePerm,
@@ -80,7 +81,7 @@ export const formatPlanPrice = (plan: IPlan) => {
   }).toFormat('$0,0.00')
   if (plan.type == 1 || plan.type == 2) {
     // 1: main plan, 2: add-on, 3: one-time addon
-    const itv = `/${plan.intervalCount == 1 ? '' : plan.intervalCount} ${plan.intervalUnit}`
+    const itv = `/${plan.intervalCount == 1 ? '' : plan.intervalCount}${plan.intervalUnit}`
     return `${amount}${itv}`
   } else {
     return amount
