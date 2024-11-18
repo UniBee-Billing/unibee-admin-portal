@@ -8,6 +8,7 @@ interface DataSetterOptions<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateRemoteSourceFunction: (payload: any, data: T) => Promise<T>
   onError: (err: Error) => void
+  onSuccess: (data: T) => void
 }
 
 export function useFetch<T>(
@@ -29,6 +30,7 @@ export function useFetch<T>(
         const res = await fetcher()
 
         setCachedData(res)
+        options?.onSuccess?.(res)
       })
 
       if (err !== null) {

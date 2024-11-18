@@ -1,5 +1,5 @@
 import { Select, SelectProps } from 'antd'
-import { getSystemTimezone, getTimezoneList } from '../utils'
+import { getTimezoneList } from '../utils'
 import { ignoreCaseLabelFilter } from '../utils/filters'
 
 interface TimezoneSelectorProps extends SelectProps {
@@ -18,7 +18,6 @@ export const TimezoneSelector = ({
   return (
     <Select
       showSearch
-      defaultValue={getSystemTimezone()}
       filterOption={ignoreCaseLabelFilter}
       placeholder="Select a timezone"
       onChange={onTimezoneChange}

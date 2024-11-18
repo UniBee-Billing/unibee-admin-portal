@@ -4,10 +4,14 @@ import { safeRun } from '../utils'
 export const useLoading = () => {
   const [isLoading, setIsLoading] = useState(false)
 
-  const withLoading = async <T>(fn: () => Promise<T>) => {
+  const withLoading = async <T>(
+    fn: () => Promise<T>,
+    safe: boolean | undefined = true
+  ) => {
     setIsLoading(true)
 
-    const res = await safeRun(fn)
+    const executeFn = safe ? () => safeRun(fn) : fn
+    const res = await executeFn()
 
     setIsLoading(false)
 

@@ -1,724 +1,306 @@
-import {
-  DeleteOutlined,
-  LoadingOutlined,
-  PlusOutlined,
-  SaveOutlined
-} from '@ant-design/icons'
-import type { DatePickerProps, RadioChangeEvent } from 'antd'
-import {
-  Button,
-  Col,
-  DatePicker,
-  Form,
-  Input,
-  message,
-  Radio,
-  Row,
-  Select,
-  Spin,
-  Tag,
-  Tooltip
-} from 'antd'
-import dayjs, { Dayjs } from 'dayjs'
-import update from 'immutability-helper'
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult
-} from 'react-beautiful-dnd'
-import {
-  exportDataReq,
-  getExportFieldsWithMore,
-  getExportTmplReq,
-  removeExportTmplReq,
-  saveExportTmplReq
-} from '../../requests'
-import { TExportDataType } from '../../shared.types'
+import { Button, message } from 'antd'
+import { omit } from 'lodash'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { useExportColumnList, useFetch, useLoading } from '../../hooks'
+import { exportDataReq, saveExportTmplReq } from '../../requests'
+import { request } from '../../requests/client'
 import { useAppConfigStore } from '../../stores'
-import { fuzzyMatch } from './helpers'
-import './index.css'
+import { mapObjectKeys } from '../../utils'
+import { AddNewTemplateButton } from './addNewTemplateButton'
+import { FieldsSelector } from './fieldsSelector'
+import { Preview, PreviewRef } from './preview'
+import { ExportType } from './preview/settings'
+import {
+  DEFAULT_TEMPLATE_NAME,
+  Template,
+  TemplateSelector
+} from './templateSelector'
 
-interface TExpTmplPayload {
-  reportTimeStart: number
-  reportTimeEnd: number
+const findCategoryByValue = (
+  columns: Record<string, string[]>,
+  value: string
+) => {
+  const [category] =
+    Object.entries(columns).find(([_, fields]) =>
+      fields.map((field) => field.toLowerCase()).includes(value.toLowerCase())
+    ) ?? []
+
+  return category
 }
 
-type TExpTmpl = {
-  templateId: number
-  name: string
-  createTime: string
-  task: TExportDataType
-  payload: TExpTmplPayload
-  exportColumns: string[]
-  format: 'csv' | 'xlsx'
+const getTemplates = async (url: string) => {
+  const { data } = await request.post(url, { task: 'InvoiceExport' })
+  const { templates } = data.data
+
+  if (templates?.length) {
+    return templates
+  }
+
+  // If no templates are found, create a default template
+  const [newTemplateData, err] = await saveExportTmplReq({
+    task: 'InvoiceExport',
+    name: DEFAULT_TEMPLATE_NAME
+  })
+
+  if (err) {
+    return err
+  }
+
+  return [newTemplateData.template]
 }
 
-type TExportField = {
-  name: string
-  id: string
-  node: ReactNode | null
-}
+export const ReportPage = () => {
+  const appConfigStore = useAppConfigStore()
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    Template | undefined
+  >()
+  const [selectedFields, setSelectedFields] = useState<string[][]>([])
+  const [editSelectedTemplateName, setEditSelectedTemplateName] = useState(
+    selectedTemplate?.name
+  )
+  const {
+    data,
+    loading: isLoadingTemplates,
+    setData
+  } = useFetch<Template[]>(
+    '/merchant/task/export_template_list',
+    getTemplates,
+    { onSuccess: (data) => setEditSelectedTemplateName(data[0]?.name) }
+  )
+  const { isLoading, withLoading } = useLoading()
+  const { isLoading: isSaveButtonLoading, withLoading: withSaveButtonLoading } =
+    useLoading()
+  const previewRef = useRef<PreviewRef | null>(null)
+  const { groupColumns, loading: loadingColumnList } =
+    useExportColumnList('InvoiceExport')
 
-type TFieldComment = {
-  [key: string]: string
-}
-type TFieldHeader = {
-  [key: string]: string
-}
+  const [stashTemplates, setStashTemplates] = useState<Template[]>([])
 
-const Index = () => {
-  const appConfig = useAppConfigStore()
-  const [form] = Form.useForm()
-  const [loading, setLoading] = useState(false)
-  const [exporting, setExporting] = useState(false)
-  const allFields = useRef<TExportField[]>([])
-  const fieldComments = useRef<TFieldComment>({})
-  const fieldHeaders = useRef<TFieldHeader>({})
-  const [availableFields, setAvailableFields] = useState<TExportField[]>([])
-  const [fields, setFields] = useState<TExportField[]>([])
-  const [selectedTmpl, setSelectedTmpl] = useState<number | null>(null)
-  const [templates, setTemplates] = useState<TExpTmpl[]>([]) // use ref, no need to save in state
-  const [newTmplName, setNewTmplName] = useState('')
-  const [exportFormat, setExportFormat] = useState<'xlsx' | 'csv'>('xlsx')
-  const [reportTimeStart, setReportTimeStart] = useState<null | Dayjs>(null)
-  const [reportTimeEnd, setReportTimeEnd] = useState<null | Dayjs>(null)
-  const [searchContent, setSearchContent] = useState('')
-
-  const filteredFields = useMemo(
-    () =>
-      // Since react-beautiful-dnd only provide index prop as the key for the draggable component
-      // we cannot just filter these draggable items directly, as this would disrupt the order of
-      // the index of these items. Thus the renderer will set display:none to draggable items which
-      // are filtered out.
-      availableFields.map((field) => ({
-        isHide: !fuzzyMatch(field.name, searchContent),
-        field
-      })),
-    [availableFields, searchContent]
+  const columns = useMemo(
+    () => Object.values(groupColumns ?? {}).flat(),
+    [groupColumns]
   )
 
-  const onExportFormatChange = (e: RadioChangeEvent) => {
-    setExportFormat(e.target.value)
+  // The value of AntD CascadedSelector is a 2D array, the value format is like this:
+  // if the selected fields are ['a', 'b'], which means the user selected the 'b' field under the 'a' field
+  // if the selected fields are ['a'], which means the user selected all fields under the 'a' field
+  // so we need to convert the 2D array to a 1D array to get the selected fields
+  const selectedFieldsList = useMemo(
+    () =>
+      selectedFields
+        .map((cascadedFields) => {
+          if (!cascadedFields.length) {
+            return []
+          }
+
+          return cascadedFields.length === 1
+            ? groupColumns[cascadedFields[0]]
+            : [cascadedFields[cascadedFields.length - 1]]
+        })
+        .flat(),
+    [selectedFields]
+  )
+
+  const updateSelectedTemplate = (template: Template) => {
+    setSelectedTemplate(template)
+    setEditSelectedTemplateName(template.name)
+
+    // Fill invoice fields when selected template was changed
+    setSelectedFields(
+      (template.exportColumns ?? [])
+        .map((fieldName) => {
+          const category = findCategoryByValue(groupColumns, fieldName)
+
+          return [category, fieldName]
+        })
+        .filter(([category]) => !!category) as string[][]
+    )
+
+    // Fill export settings when selected template was changed
+    previewRef.current!.setValue({
+      exportType: template.format as ExportType,
+      ...(template.payload ?? {})
+    })
   }
 
-  const settableFields: TExportField[] = [
-    /* {
-      name: 'Amount To',
-      id: 'amountEnd',
-      node: <Input />
-    }, */
-    // { name: 'Amount From', id: 'amountStart', node: <Input ref={} /> },
-    {
-      name: 'currency',
-      id: 'currency',
-      node: (
-        <Select
-          style={{ width: 120 }}
-          options={[
-            { value: 'EUR', label: 'EUR' },
-            { value: 'USD', label: 'USD' },
-            { value: 'JPY', label: 'JPY' }
-          ]}
-        />
+  const templates = useMemo(
+    () => stashTemplates.concat(data ?? []),
+    [data, stashTemplates]
+  )
+
+  const handleSearchFieldNameSelected = useCallback(
+    (fieldName: string) => {
+      const category = findCategoryByValue(groupColumns, fieldName)
+
+      if (!category) {
+        throw new Error('Category not found')
+      }
+
+      setSelectedFields((selectedFields) =>
+        selectedFields.concat([[category, fieldName]])
       )
     },
-    {
-      name: 'firstName',
-      id: 'firstName',
-      node: <Input style={{ width: '240px' }} />
-    },
-    {
-      name: 'lastName',
-      id: 'lastName',
-      node: <Input style={{ width: '240px' }} />
-    }
-  ]
+    [groupColumns]
+  )
 
-  const getFields = async () => {
-    setLoading(true)
-    const [res, err] = await getExportFieldsWithMore('InvoiceExport', getFields)
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
+  const handleSaveButtonClick = async () => {
+    if (!selectedTemplate || !editSelectedTemplateName) {
+      message.error('Please create a template first')
       return
     }
-    const { exportTmplRes, exportFieldsRes } = res
-    const { templates } = exportTmplRes
-    setTemplates(templates ?? [])
-    const { columns, columnComments, columnHeaders } = exportFieldsRes
-    fieldComments.current = columnComments
-    fieldHeaders.current = columnHeaders
-    const parsedColumns = columns.map((c: string) => {
-      const col = settableFields.find((f) => f.id == c)
-      if (col != null) {
-        return col
-      } else {
-        return { name: c, id: c, node: null }
-      }
-    })
-    setAvailableFields(parsedColumns)
-    allFields.current = parsedColumns
-  }
 
-  const AddCommentTip = ({
-    children,
-    fieldName
-  }: {
-    children: React.ReactNode
-    fieldName: string
-  }) => {
-    return (
-      <Tooltip title={fieldComments.current[fieldName]}>{children}</Tooltip>
+    const settingsValue = await previewRef.current!.getValue(false)
+    const [editedData, err] = await withSaveButtonLoading(
+      () =>
+        saveExportTmplReq({
+          task: 'InvoiceExport',
+          templateId: selectedTemplate.templateId,
+          name: editSelectedTemplateName,
+          exportColumns: selectedFieldsList,
+          payload: omit(settingsValue, 'exportType', 'exportColumns'),
+          format: settingsValue.exportType
+        }),
+      false
     )
-  }
 
-  const removeField = (fieldId: string) => () => {
-    const idx = fields.findIndex((f) => f.id == fieldId)
-    if (idx != -1) {
-      setAvailableFields(update(availableFields, { $push: [fields[idx]] }))
-      setFields(update(fields, { $splice: [[idx, 1]] }))
-    }
-  }
-
-  const reportRangeChange =
-    (
-      dateType: 'reportTimeStart' | 'reportTimeEnd'
-    ): DatePickerProps['onChange'] =>
-    (date) => {
-      if (dateType == 'reportTimeStart') {
-        if (date != null) {
-          date = date.hour(0).minute(0).second(0)
-        }
-        setReportTimeStart(date)
-      } else if (dateType == 'reportTimeEnd') {
-        if (date != null) {
-          date = date.hour(23).minute(59).second(59)
-        }
-        setReportTimeEnd(date)
-      }
-    }
-
-  const exportReportReq = async () => {
-    const exportColumns = fields.map((f) => f.id)
-    const payload = { ...form.getFieldsValue(), reportTimeStart, reportTimeEnd }
-    if (reportTimeStart != null) {
-      payload.reportTimeStart = reportTimeStart.unix()
-    }
-    if (reportTimeEnd != null) {
-      payload.reportTimeEnd = reportTimeEnd.unix()
-    }
-    if (
-      reportTimeStart != null &&
-      reportTimeEnd != null &&
-      reportTimeEnd.isBefore(reportTimeStart)
-    ) {
-      message.error('Report end date must be later than start date')
-      return
-    }
-
-    // return
-    setExporting(true)
-    const [_, err] = await exportDataReq({
-      task: 'InvoiceExport',
-      payload,
-      exportColumns,
-      format: exportFormat
-    })
-    setExporting(false)
-    if (null != err) {
+    if (err) {
       message.error(err.message)
       return
     }
+
+    message.success('Template saved successfully')
+
+    setData(
+      (data ?? []).map((template: Template) =>
+        template.templateId === editedData.template.templateId
+          ? editedData.template
+          : template
+      )
+    )
+    setSelectedTemplate(editedData.template)
+  }
+
+  const handleFieldDelete = (fieldName: string) => {
+    const flatFields = selectedFields
+      .map((field) => {
+        const [category] = field
+
+        // If fields length is 1, it means the user selected all fields under the category
+        return field.length === 1
+          ? groupColumns[category].map((childFieldName) => [
+              category,
+              childFieldName
+            ])
+          : [field]
+      })
+      .flat()
+
+    setSelectedFields(flatFields.filter((fields) => fields[1] !== fieldName))
+  }
+
+  const handleExportButtonClick = async () => {
+    const {
+      exportType,
+      exportColumns,
+      reportTimeEnd,
+      reportTimeStart,
+      timezone,
+      isIncludePaidInvoices
+    } = await previewRef.current!.getValue()
+
+    if (!exportColumns.length) {
+      message.error('Please select at least one field to export')
+      return
+    }
+
+    if (!reportTimeEnd || !reportTimeStart) {
+      message.error('Please select report start and end date')
+      return
+    }
+
+    if (reportTimeEnd < reportTimeStart) {
+      message.error('Report end date should be later than start date')
+      return
+    }
+
+    const payloadValue = {
+      reportTimeEnd,
+      reportTimeStart,
+      timeZone: timezone
+    }
+
+    // If the Include paid invoices checkbox is not checked, the "reportTimeStart" and
+    // "reportTimeEnd" fields should be renamed to "createTimeStart" and "createTimeEnd"
+    const payload = !isIncludePaidInvoices
+      ? mapObjectKeys(payloadValue, 'report', 'create')
+      : payloadValue
+
+    const [_, err] = await withLoading(
+      () =>
+        exportDataReq({
+          task: 'InvoiceExport',
+          payload,
+          format: exportType,
+          exportColumns
+        }),
+      false
+    )
+
+    if (err) {
+      message.error(err.message)
+      return
+    }
+
     message.success(
       'Report is being exported, please check task list for progress.'
     )
-    appConfig.setTaskListOpen(true)
+    appConfigStore.setTaskListOpen(true)
   }
-
-  const onSelectTmpl = (tmplId: number) => {
-    const tmpl = templates.find((t) => t.templateId == tmplId)
-    if (!tmpl) {
-      return
-    }
-    setSelectedTmpl(tmplId)
-    setExportFormat(tmpl.format)
-    const cols = tmpl.exportColumns ?? []
-    const newAvailableFields = allFields.current.filter(
-      (f) => cols.findIndex((c) => c == f.id) == -1
-    )
-    const newFields = cols
-      .map((c) => {
-        const f = allFields.current.find((field) => field.id == c)
-        return f
-      })
-      .filter((c) => c != null)
-    setAvailableFields(newAvailableFields)
-    setFields(newFields as TExportField[])
-    // without the 'as TExportField', TS'll complain: Type '(TExportField | undefined)[]' is not assignable to type 'TExportField[]'.
-    // but I already filtered out the undefined items, why still complain?
-    if (tmpl.payload == null) {
-      return
-    }
-    if (tmpl.payload.reportTimeStart != null) {
-      setReportTimeStart(dayjs.unix(tmpl.payload.reportTimeStart))
-    }
-    if (tmpl.payload.reportTimeEnd != null) {
-      setReportTimeEnd(dayjs.unix(tmpl.payload.reportTimeEnd))
-    }
-    const fieldValues = JSON.parse(JSON.stringify(tmpl.payload))
-    delete fieldValues.reportTimeStart
-    delete fieldValues.reportTimeEnd
-    form.setFieldsValue(fieldValues)
-  }
-
-  // create new template
-  const createTmpl = async () => {
-    if (newTmplName.trim() == '') {
-      message.error('New template name must not be empty')
-      return
-    }
-    const payload = { ...form.getFieldsValue() }
-    if (reportTimeStart != null) {
-      payload.reportTimeStart = reportTimeStart.unix()
-    }
-    if (reportTimeEnd != null) {
-      payload.reportTimeEnd = reportTimeEnd.unix()
-    }
-    setLoading(true)
-    const [res, err] = await saveExportTmplReq({
-      name: newTmplName,
-      task: 'InvoiceExport',
-      payload,
-      exportColumns: fields.map((f) => f.id),
-      format: exportFormat
-    })
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('New preset created')
-    setSelectedTmpl(res.template.templateId)
-    setNewTmplName('')
-
-    // actually, I don't need to call this, just append the createNewTmpl res to the templates array.
-    const [res2, err2] = await getExportTmplReq({
-      task: 'InvoiceExport',
-      page: 0,
-      count: 100
-    })
-    if (null != err2) {
-      message.error(err2.message)
-      return
-    }
-    const { templates } = res2
-    setTemplates(templates)
-  }
-
-  const saveTmpl = async () => {
-    if (selectedTmpl == null) {
-      return
-    }
-    const payload = { ...form.getFieldsValue() }
-    if (reportTimeStart != null) {
-      payload.reportTimeStart = reportTimeStart.unix()
-    }
-    if (reportTimeEnd != null) {
-      payload.reportTimeEnd = reportTimeEnd.unix()
-    }
-    setLoading(true)
-    const [_, err] = await saveExportTmplReq({
-      name: templates.find((t) => t.templateId == selectedTmpl)!.name,
-      templateId: selectedTmpl,
-      task: 'InvoiceExport',
-      payload,
-      exportColumns: fields.map((f) => f.id),
-      format: exportFormat
-    })
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('Preset saved')
-
-    const [res2, err2] = await getExportTmplReq({
-      task: 'InvoiceExport',
-      page: 0,
-      count: 100
-    })
-    if (null != err2) {
-      message.error(err2.message)
-      return
-    }
-    {
-      const { templates } = res2
-      setTemplates(templates)
-    }
-  }
-
-  const removeTmpl = async () => {
-    if (selectedTmpl == null) {
-      return
-    }
-    setLoading(true)
-    const [_, err] = await removeExportTmplReq({
-      templateId: selectedTmpl
-    })
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('Preset removed')
-
-    const [res2, err2] = await getExportTmplReq({
-      task: 'InvoiceExport',
-      page: 0,
-      count: 100
-    })
-    if (null != err2) {
-      message.error(err2.message)
-      return
-    }
-
-    const { templates } = res2
-    setTemplates(templates ?? [])
-    setSelectedTmpl(null)
-  }
-
-  const onDragEnd = (result: DropResult) => {
-    const { destination, source, draggableId } = result
-
-    if (!destination) {
-      return
-    }
-
-    if (
-      destination.droppableId == 'available-fields' &&
-      source.droppableId == 'exported-fields'
-    ) {
-      return
-    }
-
-    // reordering
-    if (
-      destination.droppableId == source.droppableId &&
-      destination.droppableId == 'exported-fields'
-    ) {
-      // reordering in export-fields
-
-      if (destination.index == source.index) {
-        // you are not dragging anything
-        return
-      }
-      const srcItem = fields[source.index]
-      let newFields = fields
-      if (destination.index > source.index) {
-        newFields = update(fields, {
-          $splice: [[destination.index + 1, 0, srcItem]]
-        })
-        newFields = update(newFields, { $splice: [[source.index, 1]] })
-      } else {
-        newFields = update(fields, {
-          $splice: [[destination.index, 0, srcItem]]
-        })
-        newFields = update(newFields, { $splice: [[source.index + 1, 1]] })
-      }
-
-      setFields(newFields)
-      return
-    }
-
-    if (destination.droppableId == null) {
-      return
-    }
-
-    // item is dragged from source to dst
-    // remove item from source
-    const newAvailable = update(availableFields, {
-      $splice: [[source.index, 1]]
-    })
-
-    // add item in dst
-    const item = availableFields.find((f) => f.id == draggableId)
-    const newFields = update(fields, {
-      $splice: [
-        [
-          destination.index,
-          0,
-          { name: item!.name, id: item!.id, node: item!.node }
-        ]
-      ]
-    })
-    // Available
-    setAvailableFields(newAvailable)
-    setFields(newFields)
-  }
-
-  useEffect(() => {
-    getFields()
-  }, [])
 
   return (
     <div>
-      <div className="mb-5 flex justify-between">
-        <div>
-          <Input.Search
-            placeholder="Input tag name"
-            onInput={(e) => setSearchContent(e.currentTarget.value)}
-            // Support users in reset search result using the clear button
-            onSearch={(value) => setSearchContent(value)}
-            allowClear
-          />
-        </div>
-        <div className="flex">
-          <div className="mr-6 flex">
-            <Input
-              value={newTmplName}
-              onChange={(evt) => setNewTmplName(evt.target.value)}
-            />
-            <Tooltip title="New preset">
-              <Button
-                disabled={loading || exporting}
-                onClick={createTmpl}
-                icon={<PlusOutlined />}
-                style={{ padding: 0, border: 'none' }}
-              ></Button>
-            </Tooltip>
-          </div>
-          <div>
-            <span>Preset: </span>
-            <Select
-              disabled={loading || exporting}
-              onChange={onSelectTmpl}
-              value={selectedTmpl}
-              style={{ width: '180px' }}
-              options={templates.map((t) => ({
-                value: t.templateId,
-                label: t.name
-              }))}
-            />
-          </div>
-          <Button
-            style={{ padding: 0, border: 'none' }}
-            icon={<SaveOutlined />}
-            onClick={saveTmpl}
-            disabled={loading || exporting}
-          ></Button>
-          <Button
-            onClick={removeTmpl}
-            style={{ padding: 0, border: 'none' }}
-            icon={<DeleteOutlined />}
-            disabled={loading || exporting}
-          ></Button>
-        </div>
-      </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Spin
-          spinning={loading}
-          indicator={<LoadingOutlined spin />}
-          size={'large'}
-        >
-          <div
-            className="available-fields"
-            style={{ minHeight: '80px', maxHeight: '120px', overflowY: 'auto' }}
-          >
-            <Droppable droppableId="available-fields">
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="flex flex-wrap gap-2"
-                >
-                  {filteredFields.map(({ field, isHide }, idx) => (
-                    <Draggable
-                      key={field.id}
-                      draggableId={field.id.toString()}
-                      index={idx}
-                    >
-                      {(provided) => (
-                        <div
-                          className={`${isHide && 'hidden'}`}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          ref={provided.innerRef}
-                        >
-                          {field.node == null ? (
-                            <AddCommentTip fieldName={field.name}>
-                              <Tag>{fieldHeaders.current[field.name]}</Tag>
-                            </AddCommentTip>
-                          ) : (
-                            <AddCommentTip fieldName={field.name}>
-                              <Tag color="blue">
-                                {fieldHeaders.current[field.name]}
-                              </Tag>
-                            </AddCommentTip>
-                          )}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </div>
-        </Spin>
-        <div className="my-6 flex items-center justify-center">
-          <span className="mr-2">Report from/to:</span>
-          <DatePicker
-            value={reportTimeStart}
-            onChange={reportRangeChange('reportTimeStart')}
-            disabled={loading || exporting}
-          />
-          &nbsp;&nbsp;&nbsp;
-          <DatePicker
-            value={reportTimeEnd}
-            onChange={reportRangeChange('reportTimeEnd')}
-            disabled={loading || exporting}
-          />
-          <div className="mx-4">
-            <span className="mx-2">Export format: </span>
-            <Radio.Group
-              onChange={onExportFormatChange}
-              value={exportFormat}
-              disabled={loading || exporting}
-            >
-              <Radio value={'xlsx'}>Excel xlsx</Radio>
-              <Radio value={'csv'}>CSV</Radio>
-            </Radio.Group>
-          </div>
-        </div>
-
-        <Row className="mb-2">
-          <Col span={8} className="font-bold">
-            Fields
-          </Col>
-          <Col span={12} className="font-bold">
-            Settings
-          </Col>
-          {/* <Col span={4} className="font-bold">
-              Hidden
-            </Col> */}
-        </Row>
-        <div
-          className="my-4 p-2"
-          style={{
-            border: '1px solid #eee',
-            borderRadius: '4px',
-            minHeight: '160px',
-            maxHeight: 'calc(100vh - 540px)',
-            overflowY: 'auto'
+      <div>
+        <TemplateSelector
+          selectedTemplateName={selectedTemplate?.name ?? templates[0]?.name}
+          templates={templates}
+          isLoadingTemplates={isLoadingTemplates}
+          onChange={updateSelectedTemplate}
+        />
+        <AddNewTemplateButton
+          onTemplateCreate={(template) => {
+            setStashTemplates((stashTemplates) =>
+              stashTemplates.concat(template)
+            )
+            updateSelectedTemplate(template)
           }}
-        >
-          <Form form={form} disabled={loading || exporting}>
-            <Row>
-              <Col span={8}>
-                <Droppable droppableId="exported-fields">
-                  {(provided, snapshot) => (
-                    <div
-                      className="exported-fields px-2"
-                      style={{
-                        minHeight: '420px',
-                        // maxHeight: '420px',
-                        // height: '600px',
-                        // overflowY: 'auto',
-                        background: '#F5F5F5',
-                        marginRight: '24px',
-                        border: snapshot.isDraggingOver
-                          ? '1px solid #bbdefb'
-                          : '1px solid #F5F5F5'
-                      }}
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
-                      <div>
-                        {fields.map((f, idx) => (
-                          <Draggable
-                            key={f.id}
-                            draggableId={f.id.toString()}
-                            index={idx}
-                          >
-                            {(provided, snapshot) => (
-                              <div
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                ref={provided.innerRef}
-                              >
-                                <div className="flex items-center">
-                                  <Button
-                                    size="small"
-                                    icon={<DeleteOutlined />}
-                                    style={{
-                                      border: 'unset',
-                                      padding: 0,
-                                      background: 'unset'
-                                    }}
-                                    onClick={removeField(f.id)}
-                                  />
-
-                                  <div
-                                    className="droppable-field flex w-full items-center pl-2"
-                                    style={{
-                                      borderRadius: '4px', // snapshot.isDragging ? '1px solid g'
-                                      height: '42px',
-                                      background: snapshot.isDragging
-                                        ? '#bbdefb'
-                                        : '#F5F5F5'
-                                    }}
-                                  >
-                                    <AddCommentTip fieldName={f.name}>
-                                      {fieldHeaders.current[f.name]}
-                                    </AddCommentTip>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                      </div>
-                      <div style={{ height: '42px' }}>
-                        {provided.placeholder}
-                      </div>
-                    </div>
-                  )}
-                </Droppable>
-              </Col>
-              <Col span={12}>
-                {fields.map((f) => (
-                  <div
-                    className="flex items-center"
-                    style={{ height: '42px' }}
-                    key={f.id}
-                  >
-                    {f.node != null && (
-                      <Form.Item noStyle={true} name={f.id}>
-                        {f.node}
-                      </Form.Item>
-                    )}
-                  </div>
-                ))}
-              </Col>
-              {/* <Col span={4}>
-                {fields.map((f) => (
-                  <div style={{ height: '42px' }} key={f.id}>
-                    <Switch defaultChecked={false} size="small" />
-                  </div>
-                ))}
-              </Col> */}
-            </Row>
-          </Form>
-        </div>
-      </DragDropContext>
-      <div className="flex items-center justify-end gap-4">
+        />
+      </div>
+      <FieldsSelector
+        saveLoading={isSaveButtonLoading}
+        onSaveButtonClick={handleSaveButtonClick}
+        onClearButtonClick={() => setSelectedFields([])}
+        onSearchFieldNameSelected={handleSearchFieldNameSelected}
+        loading={loadingColumnList}
+        columns={columns}
+        value={selectedFields}
+        groupColumns={groupColumns}
+        onChange={setSelectedFields}
+        className="mb-6"
+        loadingTemplates={isLoadingTemplates}
+        templateName={editSelectedTemplateName}
+        onTemplateNameChange={setEditSelectedTemplateName}
+      />
+      <Preview
+        onFieldDelete={handleFieldDelete}
+        ref={previewRef}
+        selectedFields={selectedFieldsList}
+      />
+      <div className="mt-12 flex justify-end">
         <Button
+          disabled={isLoading}
           type="primary"
-          onClick={exportReportReq}
-          loading={exporting}
-          disabled={exporting || loading}
+          loading={isLoading}
+          onClick={handleExportButtonClick}
         >
           Export
         </Button>
@@ -726,5 +308,3 @@ const Index = () => {
     </div>
   )
 }
-
-export default Index
