@@ -1,38 +1,103 @@
 import { LoadingOutlined } from '@ant-design/icons'
-import { Button, Col, Divider, Modal, Row, Spin } from 'antd'
+import { Button, Col, Divider, Empty, message, Modal, Row, Spin } from 'antd'
+import { useEffect, useState } from 'react'
 import { showAmount } from '../../../helpers'
+import { createPreviewReq, updateSubscription } from '../../../requests'
 import { IPreview } from '../../../shared.types'
 
 interface Props {
-  isOpen: boolean
-  loading: boolean
-  previewInfo: IPreview | null
+  subscriptionId?: string
+  newPlanId: number
+  addons: { quantity: number; addonPlanId: number }[]
+  // previewInfo: IPreview | null
+  discountCode: string
   onCancel: () => void
-  onConfirm: () => void
+  onAfterConfirm: () => void
 }
 
 const updateSubPreview = ({
-  isOpen,
-  loading,
-  previewInfo,
+  subscriptionId,
+  newPlanId,
+  addons,
+  discountCode,
   onCancel,
-  onConfirm
+  onAfterConfirm
 }: Props) => {
+  const [loading, setLoading] = useState(true)
+  const [confirming, setConfirming] = useState(false)
+  const [previewInfo, setPreviewInfo] = useState<IPreview | null>(null)
+
+  const createPreview = async () => {
+    console.log('subId/code: ', subscriptionId, '//', discountCode)
+    if (subscriptionId === undefined) {
+      return
+    }
+    setLoading(true)
+    const [previewRes, err] = await createPreviewReq(
+      subscriptionId,
+      newPlanId,
+      addons,
+      discountCode
+    )
+    setLoading(false)
+    if (null != err) {
+      message.error(err.message)
+      return err
+    }
+    console.log('previewRes: ', previewRes)
+    setPreviewInfo(previewRes)
+    return null
+  }
+
+  const onOK = async () => {
+    if (subscriptionId === undefined || previewInfo === null) {
+      return
+    }
+
+    setConfirming(true)
+    const [updateSubRes, err] = await updateSubscription(
+      subscriptionId,
+      newPlanId,
+      addons,
+      previewInfo.totalAmount,
+      previewInfo.currency,
+      previewInfo.prorationDate
+    )
+    setConfirming(false)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+
+    if (updateSubRes.paid) {
+      message.success('Subscription plan upgraded')
+    } else {
+      message.success('Subscription plan upgraded, but not paid')
+    }
+    onAfterConfirm()
+  }
+
+  useEffect(() => {
+    createPreview()
+  }, [])
+
   return (
     <Modal
       title="Subscription Update Preview"
-      open={isOpen}
+      open={true}
       width={'820px'}
       footer={null}
       closeIcon={null}
     >
-      {previewInfo == null ? (
+      {loading && previewInfo === null ? (
         <div className="flex h-full w-full items-center justify-center">
           <Spin
             spinning={true}
             indicator={<LoadingOutlined style={{ fontSize: '32px' }} spin />}
           />
         </div>
+      ) : !loading && previewInfo === null ? (
+        <Empty description="No preview" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
         <>
           <Row style={{ display: 'flex', alignItems: 'center' }}>
@@ -56,67 +121,71 @@ const updateSubPreview = ({
           <Divider plain style={{ margin: '8px 0', color: '#757575' }}>
             ↓ Next billing period invoices ↓
           </Divider>
-          {previewInfo.nextPeriodInvoice.lines.map((i, idx) => (
-            <Row key={idx}>
-              <Col span={10}>{i.description} </Col>
-              <Col span={4}>
-                {showAmount(i.unitAmountExcludingTax as number, i.currency)}
-              </Col>
-              <Col span={1}></Col>
-              <Col span={3}>{i.quantity}</Col>
-              <Col span={2}>{showAmount(i.tax as number, i.currency)}</Col>
-              <Col span={3}>{showAmount(i.amount as number, i.currency)}</Col>
-            </Row>
-          ))}
+          {previewInfo !== null &&
+            previewInfo.nextPeriodInvoice.lines.map((i, idx) => (
+              <Row key={idx}>
+                <Col span={10}>{i.description} </Col>
+                <Col span={4}>
+                  {showAmount(i.unitAmountExcludingTax as number, i.currency)}
+                </Col>
+                <Col span={1}></Col>
+                <Col span={3}>{i.quantity}</Col>
+                <Col span={2}>{showAmount(i.tax as number, i.currency)}</Col>
+                <Col span={3}>{showAmount(i.amount as number, i.currency)}</Col>
+              </Row>
+            ))}
           <Row>
             <Col span={20}></Col>
             <Col span={2} style={{ fontWeight: 'bold' }}>
-              {showAmount(
-                previewInfo.nextPeriodInvoice.totalAmount,
-                previewInfo.nextPeriodInvoice.currency
-              )}
+              {previewInfo !== null &&
+                showAmount(
+                  previewInfo.nextPeriodInvoice.totalAmount,
+                  previewInfo.nextPeriodInvoice.currency
+                )}
             </Col>
           </Row>
 
           <Divider plain style={{ margin: '8px 0', color: '#757575' }}>
             ↓ Current billing period invoices ↓
           </Divider>
-          {previewInfo.invoice.lines.map((i, idx) => (
-            <Row key={idx}>
-              <Col span={10}>{i.description} </Col>
-              <Col span={4}>
-                {showAmount(i.unitAmountExcludingTax as number, i.currency)}
-              </Col>
-              <Col span={1}></Col>
-              <Col span={3}>{i.quantity}</Col>
-              <Col span={2}>{showAmount(i.tax as number, i.currency)}</Col>
-              <Col span={3}>{showAmount(i.amount as number, i.currency)}</Col>
-            </Row>
-          ))}
+          {previewInfo !== null &&
+            previewInfo.invoice.lines.map((i, idx) => (
+              <Row key={idx}>
+                <Col span={10}>{i.description} </Col>
+                <Col span={4}>
+                  {showAmount(i.unitAmountExcludingTax as number, i.currency)}
+                </Col>
+                <Col span={1}></Col>
+                <Col span={3}>{i.quantity}</Col>
+                <Col span={2}>{showAmount(i.tax as number, i.currency)}</Col>
+                <Col span={3}>{showAmount(i.amount as number, i.currency)}</Col>
+              </Row>
+            ))}
           <Row>
             <Col span={20}></Col>
             <Col span={2} style={{ fontWeight: 'bold' }}>
-              {showAmount(
-                previewInfo.invoice.totalAmount,
-                previewInfo.invoice.currency
-              )}
+              {previewInfo !== null &&
+                showAmount(
+                  previewInfo.invoice.totalAmount,
+                  previewInfo.invoice.currency
+                )}
             </Col>
           </Row>
-          <div className="mx-0 my-4 flex justify-end gap-4">
-            <Button disabled={loading} onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              onClick={onConfirm}
-              loading={loading}
-              disabled={loading}
-            >
-              Confirm
-            </Button>
-          </div>
         </>
       )}
+      <div className="mx-0 my-4 flex justify-end gap-4">
+        <Button disabled={loading || confirming} onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button
+          type="primary"
+          onClick={onOK}
+          loading={loading}
+          disabled={loading || confirming || previewInfo === null}
+        >
+          OK
+        </Button>
+      </div>
     </Modal>
   )
 }

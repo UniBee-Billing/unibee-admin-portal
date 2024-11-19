@@ -24,19 +24,16 @@ import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
 import { daysBetweenDate, showAmount } from '../../helpers'
 import {
-  createPreviewReq,
   extendDueDateReq,
   getAppConfigReq,
   getSubDetailWithMore,
   resumeSubReq,
   setSimDateReq,
-  terminateSubReq,
-  updateSubscription
+  terminateSubReq
 } from '../../requests'
 import '../../shared.css'
 import {
   IPlan,
-  IPreview,
   ISubAddon,
   ISubscriptionType
 } from '../../shared.types'
@@ -63,18 +60,23 @@ const Index = ({
   const [plans, setPlans] = useState<IPlan[]>([])
   const [selectedPlan, setSelectedPlan] = useState<null | number>(null) // null: not selected
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
-  const [confirming, setConfirming] = useState(false)
   const [dueDateModal, setDueDateModal] = useState(false)
   const [newDueDate, setNewDueDate] = useState('')
+  const [discountCode, setDiscountCode] = useState('')
+  const onCodeChange: React.ChangeEventHandler<HTMLInputElement> = (evt) => {
+    // http://localhost:5174/subscription/sub20241118IAi7PXOfVwCwRxg
+    // BF-Q4-2024, 50% off
+    const v = evt.target.value
+    setDiscountCode(v)
+  }
   const [changePlanModal, setChangePlanModal] = useState(false)
   const [cancelSubModalOpen, setCancelSubModalOpen] = useState(false) // newly created sub has status == pending if user hasn't paid yet, user(or admin) can cancel this sub.
   const [changeSubStatusModal, setChangeSubStatusModal] = useState(false) // admin can mark subStatus from pending to incomplete
-  const [preview, setPreview] = useState<IPreview | null>(null)
   const [loading, setLoading] = useState(true)
   const [terminateModal, setTerminateModal] = useState(false)
   const [resumeModal, setResumeModal] = useState(false)
   const [activeSub, setActiveSub] = useState<ISubscriptionType | null>(null) // null: when page is loading, no data is ready yet.
-  const [endSubMode, setEndSubMode] = useState<1 | 2 | null>(null) // 1: immediate, 2: end of this billing cycole, null: not selected
+  const [endSubMode, setEndSubMode] = useState<1 | 2 | null>(null) // 1: immediate, 2: end of this billing cycle, null: not selected
   const [isProduction, setIsProduction] = useState(false)
   const [simDateOpen, setSimDateOpen] = useState(false)
   const simDateContainerRef = useRef(null)
@@ -175,71 +177,22 @@ const Index = ({
       message.error('Addon quantity must be greater than 0.')
       return
     }
-    setConfirming(true)
-    const err = await createPreview()
-    setConfirming(false)
-    if (err != null) {
-      return
-    }
     togglePreviewModal()
   }
 
-  const createPreview = async () => {
-    setPreview(null) // clear the last preview, otherwise, users might see the old value before the new value return
+  const getSelectedAddons = () => {
     const plan = plans.find((p) => p.id == selectedPlan)
     const addons =
       plan != null && plan.addons != null
         ? plan.addons.filter((a) => a.checked)
         : []
-
-    const [previewRes, err] = await createPreviewReq(
-      activeSub!.subscriptionId,
-      selectedPlan as number,
-      addons.map((a) => ({
-        quantity: a.quantity as number,
-        addonPlanId: a.id
-      }))
-    )
-    if (null != err) {
-      message.error(err.message)
-      return err
-    }
-    // setPreviewModalOpen(false);
-    setPreview(previewRes)
-    return null
+    return addons.map((a) => ({
+      quantity: a.quantity as number,
+      addonPlanId: a.id
+    }))
   }
 
-  // confirm the changed plan
-  const onConfirm = async () => {
-    const plan = plans.find((p) => p.id == selectedPlan)
-    const addons =
-      plan != null && plan.addons != null
-        ? plan.addons.filter((a) => a.checked)
-        : []
-
-    setConfirming(true)
-    const [updateSubRes, err] = await updateSubscription(
-      activeSub?.subscriptionId as string,
-      selectedPlan as number,
-      addons.map((a) => ({
-        quantity: a.quantity as number,
-        addonPlanId: a.id
-      })),
-      preview?.totalAmount as number,
-      preview?.currency as string,
-      preview?.prorationDate as number
-    )
-    setConfirming(false)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-
-    if (updateSubRes.paid) {
-      message.success('Plan updated')
-    } else {
-      message.success('Plan updated, but not paid')
-    }
+  const onAfterConfirm = async () => {
     togglePreviewModal()
     toggleChangPlanModal()
     fetchData()
@@ -524,24 +477,29 @@ const Index = ({
         onConfirm={onExtendDueDate}
         // setDueDate={setDueDate}
       />
-      <ChangePlanModal
-        isOpen={changePlanModal}
-        subInfo={activeSub}
-        selectedPlanId={selectedPlan}
-        plans={plans}
-        setSelectedPlan={setSelectedPlan}
-        onAddonChange={onAddonChange}
-        onCancel={toggleChangPlanModal}
-        onConfirm={openPreviewModal}
-        loading={confirming}
-      />
-      <UpdateSubPreviewModal
-        isOpen={previewModalOpen}
-        loading={confirming}
-        previewInfo={preview}
-        onCancel={togglePreviewModal}
-        onConfirm={onConfirm}
-      />
+      {changePlanModal && (
+        <ChangePlanModal
+          subInfo={activeSub}
+          selectedPlanId={selectedPlan}
+          plans={plans}
+          setSelectedPlan={setSelectedPlan}
+          discountCode={discountCode}
+          onCodeChange={onCodeChange}
+          onAddonChange={onAddonChange}
+          onCancel={toggleChangPlanModal}
+          onConfirm={openPreviewModal}
+        />
+      )}
+      {previewModalOpen && (
+        <UpdateSubPreviewModal
+          discountCode={discountCode}
+          subscriptionId={activeSub?.subscriptionId}
+          newPlanId={selectedPlan as number}
+          addons={getSelectedAddons()}
+          onCancel={togglePreviewModal}
+          onAfterConfirm={onAfterConfirm}
+        />
+      )}
       {cancelSubModalOpen && (
         <CancelPendingSubModal
           subInfo={activeSub}
@@ -556,7 +514,6 @@ const Index = ({
           refresh={fetchData}
         />
       )}
-      {/* <UserInfoSection user={activeSub?.user || null} /> */}
       <SubscriptionInfoSection
         subInfo={activeSub}
         plans={plans}

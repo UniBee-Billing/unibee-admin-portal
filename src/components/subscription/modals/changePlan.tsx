@@ -1,5 +1,5 @@
 import { Button, Divider, Input, message, Modal, Select, Tag } from 'antd'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import HiddenIcon from '../../../assets/hidden.svg?react'
 import { formatPlanPrice } from '../../../helpers'
 import { applyDiscountPreviewReq } from '../../../requests'
@@ -7,11 +7,11 @@ import { DiscountCode, IPlan, ISubscriptionType } from '../../../shared.types'
 import Plan from '../plan'
 
 interface Props {
-  isOpen: boolean
-  loading: boolean
   subInfo: ISubscriptionType | null
   selectedPlanId: number | null
   plans: IPlan[]
+  discountCode: string
+  onCodeChange: React.ChangeEventHandler<HTMLInputElement>
   // onSelectPlanChange: (planId: number) => void;
   setSelectedPlan: (planId: number) => void
   onAddonChange: (
@@ -29,18 +29,16 @@ type DiscountCodePreview = {
 }
 
 const ChangePlan = ({
-  isOpen,
-  loading,
   subInfo,
   selectedPlanId,
   plans,
-  // onSelectPlanChange,
+  discountCode,
+  onCodeChange,
   setSelectedPlan,
   onAddonChange,
   onCancel,
   onConfirm
 }: Props) => {
-  const [code, setCode] = useState('')
   const [codePreview, setCodePreview] = useState<DiscountCodePreview | null>(
     null
   ) // null: no code provided
@@ -58,36 +56,42 @@ const ChangePlan = ({
     return null
   }
 
-  const onCodeChange: React.ChangeEventHandler<HTMLInputElement> = (evt) => {
-    // http://localhost:5174/subscription/sub20241118IAi7PXOfVwCwRxg
-    // BF-Q4-2024, 50% off
-    const v = evt.target.value
-    setCode(v)
-    if (v === '') {
+  const onOK = () => {
+    if (codePreview === null && discountCode !== '') {
+      // code input, but not applied
+      console.log('not applied')
+      onPreviewCode()
+      return
+    }
+    onConfirm()
+  }
+
+  useEffect(() => {
+    if (discountCode === '') {
       setCodePreview(null)
     }
-  }
+  }, [discountCode])
 
   const onPreviewCode = async () => {
     setCodeChecking(true)
-    const [res, err] = await applyDiscountPreviewReq(code, selectedPlanId)
+    const [res, err] = await applyDiscountPreviewReq(
+      discountCode,
+      selectedPlanId
+    )
     setCodeChecking(false)
     console.log('apply code preview: ', res)
     if (null != err) {
       message.error(err.message)
       return
     }
-    const { valid, discountCode } = res
-    setCodePreview({ isValid: valid, preview: discountCode })
+    setCodePreview({ isValid: res.valid, preview: res.discountCode })
   }
 
   return (
     <Modal
       title="Change plan"
-      open={isOpen}
+      open={true}
       width={'480px'}
-      // onOk={onConfirm}
-      // onCancel={onCancel}
       footer={null}
       closeIcon={null}
     >
@@ -151,7 +155,7 @@ const ChangePlan = ({
       <div className="mx-auto my-4 flex w-64 flex-col justify-center">
         <div className="flex gap-5">
           <Input
-            value={code}
+            value={discountCode}
             onChange={onCodeChange}
             status={
               codePreview !== null && !codePreview.isValid ? 'error' : undefined
@@ -180,17 +184,15 @@ const ChangePlan = ({
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-4">
-        <Button onClick={onCancel} disabled={loading}>
+        <Button onClick={onCancel} disabled={codeChecking}>
           Cancel
         </Button>
         <Button
           type="primary"
-          onClick={onConfirm}
-          loading={loading}
+          onClick={onOK}
+          loading={codeChecking}
           disabled={
-            loading ||
-            codeChecking ||
-            (codePreview !== null && !codePreview.isValid)
+            codeChecking || (codePreview !== null && !codePreview.isValid)
           }
         >
           OK
