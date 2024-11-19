@@ -57,8 +57,10 @@ const ChangePlan = ({
   }
 
   const onOK = () => {
-    if (codePreview === null && discountCode !== '') {
-      // code input, but not applied
+    if (
+      (codePreview === null && discountCode !== '') || // code provided, but not applied
+      (codePreview !== null && codePreview.preview?.code !== discountCode) // code provided and applied, but changed in input field
+    ) {
       console.log('not applied')
       onPreviewCode()
       return

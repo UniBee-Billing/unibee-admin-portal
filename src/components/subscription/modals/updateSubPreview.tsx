@@ -61,7 +61,8 @@ const updateSubPreview = ({
       addons,
       previewInfo.totalAmount,
       previewInfo.currency,
-      previewInfo.prorationDate
+      previewInfo.prorationDate,
+      discountCode
     )
     setConfirming(false)
     if (null != err) {
