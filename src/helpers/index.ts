@@ -4,7 +4,6 @@ import Dinero from 'dinero.js'
 import passwordValidator from 'password-validator'
 import { CURRENCY } from '../constants'
 import {
-  DiscountCode,
   IPlan,
   ISubscriptionType,
   TInvoicePerm,
