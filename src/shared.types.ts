@@ -253,6 +253,7 @@ interface IOneTimeHistoryItem {
 interface IPreview {
   totalAmount: number
   currency: string
+  discount: DiscountCode
   prorationDate: number
   invoice: Invoice
   nextPeriodInvoice: Invoice
@@ -343,8 +344,9 @@ type InvoiceItem = {
   periodStart?: number
   proration?: boolean
   quantity: number | string
-  tax: number | string // tax amount
-  taxPercentage: number | string // tax rate
+  tax: number | string // tax amount,
+  taxPercentage: number | string // tax rate. Admin can manually create an invoice, in this case, tax percentage is a <Input /> value, hence the string type.
+  // when the invoice is generated from backend, it's always number.
   unitAmountExcludingTax: number | string
   discountAmount: number
   originAmount?: number
@@ -355,7 +357,9 @@ type Invoice = {
   currency: string
   subscriptionAmount: number
   subscriptionAmountExcludingTax: number
+  discountAmount: number
   taxAmount: number
+  taxPercentage: number
   totalAmount: number
   totalAmountExcludingTax: number
   lines: InvoiceItem[]
@@ -549,6 +553,7 @@ export type {
   IBillableMetrics,
   IMerchantMemberProfile,
   IMerchantUserProfile,
+  Invoice,
   InvoiceItem,
   IOneTimeHistoryItem,
   IPlan,

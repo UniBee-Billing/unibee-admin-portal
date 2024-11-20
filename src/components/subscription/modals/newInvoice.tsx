@@ -55,7 +55,6 @@ const Index = ({
   closeModal,
   refresh
 }: Props) => {
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   if (detail != null) {
     detail.lines?.forEach((item) => {
@@ -382,13 +381,6 @@ const Index = ({
     return asNumber ? total : showAmount(total, currency, true)
   }
 
-  const goToDiscountCode = () => {
-    if (detail === null || detail.discount === null) {
-      return
-    }
-    navigate(`/discount-code/${detail.discount?.id}`)
-  }
-
   return (
     <Modal
       title={refundMode ? 'Refund invoice detail' : 'New invoice Detail'}
@@ -559,10 +551,7 @@ const Index = ({
           </Col>
           <Col className="text-red-800" span={4}>
             {` ${detail?.discountAmount !== undefined && detail?.discountAmount > 0 ? '-' : ''}${showAmount(detail?.discountAmount, detail?.currency, true)}`}
-            <CouponPopover
-              coupon={detail?.discount}
-              goToDetail={goToDiscountCode}
-            />
+            <CouponPopover coupon={detail?.discount} />
           </Col>
         </Row>
       )}

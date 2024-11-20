@@ -32,11 +32,7 @@ import {
   terminateSubReq
 } from '../../requests'
 import '../../shared.css'
-import {
-  IPlan,
-  ISubAddon,
-  ISubscriptionType
-} from '../../shared.types'
+import { IPlan, ISubAddon, ISubscriptionType } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CouponPopover from '../ui/couponPopover'
 import { SubscriptionStatus } from '../ui/statusTag'
@@ -64,10 +60,7 @@ const Index = ({
   const [newDueDate, setNewDueDate] = useState('')
   const [discountCode, setDiscountCode] = useState('')
   const onCodeChange: React.ChangeEventHandler<HTMLInputElement> = (evt) => {
-    // http://localhost:5174/subscription/sub20241118IAi7PXOfVwCwRxg
-    // BF-Q4-2024, 50% off
-    const v = evt.target.value
-    setDiscountCode(v)
+    setDiscountCode(evt.target.value)
   }
   const [changePlanModal, setChangePlanModal] = useState(false)
   const [cancelSubModalOpen, setCancelSubModalOpen] = useState(false) // newly created sub has status == pending if user hasn't paid yet, user(or admin) can cancel this sub.
@@ -361,8 +354,11 @@ const Index = ({
   }, [])
 
   useEffect(() => {
-    if (!changePlanModal && activeSub != null) {
-      setSelectedPlan(activeSub?.planId)
+    if (!changePlanModal) {
+      setDiscountCode('')
+      if (activeSub != null) {
+        setSelectedPlan(activeSub?.planId)
+      }
     }
   }, [changePlanModal])
 
@@ -562,7 +558,6 @@ const SubscriptionInfoSection = ({
   const navigate = useNavigate()
   const appConfigStore = useAppConfigStore()
   const goToPlan = (planId: number) => navigate(`/plan/${planId}`)
-  const goToDiscount = (codeId: number) => navigate(`/discount-code/${codeId}`)
 
   return (
     <>
@@ -686,12 +681,7 @@ const SubscriptionInfoSection = ({
           {subInfo &&
             subInfo.latestInvoice &&
             subInfo.latestInvoice.discount && (
-              <CouponPopover
-                coupon={subInfo.latestInvoice.discount}
-                goToDetail={() =>
-                  goToDiscount(subInfo.latestInvoice?.discount?.id as number)
-                }
-              />
+              <CouponPopover coupon={subInfo.latestInvoice.discount} />
             )}
         </Col>
 

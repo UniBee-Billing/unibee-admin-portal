@@ -4,6 +4,7 @@ import HiddenIcon from '../../../assets/hidden.svg?react'
 import { formatPlanPrice } from '../../../helpers'
 import { applyDiscountPreviewReq } from '../../../requests'
 import { DiscountCode, IPlan, ISubscriptionType } from '../../../shared.types'
+import CouponPopover from '../../ui/couponPopover'
 import Plan from '../plan'
 
 interface Props {
@@ -61,7 +62,6 @@ const ChangePlan = ({
       (codePreview === null && discountCode !== '') || // code provided, but not applied
       (codePreview !== null && codePreview.preview?.code !== discountCode) // code provided and applied, but changed in input field
     ) {
-      console.log('not applied')
       onPreviewCode()
       return
     }
@@ -70,6 +70,7 @@ const ChangePlan = ({
 
   useEffect(() => {
     if (discountCode === '') {
+      // user manually cleared the code, preview obj also need to be cleared
       setCodePreview(null)
     }
   }, [discountCode])
@@ -81,7 +82,6 @@ const ChangePlan = ({
       selectedPlanId
     )
     setCodeChecking(false)
-    console.log('apply code preview: ', res)
     if (null != err) {
       message.error(err.message)
       return
@@ -177,7 +177,10 @@ const ChangePlan = ({
           {codePreview !== null &&
             (codePreview.isValid ? (
               <>
-                <span className="text-xs text-green-500">Code valid</span>
+                <span className="text-xs text-green-500">
+                  Code valid{' '}
+                  <CouponPopover coupon={codePreview.preview as DiscountCode} />
+                </span>
               </>
             ) : (
               <span className="text-xs text-red-500">Code invalid</span>

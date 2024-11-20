@@ -1,7 +1,6 @@
 import { Button, Col, Divider, message, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { REFUND_STATUS } from '../../../constants'
 import {
   getInvoicePermission,
@@ -19,9 +18,7 @@ interface Props {
 }
 
 const Index = ({ detail, closeModal }: Props) => {
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  // const appConfigStore = useAppConfigStore();
   if (detail != null && detail.lines) {
     detail.lines.forEach((item) => {
       item.id = randomString(8)
@@ -54,13 +51,6 @@ const Index = ({ detail, closeModal }: Props) => {
     }
     message.success('Invoice sent.')
     closeModal()
-  }
-
-  const goToCouponDetail = () => {
-    if (detail === null || detail.discount === null) {
-      return
-    }
-    navigate(`/discount-code/${detail.discount?.id}`)
   }
 
   return (
@@ -169,10 +159,7 @@ const Index = ({ detail, closeModal }: Props) => {
           {detail.discount !== null ? (
             <span>
               {`${showAmount(detail.discountAmount * -1, detail.currency, true)}`}
-              <CouponPopover
-                coupon={detail.discount}
-                goToDetail={goToCouponDetail}
-              />
+              <CouponPopover coupon={detail.discount} />
             </span>
           ) : (
             showAmount(0, detail.currency)
