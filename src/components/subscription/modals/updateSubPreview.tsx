@@ -3,12 +3,7 @@ import { Button, Col, Divider, Empty, message, Modal, Row, Spin } from 'antd'
 import { useEffect, useState } from 'react'
 import { showAmount } from '../../../helpers'
 import { createPreviewReq, updateSubscription } from '../../../requests'
-import {
-  DiscountCode,
-  Invoice,
-  InvoiceItem,
-  IPreview
-} from '../../../shared.types'
+import { Invoice, InvoiceItem, IPreview } from '../../../shared.types'
 
 interface Props {
   subscriptionId?: string
