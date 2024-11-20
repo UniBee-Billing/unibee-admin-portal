@@ -2,7 +2,6 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
 import update from 'immutability-helper'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { CURRENCY } from '../../../constants'
 import { randomString, showAmount } from '../../../helpers'
 import {

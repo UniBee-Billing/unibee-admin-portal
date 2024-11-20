@@ -131,7 +131,7 @@ const updateSubPreview = ({
           {previewInfo !== null && (
             <SubtotalInfo
               iv={previewInfo.nextPeriodInvoice}
-              discount={previewInfo.discount}
+              // discount={previewInfo.discount}
             />
           )}
 
@@ -145,7 +145,7 @@ const updateSubPreview = ({
           {previewInfo !== null && (
             <SubtotalInfo
               iv={previewInfo.invoice}
-              discount={previewInfo.discount}
+              // discount={previewInfo.discount}
             />
           )}
         </>
@@ -188,13 +188,7 @@ const ShowInvoiceItems = ({ items }: { items: InvoiceItem[] }) =>
     </Row>
   ))
 
-const SubtotalInfo = ({
-  iv,
-  discount
-}: {
-  iv: Invoice
-  discount: DiscountCode
-}) => (
+const SubtotalInfo = ({ iv }: { iv: Invoice }) => (
   <>
     <div className="flex w-full justify-end">
       <div style={{ width: '260px' }}>
