@@ -2,19 +2,19 @@ import { InfoCircleOutlined } from '@ant-design/icons'
 import { Col, Popover, Row } from 'antd'
 import dayjs from 'dayjs'
 import { isEmpty } from 'lodash'
+import { useNavigate } from 'react-router-dom'
 import { showAmount } from '../../helpers'
 import { DiscountCode } from '../../shared.types'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 
-const Index = ({
-  goToDetail,
-  coupon
-}: {
-  goToDetail: () => void
-  coupon?: DiscountCode
-}) => {
+const Index = ({ coupon }: { coupon?: DiscountCode }) => {
   if (isEmpty(coupon)) {
     return null
+  }
+
+  const navigate = useNavigate()
+  const goToDetail = () => {
+    navigate(`/discount-code/${coupon.id}`)
   }
   return (
     <Popover

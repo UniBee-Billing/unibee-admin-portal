@@ -826,14 +826,16 @@ export const markAsIncompleteReq = async (
 export const createPreviewReq = async (
   subscriptionId: string,
   newPlanId: number,
-  addons: { quantity: number; addonPlanId: number }[]
+  addons: { quantity: number; addonPlanId: number }[],
+  discountCode?: string
 ) => {
   try {
     const res = await request.post(`/merchant/subscription/update_preview`, {
       subscriptionId,
       newPlanId,
       quantity: 1,
-      addonParams: addons
+      addonParams: addons,
+      discountCode
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -854,7 +856,8 @@ export const updateSubscription = async (
   addons: { quantity: number; addonPlanId: number }[],
   confirmTotalAmount: number,
   confirmCurrency: string,
-  prorationDate: number
+  prorationDate: number,
+  discountCode?: string
 ) => {
   try {
     const res = await request.post(`/merchant/subscription/update_submit`, {
@@ -864,7 +867,8 @@ export const updateSubscription = async (
       addonParams: addons,
       confirmTotalAmount,
       confirmCurrency,
-      prorationDate
+      prorationDate,
+      discountCode
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -1557,6 +1561,26 @@ export const toggleDiscountCodeActivateReq = async (
     return [null, e]
   }
 }
+
+export const applyDiscountPreviewReq = async (code: string, planId: number) => {
+  try {
+    const res = await request.post(`/merchant/discount/plan_apply_preview`, {
+      code,
+      planId
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // ----------
 type TGetInvoicesReq = {
   userId?: number

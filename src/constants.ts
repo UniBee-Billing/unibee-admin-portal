@@ -107,6 +107,7 @@ export const DISCOUNT_CODE_BILLING_TYPE: { [key: number]: string } = {
   1: 'one-time',
   2: 'recurring'
 }
+
 export const DISCOUNT_CODE_TYPE: { [key: number]: string } = {
   1: 'percentage',
   2: 'fixed-amount'
