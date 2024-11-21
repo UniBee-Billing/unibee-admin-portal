@@ -1,21 +1,26 @@
 import { useState } from 'react'
-import { safeRun } from '../utils'
+import { safeRun, WithError } from '../utils'
 
 export const useLoading = () => {
   const [isLoading, setIsLoading] = useState(false)
 
-  const withLoading = async <T>(
+  async function withLoading<T, S>(
     fn: () => Promise<T>,
-    safe: boolean | undefined = true
-  ) => {
+    safe: S
+  ): Promise<S extends true ? WithError<T> : T>
+  async function withLoading<T>(fn: () => Promise<T>): Promise<WithError<T>>
+  async function withLoading<T, S extends boolean | undefined>(
+    fn: () => Promise<T>,
+    safe?: S
+  ) {
     setIsLoading(true)
 
-    const executeFn = safe ? () => safeRun(fn) : fn
+    const executeFn = (safe ?? true) ? () => safeRun(fn) : fn
     const res = await executeFn()
 
     setIsLoading(false)
 
-    return res
+    return res as Promise<WithError<T>> | Promise<T>
   }
 
   return {
