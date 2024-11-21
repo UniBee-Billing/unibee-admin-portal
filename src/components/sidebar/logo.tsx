@@ -7,11 +7,11 @@ export const Logo = () => {
   return (
     <div className="my-4 flex justify-center text-white">
       <img
+        className="h-20"
         src={
           merchantInfoStore.companyLogo ||
           withEnvBasePath('/logoPlaceholder.png')
         }
-        height={'80px'}
       />
     </div>
   )

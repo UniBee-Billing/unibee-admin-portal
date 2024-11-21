@@ -17,7 +17,7 @@ import PaymentDetail from './components/payment/detail'
 import PaymentList from './components/payment/list'
 import PricePlanList from './components/plan'
 import PlanDetail from './components/plan/detail'
-import Report from './components/report'
+import { ReportPage } from './components/report'
 import Settings from './components/settings/index'
 import WebhookLogs from './components/settings/webHooks/webhookLogs'
 import SubscriptionDetail from './components/subscription/detail'
@@ -196,7 +196,7 @@ export const APP_ROUTES: RouteObject[] = [
   {
     id: 'report',
     path: 'report',
-    element: <Report />
+    element: <ReportPage />
   },
   {
     path: '*',
