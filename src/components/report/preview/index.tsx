@@ -21,7 +21,7 @@ interface PreviewValue {
 }
 
 export interface PreviewRef {
-  getValue: (valudate?: boolean) => Promise<PreviewValue>
+  getValue: (validate?: boolean) => Promise<PreviewValue>
   setValue: (value: Omit<PreviewValue, 'exportColumns'>) => void
 }
 
