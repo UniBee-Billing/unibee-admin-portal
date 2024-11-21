@@ -1,6 +1,7 @@
 import { Select, SelectProps } from 'antd'
 import { useMemo } from 'react'
 import { Country, useCountries } from '../hooks'
+import { ignoreCaseLabelFilter } from '../utils/filters'
 
 interface CountrySelectorProps extends SelectProps {
   onCountryChange?: (country: Country) => void
@@ -30,11 +31,7 @@ export const CountrySelector = ({
     <Select
       loading={loading}
       showSearch
-      filterOption={(input, option) =>
-        ((option?.label as string) ?? '')
-          .toLowerCase()
-          .includes(input.toLowerCase())
-      }
+      filterOption={ignoreCaseLabelFilter}
       placeholder="Select a country"
       onChange={handleCountryChange}
       options={options}
