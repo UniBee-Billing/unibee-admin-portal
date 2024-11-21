@@ -116,8 +116,8 @@ const updateSubPreview = ({
               <span style={{ fontWeight: 'bold' }}>Total</span>
             </Col>
           </Row>
-          <Divider plain style={{ margin: '8px 0', color: '#757575' }}>
-            ↓ Next billing period invoices ↓
+          <Divider plain style={{ margin: '12px 0', color: '#757575' }}>
+            ↓ Next billing period invoice ↓
           </Divider>
           {previewInfo !== null && (
             <ShowInvoiceItems items={previewInfo.nextPeriodInvoice.lines} />
@@ -126,12 +126,14 @@ const updateSubPreview = ({
           {previewInfo !== null && (
             <SubtotalInfo
               iv={previewInfo.nextPeriodInvoice}
+              hideDetail={true}
+              showButton={true}
               // discount={previewInfo.discount}
             />
           )}
 
-          <Divider plain style={{ margin: '8px 0', color: '#757575' }}>
-            ↓ Current billing period invoices ↓
+          <Divider plain style={{ margin: '12px 0', color: '#757575' }}>
+            ↓ Current billing period invoice ↓
           </Divider>
           {previewInfo !== null && (
             <ShowInvoiceItems items={previewInfo.invoice.lines} />
@@ -183,47 +185,86 @@ const ShowInvoiceItems = ({ items }: { items: InvoiceItem[] }) =>
     </Row>
   ))
 
-const SubtotalInfo = ({ iv }: { iv: Invoice }) => (
-  <>
-    <div className="flex w-full justify-end">
-      <div style={{ width: '260px' }}>
-        <Divider plain style={{ margin: '8px 0', color: '#757575' }}></Divider>
+const SubtotalInfo = ({
+  iv,
+  hideDetail,
+  showButton
+}: {
+  iv: Invoice
+  hideDetail?: boolean
+  showButton?: boolean
+}) => {
+  const [hide, setHide] = useState(!!hideDetail)
+  return (
+    <>
+      <div className="flex w-full justify-end">
+        <div style={{ width: '260px' }}>
+          <Divider
+            plain
+            style={{ margin: '8px 0', color: '#757575' }}
+          ></Divider>
+        </div>
       </div>
-    </div>
 
-    <Row>
-      <Col span={17}></Col>
-      <Col span={4}>Subtotal</Col>
-      <Col span={3} style={{ fontWeight: 'bold' }}>
-        {showAmount(iv.subscriptionAmountExcludingTax, iv.currency)}
-      </Col>
-    </Row>
-    <Row>
-      <Col span={17}></Col>
-      <Col span={4}>
-        Total Discounted
-        {/* <CouponPopover coupon={discount} /> */}
-      </Col>
-      <Col span={3} style={{ fontWeight: 'bold' }}>
-        {showAmount(-1 * iv.discountAmount, iv.currency)}
-      </Col>
-    </Row>
-    <Row>
-      <Col span={17}></Col>
-      <Col span={4}>
-        VAT(
-        {`${iv.taxPercentage / 100}%`})
-      </Col>
-      <Col span={3} style={{ fontWeight: 'bold' }}>
-        {showAmount(iv.taxAmount, iv.currency)}
-      </Col>
-    </Row>
-    <Row>
-      <Col span={17}></Col>
-      <Col span={4}>Total</Col>
-      <Col span={3} style={{ fontWeight: 'bold' }}>
-        {showAmount(iv.totalAmount, iv.currency)}
-      </Col>
-    </Row>
-  </>
-)
+      {
+        <div
+          style={{
+            height: hide ? '0px' : '66px',
+            visibility: hide ? 'hidden' : 'visible'
+          }}
+        >
+          <Row>
+            <Col span={17}></Col>
+            <Col span={4}>Subtotal</Col>
+            <Col span={3} style={{ fontWeight: 'bold' }}>
+              {showAmount(iv.subscriptionAmountExcludingTax, iv.currency)}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={17}></Col>
+            <Col span={4}>
+              Total Discounted
+              {/* <CouponPopover coupon={discount} /> */}
+            </Col>
+            <Col span={3} style={{ fontWeight: 'bold' }}>
+              {showAmount(-1 * iv.discountAmount, iv.currency)}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={17}></Col>
+            <Col span={4}>
+              VAT(
+              {`${iv.taxPercentage / 100}%`})
+            </Col>
+            <Col span={3} style={{ fontWeight: 'bold' }}>
+              {showAmount(iv.taxAmount, iv.currency)}
+            </Col>
+          </Row>
+        </div>
+      }
+      <Row>
+        <Col span={17}></Col>
+        <Col span={4}>
+          Total{' '}
+          {showButton && (
+            <span
+              className="text-xs text-blue-500 hover:cursor-pointer"
+              onClick={() => setHide(!hide)}
+            >
+              {hide ? 'more' : 'less'}
+            </span>
+          )}
+        </Col>
+        <Col span={3} style={{ fontWeight: 'bold' }}>
+          {showAmount(iv.totalAmount, iv.currency)}
+        </Col>
+      </Row>
+    </>
+  )
+}
+
+{
+  /* <Button type="link" onClick={() => setHide(!hide)}>
+              push
+            </Button> */
+}
