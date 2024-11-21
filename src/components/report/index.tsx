@@ -76,6 +76,8 @@ export const ReportPage = () => {
   const { groupColumns, loading: loadingColumnList } =
     useExportColumnList('InvoiceExport')
 
+  // When new template was created and saved, the new template will be added to the stashTemplates
+  // and the stashTemplates will be merged with the data
   const [stashTemplates, setStashTemplates] = useState<Template[]>([])
 
   const columns = useMemo(
