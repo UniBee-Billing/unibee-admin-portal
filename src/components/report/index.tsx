@@ -1,6 +1,6 @@
 import { Button, message } from 'antd'
 import { omit } from 'lodash'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useExportColumnList, useFetch, useLoading } from '../../hooks'
 import { exportDataReq, saveExportTmplReq } from '../../requests'
 import { request } from '../../requests/client'
@@ -65,7 +65,9 @@ export const ReportPage = () => {
   } = useFetch<Template[]>(
     '/merchant/task/export_template_list',
     getTemplates,
-    { onSuccess: (data) => setEditSelectedTemplateName(data[0]?.name) }
+    {
+      onError: (err) => message.error(err.message)
+    }
   )
   const { isLoading, withLoading } = useLoading()
   const { isLoading: isSaveButtonLoading, withLoading: withSaveButtonLoading } =
@@ -101,27 +103,30 @@ export const ReportPage = () => {
     [selectedFields]
   )
 
-  const updateSelectedTemplate = (template: Template) => {
-    setSelectedTemplate(template)
-    setEditSelectedTemplateName(template.name)
+  const updateSelectedTemplate = useCallback(
+    (template: Template) => {
+      setSelectedTemplate(template)
+      setEditSelectedTemplateName(template.name)
 
-    // Fill invoice fields when selected template was changed
-    setSelectedFields(
-      (template.exportColumns ?? [])
-        .map((fieldName) => {
-          const category = findCategoryByValue(groupColumns, fieldName)
+      // Fill invoice fields when selected template was changed
+      setSelectedFields(
+        (template.exportColumns ?? [])
+          .map((fieldName) => {
+            const category = findCategoryByValue(groupColumns, fieldName)
 
-          return [category, fieldName]
-        })
-        .filter(([category]) => !!category) as string[][]
-    )
+            return [category, fieldName]
+          })
+          .filter(([category]) => !!category) as string[][]
+      )
 
-    // Fill export settings when selected template was changed
-    previewRef.current!.setValue({
-      exportType: template.format as ExportType,
-      ...(template.payload ?? {})
-    })
-  }
+      // Fill export settings when selected template was changed
+      previewRef.current!.setValue({
+        exportType: template.format as ExportType,
+        ...(template.payload ?? {})
+      })
+    },
+    [groupColumns]
+  )
 
   const templates = useMemo(
     () => stashTemplates.concat(data ?? []),
@@ -256,6 +261,14 @@ export const ReportPage = () => {
     )
     appConfigStore.setTaskListOpen(true)
   }
+
+  useEffect(() => {
+    // When first time loading templates, select the first template by default
+    // When create a new template, select the new template by default
+    if (templates.length) {
+      updateSelectedTemplate(templates[0])
+    }
+  }, [templates])
 
   return (
     <div>
