@@ -1,6 +1,9 @@
 import { Select } from 'antd'
 import { useMemo } from 'react'
-import { ignoreCaseLabelFilter } from '../../../utils'
+import {
+  convertPascalCaseToSentence,
+  ignoreCaseLabelFilter
+} from '../../../utils'
 
 interface FieldsSearchInputProps {
   columns: string[]
@@ -14,7 +17,11 @@ export const FieldsSearchInput = ({
   onChange
 }: FieldsSearchInputProps) => {
   const options = useMemo(
-    () => (columns ?? []).map((col) => ({ value: col, label: col })),
+    () =>
+      (columns ?? []).map((col) => ({
+        value: col,
+        label: convertPascalCaseToSentence(col)
+      })),
     [columns]
   )
 
