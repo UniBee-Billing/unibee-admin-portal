@@ -19,3 +19,9 @@ export const mapObjectKeys = (
 
 export const convertMillisecondsToSeconds = (date: number) =>
   isMilliseconds(date) ? date / 1000 : date
+
+export const convertPascalCaseToSentence = (word: string) =>
+  word
+    .replace(/([A-Z])/g, (_, capture) => ` ${capture.toLowerCase()}`)
+    .trim()
+    .replace(/^[a-z]/, (str) => str.toUpperCase())

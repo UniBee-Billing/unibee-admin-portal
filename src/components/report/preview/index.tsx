@@ -33,7 +33,11 @@ export const Preview = forwardRef<PreviewRef, PreviewProps>(
 
     if (previousFields !== selectedFields) {
       setPreviousFields(selectedFields)
-      setFields(selectedFields)
+      setFields(
+        selectedFields.sort(
+          (prev, next) => fields.indexOf(prev) - fields.indexOf(next)
+        )
+      )
     }
 
     useImperativeHandle(ref, () => ({
