@@ -76,10 +76,6 @@ export const ReportPage = () => {
   const { groupColumns, loading: loadingColumnList } =
     useExportColumnList('InvoiceExport')
 
-  // When new template was created and saved, the new template will be added to the stashTemplates
-  // and the stashTemplates will be merged with the data
-  const [stashTemplates, setStashTemplates] = useState<Template[]>([])
-
   const columns = useMemo(
     () => Object.values(groupColumns ?? {}).flat(),
     [groupColumns]
@@ -129,11 +125,7 @@ export const ReportPage = () => {
     },
     [groupColumns]
   )
-
-  const templates = useMemo(
-    () => stashTemplates.concat(data ?? []),
-    [data, stashTemplates]
-  )
+  const templates = data ?? []
 
   const handleSearchFieldNameSelected = useCallback(
     (fieldName: string) => {
@@ -267,10 +259,13 @@ export const ReportPage = () => {
   useEffect(() => {
     // When first time loading templates, select the first template by default
     // When create a new template, select the new template by default
-    if (templates.length) {
+    if (
+      templates.length ||
+      selectedTemplate?.templateId !== templates[0]?.templateId
+    ) {
       updateSelectedTemplate(templates[0])
     }
-  }, [templates])
+  }, [templates, updateSelectedTemplate, selectedTemplate])
 
   return (
     <div>
@@ -282,12 +277,9 @@ export const ReportPage = () => {
           onChange={updateSelectedTemplate}
         />
         <AddNewTemplateButton
-          onTemplateCreate={(template) => {
-            setStashTemplates((stashTemplates) =>
-              stashTemplates.concat(template)
-            )
-            updateSelectedTemplate(template)
-          }}
+          onTemplateCreate={(template) =>
+            setData([template].concat(templates ?? []))
+          }
         />
       </div>
       <FieldsSelector

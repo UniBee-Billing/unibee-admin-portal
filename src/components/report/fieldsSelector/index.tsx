@@ -2,6 +2,7 @@ import { PlusOutlined, SaveOutlined } from '@ant-design/icons'
 import { Button, Cascader, Input } from 'antd'
 import { useMemo, useState } from 'react'
 import { WithStyle } from '../../../shared.types'
+import { convertPascalCaseToSentence } from '../../../utils'
 import { FieldsSearchInput } from './fieldsSearchInput'
 
 interface FieldsSelectorProps {
@@ -20,9 +21,6 @@ interface FieldsSelectorProps {
 }
 
 const mapOptionWithSameValue = (value: string) => ({ label: value, value })
-
-const mapOptionsWithSameValue = (values: string[]) =>
-  values.map(mapOptionWithSameValue)
 
 export const FieldsSelector = ({
   templateName,
@@ -49,9 +47,12 @@ export const FieldsSelector = ({
     () =>
       categories.map((category) => ({
         ...mapOptionWithSameValue(category),
-        children: mapOptionsWithSameValue(groupColumns[category])
+        children: groupColumns[category].map((value) => ({
+          label: convertPascalCaseToSentence(value),
+          value
+        }))
       })),
-    [categories]
+    [categories, groupColumns]
   )
 
   return (
