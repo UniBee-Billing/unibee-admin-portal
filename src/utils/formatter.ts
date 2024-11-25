@@ -22,7 +22,7 @@ export const convertMillisecondsToSeconds = (date: number) =>
 
 export const convertPascalCaseToSentence = (word: string) =>
   word
-    .replace(/([A-Z])/g, (_, capture) => ` ${capture.toLowerCase()}`)
+    .replace(/([A-Z])/g, (_, capture) => ` ${capture}`)
     .trim()
     .replace(/^[a-z]/, (str) => str.toUpperCase())
 

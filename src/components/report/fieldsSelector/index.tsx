@@ -1,11 +1,13 @@
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons'
 import { Button, Cascader, Input } from 'antd'
-import { useMemo, useState } from 'react'
+import { CascaderRef } from 'antd/es/cascader'
+import { useMemo, useRef, useState } from 'react'
 import { WithStyle } from '../../../shared.types'
 import { safeConvertPascalCaseToSentence } from '../../../utils'
 import { FieldsSearchInput } from './fieldsSearchInput'
 
 interface FieldsSelectorProps {
+  searchContent: string
   value: string[][]
   saveLoading?: boolean
   templateName?: string
@@ -34,9 +36,11 @@ export const FieldsSelector = ({
   onSearchFieldNameSelected,
   onClearButtonClick,
   onSaveButtonClick,
-  saveLoading
+  saveLoading,
+  searchContent
 }: WithStyle<FieldsSelectorProps>) => {
   const [isOpenCascader, setIsOpenCascader] = useState(false)
+  const cascaderRef = useRef<CascaderRef | null>(null)
 
   const categories = useMemo(
     () => Object.keys(groupColumns ?? []),
@@ -55,6 +59,11 @@ export const FieldsSelector = ({
     [categories, groupColumns]
   )
 
+  const handleAddMatrixButtonClick = () => {
+    setIsOpenCascader(true)
+    cascaderRef.current!.focus()
+  }
+
   return (
     <div className={`rounded-xl bg-[#f5f5f5] p-5 ${className}`}>
       <div className="flex justify-between">
@@ -65,6 +74,7 @@ export const FieldsSelector = ({
             onChange={(e) => onTemplateNameChange(e.target.value)}
           />
           <FieldsSearchInput
+            searchContent={searchContent}
             onChange={onSearchFieldNameSelected}
             loadingColumns={loading}
             columns={columns}
@@ -80,21 +90,22 @@ export const FieldsSelector = ({
         </Button>
       </div>
       <div className="mt-4 flex justify-between">
-        <div>
+        <div className="flex w-[60%]">
           <Button
             color="default"
             variant="filled"
             icon={<PlusOutlined />}
-            onClick={() => setIsOpenCascader(true)}
+            onClick={handleAddMatrixButtonClick}
           >
             Add Matrix
           </Button>
           <Cascader
+            ref={cascaderRef}
             open={isOpenCascader}
             value={value}
             onFocus={() => setIsOpenCascader(true)}
             onBlur={() => setIsOpenCascader(false)}
-            className="ml-3 w-[320px]"
+            className="ml-3 grow"
             options={options}
             multiple
             showCheckedStrategy={Cascader.SHOW_CHILD}

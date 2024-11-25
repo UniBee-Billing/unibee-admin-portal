@@ -6,6 +6,7 @@ import {
 } from '../../../utils'
 
 interface FieldsSearchInputProps {
+  searchContent: string
   columns: string[]
   loadingColumns: boolean
   onChange: (value: string) => void
@@ -14,7 +15,8 @@ interface FieldsSearchInputProps {
 export const FieldsSearchInput = ({
   columns,
   loadingColumns,
-  onChange
+  onChange,
+  searchContent
 }: FieldsSearchInputProps) => {
   const options = useMemo(
     () =>
@@ -27,6 +29,7 @@ export const FieldsSearchInput = ({
 
   return (
     <Select
+      value={searchContent}
       showSearch
       className="w-[270px]"
       onChange={onChange}
