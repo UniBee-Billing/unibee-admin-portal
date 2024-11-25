@@ -333,9 +333,10 @@ export const ReportPage = () => {
             onChange={updateSelectedTemplate}
           />
           <AddNewTemplateButton
-            onTemplateCreate={(template) =>
+            onTemplateCreate={(template) => {
               setData([template].concat(templates ?? []))
-            }
+              updateSelectedTemplate(template)
+            }}
           />
         </div>
         <Button

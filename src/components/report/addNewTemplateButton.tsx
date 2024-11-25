@@ -37,6 +37,7 @@ export const AddNewTemplateButton = ({
     message.success('Template created successfully')
     onTemplateCreate(data.template)
     closeAddNewTemplateModal()
+    setTemplateName(undefined)
   }
 
   return (
