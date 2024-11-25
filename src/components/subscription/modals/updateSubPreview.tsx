@@ -206,42 +206,41 @@ const SubtotalInfo = ({
         </div>
       </div>
 
-      {
-        <div
-          style={{
-            height: hide ? '0px' : '66px',
-            visibility: hide ? 'hidden' : 'visible'
-          }}
-        >
-          <Row>
-            <Col span={17}></Col>
-            <Col span={4}>Subtotal</Col>
-            <Col span={3} style={{ fontWeight: 'bold' }}>
-              {showAmount(iv.subscriptionAmountExcludingTax, iv.currency)}
-            </Col>
-          </Row>
-          <Row>
-            <Col span={17}></Col>
-            <Col span={4}>
-              Total Discounted
-              {/* <CouponPopover coupon={discount} /> */}
-            </Col>
-            <Col span={3} style={{ fontWeight: 'bold' }}>
-              {showAmount(-1 * iv.discountAmount, iv.currency)}
-            </Col>
-          </Row>
-          <Row>
-            <Col span={17}></Col>
-            <Col span={4}>
-              VAT(
-              {`${iv.taxPercentage / 100}%`})
-            </Col>
-            <Col span={3} style={{ fontWeight: 'bold' }}>
-              {showAmount(iv.taxAmount, iv.currency)}
-            </Col>
-          </Row>
-        </div>
-      }
+      <div
+        style={{
+          height: hide ? '0px' : '66px',
+          visibility: hide ? 'hidden' : 'visible'
+        }}
+      >
+        <Row>
+          <Col span={17}></Col>
+          <Col span={4}>Subtotal</Col>
+          <Col span={3} style={{ fontWeight: 'bold' }}>
+            {showAmount(iv.subscriptionAmountExcludingTax, iv.currency)}
+          </Col>
+        </Row>
+        <Row>
+          <Col span={17}></Col>
+          <Col span={4}>
+            Total Discounted
+            {/* <CouponPopover coupon={discount} /> */}
+          </Col>
+          <Col span={3} style={{ fontWeight: 'bold' }}>
+            {showAmount(-1 * iv.discountAmount, iv.currency)}
+          </Col>
+        </Row>
+        <Row>
+          <Col span={17}></Col>
+          <Col span={4}>
+            VAT(
+            {`${iv.taxPercentage / 100}%`})
+          </Col>
+          <Col span={3} style={{ fontWeight: 'bold' }}>
+            {showAmount(iv.taxAmount, iv.currency)}
+          </Col>
+        </Row>
+      </div>
+
       <Row>
         <Col span={17}></Col>
         <Col span={4}>
