@@ -2,7 +2,7 @@ import { DeleteOutlined } from '@ant-design/icons'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from 'antd'
-import { convertPascalCaseToSentence } from '../../../utils'
+import { safeConvertPascalCaseToSentence } from '../../../utils'
 
 interface FieldItemProps {
   value: string
@@ -27,7 +27,7 @@ export const FieldItem = ({ value, onDeleteButtonClick }: FieldItemProps) => {
       className="group flex h-8 items-center justify-between rounded px-3 py-1 hover:bg-[#ebebeb]"
     >
       <div className="flex-1" {...listeners}>
-        {convertPascalCaseToSentence(value)}
+        {safeConvertPascalCaseToSentence(value)}
       </div>
       <Button
         onClick={() => onDeleteButtonClick(value)}

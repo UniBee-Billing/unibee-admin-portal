@@ -2,7 +2,7 @@ import { PlusOutlined, SaveOutlined } from '@ant-design/icons'
 import { Button, Cascader, Input } from 'antd'
 import { useMemo, useState } from 'react'
 import { WithStyle } from '../../../shared.types'
-import { convertPascalCaseToSentence } from '../../../utils'
+import { safeConvertPascalCaseToSentence } from '../../../utils'
 import { FieldsSearchInput } from './fieldsSearchInput'
 
 interface FieldsSelectorProps {
@@ -48,7 +48,7 @@ export const FieldsSelector = ({
       categories.map((category) => ({
         ...mapOptionWithSameValue(category),
         children: groupColumns[category].map((value) => ({
-          label: convertPascalCaseToSentence(value),
+          label: safeConvertPascalCaseToSentence(value),
           value
         }))
       })),
