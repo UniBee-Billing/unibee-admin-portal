@@ -259,13 +259,10 @@ export const ReportPage = () => {
   useEffect(() => {
     // When first time loading templates, select the first template by default
     // When create a new template, select the new template by default
-    if (
-      templates.length ||
-      selectedTemplate?.templateId !== templates[0]?.templateId
-    ) {
+    if (templates.length && !selectedTemplate) {
       updateSelectedTemplate(templates[0])
     }
-  }, [templates, updateSelectedTemplate, selectedTemplate])
+  }, [templates, selectedTemplate, updateSelectedTemplate])
 
   return (
     <div>
