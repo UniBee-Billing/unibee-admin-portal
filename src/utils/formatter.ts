@@ -1,5 +1,5 @@
 import { IProfile } from '../shared.types'
-import { isMilliseconds } from './is'
+import { isMilliseconds, isWord } from './is'
 
 export const formatUserName = (user: IProfile) =>
   `${user.firstName} ${user.lastName}`
@@ -25,3 +25,6 @@ export const convertPascalCaseToSentence = (word: string) =>
     .replace(/([A-Z])/g, (_, capture) => ` ${capture.toLowerCase()}`)
     .trim()
     .replace(/^[a-z]/, (str) => str.toUpperCase())
+
+export const safeConvertPascalCaseToSentence = (word: string) =>
+  isWord(word) ? convertPascalCaseToSentence(word) : word
