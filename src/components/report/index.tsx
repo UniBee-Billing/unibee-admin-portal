@@ -30,7 +30,7 @@ const findCategoryByValue = (
 
 const getTemplates = async (url: string) => {
   const { data } = await request.post(url, { task: 'InvoiceExport' })
-  const { templates } = data.data
+  const { templates = [] } = data.data ?? {}
 
   if (templates?.length) {
     return templates
@@ -43,7 +43,7 @@ const getTemplates = async (url: string) => {
   })
 
   if (err) {
-    return err
+    throw err
   }
 
   return [newTemplateData.template]
