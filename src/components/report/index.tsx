@@ -22,11 +22,11 @@ import {
 } from './templateSelector'
 
 const findCategoryByValue = (
-  columns: Record<string, string[]>,
+  columns: Record<string, string[]> | undefined,
   value: string
 ) => {
   const [category] =
-    Object.entries(columns).find(([_, fields]) =>
+    Object.entries(columns ?? []).find(([_, fields]) =>
       fields.map((field) => field.toLowerCase()).includes(value.toLowerCase())
     ) ?? []
 
