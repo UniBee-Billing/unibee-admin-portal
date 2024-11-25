@@ -13,7 +13,7 @@ export const useExportColumnList = (task: TExportDataType) => {
     (url) => request.post(url, { task })
   )
 
-  const cols: ExportColumnsRes = data?.data ?? {}
+  const cols: ExportColumnsRes = data?.data ?? { columns: [], groupColumns: [] }
 
   return { ...fetchStates, ...cols }
 }
