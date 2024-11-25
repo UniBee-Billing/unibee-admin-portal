@@ -1,8 +1,13 @@
-import { Button, message } from 'antd'
+import { DeleteOutlined } from '@ant-design/icons'
+import { Button, message, Modal } from 'antd'
 import { omit } from 'lodash'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useExportColumnList, useFetch, useLoading } from '../../hooks'
-import { exportDataReq, saveExportTmplReq } from '../../requests'
+import {
+  exportDataReq,
+  removeExportTmplReq,
+  saveExportTmplReq
+} from '../../requests'
 import { request } from '../../requests/client'
 import { useAppConfigStore } from '../../stores'
 import { mapObjectKeys } from '../../utils'
@@ -70,8 +75,11 @@ export const ReportPage = () => {
     }
   )
   const { isLoading, withLoading } = useLoading()
+  const { isLoading: isDeleteLoading, withLoading: withDeleteLoading } =
+    useLoading()
   const { isLoading: isSaveButtonLoading, withLoading: withSaveButtonLoading } =
     useLoading()
+  const [searchContent, setSearchContent] = useState<string>('')
   const previewRef = useRef<PreviewRef | null>(null)
   const { groupColumns, loading: loadingColumnList } =
     useExportColumnList('InvoiceExport')
@@ -105,6 +113,7 @@ export const ReportPage = () => {
     (template: Template) => {
       setSelectedTemplate(template)
       setEditSelectedTemplateName(template.name)
+      setSearchContent('')
 
       // Fill invoice fields when selected template was changed
       setSelectedFields(
@@ -129,6 +138,11 @@ export const ReportPage = () => {
 
   const handleSearchFieldNameSelected = useCallback(
     (fieldName: string) => {
+      if (selectedFieldsList.includes(fieldName)) {
+        message.error('Field already selected')
+        return
+      }
+
       const category = findCategoryByValue(groupColumns, fieldName)
 
       if (!category) {
@@ -138,8 +152,9 @@ export const ReportPage = () => {
       setSelectedFields((selectedFields) =>
         selectedFields.concat([[category, fieldName]])
       )
+      setSearchContent(fieldName)
     },
-    [groupColumns]
+    [groupColumns, selectedFieldsList]
   )
 
   const handleSaveButtonClick = async () => {
@@ -195,6 +210,44 @@ export const ReportPage = () => {
       .flat()
 
     setSelectedFields(flatFields.filter((fields) => fields[1] !== fieldName))
+  }
+
+  const handleDeleteButtonClick = async () => {
+    if (templates.length === 1) {
+      message.error('Cannot delete the only template')
+      return
+    }
+
+    if (!selectedTemplate) {
+      message.error('No template selected')
+      return
+    }
+
+    Modal.confirm({
+      title: `Delete ${selectedTemplate.name} template?`,
+      content:
+        'Are you sure to delete this report template? Deleted template cannot be restored.',
+      onOk: async () => {
+        const [_, err] = await withDeleteLoading(
+          () =>
+            removeExportTmplReq({ templateId: selectedTemplate.templateId }),
+          false
+        )
+
+        if (err) {
+          message.error(err.message)
+          return
+        }
+
+        const deletedTemplates = (data ?? []).filter(
+          (template) => template.templateId !== selectedTemplate.templateId
+        )
+
+        message.success('Template deleted successfully')
+        setData(deletedTemplates)
+        updateSelectedTemplate(deletedTemplates[0])
+      }
+    })
   }
 
   const handleExportButtonClick = async () => {
@@ -256,6 +309,11 @@ export const ReportPage = () => {
     appConfigStore.setTaskListOpen(true)
   }
 
+  const handleClearButtonClick = () => {
+    setSelectedFields([])
+    setSearchContent('')
+  }
+
   useEffect(() => {
     // When first time loading templates, select the first template by default
     // When create a new template, select the new template by default
@@ -266,23 +324,33 @@ export const ReportPage = () => {
 
   return (
     <div>
-      <div>
-        <TemplateSelector
-          selectedTemplateName={selectedTemplate?.name ?? templates[0]?.name}
-          templates={templates}
-          isLoadingTemplates={isLoadingTemplates}
-          onChange={updateSelectedTemplate}
-        />
-        <AddNewTemplateButton
-          onTemplateCreate={(template) =>
-            setData([template].concat(templates ?? []))
-          }
-        />
+      <div className="flex justify-between">
+        <div>
+          <TemplateSelector
+            selectedTemplateName={selectedTemplate?.name ?? templates[0]?.name}
+            templates={templates}
+            isLoadingTemplates={isLoadingTemplates}
+            onChange={updateSelectedTemplate}
+          />
+          <AddNewTemplateButton
+            onTemplateCreate={(template) =>
+              setData([template].concat(templates ?? []))
+            }
+          />
+        </div>
+        <Button
+          loading={isDeleteLoading}
+          onClick={handleDeleteButtonClick}
+          icon={<DeleteOutlined />}
+        >
+          Delete
+        </Button>
       </div>
       <FieldsSelector
+        searchContent={searchContent}
         saveLoading={isSaveButtonLoading}
         onSaveButtonClick={handleSaveButtonClick}
-        onClearButtonClick={() => setSelectedFields([])}
+        onClearButtonClick={handleClearButtonClick}
         onSearchFieldNameSelected={handleSearchFieldNameSelected}
         loading={loadingColumnList}
         columns={columns}
