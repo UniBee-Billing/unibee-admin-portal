@@ -25,7 +25,7 @@ const Index = () => {
     setOtp(value.toUpperCase())
   }
 
-  const goLogin = () => navigate('login')
+  const goLogin = () => navigate('/login')
 
   // submit basic signup ingo
   const onSubmitBasicInfo = async () => {
@@ -61,7 +61,7 @@ const Index = () => {
         if (res.data.code != 0) {
           throw new Error(res.data.message)
         }
-        navigate('login', {
+        navigate('/login', {
           state: { msg: 'Thanks for your sign-up.' }
         })
       })
