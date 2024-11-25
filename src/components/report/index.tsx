@@ -155,7 +155,7 @@ export const ReportPage = () => {
           task: 'InvoiceExport',
           templateId: selectedTemplate.templateId,
           name: editSelectedTemplateName,
-          exportColumns: selectedFieldsList,
+          exportColumns: settingsValue.exportColumns,
           payload: omit(settingsValue, 'exportType', 'exportColumns'),
           format: settingsValue.exportType
         }),
