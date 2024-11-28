@@ -6,7 +6,6 @@ import { getUserProfile } from '../../requests'
 import { IProfile } from '../../shared.types'
 import UserInfoSection from '../shared/userInfo'
 import AdminNote from './adminNote'
-import './detail.css'
 import InvoiceTab from './invoicesTab'
 import PaymentTab from './paymentTab'
 import SubscriptionTab from './subscription'
@@ -90,10 +89,22 @@ const Index = () => {
   const togglePush = () => setAdminNotePushed(!adminNotePushed)
 
   return (
-    <div className="flex" style={{ position: 'relative', overflowX: 'hidden' }}>
+    <div
+      className="flex"
+      style={{
+        position: 'relative',
+        overflowX: 'hidden',
+        height: 'calc(100vh - 210px)'
+      }}
+    >
       <div
-        style={{ width: adminNotePushed ? '100%' : '79%' }}
-        id="subscription-main-content"
+        style={{
+          marginTop: '24px',
+          overflowY: 'auto',
+          paddingRight: '18px',
+          width: adminNotePushed ? '100%' : '69%',
+          transition: 'width 0.3s ease-in-out'
+        }}
       >
         <Divider orientation="left" style={{ margin: '16px 0' }}>
           User Info

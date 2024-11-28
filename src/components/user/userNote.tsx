@@ -72,6 +72,7 @@ const Index = ({
       className="absolute h-full rounded"
       style={{
         width: '30%',
+        height: 'calc(100vh - 208px)',
         right: pushed ? '-30%' : 0,
         border: '1px solid #EEE',
         transition: 'right 0.3s ease-in-out'
