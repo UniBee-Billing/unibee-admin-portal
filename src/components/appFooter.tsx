@@ -4,7 +4,6 @@ import {
   TwitterOutlined
 } from '@ant-design/icons'
 import { Divider } from 'antd'
-import React from 'react'
 
 const Index = () => (
   <div
