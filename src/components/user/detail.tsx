@@ -109,8 +109,23 @@ const Index = () => {
   ]
 
   return (
-    <div className="flex" style={{ position: 'relative', overflowX: 'hidden' }}>
-      <div style={{ width: userNotePushed ? '100%' : '69%' }}>
+    <div
+      className="flex"
+      style={{
+        position: 'relative',
+        height: 'calc(100vh - 208px)',
+        overflowX: 'hidden'
+      }}
+    >
+      <div
+        style={{
+          marginTop: '24px',
+          overflowY: 'auto',
+          width: userNotePushed ? '100%' : '69%',
+          transition: 'width 0.3s ease-in-out',
+          paddingRight: '18px'
+        }}
+      >
         <Divider orientation="left" style={{ margin: '16px 0' }}>
           Brief Info
         </Divider>

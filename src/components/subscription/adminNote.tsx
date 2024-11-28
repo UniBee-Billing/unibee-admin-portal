@@ -1,8 +1,8 @@
 import { DoubleRightOutlined } from '@ant-design/icons'
-import { Button, Divider, message } from 'antd'
+import { Badge, Button, Divider, message } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
-import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
+import { formatDate } from '../../helpers'
 import { createAdminNoteReq, getAdminNoteReq } from '../../requests'
 import { TAdminNote } from '../../shared.types'
 import './adminNote.css'
@@ -72,20 +72,27 @@ const Index = ({
 
   return (
     <div
-      id="admin-note-wrapper"
       className="absolute h-full rounded"
       style={{
-        width: '20%',
-        right: pushed ? '-20%' : 0,
-        border: '1px solid #EEE'
+        width: '30%',
+        height: 'calc(100vh - 210px)',
+        right: pushed ? '-30%' : 0,
+        border: '1px solid #EEE',
+        transition: 'right 0.3s ease-in-out'
       }}
     >
       <div
         onClick={togglePush}
         className="absolute flex cursor-pointer items-center justify-center"
-        style={{ width: '32px', height: '32px', left: '-36px', top: '-4px' }}
+        style={{ width: '32px', height: '32px', left: '-24px', top: '-4px' }}
       >
-        <DoubleRightOutlined rotate={pushed ? 180 : 0} />
+        {noteList.length === 0 ? (
+          <DoubleRightOutlined rotate={pushed ? 180 : 0} />
+        ) : (
+          <Badge count={noteList.length} offset={[-30, 7]} size="small">
+            <DoubleRightOutlined rotate={pushed ? 180 : 0} />
+          </Badge>
+        )}
       </div>
       <div className="flex h-8 items-center justify-center bg-gray-200 text-gray-500">
         Admin side note
@@ -155,9 +162,7 @@ const Note = ({ content }: { content: TAdminNote }) => {
       <div className="mb-1 whitespace-pre-wrap">{content.note}</div>
       <div className="my-2" style={{ fontSize: '11px', color: 'lightgray' }}>
         <span>{content.firstName}</span>:&nbsp;&nbsp;
-        {dayjs(new Date(content.createTime * 1000)).format(
-          'YYYY-MMM-DD HH:MM:ss'
-        )}
+        {formatDate(content.createTime, true)}
       </div>
     </div>
   )
