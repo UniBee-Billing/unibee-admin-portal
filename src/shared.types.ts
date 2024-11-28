@@ -454,6 +454,16 @@ type TAdminNote = {
   note: string
 }
 
+type TUserNote = {
+  id: number
+  createTime: number
+  note: string
+  userId: number
+  userAccount: IProfile
+  merchantMemberId: number
+  merchantMember: IMerchantMemberProfile
+}
+
 type TWebhook = {
   id: number
   merchantId: number
@@ -572,6 +582,7 @@ export type {
   TMerchantInfo,
   TransactionItem,
   TRefund,
+  TUserNote,
   TWebhook,
   TWebhookLogs,
   UserInvoice

@@ -8,6 +8,7 @@ import InvoiceTab from '../subscription/invoicesTab'
 import TransactionTab from '../subscription/paymentTab'
 import UserAccountTab from '../subscription/userAccountTab'
 import ProductList from './productList'
+import UserNote from './userNote'
 
 const GoBackBtn = () => {
   const navigate = useNavigate()
@@ -36,6 +37,8 @@ const Index = () => {
   const [userProfile, setUserProfile] = useState<IProfile | undefined>(
     undefined
   )
+  const [userNotePushed, setUserNotePushed] = useState(true)
+  const togglePush = () => setUserNotePushed(!userNotePushed)
 
   const fetchUserProfile = async () => {
     const [user, err] = await getUserProfile(userId as number, fetchUserProfile)
@@ -106,12 +109,16 @@ const Index = () => {
   ]
 
   return (
-    <div>
-      <Divider orientation="left" style={{ margin: '16px 0' }}>
-        Brief Info
-      </Divider>
-      <UserInfo user={userProfile} />
-      <Tabs activeKey={activeTab} items={tabItems} onChange={onTabChange} />
+    <div className="flex" style={{ position: 'relative', overflowX: 'hidden' }}>
+      <div style={{ width: userNotePushed ? '100%' : '69%' }}>
+        <Divider orientation="left" style={{ margin: '16px 0' }}>
+          Brief Info
+        </Divider>
+        <UserInfo user={userProfile} />
+        <Tabs activeKey={activeTab} items={tabItems} onChange={onTabChange} />
+      </div>
+
+      <UserNote pushed={userNotePushed} togglePush={togglePush} />
     </div>
   )
 }
