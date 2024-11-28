@@ -1203,6 +1203,61 @@ export const createAdminNoteReq = async ({
   }
 }
 
+export const getUserNoteReq = async ({
+  userId,
+  page,
+  count,
+  refreshCb
+}: {
+  userId: number
+  page: number
+  count: number
+  refreshCb: (() => void) | null
+}) => {
+  try {
+    const res = await request.post('/merchant/user/admin_note_list', {
+      userId,
+      page,
+      count
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: refreshCb })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.noteLists, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const createUserNoteReq = async ({
+  userId,
+  note
+}: {
+  userId: number
+  note: string
+}) => {
+  try {
+    const res = await request.post('/merchant/user/new_admin_note', {
+      userId,
+      note
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 export const setSimDateReq = async (
   subscriptionId: string,
   newTestClock: number
