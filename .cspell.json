@@ -64,6 +64,7 @@
     "mamo",
     "changelly",
     "iban",
-    "zustand"
+    "zustand",
+    "linkify"
   ]
 }
