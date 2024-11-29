@@ -1,7 +1,10 @@
-import { LoadingOutlined, SyncOutlined } from '@ant-design/icons'
-import { Col, Empty, Row, Spin, Tooltip, message } from 'antd'
+import { LoadingOutlined, MinusOutlined, SyncOutlined } from '@ant-design/icons'
+import { Col, Empty, Popconfirm, Row, Spin, Tooltip, message } from 'antd'
 import { useEffect, useState } from 'react'
-import { getUserPaymentMethodListReq } from '../../requests'
+import {
+  getUserPaymentMethodListReq,
+  removeCardPaymentMethodReq
+} from '../../requests'
 
 type TCard = {
   id: string
@@ -75,6 +78,23 @@ const Index = ({
     }
   }
 
+  const onDeleteCard = (paymentMethodId: string) => async () => {
+    if (gatewayId == undefined) {
+      return
+    }
+
+    const [_, err] = await removeCardPaymentMethodReq({
+      userId,
+      gatewayId,
+      paymentMethodId
+    })
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+    refresh()
+  }
+
   const refresh = () => {
     if (refreshUserProfile != null) {
       refreshUserProfile()
@@ -96,13 +116,11 @@ const Index = ({
         <Col span={5}>Expired at</Col>
         <Col span={5}>Last 4 digits</Col>
         <Col span={2}>
-          <div className="flex justify-evenly gap-2">
-            <Tooltip title="Refresh">
-              <span className="cursor-pointer" onClick={refresh}>
-                <SyncOutlined />
-              </span>
-            </Tooltip>
-          </div>
+          <Tooltip title="Refresh">
+            <span className="cursor-pointer" onClick={refresh}>
+              <SyncOutlined />
+            </span>
+          </Tooltip>
         </Col>
       </Row>
       <div className="flex w-full flex-col">
@@ -142,7 +160,20 @@ const Index = ({
               <Col span={4}>{c.country}</Col>
               <Col span={5}>{c.expiredAt}</Col>
               <Col span={5}>{c.last4}</Col>
-              <Col span={2}></Col>
+              <Col span={2}>
+                <Popconfirm
+                  title="Delete confirm"
+                  description="Are you sure to delete this payment card?"
+                  onConfirm={onDeleteCard(c.id)}
+                  // onCancel={cancel}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <span style={{ cursor: 'pointer' }}>
+                    <MinusOutlined />
+                  </span>
+                </Popconfirm>
+              </Col>
             </Row>
           ))
         )}
