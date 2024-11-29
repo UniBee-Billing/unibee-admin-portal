@@ -1344,6 +1344,33 @@ export const getUserPaymentMethodListReq = async ({
   }
 }
 
+// for bank card user, remove a bank card
+export const removeCardPaymentMethodReq = async ({
+  userId,
+  gatewayId,
+  paymentMethodId
+}: {
+  userId: number
+  gatewayId: number
+  paymentMethodId: string
+}) => {
+  const session = useSessionStore.getState()
+  const body = { userId, gatewayId, paymentMethodId }
+  try {
+    const res = await request.post(`/merchant/payment/method_delete`, body)
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // billing admin can also update user profile.
 export const suspendUserReq = async (userId: number) => {
   try {
