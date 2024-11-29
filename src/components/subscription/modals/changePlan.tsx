@@ -178,12 +178,12 @@ const ChangePlan = ({
             (codePreview.isValid ? (
               <>
                 <span className="text-xs text-green-500">
-                  Code valid{' '}
+                  Code is valid{' '}
                   <CouponPopover coupon={codePreview.preview as DiscountCode} />
                 </span>
               </>
             ) : (
-              <span className="text-xs text-red-500">Code invalid</span>
+              <span className="text-xs text-red-500">Code is invalid</span>
             ))}
         </div>
       </div>
