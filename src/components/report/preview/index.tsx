@@ -50,9 +50,13 @@ export const Preview = forwardRef<PreviewRef, PreviewProps>(
           form.getFieldsValue()
         const [start, end] = reportDateRange ?? []
 
+        if (!start || !end) {
+          throw new Error('Report date range is required')
+        }
+
         return {
-          reportTimeEnd: end?.valueOf(),
-          reportTimeStart: start?.valueOf(),
+          reportTimeEnd: convertMillisecondsToSeconds(end.valueOf()),
+          reportTimeStart: convertMillisecondsToSeconds(start.valueOf()),
           isIncludePaidInvoices,
           exportColumns: fields,
           timezone,
