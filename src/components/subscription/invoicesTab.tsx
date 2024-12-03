@@ -343,18 +343,20 @@ const Index = ({
       title: (
         <>
           <span>Actions</span>
-          <Tooltip title="New invoice">
-            <Button
-              size="small"
-              style={{ marginLeft: '8px' }}
-              onClick={() => {
-                setInvoiceIdx(-1)
-                toggleNewInvoiceModal()
-              }}
-              icon={<PlusOutlined />}
-              disabled={user == null}
-            />
-          </Tooltip>
+          {user != undefined && (
+            <Tooltip title="New invoice">
+              <Button
+                size="small"
+                style={{ marginLeft: '8px' }}
+                onClick={() => {
+                  setInvoiceIdx(-1)
+                  toggleNewInvoiceModal()
+                }}
+                icon={<PlusOutlined />}
+                disabled={user == undefined}
+              />
+            </Tooltip>
+          )}
           <Tooltip title="Refresh">
             <Button
               size="small"
