@@ -1,4 +1,5 @@
 import { Button, Form, Input, message, Modal, Switch } from 'antd'
+import update from 'immutability-helper'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { showAmount } from '../../../helpers'
 import { useLoading } from '../../../hooks'
@@ -37,6 +38,12 @@ interface Props {
   closeModal: () => void
 }
 
+type TSelectedAddon = {
+  quantity: number
+  addonPlanId: number
+  checked?: boolean
+}
+
 interface CreateSubScriptionBody {
   planId: number
   gatewayId: number
@@ -47,6 +54,7 @@ interface CreateSubScriptionBody {
   vatCountryCode: string | undefined
   vatNumber: string | undefined
   discountCode: string | undefined
+  addonParams?: TSelectedAddon[]
 }
 
 type VATNumberValidateResult = {
@@ -105,6 +113,34 @@ export const AssignSubscriptionModal = ({
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
   const accountFormValues = useRef<AccountValues | undefined>()
+
+  const onAddonChange = (
+    addonId: number,
+    quantity: number | null,
+    checked: boolean | null
+  ) => {
+    if (selectedPlan == undefined) {
+      return
+    }
+    const addOnIdx = selectedPlan.addons?.findIndex((a) => a.id == addonId)
+    if (addOnIdx == -1 || addOnIdx == undefined) {
+      return
+    }
+    let newAddon = selectedPlan.addons
+    if (quantity != null) {
+      // todo: add quantity is >0 integer check.
+      newAddon = update(newAddon, {
+        [addOnIdx]: { quantity: { $set: quantity } }
+      })
+    }
+    if (checked != null) {
+      newAddon = update(newAddon, {
+        [addOnIdx]: { checked: { $set: checked } }
+      })
+    }
+
+    setSelectedPlan(update(selectedPlan, { addons: { $set: newAddon } }))
+  }
 
   const parsedTax = useMemo(
     () => (previewData?.taxPercentage ?? 0) / 100,
@@ -177,7 +213,13 @@ export const AssignSubscriptionModal = ({
         user: userData,
         vatNumber: vat,
         vatCountryCode: country,
-        discountCode: discountCode
+        discountCode: discountCode,
+        addonParams: [] as TSelectedAddon[]
+      }
+      if (selectedPlan?.addons != null && selectedPlan.addons.length > 0) {
+        submitData.addonParams = selectedPlan.addons
+          .filter((a) => a.checked)
+          .map((a) => ({ quantity: a.quantity as number, addonPlanId: a.id }))
       }
 
       if (!requirePayment) {
@@ -235,6 +277,21 @@ export const AssignSubscriptionModal = ({
       confirmTotalAmount: previewData?.totalAmount,
       confirmCurrency: selectedPlan?.currency
     } as WithDoubleConfirmFields<CreateSubScriptionBody>
+    if (selectedPlan.addons != undefined && selectedPlan.addons.length > 0) {
+      body.addonParams = selectedPlan.addons
+        .filter((a) => a.checked)
+        .map((a) => ({
+          quantity: a.quantity,
+          addonPlanId: a.id
+        })) as TSelectedAddon[]
+    }
+    /*
+    type TSelectedAddon = {
+  quantity: number
+  addonPlanId: number
+  checked?: boolean
+}
+    */
 
     const [_, err] = await withLoading(async () => createSubscriptionReq(body))
 
@@ -365,6 +422,7 @@ export const AssignSubscriptionModal = ({
                 selectedPlan={selectedPlan.id}
                 isThumbnail
                 isActive={false}
+                onAddonChange={onAddonChange}
               />
             </div>
           )}

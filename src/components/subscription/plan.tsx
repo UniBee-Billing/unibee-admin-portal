@@ -40,8 +40,8 @@ const Index = ({
   selectedPlan,
   isActive,
   setSelectedPlan,
-  onAddonChange,
-  isThumbnail = false
+  onAddonChange
+  // isThumbnail = false
 }: IPLanProps) => {
   const [totalAmount, setTotalAmount] = useState(0)
   const addonCheck = (addonId: number) => (e: CheckboxChangeEvent) => {
@@ -108,24 +108,20 @@ const Index = ({
     <div>
       <div
         onClick={() => setSelectedPlan?.(plan.id)}
-        className="flex h-80 w-64 cursor-pointer flex-col items-center justify-center gap-6 rounded-md px-2 py-2"
+        className="flex w-64 cursor-pointer flex-col items-center justify-center gap-6 rounded-md px-2 py-2"
         style={{
           border: `1px solid ${isActive ? 'orange' : '#BDBDBD'}`,
-          background: selectedPlan == plan.id ? '#FFF' : '#FBFBFB',
-          /*
-          boxShadow:
-            selectedPlan == plan.id
-              ? "rgba(0, 0, 0, 0.35) 0px 5px 15px"
-              : "unset",
-          */
-          cursor: 'pointer'
+          background: selectedPlan == plan.id ? '#FFF' : '#FBFBFB'
         }}
       >
         <div style={{ fontSize: '28px' }}>{plan.planName}</div>
         <div>{plan.description}</div>
 
-        {!isThumbnail && plan.addons && (
-          <div className="flex flex-col gap-2">
+        {plan.addons && (
+          <div
+            // className="flex flex-col gap-2"
+            style={{ maxHeight: '74px', overflowY: 'auto' }}
+          >
             {plan.addons.map((a) => (
               <div
                 className="flex w-full items-center justify-between"
@@ -154,7 +150,7 @@ const Index = ({
 
                     <Input
                       id={a.id.toString()}
-                      value={a.quantity || 0}
+                      value={a.quantity || 1}
                       onChange={addonQuantityChange}
                       disabled={!a.checked}
                       size="small"
