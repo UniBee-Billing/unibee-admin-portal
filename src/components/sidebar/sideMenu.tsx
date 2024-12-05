@@ -7,7 +7,7 @@ import { Menu, MenuProps } from 'antd'
 import { ItemType, MenuItemType } from 'antd/es/menu/interface'
 import { useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ActivitiLogSvg from '../../assets/navIcons/activityLog.svg?react'
+import ActivityLogSvg from '../../assets/navIcons/activityLog.svg?react'
 import BillableMetricsSvg from '../../assets/navIcons/billableMetrics.svg?react'
 import ConfigSvg from '../../assets/navIcons/config.svg?react'
 import DiscountCodeSvg from '../../assets/navIcons/discountCode.svg?react'
@@ -71,7 +71,7 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
   {
     label: 'Activity Logs',
     key: 'activity-logs',
-    icon: <Icon component={ActivitiLogSvg} />
+    icon: <Icon component={ActivityLogSvg} />
   }
 ]
 
