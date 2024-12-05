@@ -4,7 +4,7 @@ import {
   EditOutlined,
   ProfileOutlined
 } from '@ant-design/icons'
-import { Space, Table, message } from 'antd'
+import { Modal, Popconfirm, Space, Table, message } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { Key, useCallback, useEffect, useState } from 'react'
@@ -239,7 +239,17 @@ export const DiscountCodeList = () => {
           <ListItemActionButton
             tooltipMessage="Delete"
             asyncTask
-            onClick={() => deleteDiscountCode(record)}
+            onClick={async () => {
+              await new Promise((resolve, reject) =>
+                Modal.confirm({
+                  title: `Delete the ${record.name} coupon code?`,
+                  content: 'Are you sure to archive this coupon code?',
+                  onOk: () => resolve(undefined),
+                  onCancel: () => reject(undefined)
+                })
+              )
+              await deleteDiscountCode(record)
+            }}
           >
             <DeleteOutlined />
           </ListItemActionButton>
