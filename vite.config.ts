@@ -8,7 +8,7 @@ export default defineConfig((env) => ({
   base: env.mode === 'production' ? '/__dynamic_base__/' : '/',
   plugins: [
     react(),
-    svgr(),
+    svgr({ svgrOptions: { icon: true } }),
     dynamicBase({
       // dynamic public path var string, default window.__dynamic_base__
       publicPath: 'window.__dynamic_base__',
