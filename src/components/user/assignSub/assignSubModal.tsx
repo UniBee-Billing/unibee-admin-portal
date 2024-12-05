@@ -103,14 +103,15 @@ export const AssignSubscriptionModal = ({
   const appConfig = useAppConfigStore()
   const accountTypeFormRef = useRef<AccountTypeFormInstance>(null)
   const { isLoading, withLoading } = useLoading()
+  const [loading, setLoading] = useState(false)
   const [gatewayId, setGatewayId] = useState<undefined | number>(
     appConfig.gateway.find((g) => g.gatewayName === 'stripe')?.gatewayId
   )
   const [selectedPlan, setSelectedPlan] = useState<IPlan | undefined>()
   const [requirePayment, setRequirePayment] = useState(true)
   // const [includeUnpublishedPlan, setIncludeUnpublishedPlan] = useState(false)
-  const [applyPromo, setApplyPromo] = useState(false)
-  const onApplyPromoChange = () => setApplyPromo(!applyPromo)
+  // const [applyPromo, setApplyPromo] = useState(false)
+  // const onApplyPromoChange = () => setApplyPromo(!applyPromo)
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
@@ -287,16 +288,10 @@ export const AssignSubscriptionModal = ({
           addonPlanId: a.id
         })) as TSelectedAddon[]
     }
-    /*
-    type TSelectedAddon = {
-  quantity: number
-  addonPlanId: number
-  checked?: boolean
-}
-    */
 
-    const [_, err] = await withLoading(async () => createSubscriptionReq(body))
-
+    setLoading(true)
+    const [_, err] = await createSubscriptionReq(body)
+    setLoading(false)
     if (err) {
       message.error(err.message)
       return
@@ -345,14 +340,14 @@ export const AssignSubscriptionModal = ({
       open={true}
       width={'720px'}
       footer={[
-        <Button onClick={closeModal} disabled={isLoading}>
+        <Button onClick={closeModal} disabled={loading}>
           Cancel
         </Button>,
         <Button
           type="primary"
           onClick={onSubmit}
-          loading={isLoading}
-          disabled={isLoading || isEmpty(selectedPlan)}
+          loading={loading}
+          disabled={loading || isEmpty(selectedPlan)}
         >
           OK
         </Button>
@@ -441,7 +436,7 @@ export const AssignSubscriptionModal = ({
                   />
                 </InfoItem>
               </div>
-              <div className="mt-2">
+              {/* <div className="mt-2">
                 <div className="flex justify-between">
                   <div>Apply promo credits</div>
                   <div>
@@ -458,6 +453,7 @@ export const AssignSubscriptionModal = ({
                   </div>
                 </div>
               )}
+                */}
 
               <div className="my-8 h-[1px] w-full bg-gray-100"></div>
               <CheckoutItem
