@@ -12,6 +12,7 @@ import {
   TRole
 } from '../shared.types'
 import { useMerchantInfoStore, useSessionStore } from '../stores'
+import { serializeSearchParams } from '../utils/query'
 import { analyticsRequest, request } from './client'
 
 const API_URL = import.meta.env.VITE_API_URL
@@ -1445,33 +1446,11 @@ export const getDiscountCodeListReq = async (
   params: TDiscountCodeQry,
   refreshCb: () => void
 ) => {
-  const {
-    page,
-    count,
-    createTimeStart,
-    createTimeEnd,
-    status,
-    billingType,
-    discountType
-  } = params
-  let url = `/merchant/discount/list?page=${page}&count=${count}`
-  if (createTimeStart != null) {
-    url += `&createTimeStart=${createTimeStart}`
-  }
-  if (createTimeEnd != null) {
-    url += `&createTimeEnd=${createTimeEnd}`
-  }
-  if (status != null) {
-    url += `&status=[${status.toString()}]`
-  }
-  if (billingType != null) {
-    url += `&billingType=[${billingType.toString()}]`
-  }
-  if (discountType != null) {
-    url += `&discountType=[${discountType.toString()}]`
-  }
   try {
-    const res = await request.get(url)
+    const res = await request.get('/merchant/discount/list', {
+      params,
+      paramsSerializer: serializeSearchParams
+    })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: refreshCb })
       throw new ExpiredError(
@@ -1485,7 +1464,7 @@ export const getDiscountCodeListReq = async (
   }
 }
 
-const getDiscountCodeDetailReq = async (codeId: number) => {
+export const getDiscountCodeDetailReq = async (codeId: number) => {
   try {
     const res = await request.get(`/merchant/discount/detail?id=${codeId}`)
     if (res.data.code == 61 || res.data.code == 62) {
@@ -1503,25 +1482,21 @@ const getDiscountCodeDetailReq = async (codeId: number) => {
 
 type TDiscountUsageDetail = {
   id: number
-  searchTerms: { createTimeStart?: number; createTimeEnd?: number }
+  createTimeStart?: number
+  createTimeEnd?: number
   page: number
   count: number
   refreshCb?: () => void
 }
-export const getDiscountCodeUsageDetailReq = async (
-  params: TDiscountUsageDetail
-) => {
-  const { id, searchTerms, page, count, refreshCb } = params
-  const { createTimeStart, createTimeEnd } = searchTerms
-  let url = `/merchant/discount/user_discount_list?id=${id}&page=${page}&count=${count}`
-  if (null != createTimeStart) {
-    url += `&createTimeStart=${createTimeStart}`
-  }
-  if (null != createTimeEnd) {
-    url += `&createTimeEnd=${createTimeEnd}`
-  }
+export const getDiscountCodeUsageDetailReq = async ({
+  refreshCb,
+  ...params
+}: TDiscountUsageDetail) => {
   try {
-    const res = await request.get(url)
+    const res = await request.get('/merchant/discount/user_discount_list', {
+      params,
+      paramsSerializer: serializeSearchParams
+    })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: refreshCb ?? null })
       throw new ExpiredError(

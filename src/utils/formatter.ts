@@ -1,3 +1,4 @@
+import { DropdownProps } from 'antd'
 import { IProfile } from '../shared.types'
 import { isMilliseconds, isWord } from './is'
 
@@ -28,3 +29,16 @@ export const convertPascalCaseToSentence = (word: string) =>
 
 export const safeConvertPascalCaseToSentence = (word: string) =>
   isWord(word) ? convertPascalCaseToSentence(word) : word
+
+export const strItemsWithSameKey = (items: string[]) =>
+  items.map((item) => ({ label: item, key: item }))
+
+export const convertActions2Menu = (
+  actions: Record<string, () => void>
+): DropdownProps['menu'] => ({
+  items: strItemsWithSameKey(Object.keys(actions)),
+  onClick: ({ key }) => actions[key]?.()
+})
+
+export const title = (word: string) =>
+  word.replace(/^([a-z])/g, (str) => str.toUpperCase())

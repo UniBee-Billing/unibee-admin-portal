@@ -1,5 +1,5 @@
 import { message } from 'antd'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import AppFooter from '../appFooter'
 import AppHeader from '../appHeader'

@@ -1,4 +1,6 @@
+import { message } from 'antd'
 import { DiscountCodeUsageStatus } from '../../shared.types'
+import { useAppConfigStore } from '../../stores'
 
 export const formatNumberByZeroUnLimitedRule = (
   num: number,
@@ -29,3 +31,22 @@ const FORMATTED_DISCOUNT_CODE_STATUS_MAP = {
 
 export const formatDiscountCodeStatus = (status: DiscountCodeUsageStatus) =>
   FORMATTED_DISCOUNT_CODE_STATUS_MAP[status] ?? 'Unknown'
+
+export const useWithExportAction = () => {
+  const appConfigStore = useAppConfigStore()
+
+  return <T extends unknown[]>(exportAction: () => Promise<T>) =>
+    async () => {
+      const [_, err] = await exportAction()
+
+      if (err) {
+        message.error('Failed to export, Please try again later.')
+        return
+      }
+
+      message.success(
+        'Report is being exported, please check task list for progress.'
+      )
+      appConfigStore.setTaskListOpen(true)
+    }
+}

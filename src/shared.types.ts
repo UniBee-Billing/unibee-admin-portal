@@ -538,6 +538,13 @@ export type TActivityLogs = {
   member: IMerchantUserProfile[]
 }
 
+export enum DiscountCodeStatus {
+  EDITING = 1,
+  ACTIVE,
+  DEACTIVATE,
+  EXPIRED
+}
+
 export type TExportDataType =
   | 'InvoiceExport'
   | 'UserExport'
@@ -546,6 +553,7 @@ export type TExportDataType =
   | 'UserDiscountExport'
   | 'DiscountExport'
   | 'UserDiscountExport'
+  | 'MultiUserDiscountExport'
 
 export type TImportDataType =
   | 'UserImport'
