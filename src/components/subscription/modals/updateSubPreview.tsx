@@ -99,7 +99,7 @@ const updateSubPreview = ({
       ) : (
         <>
           <Row style={{ display: 'flex', alignItems: 'center' }}>
-            <Col span={9}>
+            <Col span={13}>
               <span style={{ fontWeight: 'bold' }}>Item description</span>
             </Col>
             <Col span={4}>
@@ -108,9 +108,6 @@ const updateSubPreview = ({
             <Col span={1}></Col>
             <Col span={3}>
               <span style={{ fontWeight: 'bold' }}>Quantity</span>
-            </Col>
-            <Col span={4}>
-              <span style={{ fontWeight: 'bold' }}>VAT</span>
             </Col>
             <Col span={3}>
               <span style={{ fontWeight: 'bold' }}>Total</span>
@@ -167,7 +164,7 @@ export default updateSubPreview
 const ShowInvoiceItems = ({ items }: { items: InvoiceItem[] }) =>
   items.map((i, idx) => (
     <Row key={idx}>
-      <Col span={9} className="pr-2">
+      <Col span={13} className="pr-2">
         {i.description}{' '}
       </Col>
       <Col span={4}>
@@ -175,11 +172,13 @@ const ShowInvoiceItems = ({ items }: { items: InvoiceItem[] }) =>
       </Col>
       <Col span={1}></Col>
       <Col span={3}>{i.quantity}</Col>
-      <Col span={4}>
+      {/* <Col span={4}>
         {showAmount(i.tax as number, i.currency)}
         <span className="text-xs text-gray-500">{` (${(i.taxPercentage as number) / 100}%)`}</span>
+      </Col> */}
+      <Col span={3}>
+        {showAmount(i.amountExcludingTax as number, i.currency)}
       </Col>
-      <Col span={3}>{showAmount(i.amount as number, i.currency)}</Col>
     </Row>
   ))
 

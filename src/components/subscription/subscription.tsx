@@ -295,8 +295,23 @@ const Index = ({
             addons: p.addons
           }))
 
-    plans = plans.filter((p) => p != null)
     const planIdx = plans.findIndex((p) => p.id == subDetail.plan.id)
+    plans = plans
+      .filter((p) => p != null)
+      .map((p, idx) => {
+        if (idx == planIdx) {
+          return p
+        } else {
+          if (p.addons != null && p.addons.length > 0) {
+            p.addons = p.addons.map((a) => ({
+              ...a,
+              quantity: 1,
+              checked: false
+            }))
+          }
+          return p
+        }
+      })
     // let's say we have planA(which has addonA1, addonA2, addonA3), planB, planC, user has subscribed to planA, and selected addonA1, addonA3
     // I need to find the index of addonA1,3 in planA.addons array,
     // then set their {quantity, checked: true} props on planA.addons, these props value are from subscription.addons array.
@@ -313,6 +328,9 @@ const Index = ({
           plans[planIdx].addons![i].checked = true
           plans[planIdx].addons![i].quantity =
             localActiveSub.addons[addonIdx].quantity
+        } else {
+          plans[planIdx].addons![i].checked = false
+          plans[planIdx].addons![i].quantity = 1
         }
       }
     }
