@@ -1,39 +1,46 @@
-import { LoadingOutlined } from '@ant-design/icons'
-import {
-  Button,
-  Col,
-  DatePicker,
-  Form,
-  FormInstance,
-  Pagination,
-  Row,
-  Space,
-  Table,
-  message
-} from 'antd'
-import { ColumnsType } from 'antd/es/table'
+import { Button, Table, message } from 'antd'
+import { ColumnsType, TableProps } from 'antd/es/table'
+import { SorterResult } from 'antd/es/table/interface'
+import _ from 'lodash'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { formatDate, showAmount } from '../../helpers'
-import { usePagination } from '../../hooks'
+import { useLoading, usePagination } from '../../hooks'
 import { exportDataReq, getDiscountCodeUsageDetailReq } from '../../requests'
 import { DiscountCodeUsage } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
-import { formatDiscountCodeStatus, formatRecurringStatus } from './helpers'
+import { renameKeys, trimEmptyValues } from '../../utils/object'
+import { ExportButton } from '../table/exportButton'
+import {
+  formatDateRange,
+  useTableDateFilter
+} from '../table/filters/dateFilter'
+import { parseSearchFilters, useTableSearchBox } from '../table/filters/search'
+import { parseAntDSorter2SpecData } from '../table/sort'
+import {
+  formatDiscountCodeStatus,
+  formatRecurringStatus,
+  useWithExportAction
+} from './helpers'
 
 const PAGE_SIZE = 10
 
 const Index = () => {
   const params = useParams()
   const codeId = params.discountCodeId
-  const [form] = Form.useForm()
   const { page, onPageChange } = usePagination()
+  const { isLoading, withLoading } = useLoading()
+  const {
+    isLoading: isExportButtonLoading,
+    withLoading: withExportButtonLoading
+  } = useLoading()
+  const withExportAction = useWithExportAction()
   const [total, setTotal] = useState(0)
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
   const [usageDetailList, setUsageDetailList] = useState<DiscountCodeUsage[]>(
     []
   )
+  const createTableSearchBox = useTableSearchBox<DiscountCodeUsage>()
+  const createTableDateFilter = useTableDateFilter<DiscountCodeUsage>()
 
   const goBack = () => navigate(`/discount-code/list`)
 
@@ -41,7 +48,8 @@ const Index = () => {
     {
       title: 'Code',
       dataIndex: 'code',
-      key: 'code'
+      key: 'code',
+      fixed: true
     },
     {
       title: 'Applied plan',
@@ -66,7 +74,7 @@ const Index = () => {
       title: 'Used by',
       dataIndex: 'user',
       key: 'user',
-      render: (user) =>
+      ...createTableSearchBox('user', (user, highlight) =>
         !user ? (
           ''
         ) : (
@@ -74,15 +82,18 @@ const Index = () => {
             onClick={() => navigate(`/user/${user.id}`)}
             className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
           >
-            {user.email}
+            {highlight(user.email)}
           </div>
         )
+      )
     },
     {
       title: 'Used at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (usedAt) => formatDate(usedAt, true)
+      sorter: (a, b) => a.createTime - b.createTime,
+      render: (usedAt) => formatDate(usedAt, true),
+      ...createTableDateFilter()
     },
     {
       title: 'Recurring',
@@ -133,240 +144,114 @@ const Index = () => {
       title: 'Transaction Id',
       dataIndex: 'paymentId',
       key: 'paymentId'
-      // render: (plan, code_detail) => plan.planName
     }
   ]
 
-  const normalizeSearchTerms = () => {
-    const searchTerm = form.getFieldsValue()
-    const start = form.getFieldValue('createTimeStart')
-    const end = form.getFieldValue('createTimeEnd')
-    if (start != null) {
-      searchTerm.createTimeStart = start.hour(0).minute(0).second(0).unix()
-    }
-    if (end != null) {
-      searchTerm.createTimeEnd = end.hour(23).minute(59).second(59).unix()
-    }
-    return searchTerm
-  }
-
-  const fetchData = async () => {
+  const fetchData = async (
+    page: number | undefined = 0,
+    filters: Record<string, unknown> | undefined = {},
+    sorter: Record<string, unknown> | undefined = {}
+  ) => {
     const id = Number(codeId)
+
     if (isNaN(id)) {
       message.error('Invalid code Id')
       return
     }
-    const searchTerms = normalizeSearchTerms()
-    setLoading(true)
-    const [res, err] = await getDiscountCodeUsageDetailReq({
-      id,
-      page,
-      count: PAGE_SIZE,
-      searchTerms,
-      refreshCb: fetchData
-    })
 
-    setLoading(false)
-    if (null != err) {
+    const [res, err] = await withLoading(
+      () =>
+        getDiscountCodeUsageDetailReq({
+          id,
+          page,
+          count: PAGE_SIZE,
+          refreshCb: fetchData,
+          ...filters,
+          ...sorter
+        }),
+      false
+    )
+
+    if (err) {
       message.error(err.message)
       return
     }
+
     const { userDiscounts, total } = res
+
     setUsageDetailList(userDiscounts ?? [])
     setTotal(total)
   }
 
-  const goSearch = () => {
-    if (page == 0) {
-      fetchData()
-    } else {
-      onPageChange(1, PAGE_SIZE)
-    }
+  const handleTableChange: TableProps<DiscountCodeUsage>['onChange'] = (
+    pagination,
+    filters,
+    sorter
+  ) => {
+    const parsedFilters = renameKeys(
+      formatDateRange(parseSearchFilters(filters, ['user']), 'createTime', {
+        start: 'createTimeStart',
+        end: 'createTimeEnd'
+      }),
+      {
+        user: 'email'
+      }
+    )
+
+    onPageChange(pagination.current!, PAGE_SIZE)
+    fetchData(
+      pagination.current! - 1,
+      trimEmptyValues(parsedFilters),
+      // The back-end only supports sorting one column at a time
+      parseAntDSorter2SpecData(sorter as SorterResult<DiscountCodeUsage>, {
+        createTime: 'gmt_create'
+      })
+    )
   }
+
+  const handleExportAllButtonClick = withExportAction(() =>
+    withExportButtonLoading(
+      () =>
+        exportDataReq({
+          task: 'UserDiscountExport',
+          payload: { id: Number(codeId) }
+        }),
+      false
+    )
+  )
 
   useEffect(() => {
     fetchData()
-  }, [page])
+  }, [])
 
   return (
-    <div>
-      <Search
-        form={form}
-        onPageChange={onPageChange}
-        searching={loading}
-        goSearch={goSearch}
-        normalizeSearchTerms={normalizeSearchTerms}
-      />
+    <div className="relative">
+      <div className="mb-4 flex justify-end">
+        <ExportButton
+          onExportButtonClick={handleExportAllButtonClick}
+          loading={isExportButtonLoading}
+        />
+      </div>
       <Table
         columns={columns}
         dataSource={usageDetailList}
-        rowKey={'id'}
+        scroll={{ x: 'max-content' }}
+        rowKey="id"
+        onChange={handleTableChange}
         rowClassName="clickable-tbl-row"
-        pagination={false}
-        loading={{
-          spinning: loading,
-          indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+        pagination={{
+          current: page + 1,
+          pageSize: PAGE_SIZE,
+          total,
+          showSizeChanger: false
         }}
-        onRow={() => {
-          return {
-            onClick: () => {}
-          }
-        }}
+        loading={isLoading}
       />
-      <div className="mx-0 my-4 flex w-full items-center justify-end">
-        <div className="flex w-2/4 justify-end">
-          <div className="flex w-full justify-between">
-            <Button onClick={goBack}>Go back</Button>
-            <Pagination
-              current={page + 1} // back-end starts with 0, front-end starts with 1
-              pageSize={PAGE_SIZE}
-              total={total}
-              size="small"
-              onChange={onPageChange}
-              disabled={loading}
-              showSizeChanger={false}
-              showTotal={(total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`
-              }
-            />
-          </div>
-        </div>
+      <div className="absolute bottom-[14px]">
+        <Button onClick={goBack}>Go back</Button>
       </div>
     </div>
   )
 }
 
 export default Index
-
-interface SearchTerms {
-  id: number
-}
-
-interface SearchParams {
-  form: FormInstance<unknown>
-  searching: boolean
-  goSearch: () => void
-  onPageChange: (page: number, pageSize: number) => void
-  normalizeSearchTerms: () => SearchTerms
-}
-
-const Search = ({
-  form,
-  searching,
-  goSearch,
-  onPageChange,
-  normalizeSearchTerms
-}: SearchParams) => {
-  const appConfig = useAppConfigStore()
-  const params = useParams()
-  const codeId = params.discountCodeId
-  const [exporting, setExporting] = useState(false)
-  const clear = () => {
-    form.resetFields()
-    onPageChange(1, PAGE_SIZE)
-    goSearch()
-  }
-
-  const exportData = async () => {
-    const id = Number(codeId)
-    if (isNaN(id)) {
-      message.error('Invalid code Id')
-      return
-    }
-    const payload = normalizeSearchTerms()
-    if (null == payload) {
-      return
-    }
-    payload.id = id
-
-    // return
-    setExporting(true)
-    const [_, err] = await exportDataReq({
-      task: 'UserDiscountExport',
-      payload
-    })
-    setExporting(false)
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    message.success(
-      'Discount code list is being exported, please check task list for progress.'
-    )
-    appConfig.setTaskListOpen(true)
-  }
-
-  return (
-    <div>
-      <Form form={form} onFinish={goSearch} disabled={searching || exporting}>
-        <Row className="mb-5 flex items-center" gutter={[8, 8]}>
-          <Col span={2} className="font-bold text-gray-500">
-            Code used
-          </Col>
-          <Col span={4}>
-            <Form.Item name="createTimeStart" noStyle={true}>
-              <DatePicker
-                style={{ width: '100%' }}
-                placeholder="From"
-                format="YYYY-MMM-DD"
-                disabledDate={(d) => d.isAfter(new Date())}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item
-              name="createTimeEnd"
-              noStyle={true}
-              rules={[
-                {
-                  required: false,
-                  message: 'Must be later than start date.'
-                },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    const start = getFieldValue('createTimeStart')
-                    if (null == start || value == null) {
-                      return Promise.resolve()
-                    }
-                    return value.isAfter(start)
-                      ? Promise.resolve()
-                      : Promise.reject('Must be later than start date')
-                  }
-                })
-              ]}
-            >
-              <DatePicker
-                style={{ width: '100%' }}
-                placeholder="To"
-                format="YYYY-MMM-DD"
-                disabledDate={(d) => d.isAfter(new Date())}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={14} className="flex justify-end">
-            <Space>
-              <Button onClick={clear} disabled={searching || exporting}>
-                Clear
-              </Button>
-              <Button
-                onClick={form.submit}
-                type="primary"
-                loading={searching}
-                disabled={searching || exporting}
-              >
-                Search
-              </Button>
-              <Button
-                onClick={exportData}
-                loading={exporting}
-                disabled={searching || exporting}
-              >
-                Export
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Form>
-    </div>
-  )
-}

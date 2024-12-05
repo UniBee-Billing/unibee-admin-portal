@@ -11,8 +11,16 @@ import {
   message
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import {
+  PropsWithChildren,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+
 import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
@@ -27,21 +35,14 @@ import {
   toggleDiscountCodeActivateReq,
   updateDiscountCodeReq
 } from '../../requests'
-import { DiscountCode, IPlan } from '../../shared.types'
+import { DiscountCode, DiscountCodeStatus, IPlan } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
-import { isEmpty } from '../../utils'
+import { isEmpty, title } from '../../utils'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 import { formatQuantity } from './helpers'
 import { UpdateDiscountCodeQuantityModal } from './updateDiscountCodeQuantityModal'
 
 const { RangePicker } = DatePicker
-
-enum DiscountCodeStatus {
-  EDITING = 1,
-  ACTIVE,
-  DEACTIVATE,
-  EXPIRED
-}
 
 const DEFAULT_CODE: DiscountCode = {
   merchantId: useMerchantInfoStore.getState().id,
@@ -74,9 +75,12 @@ const Index = () => {
   const codeId = params.discountCodeId
   const isNew = isEmpty(codeId)
   const navigate = useNavigate()
+  const location = useLocation()
+  const discountCopyData = location.state?.copyDiscountCode
+  const isCopy = !!discountCopyData
   const [loading, setLoading] = useState(false)
   const [code, setCode] = useState<DiscountCode | null>(
-    isNew ? DEFAULT_CODE : null
+    isNew && !isCopy ? DEFAULT_CODE : null
   )
   const [planList, setPlanList] = useState<IPlan[]>([])
   const planListRef = useRef<IPlan[]>([])
@@ -85,7 +89,6 @@ const Index = () => {
     setIsOpenUpdateDiscountCodeQuantityModal
   ] = useState(false)
   const [form] = Form.useForm()
-
   const watchDiscountType = Form.useWatch('discountType', form)
   const watchBillingType = Form.useWatch('billingType', form)
   const watchCurrency = Form.useWatch('currency', form)
@@ -127,12 +130,17 @@ const Index = () => {
     [code?.status, code?.quantity]
   )
 
+  const SubForm = ({ children }: PropsWithChildren) => (
+    <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
+      {children}
+    </div>
+  )
+
   const goBack = () => navigate(`/discount-code/list`)
   const goToUsageDetail = () =>
     navigate(`/discount-code/${codeId}/usage-detail`)
 
-  // for editing code, need to fetch code detail and planList
-  const fetchData = async () => {
+  const fetchDiscountCodeByQuery = async () => {
     const pathName = window.location.pathname.split('/')
     const codeId = pathName.pop()
     const codeNum = Number(codeId)
@@ -147,6 +155,14 @@ const Index = () => {
       message.error(err.message)
       return
     }
+
+    return res
+  }
+
+  // for editing code, need to fetch code detail and planList
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+  const fetchData = async (data?: any) => {
+    const res = data ?? (await fetchDiscountCodeByQuery())
     const { discount, planList } = res
 
     // if discount.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
@@ -171,6 +187,7 @@ const Index = () => {
       // percentage
       discount.discountPercentage /= 100
     }
+
     setCode(discount)
   }
 
@@ -265,38 +282,29 @@ const Index = () => {
   }
 
   const toggleActivate = async () => {
-    if (code == null || code.id == null) {
+    if (!code?.id) {
       return
     }
 
-    const action =
-      code.status == DiscountCodeStatus.EDITING ||
-      code.status == DiscountCodeStatus.DEACTIVATE
-        ? 'activate'
-        : code.status == DiscountCodeStatus.ACTIVE
-          ? 'deactivate'
-          : ''
-
-    if (action == '') {
-      return
-    }
     setLoading(true)
-    const [_, err] = await toggleDiscountCodeActivateReq(code.id, action)
+    const [_, err] = await toggleDiscountCodeActivateReq(
+      code.id,
+      toggleActiveButtonAction
+    )
     setLoading(false)
     if (null != err) {
       message.error(err.message)
       return
     }
-    message.success(`Discount code (${code.code}) ${action}d`)
+    message.success(`Discount code (${code.code}) ${toggleActiveButtonAction}d`)
     goBack()
   }
 
-  const formEditable = useMemo(
-    () => isNew || code?.status === DiscountCodeStatus.EDITING,
-    [code?.status]
-  )
-
+  const formEditable = isNew || code?.status === DiscountCodeStatus.EDITING
   const isAllFormItemsDisabled = code?.status === DiscountCodeStatus.EXPIRED
+
+  const toggleActiveButtonAction =
+    code?.status === DiscountCodeStatus.ACTIVE ? 'deactivate' : 'activate'
 
   const getPlanLabel = (planId: number) => {
     const p = planListRef.current.find((p) => p.id == planId)
@@ -307,6 +315,12 @@ const Index = () => {
   }
 
   useEffect(() => {
+    // Copy the code from discount code list
+    if (location.state?.copyDiscountCode) {
+      fetchData(location.state.copyDiscountCode)
+      return
+    }
+
     if (isNew) {
       fetchPlans()
     } else {
@@ -392,48 +406,12 @@ const Index = () => {
           >
             <Input disabled={!isNew} />
           </Form.Item>
+
           {!isNew && (
             <Form.Item label="Status">
               {getDiscountCodeStatusTagById(code.status as number)}
             </Form.Item>
           )}
-          <Form.Item
-            label="Billing Type"
-            name="billingType"
-            rules={[
-              {
-                required: true,
-                message: 'Please choose your billing type!'
-              }
-            ]}
-          >
-            <Select
-              style={{ width: 180 }}
-              options={[
-                { value: 1, label: 'One time use' },
-                { value: 2, label: 'Recurring' }
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Discount Type"
-            name="discountType"
-            rules={[
-              {
-                required: true,
-                message: 'Please choose your discountType type!'
-              }
-            ]}
-          >
-            <Select
-              style={{ width: 180 }}
-              options={[
-                { value: 1, label: 'Percentage' },
-                { value: 2, label: 'Fixed amount' }
-              ]}
-            />
-          </Form.Item>
 
           <Form.Item
             label="Quantity"
@@ -450,120 +428,44 @@ const Index = () => {
           </Form.Item>
 
           <Form.Item
-            label="Currency"
-            name="currency"
+            label="Discount Type"
+            name="discountType"
+            className="mb-0"
             rules={[
               {
-                required: watchDiscountType != 1,
-                message: 'Please select your currency!'
+                required: true,
+                message: 'Please choose your discountType type!'
               }
             ]}
           >
             <Select
-              disabled={watchDiscountType == 1 || !formEditable}
               style={{ width: 180 }}
               options={[
-                { value: 'EUR', label: 'EUR' },
-                { value: 'USD', label: 'USD' },
-                { value: 'JPY', label: 'JPY' }
+                { value: 1, label: 'Percentage' },
+                { value: 2, label: 'Fixed amount' }
               ]}
             />
           </Form.Item>
-          <Form.Item
-            label="Discount Amount"
-            name="discountAmount"
-            dependencies={['currency']}
-            rules={[
-              {
-                required: watchDiscountType != 1, // 1: percentage, 2: fixed-amt
-                message: 'Please choose your discount amount!'
-              },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (watchDiscountType == 1) {
-                    return Promise.resolve()
-                  }
-                  const num = Number(value)
-                  if (isNaN(num) || num <= 0) {
-                    return Promise.reject('Please input a valid amount (> 0).')
-                  }
-                  if (
-                    !currencyDecimalValidate(num, getFieldValue('currency'))
-                  ) {
-                    return Promise.reject('Please input a valid amount')
-                  }
-                  return Promise.resolve()
-                }
-              })
-            ]}
-          >
-            <Input
-              style={{ width: 180 }}
-              prefix={
-                watchCurrency == null || watchCurrency == ''
-                  ? ''
-                  : CURRENCY[watchCurrency].symbol
-              }
-              disabled={watchDiscountType == 1 || !formEditable}
-            />
-          </Form.Item>
 
-          <Form.Item
-            label="Discount percentage"
-            name="discountPercentage"
-            rules={[
-              {
-                required: watchDiscountType == 1,
-                message: 'Please choose your discount percentage!'
-              },
-              () => ({
-                validator(_, value) {
-                  if (watchDiscountType == 2) {
-                    // 2: fixed amount
-                    return Promise.resolve()
-                  }
-                  const num = Number(value)
-                  if (isNaN(num) || num <= 0 || num > 100) {
-                    return Promise.reject(
-                      'Please input a valid percentage number between 0 ~ 100.'
-                    )
-                  }
-                  return Promise.resolve()
-                }
-              })
-            ]}
-          >
-            <Input
-              style={{ width: 180 }}
-              disabled={watchDiscountType == 2 || !formEditable}
-              suffix="%"
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Cycle Limit"
-            extra="How many billing cycles this discount code can be applied on a
-              recurring subscription (0 means no-limit)."
-          >
+          <SubForm>
             <Form.Item
-              noStyle
-              name="cycleLimit"
+              label="Discount percentage"
+              name="discountPercentage"
               rules={[
                 {
-                  required: watchBillingType != 1,
-                  message: 'Please input your cycleLimit!'
+                  required: watchDiscountType == 1,
+                  message: 'Please choose your discount percentage!'
                 },
                 () => ({
                   validator(_, value) {
-                    const num = Number(value)
-                    if (!Number.isInteger(num)) {
-                      return Promise.reject(
-                        'Please input a valid cycle limit number between 0 ~ 1000.'
-                      )
+                    if (watchDiscountType == 2) {
+                      // 2: fixed amount
+                      return Promise.resolve()
                     }
-                    if (isNaN(num) || num < 0 || num > 999) {
+                    const num = Number(value)
+                    if (isNaN(num) || num <= 0 || num > 100) {
                       return Promise.reject(
-                        'Please input a valid cycle limit number between 0 ~ 1000.'
+                        'Please input a valid percentage number between 0 ~ 100.'
                       )
                     }
                     return Promise.resolve()
@@ -573,11 +475,133 @@ const Index = () => {
             >
               <Input
                 style={{ width: 180 }}
-                disabled={watchBillingType == 1 || !formEditable}
+                disabled={watchDiscountType == 2 || !formEditable}
+                suffix="%"
               />
-              {/* 1: one-time use */}
             </Form.Item>
+            <Form.Item
+              label="Currency"
+              name="currency"
+              rules={[
+                {
+                  required: watchDiscountType != 1,
+                  message: 'Please select your currency!'
+                }
+              ]}
+            >
+              <Select
+                disabled={watchDiscountType == 1 || !formEditable}
+                style={{ width: 180 }}
+                options={[
+                  { value: 'EUR', label: 'EUR' },
+                  { value: 'USD', label: 'USD' },
+                  { value: 'JPY', label: 'JPY' }
+                ]}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Discount Amount"
+              name="discountAmount"
+              dependencies={['currency']}
+              className="mb-0"
+              rules={[
+                {
+                  required: watchDiscountType != 1, // 1: percentage, 2: fixed-amt
+                  message: 'Please choose your discount amount!'
+                },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (watchDiscountType == 1) {
+                      return Promise.resolve()
+                    }
+                    const num = Number(value)
+                    if (isNaN(num) || num <= 0) {
+                      return Promise.reject(
+                        'Please input a valid amount (> 0).'
+                      )
+                    }
+                    if (
+                      !currencyDecimalValidate(num, getFieldValue('currency'))
+                    ) {
+                      return Promise.reject('Please input a valid amount')
+                    }
+                    return Promise.resolve()
+                  }
+                })
+              ]}
+            >
+              <Input
+                style={{ width: 180 }}
+                prefix={
+                  watchCurrency == null || watchCurrency == ''
+                    ? ''
+                    : CURRENCY[watchCurrency].symbol
+                }
+                disabled={watchDiscountType == 1 || !formEditable}
+              />
+            </Form.Item>
+          </SubForm>
+
+          <Form.Item
+            label="Billing Type"
+            name="billingType"
+            className=""
+            rules={[
+              {
+                required: true,
+                message: 'Please choose your billing type!'
+              }
+            ]}
+          >
+            <Select
+              style={{ width: 180 }}
+              options={[
+                { value: 1, label: 'One time use' },
+                { value: 2, label: 'Recurring' }
+              ]}
+            />
           </Form.Item>
+
+          <SubForm>
+            <Form.Item
+              label="Cycle Limit"
+              extra="How many billing cycles this discount code can be applied on a
+              recurring subscription (0 means no-limit)."
+            >
+              <Form.Item
+                noStyle
+                name="cycleLimit"
+                rules={[
+                  {
+                    required: watchBillingType != 1,
+                    message: 'Please input your cycleLimit!'
+                  },
+                  () => ({
+                    validator(_, value) {
+                      const num = Number(value)
+                      if (!Number.isInteger(num)) {
+                        return Promise.reject(
+                          'Please input a valid cycle limit number between 0 ~ 1000.'
+                        )
+                      }
+                      if (isNaN(num) || num < 0 || num > 999) {
+                        return Promise.reject(
+                          'Please input a valid cycle limit number between 0 ~ 1000.'
+                        )
+                      }
+                      return Promise.resolve()
+                    }
+                  })
+                ]}
+              >
+                <Input
+                  style={{ width: 180 }}
+                  disabled={watchBillingType == 1 || !formEditable}
+                />
+                {/* 1: one-time use */}
+              </Form.Item>
+            </Form.Item>
+          </SubForm>
 
           <Form.Item
             label="Code Apply Date Range"
@@ -643,21 +667,23 @@ const Index = () => {
           </Form.Item>
         </Form>
       )}
-      <div className="flex justify-between">
-        <Popconfirm
-          title="Deletion Confirm"
-          description="Are you sure to delete this discount code?"
-          onConfirm={onDelete}
-          showCancel={false}
-          okText="Yes"
-        >
-          <Button
-            danger
-            disabled={isNew || (code != null && code.status != 1)} // 1: editing
+      <div className={`flex ${isNew ? 'justify-end' : 'justify-between'}`}>
+        {!isNew && (
+          <Popconfirm
+            title="Deletion Confirm"
+            description="Are you sure to delete this discount code?"
+            onConfirm={onDelete}
+            showCancel={false}
+            okText="Yes"
           >
-            Delete
-          </Button>
-        </Popconfirm>
+            <Button
+              danger
+              disabled={isNew || (code != null && code.status != 1)} // 1: editing
+            >
+              Delete
+            </Button>
+          </Popconfirm>
+        )}
 
         <div className="flex justify-center gap-4">
           <Button onClick={goBack}>Go back</Button>
@@ -666,16 +692,11 @@ const Index = () => {
               View usage detail
             </Button>
           )}
-          {code != null &&
-            (code.status == 1 || code.status == 2 || code.status == 3) && (
-              <Button onClick={toggleActivate}>
-                {code.status == 1
-                  ? 'Activate'
-                  : code.status == 2
-                    ? 'Deactivate'
-                    : 'Activate'}
-              </Button>
-            )}
+          {!isNew && (
+            <Button onClick={toggleActivate}>
+              {title(toggleActiveButtonAction)}
+            </Button>
+          )}
 
           {!isAllFormItemsDisabled && (
             <Button onClick={form.submit} type="primary">
