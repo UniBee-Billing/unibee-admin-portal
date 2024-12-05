@@ -135,7 +135,7 @@ interface IPlan {
   amount: number
   status: number // 1: editing，2: active, 3: inactive，4: expired
   publishStatus: number // 1: unpublished(not visible to users), 2: published(users could see and choose this plan)
-  addons?: IAddon[] // bad design, make a ISubscriptionPlan interface extending from IPlan with quantity/checked
+  addons?: IAddon[]
   addonIds?: number[] // which addons have been attached to this plan.
   onetimeAddonIds?: number[] // which one-time payment addons have been attached to this plan (main plan only)
   metricPlanLimits?: { metricId: number; metricLimit: number }[]
@@ -562,6 +562,7 @@ export type {
   Country,
   DiscountCode,
   DiscountCodeUsage,
+  IAddon,
   IAppConfig,
   IBillableMetrics,
   IMerchantMemberProfile,

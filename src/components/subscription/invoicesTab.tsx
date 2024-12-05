@@ -30,7 +30,12 @@ import {
 import { useNavigate } from 'react-router-dom'
 import RefundIcon from '../../assets/refund.svg?react'
 import { CURRENCY, INVOICE_STATUS } from '../../constants'
-import { formatDate, getInvoicePermission, showAmount } from '../../helpers'
+import {
+  downloadStaticFile,
+  formatDate,
+  getInvoicePermission,
+  showAmount
+} from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getInvoiceListReq } from '../../requests'
 import '../../shared.css'
@@ -220,6 +225,10 @@ const Index = ({
       'Invoice list is being exported, please check task list for progress.'
     )
     appConfig.setTaskListOpen(true)
+  }
+
+  const downloadInvoice = (iv: UserInvoice) => () => {
+    downloadStaticFile(iv.sendPdf, `${iv.invoiceId}.pdf`)
   }
 
   const goSearch = () => {
@@ -437,7 +446,7 @@ const Index = ({
           </Tooltip>
           <Tooltip title="Download Invoice">
             <Button
-              // onClick={toggleNewInvoiceModal}
+              onClick={downloadInvoice(invoice)}
               icon={<DownloadOutlined />}
               style={{ border: 'unset' }}
               disabled={!getInvoicePermission(invoice).downloadable}

@@ -27,6 +27,15 @@ export const PlanSelector = ({
     () =>
       data
         .map((planWrapper) => ({ ...planWrapper, ...planWrapper.plan }))
+        .map((p) => {
+          // if addons is not empty, set quantity to 1 as default value.
+          if (p.addons != null && p.addons.length > 0) {
+            p.addons = p.addons.map((a) => ({ ...a, quantity: 1 }))
+            return p
+          } else {
+            return p
+          }
+        })
         .filter(filterPredicate ?? (() => true)),
     [data, filterPredicate]
   )
