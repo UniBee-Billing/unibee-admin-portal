@@ -24,6 +24,10 @@ import {
 } from '../../requests'
 import '../../shared.css'
 import { DiscountCode, DiscountCodeStatus } from '../../shared.types'
+import {
+  formatDateRange,
+  useTableDateFilter
+} from '../table/filters/dateFilter'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
@@ -68,6 +72,7 @@ export const DiscountCodeList = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
   const [isShowRowSelectCheckBox, setIsShowRowSelectCheckBox] = useState(false)
   const withExportAction = useWithExportAction()
+  const createTableDateFilter = useTableDateFilter<DiscountCode>()
 
   const rowSelection: TableRowSelection<DiscountCode> = {
     selectedRowKeys,
@@ -188,7 +193,8 @@ export const DiscountCodeList = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (createTime) => formatDate(createTime)
+      render: (createTime) => formatDate(createTime),
+      ...createTableDateFilter()
     },
     {
       title: 'Validity Range',
@@ -283,7 +289,13 @@ export const DiscountCodeList = () => {
     filters
   ) => {
     onPageChange(pagination.current!, pagination.pageSize!)
-    fetchData(filters, pagination.current! - 1)
+    fetchData(
+      formatDateRange(filters, 'createTime', {
+        start: 'createTimeStart',
+        end: 'createTimeEnd'
+      }),
+      pagination.current! - 1
+    )
   }
 
   const handleExportButtonClick = withExportAction(async () => {
