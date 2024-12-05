@@ -197,16 +197,18 @@ const SubtotalInfo = ({ iv }: { iv: Invoice }) => (
         {showAmount(iv.subscriptionAmountExcludingTax, iv.currency)}
       </Col>
     </Row>
-    <Row>
-      <Col span={17}></Col>
-      <Col span={4}>
-        Total Discounted
-        {/* <CouponPopover coupon={discount} /> */}
-      </Col>
-      <Col span={3} style={{ fontWeight: 'bold' }}>
-        {showAmount(-1 * iv.discountAmount, iv.currency)}
-      </Col>
-    </Row>
+    {iv.discountAmount !== 0 && (
+      <Row>
+        <Col span={17}></Col>
+        <Col span={4}>
+          Total Discounted
+          {/* <CouponPopover coupon={discount} /> */}
+        </Col>
+        <Col span={3} style={{ fontWeight: 'bold' }}>
+          {showAmount(-1 * iv.discountAmount, iv.currency)}
+        </Col>
+      </Row>
+    )}
     <Row>
       <Col span={17}></Col>
       <Col span={4}>
