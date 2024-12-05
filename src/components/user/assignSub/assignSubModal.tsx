@@ -337,11 +337,13 @@ export const AssignSubscriptionModal = ({
     updatePrice()
   }, [selectedPlan, updatePrice])
 
+  /*
   const planSelectorFilterPredicate = useCallback(
     (plan: IPlan | undefined) =>
       includeUnpublishedPlan || plan?.publishStatus === PublishStatus.PUBLISHED,
     [includeUnpublishedPlan]
   )
+    */
 
   return (
     <Modal
@@ -411,7 +413,7 @@ export const AssignSubscriptionModal = ({
           <InfoItem title="Choose plan">
             <PlanSelector
               onPlanSelected={setSelectedPlan}
-              filterPredicate={planSelectorFilterPredicate}
+              // filterPredicate={planSelectorFilterPredicate}
               productId={productId.toString()}
             />
           </InfoItem>
@@ -433,7 +435,7 @@ export const AssignSubscriptionModal = ({
                 onChange={(switched) => setRequirePayment(switched)}
               />
             </InfoItem>
-            <InfoItem
+            {/* <InfoItem
               title="Include unpublished plans"
               horizontal
               isBold={false}
@@ -443,7 +445,7 @@ export const AssignSubscriptionModal = ({
                 value={includeUnpublishedPlan}
                 onChange={(switched) => setIncludeUnpublishedPlan(switched)}
               />
-            </InfoItem>
+            </InfoItem> */}
           </div>
 
           <div className="my-8 h-[1px] w-full bg-gray-100"></div>
