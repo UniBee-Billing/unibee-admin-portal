@@ -73,6 +73,7 @@ export const Header = ({
                 'Export coupon list': onExportAllButtonClick
               }}
               disabled={disabled}
+              dropdownProps={{ placement: 'bottomRight' }}
               onExportButtonClick={onExportAllButtonClick}
             />
             <Button
