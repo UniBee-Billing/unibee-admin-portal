@@ -1,6 +1,5 @@
 import { Col, Row } from 'antd'
-import { IProfile, WithStyle } from '../../../shared.types'
-import { formatUserName } from '../../../utils'
+import { IProfile } from '../../../shared.types'
 
 export interface UserInfoCardProps {
   user: IProfile

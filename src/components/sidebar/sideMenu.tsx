@@ -1,8 +1,4 @@
-import Icon, {
-  PieChartOutlined,
-  TeamOutlined,
-  TransactionOutlined
-} from '@ant-design/icons'
+import Icon, { TransactionOutlined } from '@ant-design/icons'
 import { Menu, MenuProps } from 'antd'
 import { ItemType, MenuItemType } from 'antd/es/menu/interface'
 import { useLayoutEffect, useMemo, useState } from 'react'
