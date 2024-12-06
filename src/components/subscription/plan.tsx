@@ -1,4 +1,4 @@
-import { Checkbox, Input } from 'antd'
+import { Checkbox, Divider, Input } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import React, { useEffect, useState } from 'react'
 import { showAmount } from '../../helpers'
@@ -115,7 +115,12 @@ const Index = ({
         }}
       >
         <div style={{ fontSize: '28px' }}>{plan.planName}</div>
-        <div>{plan.description}</div>
+        <div style={{ fontSize: '14px' }}>{`${showAmount(
+          plan.amount,
+          plan.currency
+        )}/${plan.intervalCount == 1 ? '' : plan.intervalCount}${
+          plan.intervalUnit
+        }`}</div>
 
         {plan.addons && (
           <div
@@ -163,19 +168,17 @@ const Index = ({
             ))}
           </div>
         )}
-        <div style={{ fontSize: '14px' }}>{`${showAmount(
-          plan.amount,
-          plan.currency
-        )}/${plan.intervalCount == 1 ? '' : plan.intervalCount}${
-          plan.intervalUnit
-        }`}</div>
-        <div style={{ fontSize: '24px' }}>
-          Total:&nbsp;
-          {`${showAmount(totalAmount, plan.currency)}/${
-            plan.intervalCount == 1 ? '' : plan.intervalCount
-          }${plan.intervalUnit}`}
-        </div>
         <div>{trialInfo()}</div>
+
+        <Divider orientation="left" style={{ margin: '4px 0' }} />
+        <div className="flex w-full justify-around text-lg">
+          <div>Total</div>
+          <div>
+            {`${showAmount(totalAmount, plan.currency)}/${
+              plan.intervalCount == 1 ? '' : plan.intervalCount
+            }${plan.intervalUnit}`}
+          </div>
+        </div>
       </div>
     </div>
   )

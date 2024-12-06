@@ -1,3 +1,4 @@
+import Icon from '@ant-design/icons'
 import React, { ChangeEventHandler, ReactNode } from 'react'
 import { useAppConfigStore } from '../../stores'
 import PayPalIcon from './icon/PayPal.svg?react'
@@ -56,7 +57,7 @@ const PAYMENTS: {
   wire_transfer: {
     label: 'Wire Transfer',
     logo: [<WireIcon />].map((c, idx) => (
-      <div key={idx} className="flex h-12 w-12 items-center">
+      <div key={idx} className="flex h-8 w-8 items-center">
         {c}
       </div>
     )),
@@ -101,7 +102,7 @@ const Index = ({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex w-full flex-col gap-3">
       {gateways.map(({ gatewayId, gatewayName, label, logo }) => (
         <label
           onClick={onLabelClick}

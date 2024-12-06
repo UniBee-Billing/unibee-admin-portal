@@ -1,5 +1,7 @@
 import { message, Select } from 'antd'
 import { useMemo } from 'react'
+import HiddenIcon from '../../../assets/hidden.svg?react'
+import { formatPlanPrice } from '../../../helpers'
 import { PlanStatus, PlanType, usePlans } from '../../../hooks/usePlans'
 import { IPlan } from '../../../shared.types'
 
@@ -42,7 +44,22 @@ export const PlanSelector = ({
 
   const options = useMemo(
     () =>
-      innerPlans.map((plan) => ({ value: plan?.id, label: plan?.planName })),
+      innerPlans.map((p) => ({
+        value: p?.id,
+        label: (
+          <div className="flex items-center" data-plan-name={p.planName}>
+            <div>
+              <span id="selector-plan-name">{p.planName}</span>
+              {`(${formatPlanPrice(p)})`}
+            </div>
+            {p.publishStatus == 1 && (
+              <div className="absolute flex h-4 w-4" style={{ right: '14px' }}>
+                <HiddenIcon />
+              </div>
+            )}
+          </div>
+        )
+      })),
     [innerPlans]
   )
 
@@ -52,9 +69,10 @@ export const PlanSelector = ({
       loading={loading}
       disabled={loading}
       options={options}
-      filterOption={(input, option) =>
-        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-      }
+      filterOption={(input, option) => {
+        const planName = option?.label.props['data-plan-name']
+        return planName.toLowerCase().includes(input.toLowerCase())
+      }}
       onChange={(value) =>
         onPlanSelected?.(innerPlans.find((plan) => plan?.id === value)!)
       }

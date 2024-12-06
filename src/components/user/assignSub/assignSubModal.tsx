@@ -1,9 +1,9 @@
-import { Button, Form, Input, message, Modal, Switch } from 'antd'
+import { Button, Divider, Form, Input, message, Modal, Switch } from 'antd'
 import update from 'immutability-helper'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { showAmount } from '../../../helpers'
 import { useLoading } from '../../../hooks'
-import { PublishStatus } from '../../../hooks/usePlans'
+// import { PublishStatus } from '../../../hooks/usePlans'
 import {
   BusinessUserData,
   createSubscriptionReq,
@@ -108,7 +108,9 @@ export const AssignSubscriptionModal = ({
   )
   const [selectedPlan, setSelectedPlan] = useState<IPlan | undefined>()
   const [requirePayment, setRequirePayment] = useState(true)
-  const [includeUnpublishedPlan, setIncludeUnpublishedPlan] = useState(false)
+  // const [includeUnpublishedPlan, setIncludeUnpublishedPlan] = useState(false)
+  const [applyPromo, setApplyPromo] = useState(false)
+  const onApplyPromoChange = () => setApplyPromo(!applyPromo)
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
@@ -337,14 +339,6 @@ export const AssignSubscriptionModal = ({
     updatePrice()
   }, [selectedPlan, updatePrice])
 
-  /*
-  const planSelectorFilterPredicate = useCallback(
-    (plan: IPlan | undefined) =>
-      includeUnpublishedPlan || plan?.publishStatus === PublishStatus.PUBLISHED,
-    [includeUnpublishedPlan]
-  )
-    */
-
   return (
     <Modal
       title="Choose a subscription plan"
@@ -365,118 +359,137 @@ export const AssignSubscriptionModal = ({
       ]}
       closeIcon={null}
     >
-      <div className="my-6 flex justify-between">
-        <div className="mr-16 flex-1">
-          <UserInfoCard user={user} className="mb-6" />
-          <PaymentMethodSelector
-            selected={gatewayId}
-            onSelect={setGatewayId}
-            disabled={isLoading}
-          />
-          <InfoItem title="Account type" className="mt-6">
-            <AccountTypeForm
-              loading={isLoading}
-              previewData={previewData}
-              onFormValuesChange={(changedValues, values, accountType) => {
-                const [changedKey] = Object.keys(changedValues)
-
-                setAccountType(accountType)
-                accountFormValues.current = values as AccountValues
-
-                if (
-                  TRIGGER_PREVIEW_FIELDS.includes(changedKey) &&
-                  selectedPlan
-                ) {
-                  updatePrice()
-                }
-              }}
-              ref={accountTypeFormRef}
-              user={user}
-            ></AccountTypeForm>
-          </InfoItem>
-        </div>
-
-        <div className="flex-1">
-          <InfoItem title="Discount code">
-            <Form.Item
-              validateStatus={getValidStatusByMessage(
-                previewData?.discountMessage
-              )}
-              help={previewData?.discountMessage}
-            >
-              <Input
-                onChange={(e) => debouncedUpdateDiscountCode(e.target.value)}
-                placeholder="Discount code"
-              />
-            </Form.Item>
-          </InfoItem>
-          <InfoItem title="Choose plan">
+      <div className="my-6">
+        <UserInfoCard user={user} />
+        <Divider orientation="left" style={{ margin: '16px 0' }} />
+        <div className="flex gap-8">
+          <div className="w-1/2">
+            <div className="mb-2 text-lg font-bold text-gray-600">
+              Choose plan
+            </div>
             <PlanSelector
               onPlanSelected={setSelectedPlan}
-              // filterPredicate={planSelectorFilterPredicate}
               productId={productId.toString()}
             />
-          </InfoItem>
-          {selectedPlan && (
-            <div className="mt-8 flex justify-center">
-              <Plan
-                plan={selectedPlan}
-                selectedPlan={selectedPlan.id}
-                isThumbnail
-                isActive={false}
-                onAddonChange={onAddonChange}
-              />
-            </div>
-          )}
-          <div className="mt-8">
-            <InfoItem title="Require payment" horizontal isBold={false}>
-              <Switch
-                value={requirePayment}
-                onChange={(switched) => setRequirePayment(switched)}
-              />
+
+            {selectedPlan && (
+              <div className="mt-4 flex justify-center">
+                <Plan
+                  plan={selectedPlan}
+                  selectedPlan={selectedPlan.id}
+                  isThumbnail
+                  isActive={false}
+                  onAddonChange={onAddonChange}
+                />
+              </div>
+            )}
+            <InfoItem title="Account type" className="mt-6">
+              <AccountTypeForm
+                loading={isLoading}
+                previewData={previewData}
+                onFormValuesChange={(changedValues, values, accountType) => {
+                  const [changedKey] = Object.keys(changedValues)
+
+                  setAccountType(accountType)
+                  accountFormValues.current = values as AccountValues
+
+                  if (
+                    TRIGGER_PREVIEW_FIELDS.includes(changedKey) &&
+                    selectedPlan
+                  ) {
+                    updatePrice()
+                  }
+                }}
+                ref={accountTypeFormRef}
+                user={user}
+              ></AccountTypeForm>
             </InfoItem>
-            {/* <InfoItem
-              title="Include unpublished plans"
-              horizontal
-              isBold={false}
-              className="mt-2"
-            >
-              <Switch
-                value={includeUnpublishedPlan}
-                onChange={(switched) => setIncludeUnpublishedPlan(switched)}
-              />
-            </InfoItem> */}
           </div>
 
-          <div className="my-8 h-[1px] w-full bg-gray-100"></div>
-          <CheckoutItem
-            label="Subtotal"
-            loading={isLoading}
-            value={formatAmount(
-              previewData?.invoice.subscriptionAmountExcludingTax
-            )}
-          />
-          {selectedPlan && (
-            <CheckoutItem
-              loading={isLoading}
-              label={`Tax(${parsedTax}%)`}
-              value={formatAmount(previewData?.invoice.taxAmount)}
-            />
-          )}
-          <CheckoutItem
-            label={formattedDiscountLabel}
-            loading={isLoading}
-            value={formattedDiscountValue}
-          />
-          {selectedPlan && (
-            <div className="my-8 h-[1px] w-full bg-gray-100"></div>
-          )}
-          <CheckoutItem
-            labelStyle="text-lg"
-            loading={isLoading}
-            label="Total"
-            value={formatAmount(previewData?.totalAmount)}
-          />
+          <div className="w-1/2">
+            <div className="mb-2 text-lg font-bold text-gray-600">Payment</div>
+            <div className="mr-16 w-full flex-1">
+              <PaymentMethodSelector
+                selected={gatewayId}
+                onSelect={setGatewayId}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="mt-4 flex-1">
+              <InfoItem title="Discount code">
+                <Form.Item
+                  validateStatus={getValidStatusByMessage(
+                    previewData?.discountMessage
+                  )}
+                  help={previewData?.discountMessage}
+                >
+                  <Input
+                    onChange={(e) =>
+                      debouncedUpdateDiscountCode(e.target.value)
+                    }
+                    placeholder="Discount code"
+                  />
+                </Form.Item>
+              </InfoItem>
+
+              <div className="mt-1">
+                <InfoItem title="Require payment" horizontal isBold={false}>
+                  <Switch
+                    value={requirePayment}
+                    onChange={(switched) => setRequirePayment(switched)}
+                  />
+                </InfoItem>
+              </div>
+              <div className="mt-2">
+                <div className="flex justify-between">
+                  <div>Apply promo credits</div>
+                  <div>
+                    <Switch value={applyPromo} onChange={onApplyPromoChange} />
+                  </div>
+                </div>
+              </div>
+
+              {applyPromo && (
+                <div className="mt-2">
+                  <div className="flex justify-between">
+                    <Input style={{ width: 240 }} />
+                    <div></div>
+                  </div>
+                </div>
+              )}
+
+              <div className="my-8 h-[1px] w-full bg-gray-100"></div>
+              <CheckoutItem
+                label="Subtotal"
+                loading={isLoading}
+                value={formatAmount(
+                  previewData?.invoice.subscriptionAmountExcludingTax
+                )}
+              />
+              {selectedPlan && (
+                <CheckoutItem
+                  loading={isLoading}
+                  label={`Tax(${parsedTax}%)`}
+                  value={formatAmount(previewData?.invoice.taxAmount)}
+                />
+              )}
+              <CheckoutItem
+                label={formattedDiscountLabel}
+                loading={isLoading}
+                value={formattedDiscountValue}
+              />
+              {selectedPlan && (
+                <div className="my-8 h-[1px] w-full bg-gray-100"></div>
+              )}
+              <CheckoutItem
+                labelStyle="text-lg"
+                loading={isLoading}
+                label="Total"
+                value={formatAmount(previewData?.totalAmount)}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </Modal>
