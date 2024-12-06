@@ -37,7 +37,7 @@ import {
 } from '../../requests'
 import { DiscountCode, DiscountCodeStatus, IPlan } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
-import { isEmpty, title } from '../../utils'
+import { title } from '../../utils'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 import { formatQuantity } from './helpers'
 import { UpdateDiscountCodeQuantityModal } from './updateDiscountCodeQuantityModal'
@@ -72,15 +72,15 @@ const canActiveItemEdit = (status?: DiscountCodeStatus) =>
 
 const Index = () => {
   const params = useParams()
-  const codeId = params.discountCodeId
-  const isNew = isEmpty(codeId)
   const navigate = useNavigate()
   const location = useLocation()
   const discountCopyData = location.state?.copyDiscountCode
   const isCopy = !!discountCopyData
+  const codeId = params.discountCodeId
+  const isNew = !codeId || isCopy
   const [loading, setLoading] = useState(false)
   const [code, setCode] = useState<DiscountCode | null>(
-    isNew && !isCopy ? DEFAULT_CODE : null
+    !codeId && !isCopy ? DEFAULT_CODE : null
   )
   const [planList, setPlanList] = useState<IPlan[]>([])
   const planListRef = useRef<IPlan[]>([])
@@ -160,10 +160,13 @@ const Index = () => {
   }
 
   // for editing code, need to fetch code detail and planList
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-  const fetchData = async (data?: any) => {
+  const fetchData = async (data?: DiscountCode) => {
     const res = data ?? (await fetchDiscountCodeByQuery())
     const { discount, planList } = res
+
+    if (data) {
+      discount.status = undefined
+    }
 
     // if discount.currency is EUR, and discountType == 2(fixed amt), then filter the planList to contain only euro plans
     let plans =
@@ -301,7 +304,6 @@ const Index = () => {
   }
 
   const formEditable = isNew || code?.status === DiscountCodeStatus.EDITING
-  const isAllFormItemsDisabled = code?.status === DiscountCodeStatus.EXPIRED
 
   const toggleActiveButtonAction =
     code?.status === DiscountCodeStatus.ACTIVE ? 'deactivate' : 'activate'
@@ -543,7 +545,7 @@ const Index = () => {
           </SubForm>
 
           <Form.Item
-            label="Billing Type"
+            label="One-time or recurring"
             name="billingType"
             className=""
             rules={[
@@ -564,7 +566,7 @@ const Index = () => {
 
           <SubForm>
             <Form.Item
-              label="Cycle Limit"
+              label="Recurring cycle"
               extra="How many billing cycles this discount code can be applied on a
               recurring subscription (0 means no-limit)."
             >
@@ -698,7 +700,7 @@ const Index = () => {
             </Button>
           )}
 
-          {!isAllFormItemsDisabled && (
+          {(code?.status !== DiscountCodeStatus.EXPIRED || isNew) && (
             <Button onClick={form.submit} type="primary">
               Save
             </Button>

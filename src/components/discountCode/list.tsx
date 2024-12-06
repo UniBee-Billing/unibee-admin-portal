@@ -4,7 +4,7 @@ import {
   EditOutlined,
   ProfileOutlined
 } from '@ant-design/icons'
-import { Space, Table, message } from 'antd'
+import { Modal, Space, Table, message } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { Key, useCallback, useEffect, useState } from 'react'
@@ -24,6 +24,10 @@ import {
 } from '../../requests'
 import '../../shared.css'
 import { DiscountCode, DiscountCodeStatus } from '../../shared.types'
+import {
+  formatDateRange,
+  useTableDateFilter
+} from '../table/filters/dateFilter'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
@@ -68,6 +72,7 @@ export const DiscountCodeList = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
   const [isShowRowSelectCheckBox, setIsShowRowSelectCheckBox] = useState(false)
   const withExportAction = useWithExportAction()
+  const createTableDateFilter = useTableDateFilter<DiscountCode>()
 
   const rowSelection: TableRowSelection<DiscountCode> = {
     selectedRowKeys,
@@ -188,7 +193,8 @@ export const DiscountCodeList = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (createTime) => formatDate(createTime)
+      render: (createTime) => formatDate(createTime),
+      ...createTableDateFilter()
     },
     {
       title: 'Validity Range',
@@ -232,8 +238,19 @@ export const DiscountCodeList = () => {
 
           <ListItemActionButton
             tooltipMessage="Delete"
+            disabled={record.status !== DiscountCodeStatus.EDITING}
             asyncTask
-            onClick={() => deleteDiscountCode(record)}
+            onClick={async () => {
+              await new Promise((resolve, reject) =>
+                Modal.confirm({
+                  title: `Delete the ${record.name} coupon code?`,
+                  content: 'Are you sure to archive this coupon code?',
+                  onOk: () => resolve(undefined),
+                  onCancel: () => reject(undefined)
+                })
+              )
+              await deleteDiscountCode(record)
+            }}
           >
             <DeleteOutlined />
           </ListItemActionButton>
@@ -283,7 +300,13 @@ export const DiscountCodeList = () => {
     filters
   ) => {
     onPageChange(pagination.current!, pagination.pageSize!)
-    fetchData(filters, pagination.current! - 1)
+    fetchData(
+      formatDateRange(filters, 'createTime', {
+        start: 'createTimeStart',
+        end: 'createTimeEnd'
+      }),
+      pagination.current! - 1
+    )
   }
 
   const handleExportButtonClick = withExportAction(async () => {
@@ -306,10 +329,8 @@ export const DiscountCodeList = () => {
   const handleExportAllButtonClick = withExportAction(() =>
     withExportAllButtonLoading(() =>
       exportDataReq({
-        task: 'MultiUserDiscountExport',
-        payload: {
-          exportAll: 1
-        }
+        task: 'DiscountExport',
+        payload: {}
       })
     )
   )
