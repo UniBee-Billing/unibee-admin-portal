@@ -1,4 +1,3 @@
-import Icon from '@ant-design/icons'
 import React, { ChangeEventHandler, ReactNode } from 'react'
 import { useAppConfigStore } from '../../stores'
 import PayPalIcon from './icon/PayPal.svg?react'
