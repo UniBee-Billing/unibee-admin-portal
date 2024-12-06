@@ -238,7 +238,6 @@ export const DiscountCodeList = () => {
 
           <ListItemActionButton
             tooltipMessage="Delete"
-            disabled={record.status !== DiscountCodeStatus.EDITING}
             asyncTask
             onClick={async () => {
               await new Promise((resolve, reject) =>
