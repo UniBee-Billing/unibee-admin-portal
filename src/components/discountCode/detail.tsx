@@ -543,7 +543,7 @@ const Index = () => {
           </SubForm>
 
           <Form.Item
-            label="Billing Type"
+            label="One-time or recurring"
             name="billingType"
             className=""
             rules={[
@@ -564,7 +564,7 @@ const Index = () => {
 
           <SubForm>
             <Form.Item
-              label="Cycle Limit"
+              label="Recurring cycle"
               extra="How many billing cycles this discount code can be applied on a
               recurring subscription (0 means no-limit)."
             >
