@@ -3,10 +3,7 @@ import { Button } from 'antd'
 import Search, { SearchProps } from 'antd/es/input/Search'
 import { Key } from 'react'
 import { WithStyle } from '../../shared.types'
-import {
-  ExportButton,
-  ExportButtonWithSelectOption
-} from '../table/exportButton'
+import { ExportButton } from '../table/exportButton'
 
 interface HeaderProps {
   selectedRowKeys: Key[]
@@ -68,12 +65,13 @@ export const Header = ({
             style={{ width: 375 }}
           />
           <div className="flex">
-            <ExportButtonWithSelectOption
+            <ExportButton
               loading={isLoadingExportAllButton}
-              selectExportButtonTitle="Export selected code usage details"
-              onSelectExportButtonClick={
-                onExportSelectedCodeUsageDetailsButtonClick
-              }
+              moreActions={{
+                'Export selected code usage details':
+                  onExportSelectedCodeUsageDetailsButtonClick,
+                'Export coupon list': onExportAllButtonClick
+              }}
               disabled={disabled}
               onExportButtonClick={onExportAllButtonClick}
             />

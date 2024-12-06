@@ -1,9 +1,10 @@
-import { Button, ButtonProps, Dropdown } from 'antd'
+import { DownOutlined } from '@ant-design/icons'
+import { Button, ButtonProps, Dropdown, Space } from 'antd'
 import { PropsWithChildren } from 'react'
 import { convertActions2Menu } from '../../utils'
 
 export interface ExportButtonProps extends ButtonProps {
-  onExportButtonClick(): void
+  onExportButtonClick?(): void
   moreActions?: Record<string, () => void>
 }
 
@@ -12,34 +13,18 @@ export const ExportButton = ({
   onExportButtonClick,
   children = 'Export',
   ...buttonProps
-}: PropsWithChildren<ExportButtonProps>) => {
-  return moreActions ? (
-    <Dropdown.Button
-      onClick={onExportButtonClick}
-      menu={convertActions2Menu(moreActions)}
-      {...buttonProps}
-    >
-      {children}
-    </Dropdown.Button>
+}: PropsWithChildren<ExportButtonProps>) =>
+  moreActions ? (
+    <Dropdown menu={convertActions2Menu(moreActions)}>
+      <Button>
+        <Space>
+          {children}
+          <DownOutlined />
+        </Space>
+      </Button>
+    </Dropdown>
   ) : (
     <Button onClick={onExportButtonClick} {...buttonProps}>
       {children}
     </Button>
   )
-}
-
-export interface ExportButtonWithSelectOptionProps extends ExportButtonProps {
-  selectExportButtonTitle: string
-  onSelectExportButtonClick(): void
-}
-
-export const ExportButtonWithSelectOption = ({
-  onSelectExportButtonClick,
-  selectExportButtonTitle,
-  ...exportButtonProps
-}: ExportButtonWithSelectOptionProps) => (
-  <ExportButton
-    moreActions={{ [selectExportButtonTitle]: onSelectExportButtonClick }}
-    {...exportButtonProps}
-  />
-)
