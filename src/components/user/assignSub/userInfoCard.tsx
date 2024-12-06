@@ -1,29 +1,20 @@
-import { IProfile, WithStyle } from '../../../shared.types'
-import { formatUserName } from '../../../utils'
+import { Col, Row } from 'antd'
+import { IProfile } from '../../../shared.types'
 
 export interface UserInfoCardProps {
   user: IProfile
 }
 
-interface UserInfoItemProps {
-  title: string
-  value?: number | string | null
-}
-
-const UserInfoItem = ({ title, value = '' }: UserInfoItemProps) => (
-  <div className="flex items-center">
-    <div className="w-16 font-bold">{title}</div>
-    <div>{value}</div>
-  </div>
-)
-
-export const UserInfoCard = ({
-  user,
-  className
-}: WithStyle<UserInfoCardProps>) => (
-  <div className={className}>
-    <UserInfoItem title="User Id" value={user.id} />
-    <UserInfoItem title="Name" value={formatUserName(user)} />
-    <UserInfoItem title="Email" value={user.email} />
-  </div>
+export const UserInfoCard = ({ user }: { user: IProfile }) => (
+  <Row className="text-gray-600">
+    <Col span={8}>
+      <span>User Id: </span> <span>{user.id}</span>{' '}
+    </Col>
+    <Col span={8}>
+      <span>Name: </span> <span>{`${user.firstName} ${user.lastName}`}</span>{' '}
+    </Col>
+    <Col span={8}>
+      <span>Email: </span> <span>{user.email}</span>{' '}
+    </Col>
+  </Row>
 )

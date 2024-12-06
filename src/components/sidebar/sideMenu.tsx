@@ -1,13 +1,10 @@
-import Icon, {
-  PieChartOutlined,
-  TeamOutlined,
-  TransactionOutlined
-} from '@ant-design/icons'
+import Icon, { TransactionOutlined } from '@ant-design/icons'
 import { Menu, MenuProps } from 'antd'
 import { ItemType, MenuItemType } from 'antd/es/menu/interface'
 import { useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ActivityLogSvg from '../../assets/navIcons/activityLog.svg?react'
+import AdminListSvg from '../../assets/navIcons/adminList.svg?react'
 import BillableMetricsSvg from '../../assets/navIcons/billableMetrics.svg?react'
 import ConfigSvg from '../../assets/navIcons/config.svg?react'
 import DiscountCodeSvg from '../../assets/navIcons/discountCode.svg?react'
@@ -15,8 +12,8 @@ import InvoiceSvg from '../../assets/navIcons/invoice.svg?react'
 import MyAccountSvg from '../../assets/navIcons/myAccount.svg?react'
 import ProductPlanSvg from '../../assets/navIcons/productPlan.svg?react'
 import ReportSvg from '../../assets/navIcons/report.svg?react'
+import SubscriptionSvg from '../../assets/navIcons/subscription.svg?react'
 import UserListSvg from '../../assets/navIcons/userList.svg?react'
-
 import { useAccessiblePages } from '../../hooks/useAccessiblePages'
 import { APP_ROUTES } from '../../routes'
 import { useProfileStore } from '../../stores'
@@ -41,7 +38,7 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
   {
     label: 'Subscription',
     key: 'subscription',
-    icon: <PieChartOutlined />
+    icon: <Icon component={SubscriptionSvg} />
   },
   { label: 'Invoice', key: 'invoice', icon: <Icon component={InvoiceSvg} /> },
   {
@@ -50,7 +47,11 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     icon: <TransactionOutlined />
   },
   { label: 'User List', key: 'user', icon: <Icon component={UserListSvg} /> },
-  { label: 'Admin List', key: 'admin', icon: <TeamOutlined /> },
+  {
+    label: 'Admin List',
+    key: 'admin',
+    icon: <Icon component={AdminListSvg} />
+  },
   // The backend of Analytics is not completed yet, so it should hide from the menu until backend is ready
   // { label: 'Analytics', key: 'analytics', icon: <PieChartOutlined /> },
   {
