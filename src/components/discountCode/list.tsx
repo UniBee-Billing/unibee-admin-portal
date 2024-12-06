@@ -329,10 +329,8 @@ export const DiscountCodeList = () => {
   const handleExportAllButtonClick = withExportAction(() =>
     withExportAllButtonLoading(() =>
       exportDataReq({
-        task: 'MultiUserDiscountExport',
-        payload: {
-          exportAll: 1
-        }
+        task: 'DiscountExport',
+        payload: {}
       })
     )
   )
