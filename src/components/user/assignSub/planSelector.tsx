@@ -1,4 +1,4 @@
-import { message, Select } from 'antd'
+import { Divider, message, Select } from 'antd'
 import { useMemo } from 'react'
 import HiddenIcon from '../../../assets/hidden.svg?react'
 import { formatPlanPrice } from '../../../helpers'
@@ -42,26 +42,46 @@ export const PlanSelector = ({
     [data, filterPredicate]
   )
 
-  const options = useMemo(
-    () =>
-      innerPlans.map((p) => ({
-        value: p?.id,
-        label: (
-          <div className="flex items-center" data-plan-name={p.planName}>
-            <div>
-              <span id="selector-plan-name">{p.planName}</span>
-              {`(${formatPlanPrice(p)})`}
-            </div>
-            {p.publishStatus == 1 && (
-              <div className="absolute flex h-4 w-4" style={{ right: '14px' }}>
-                <HiddenIcon />
-              </div>
-            )}
+  const optionMapper = (p: IPlan) => ({
+    value: p?.id,
+    label: (
+      <div className="flex items-center" data-plan-name={p.planName}>
+        <div>
+          <span id="selector-plan-name">{p.planName}</span>&nbsp;
+          <span className="text-xs text-gray-400">{`(${formatPlanPrice(p)})`}</span>
+        </div>
+        {p.publishStatus == 1 && (
+          <div className="absolute flex h-4 w-4" style={{ right: '14px' }}>
+            <HiddenIcon />
           </div>
-        )
-      })),
-    [innerPlans]
-  )
+        )}
+      </div>
+    )
+  })
+
+  const options = useMemo(() => {
+    const published = innerPlans
+      .filter((p) => p.publishStatus != 1)
+      .map(optionMapper)
+    const divider = {
+      value: -1,
+      label: (
+        <Divider style={{ margin: '2px 0' }}>
+          <span className="text-xs font-light text-gray-400">
+            ↓ Unpublished plans ↓
+          </span>
+        </Divider>
+      ),
+      disabled: true
+    }
+    const unpublished = innerPlans
+      .filter((p) => p.publishStatus == 1)
+      .map(optionMapper)
+
+    return unpublished.length == 0
+      ? published
+      : [...published, divider, ...unpublished]
+  }, [innerPlans])
 
   return (
     <Select
@@ -71,7 +91,7 @@ export const PlanSelector = ({
       options={options}
       filterOption={(input, option) => {
         const planName = option?.label.props['data-plan-name']
-        return planName.toLowerCase().includes(input.toLowerCase())
+        return planName?.toLowerCase().includes(input.toLowerCase())
       }}
       onChange={(value) =>
         onPlanSelected?.(innerPlans.find((plan) => plan?.id === value)!)
