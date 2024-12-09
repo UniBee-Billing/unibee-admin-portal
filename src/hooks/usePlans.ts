@@ -20,9 +20,9 @@ export enum PublishStatus {
 }
 
 export interface UsePlansOptions {
-  productIds?: string[]
-  type: PlanType
-  status?: PlanStatus
+  productIds?: number[]
+  type: PlanType[]
+  status?: PlanStatus[]
   publishStatus?: PublishStatus
   currency?: string
   sortField?: 'gmt_create' | 'gmt_modify'
@@ -33,9 +33,15 @@ export interface UsePlansOptions {
 }
 
 export const usePlans = ({ onError, ...requestParams }: UsePlansOptions) => {
+  if (requestParams.page == undefined) {
+    requestParams.page = 0
+  }
+  if (requestParams.count == undefined) {
+    requestParams.count = 200
+  }
   const res = useAxiosFetch(
     '/merchant/plan/list',
-    (url) => request.get(url, { params: requestParams }),
+    (url) => request.post(url, { params: requestParams }),
     { onError }
   )
 
