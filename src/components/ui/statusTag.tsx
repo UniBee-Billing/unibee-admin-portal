@@ -85,7 +85,8 @@ const DISCOUNT_CODE_STATUS_TAG: { [key: number]: ReactElement } = {
   1: <Tag color="blue">{DISCOUNT_CODE_STATUS[1]}</Tag>,
   2: <Tag color="#87d068">{DISCOUNT_CODE_STATUS[2]}</Tag>,
   3: <Tag color="purple">{DISCOUNT_CODE_STATUS[3]}</Tag>,
-  4: <Tag color="red">{DISCOUNT_CODE_STATUS[4]}</Tag>
+  4: <Tag color="red">{DISCOUNT_CODE_STATUS[4]}</Tag>,
+  10: <Tag color="gray">{DISCOUNT_CODE_STATUS[10]}</Tag>
 }
 const getDiscountCodeStatusTagById = (statusId: number) =>
   DISCOUNT_CODE_STATUS_TAG[statusId]

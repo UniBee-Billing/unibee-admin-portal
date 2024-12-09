@@ -678,12 +678,7 @@ const Index = () => {
             showCancel={false}
             okText="Yes"
           >
-            <Button
-              danger
-              disabled={isNew || (code != null && code.status != 1)} // 1: editing
-            >
-              Delete
-            </Button>
+            <Button danger>Delete</Button>
           </Popconfirm>
         )}
 

@@ -100,7 +100,8 @@ export const DISCOUNT_CODE_STATUS: { [key: number]: string } = {
   1: 'Editing',
   2: 'Active',
   3: 'Inactive',
-  4: 'Expired'
+  4: 'Expired',
+  10: 'Archived'
 }
 
 export const DISCOUNT_CODE_BILLING_TYPE: { [key: number]: string } = {
