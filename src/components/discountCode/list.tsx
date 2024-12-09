@@ -215,6 +215,7 @@ export const DiscountCodeList = () => {
         <Space size="middle" className="code-action-btn-wrapper">
           <ListItemActionButton
             tooltipMessage="Edit"
+            disabled={record.status === DiscountCodeStatus.ARCHIVED}
             onClick={() => navigateToEditPage(record)}
           >
             <EditOutlined />
@@ -237,12 +238,13 @@ export const DiscountCodeList = () => {
           </ListItemActionButton>
 
           <ListItemActionButton
-            tooltipMessage="Delete"
+            tooltipMessage="Archive"
             asyncTask
+            disabled={record.status === DiscountCodeStatus.ARCHIVED}
             onClick={async () => {
               await new Promise((resolve, reject) =>
                 Modal.confirm({
-                  title: `Delete the ${record.name} coupon code?`,
+                  title: `Archive the ${record.name} coupon code?`,
                   content: 'Are you sure to archive this coupon code?',
                   onOk: () => resolve(undefined),
                   onCancel: () => reject(undefined)
@@ -335,12 +337,15 @@ export const DiscountCodeList = () => {
   )
 
   useEffect(() => {
-    fetchData()
+    fetchData({}, page)
   }, [fetchData])
 
   const handleRowClick = (code: DiscountCode) => {
     // If in exporting mode, do not allow row click
-    if (isShowRowSelectCheckBox) {
+    if (
+      isShowRowSelectCheckBox ||
+      code.status === DiscountCodeStatus.ARCHIVED
+    ) {
       return
     }
 

@@ -542,7 +542,8 @@ export enum DiscountCodeStatus {
   EDITING = 1,
   ACTIVE,
   DEACTIVATE,
-  EXPIRED
+  EXPIRED,
+  ARCHIVED = 10
 }
 
 export type TExportDataType =
