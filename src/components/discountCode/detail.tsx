@@ -678,7 +678,7 @@ const Index = () => {
             showCancel={false}
             okText="Yes"
           >
-            <Button danger>Delete</Button>
+            <Button danger>Archive</Button>
           </Popconfirm>
         )}
 
