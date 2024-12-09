@@ -902,7 +902,7 @@ type TCreateSubReq = {
   gatewayId: number
   userId: number
   trialEnd?: number
-  addons?: { quantity: number; addonPlanId: number }[]
+  addonParams?: { quantity: number; addonPlanId: number }[]
   confirmTotalAmount?: number
   confirmCurrency?: string
   startIncomplete?: boolean
@@ -917,7 +917,7 @@ export const createSubscriptionReq = async ({
   gatewayId,
   userId,
   trialEnd,
-  addons,
+  addonParams,
   confirmCurrency,
   confirmTotalAmount,
   startIncomplete,
@@ -933,7 +933,7 @@ export const createSubscriptionReq = async ({
       userId,
       trialEnd,
       quantity: 1,
-      addonParams: addons,
+      addonParams: addonParams,
       confirmTotalAmount,
       confirmCurrency,
       startIncomplete,
@@ -947,6 +947,10 @@ export const createSubscriptionReq = async ({
       throw new ExpiredError(
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
+    }
+    if (res.data.code == 51) {
+      // amt in preview data not matched amt in submit body
+      throw new Error(res.data.message)
     }
     return [res.data.data, null]
   } catch (err) {

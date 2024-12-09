@@ -48,7 +48,11 @@ const Index = ({
     onAddonChange?.(addonId, null, e.target.checked)
   }
   const addonQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onAddonChange?.(Number(e.target.id), Number(e.target.value), null)
+    const q = Number(e.target.value)
+    if (isNaN(q) || !Number.isInteger(q) || q <= 0) {
+      return
+    }
+    onAddonChange?.(Number(e.target.id), q, null)
   }
 
   const trialInfo = () => {
