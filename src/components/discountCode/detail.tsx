@@ -672,8 +672,8 @@ const Index = () => {
       <div className={`flex ${isNew ? 'justify-end' : 'justify-between'}`}>
         {!isNew && (
           <Popconfirm
-            title="Deletion Confirm"
-            description="Are you sure to delete this discount code?"
+            title="Archive Confirm"
+            description="Are you sure to archive this discount code?"
             onConfirm={onDelete}
             showCancel={false}
             okText="Yes"
