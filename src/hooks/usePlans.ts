@@ -39,7 +39,7 @@ export const usePlans = ({ onError, ...requestParams }: UsePlansOptions) => {
     { onError }
   )
 
-  const plans: IPlan[] = res.data?.data.plans ?? []
+  const plans: IPlan[] = res.data?.data?.plans ?? []
 
   return { ...res, data: plans }
 }
