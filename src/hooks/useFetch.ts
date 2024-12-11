@@ -33,7 +33,7 @@ export function useFetch<T>(
         options?.onSuccess?.(res)
       })
 
-      if (err !== null) {
+      if (err) {
         setError(err)
         options?.onError?.(err)
       }
