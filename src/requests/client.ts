@@ -3,6 +3,7 @@ import axios from 'axios'
 enum ResponseCode {
   SESSION_EXPIRED = 61,
   INVALID_PERMISSION = 62,
+  VALIDATION_FAILED = 51,
   SUCCESS = 0
 }
 
@@ -53,6 +54,10 @@ request.interceptors.response.use(
     // If the Content-Type is not application/json, we don't need to check the response
     if (typeof data === 'string') {
       return responseConfig
+    }
+
+    if (data.code === ResponseCode.VALIDATION_FAILED) {
+      return Promise.reject(new Error(responseConfig.data.message))
     }
 
     if (
