@@ -149,7 +149,7 @@ const updateSubPreview = ({
         <Button
           type="primary"
           onClick={onOK}
-          loading={loading}
+          loading={confirming || loading}
           disabled={loading || confirming || previewInfo === null}
         >
           OK

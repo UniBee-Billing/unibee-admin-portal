@@ -1,34 +1,77 @@
-import { Divider, message, Select } from 'antd'
-import { useMemo } from 'react'
+import { Divider, message, Select, Tag } from 'antd'
+import { useEffect, useMemo, useState } from 'react'
 import HiddenIcon from '../../../assets/hidden.svg?react'
 import { formatPlanPrice } from '../../../helpers'
-import { PlanStatus, PlanType, usePlans } from '../../../hooks/usePlans'
+import { PlanStatus, PlanType } from '../../../hooks/usePlans'
+import { getPlanList } from '../../../requests'
 import { IPlan } from '../../../shared.types'
 
 interface PlanSelectorProps {
-  productId: string
+  productId: number
+  currentPlanId?: number // this is used only in <ChangePlan /> modal: when upgrade from planA(current) to planB, planA need to be highlighted.
+  selectedPlanId: number | null
   filterPredicate?: (plan: IPlan | undefined) => boolean
   onPlanSelected?: (plan: IPlan) => void
 }
 
 export const PlanSelector = ({
   productId,
+  currentPlanId,
+  selectedPlanId,
   onPlanSelected,
   filterPredicate
 }: PlanSelectorProps) => {
+  /*
   const { data, loading } = usePlans({
-    type: PlanType.MAIN,
+    type: [PlanType.MAIN],
     productIds: [productId],
-    status: PlanStatus.ACTIVE,
+    status: [PlanStatus.ACTIVE],
+    page: 0,
+    count: 200,
     onError: (err) => {
       message.error(err.message)
     }
   })
+    */
+
+  // todo: planList can be passed from parent, if null, run getPlanList.
+  const [plans, setPlans] = useState<IPlan[]>([])
+  const [loading, setLoading] = useState(false)
+  const fetchPlan = async () => {
+    setLoading(true)
+    const [planList, err] = await getPlanList(
+      {
+        type: [PlanType.MAIN],
+        productIds: [productId],
+        status: [PlanStatus.ACTIVE],
+        page: 0,
+        count: 200
+      },
+      fetchPlan
+    )
+    setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    const { plans } = planList
+    setPlans(
+      plans == null
+        ? []
+        : plans.map((p: IPlan) => ({
+            ...p,
+            ...p.plan
+          }))
+    )
+  }
+
+  useEffect(() => {
+    fetchPlan()
+  }, [])
 
   const innerPlans = useMemo(
     () =>
-      data
-        .map((planWrapper) => ({ ...planWrapper, ...planWrapper.plan }))
+      plans
         .map((p) => {
           // if addons is not empty, set quantity to 1 as default value.
           if (p.addons != null && p.addons.length > 0) {
@@ -39,7 +82,7 @@ export const PlanSelector = ({
           }
         })
         .filter(filterPredicate ?? (() => true)),
-    [data, filterPredicate]
+    [plans, filterPredicate]
   )
 
   const optionMapper = (p: IPlan) => ({
@@ -50,6 +93,11 @@ export const PlanSelector = ({
           <span id="selector-plan-name">{p.planName}</span>&nbsp;
           <span className="text-xs text-gray-400">{`(${formatPlanPrice(p)})`}</span>
         </div>
+        {currentPlanId == p.id && (
+          <div className="ml-2">
+            <Tag color="orange">Current Plan</Tag>
+          </div>
+        )}
         {p.publishStatus == 1 && (
           <div className="absolute flex h-4 w-4" style={{ right: '14px' }}>
             <HiddenIcon />
@@ -93,6 +141,7 @@ export const PlanSelector = ({
         const planName = option?.label.props['data-plan-name']
         return planName?.toLowerCase().includes(input.toLowerCase())
       }}
+      value={selectedPlanId}
       onChange={(value) =>
         onPlanSelected?.(innerPlans.find((plan) => plan?.id === value)!)
       }

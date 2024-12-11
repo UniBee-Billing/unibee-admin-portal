@@ -364,7 +364,10 @@ export const AssignSubscriptionModal = ({
             </div>
             <PlanSelector
               onPlanSelected={setSelectedPlan}
-              productId={productId.toString()}
+              productId={productId}
+              selectedPlanId={
+                selectedPlan == undefined ? null : selectedPlan.id
+              }
             />
 
             {selectedPlan && (

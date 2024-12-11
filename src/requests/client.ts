@@ -28,7 +28,7 @@ const analyticsRequest = axios.create({
 request.interceptors.request.use(
   (requestConfig) => {
     const token = localStorage.getItem('merchantToken')
-    requestConfig.headers.Authorization = token // to be declared as: `Bearer ${token}`;
+    requestConfig.headers.Authorization = token
     return requestConfig
   },
   (error) => {
@@ -39,7 +39,7 @@ request.interceptors.request.use(
 analyticsRequest.interceptors.request.use(
   (requestConfig) => {
     const token = localStorage.getItem('merchantToken')
-    requestConfig.headers.Authorization = token // to be declared as: `Bearer ${token}`;
+    requestConfig.headers.Authorization = token
     return requestConfig
   },
   (error) => {
