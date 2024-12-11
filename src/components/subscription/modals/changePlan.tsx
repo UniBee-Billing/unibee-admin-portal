@@ -1,10 +1,11 @@
-import { Button, Divider, Input, message, Modal, Select, Tag } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
-import HiddenIcon from '../../../assets/hidden.svg?react'
-import { formatPlanPrice } from '../../../helpers'
+import { Button, Divider, Input, message, Modal } from 'antd'
+import { useEffect, useState } from 'react'
+// import HiddenIcon from '../../../assets/hidden.svg?react'
+// import { formatPlanPrice } from '../../../helpers'
 import { applyDiscountPreviewReq } from '../../../requests'
 import { DiscountCode, IPlan, ISubscriptionType } from '../../../shared.types'
 import CouponPopover from '../../ui/couponPopover'
+import { PlanSelector } from '../../user/assignSub/planSelector'
 import Plan from '../plan'
 
 interface Props {
@@ -44,10 +45,12 @@ const ChangePlan = ({
     null
   ) // null: no code provided
   const [codeChecking, setCodeChecking] = useState(false)
+  /*
   const sameProductPlans = useMemo(
     () => plans.filter((plan) => subInfo?.productId === plan.productId),
     [plans, subInfo]
   )
+    */
 
   if (selectedPlanId == null) {
     return null
@@ -99,7 +102,13 @@ const ChangePlan = ({
     >
       <Divider>Choose a new subscription plan</Divider>
       <div className="mx-3 my-6 flex items-center justify-center">
-        <Select
+        <PlanSelector
+          currentPlanId={subInfo?.planId}
+          selectedPlanId={selectedPlanId}
+          productId={subInfo!.productId}
+          onPlanSelected={(p: IPlan) => setSelectedPlan(p.id)}
+        />
+        {/* <Select
           style={{ width: 420 }}
           value={selectedPlanId}
           onChange={setSelectedPlan}
@@ -141,7 +150,7 @@ const ChangePlan = ({
               ),
             value: p.id
           }))}
-        />
+        /> */}
       </div>
 
       <div className="flex items-center justify-center">
