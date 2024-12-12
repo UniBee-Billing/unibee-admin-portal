@@ -26,7 +26,7 @@ export const useCountries = () => {
         merchantId: merchantStore.id
       })
   )
-  const countries = useMemo(() => data?.data.vatCountryList ?? [], [data])
+  const countries = useMemo(() => data?.data?.vatCountryList ?? [], [data])
 
   return { countries, ...restStates }
 }
