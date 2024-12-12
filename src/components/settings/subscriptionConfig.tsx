@@ -151,8 +151,8 @@ export const SubscriptionConfig = () => {
 
   return (
     <List>
-      {configs.map(({ component, title, description }) => (
-        <List.Item>
+      {configs.map(({ component, title, description }, idx: number) => (
+        <List.Item key={idx}>
           <ConfigItem key={title} title={title} description={description}>
             {component}
           </ConfigItem>

@@ -2,6 +2,7 @@ import axios from 'axios'
 import { CURRENCY } from '../constants'
 import {
   AccountType,
+  CreditType,
   DiscountCode,
   ExpiredError,
   IProfile,
@@ -2706,6 +2707,64 @@ export const getProductDetailReq = async (productId: number) => {
       )
     }
     return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getCreditConfigListReq = async ({
+  types,
+  currency
+}: {
+  types: CreditType[]
+  currency: string
+}) => {
+  try {
+    const res = await request.post(`/merchant/credit/config_list`, {
+      types,
+      currency
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.creditConfigs, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const createCreditConfigReq = async () => {
+  try {
+    const res = await request.post(`/merchant/credit/config_list`, {})
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.creditConfigs, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// save changes for an existing credit config
+export const saveCreditConfigReq = async () => {
+  try {
+    const res = await request.post(`/merchant/credit/config_list`, {})
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.creditConfigs, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
