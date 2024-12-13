@@ -60,7 +60,7 @@ export const Header = ({
         <div className="flex justify-between">
           <Search
             allowClear
-            placeholder="Enter coupon code or name"
+            placeholder="Search by Code or Name"
             onSearch={onSearch}
             style={{ width: 375 }}
           />
@@ -70,7 +70,7 @@ export const Header = ({
               moreActions={{
                 'Export selected code usage details':
                   onExportSelectedCodeUsageDetailsButtonClick,
-                'Export coupon list': onExportAllButtonClick
+                'Export discount code list': onExportAllButtonClick
               }}
               disabled={disabled}
               dropdownProps={{ placement: 'bottomRight' }}
