@@ -24,6 +24,7 @@ import {
 } from '../../requests'
 import '../../shared.css'
 import { DiscountCode, DiscountCodeStatus } from '../../shared.types'
+import { title } from '../../utils'
 import {
   formatDateRange,
   useTableDateFilter
@@ -46,12 +47,12 @@ const CODE_STATUS_FILTER = Object.entries(DISCOUNT_CODE_STATUS).map((s) => {
 const BILLING_TYPE_FILTER = Object.entries(DISCOUNT_CODE_BILLING_TYPE).map(
   (s) => {
     const [value, text] = s
-    return { value: Number(value), text }
+    return { value: Number(value), text: title(text) }
   }
 )
 const DISCOUNT_TYPE_FILTER = Object.entries(DISCOUNT_CODE_TYPE).map((s) => {
   const [value, text] = s
-  return { value: Number(value), text }
+  return { value: Number(value), text: title(text) }
 })
 
 type TableRowSelection<T extends object = object> =
@@ -286,7 +287,7 @@ export const DiscountCodeList = () => {
       return
     }
 
-    message.success('Discount code deleted successfully')
+    message.success('Discount code archived successfully')
     fetchData({}, page)
   }
 
