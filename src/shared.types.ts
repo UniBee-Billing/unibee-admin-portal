@@ -546,6 +546,27 @@ export enum DiscountCodeStatus {
   ARCHIVED = 10
 }
 
+export enum CreditType {
+  MAIN = 1, // main, rechargeable
+  PROMO_CREDIT = 2 // promo credit account
+}
+
+export type TCreditConfig = {
+  id?: number // when saving a creditConfig, backend doesn't require an id.
+  merchantId: number
+  createTime: number
+  name: string
+  description: string
+  type: CreditType
+  currency: string
+  exchangeRate: number | string // in FE, it's shown in an <input />, so it has to be string
+  payoutEnable: 0 | 1 | boolean // 1 | 0 (bool like), global switch to enable/disable credit use
+  discountCodeExclusive: 0 | 1 | boolean // 1 | 0(bool like), allow credit and discount be used together
+  recurring: 0 | 1 | boolean
+  rechargeEnable: 0 | 1 | boolean // bool like, only used for type: 1
+  previewDefaultUsed: 0 | 1 | boolean // 1(used) | 0(not used), bool like. in purchase preview, if not specified whether or not use credit, this default value is assumed.
+}
+
 export type TExportDataType =
   | 'InvoiceExport'
   | 'UserExport'

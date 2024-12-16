@@ -324,3 +324,14 @@ export const linkify = (inputText: string) => {
   */
   return replacedText
 }
+
+// some bool like values from backend are 1 to denote true, 0 to denote false, use this to do the conversion.
+export const numBoolConvert = (val: 0 | 1 | boolean) => {
+  if (typeof val == 'number') {
+    return val == 0 ? false : true
+  } else if (typeof val == 'boolean') {
+    return val ? 1 : 0
+  } else {
+    throw new Error('unknown value type')
+  }
+}
