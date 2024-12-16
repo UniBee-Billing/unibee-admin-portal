@@ -1,0 +1,106 @@
+import { LoadingOutlined } from '@ant-design/icons'
+import { message, Pagination } from 'antd'
+import Table, { ColumnsType } from 'antd/es/table'
+import { useEffect, useState } from 'react'
+import { usePagination } from '../../hooks'
+import { getCreditTxReq } from '../../requests'
+import { CreditType, TCreditTx } from '../../shared.types'
+
+const PAGE_SIZE = 10
+
+const Index = () => {
+  const { page, onPageChange } = usePagination()
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [creditTxList, setCreditTxlist] = useState<TCreditTx[]>([])
+
+  const columns: ColumnsType<TCreditTx> = [
+    {
+      title: 'Time',
+      dataIndex: 'createTime',
+      key: 'createTime'
+    },
+    {
+      title: 'User Email',
+      dataIndex: 'user',
+      key: 'user',
+      render: (u) => <a>{u.email}</a>
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'deltaAmount',
+      key: 'deltaAmount'
+    },
+    {
+      title: 'Invoice Id',
+      dataIndex: 'invoiceId',
+      key: 'invoiceId'
+    }
+  ]
+
+  const fetchData = async () => {
+    setLoading(true)
+    const [res, err] = await getCreditTxReq(CreditType.PROMO_CREDIT)
+    setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    console.log('creditTransactions: ', res)
+    const { creditTransactions, total } = res
+    setCreditTxlist(creditTransactions ?? [])
+    setTotal(total)
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  return (
+    <>
+      <Table
+        columns={columns}
+        dataSource={creditTxList}
+        rowKey={'id'}
+        rowClassName="clickable-tbl-row"
+        pagination={false}
+        loading={{
+          spinning: loading,
+          indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+        }}
+        // onChange={onTableChange}
+        /*
+        onRow={(record) => {
+          return {
+            onClick: (event) => {
+              if (
+                event.target instanceof Element &&
+                event.target.closest('.plan-action-btn-wrapper') != null
+              ) {
+                return
+              }
+              navigate(`/plan/${record.id}?productId=${productId}`)
+            }
+          }
+        }}
+        */
+      />
+      <div className="mx-0 my-4 flex items-center justify-end">
+        <Pagination
+          current={page + 1} // back-end starts with 0, front-end starts with 1
+          pageSize={PAGE_SIZE}
+          total={total}
+          size="small"
+          onChange={onPageChange}
+          showTotal={(total, range) =>
+            `${range[0]}-${range[1]} of ${total} items`
+          }
+          disabled={loading}
+          showSizeChanger={false}
+        />
+      </div>
+    </>
+  )
+}
+
+export default Index

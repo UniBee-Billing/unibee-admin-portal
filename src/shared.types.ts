@@ -567,6 +567,39 @@ export type TCreditConfig = {
   previewDefaultUsed: 0 | 1 | boolean // 1(used) | 0(not used), bool like. in purchase preview, if not specified whether or not use credit, this default value is assumed.
 }
 
+// credit can be consumed, topped up,
+export enum CreditTxTypes {
+  TOPPED_UP = 1,
+  CONSUMED = 2,
+  REFUND = 3,
+  WITHDRAW = 4,
+  FAILED_WITHDRAW = 5,
+  ADMIN_MODIFIED = 6,
+  RECHARGE_REFUND = 7
+}
+
+// credit transaction
+export type TCreditTx = {
+  id: number
+  transactionId: string
+  user: IProfile
+  currency: string
+  invoiceId: string
+  transactionTypes: CreditTxTypes
+  deltaAmount: number
+  creditAmountBefore: number
+  creditAmountAfter: number
+  adminMember: IMerchantMemberProfile
+  createTime: number
+  /*
+  accountType: CreditType
+  userId: number
+  email: string
+  createTimeStart: number
+  createTimeEnd: number
+  */
+}
+
 export type TExportDataType =
   | 'InvoiceExport'
   | 'UserExport'

@@ -2788,6 +2788,24 @@ export const saveCreditConfigReq = async ({
   }
 }
 
+export const getCreditTxReq = async (accountType: CreditType) => {
+  try {
+    const res = await request.get(
+      `/merchant/credit/credit_transaction_list?accountType=${accountType}`
+    )
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 export const getRevenueReq = async () => {
   try {
     const res = await analyticsRequest.get('/revenue')
