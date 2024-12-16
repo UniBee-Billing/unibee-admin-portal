@@ -5,6 +5,7 @@ import 'react-quill/dist/quill.snow.css'
 import { useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 import AppConfig from './appConfig'
+import CreditConfig from './creditConfig'
 import EmailTemplates from './emailTemplates'
 import Permissions from './permissions'
 import { SubscriptionConfig } from './subscriptionConfig'
@@ -45,6 +46,11 @@ const Index = () => {
       key: 'Subscription Config',
       label: 'Subscription Config',
       children: <SubscriptionConfig />
+    },
+    {
+      key: 'creditConfig',
+      label: 'Credit System Config',
+      children: <CreditConfig />
     }
   ]
   const onTabChange = (key: string) => {
@@ -53,7 +59,7 @@ const Index = () => {
   }
 
   return (
-    <div style={{ width: '100%' }}>
+    <div className="w-full">
       <Tabs activeKey={activeTab} items={tabItems} onChange={onTabChange} />
     </div>
   )
