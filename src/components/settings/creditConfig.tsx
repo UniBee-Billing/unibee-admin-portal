@@ -10,37 +10,42 @@ import {
   Switch,
   Tooltip
 } from 'antd'
-import { PropsWithChildren, useEffect, useState } from 'react'
+// import update from 'immutability-helper'
+import { useEffect, useState } from 'react'
 import ExchangeIcon from '../../assets/exchange.svg?react'
 import { numBoolConvert } from '../../helpers'
-import { useFetch } from '../../hooks'
-import { getCreditConfigListReq } from '../../requests'
-import { request } from '../../requests/client'
+import {
+  createCreditConfigReq,
+  getCreditConfigListReq,
+  saveCreditConfigReq
+} from '../../requests'
 import { CreditType, TCreditConfig } from '../../shared.types'
 import { useMerchantInfoStore } from '../../stores'
-import { Config } from './components'
 
-/*
-export type TCreditConfig = {
-  id: number
-  merchantId: number
-  createTime: number
-  name: string
-  description: string
-  type: CreditType
-  discountCodeExclusive: 0 | 1 | boolean // 1 | 0(bool like), allow credit and discount be used together
-  currency: string
-  exchangeRate: number
-  payoutEnable: 0 | 1 | boolean // 1 | 0 (bool like), global switch to enable/disable credit use
-  recurring: 0 | 1 | boolean
-  rechargeEnable: 0 | 1 | boolean // bool like, only used for type: 1
-  previewDefaultUsed: 0 | 1 | boolean // 1(used) | 0(not used), bool like. in purchase preview, if not specified whether or not use credit, this default value is assumed.
+const normalizeCreditConfig = (c: TCreditConfig): TCreditConfig => {
+  if (typeof c.payoutEnable == 'number') {
+    // when this field type is number, data is from BE directly
+    // some fields from backend are 1 | 0 (bool like), I need to convert them to bool for FE use
+    // but before submit, I need to convert them back to 0 | 1
+    // exchange rate also need to be divided by 100 for FE use, before submit to BE, need to be multiplied by 100
+    ;(c.exchangeRate as number) /= 100
+    // discountCodeExclusive is used to denote "Allow both Promo Credit and Discount Code in one invoice?"
+    // its meaning is totally opposite of what it means on UI, so flip its value.
+    c.discountCodeExclusive = c.discountCodeExclusive == 1 ? 0 : 1
+  } else {
+    // data is from FE
+    ;(c.exchangeRate as number) *= 100
+    c.discountCodeExclusive = c.discountCodeExclusive ? false : true
+  }
+  c.payoutEnable = numBoolConvert(c.payoutEnable)
+  c.discountCodeExclusive = numBoolConvert(c.discountCodeExclusive)
+  c.recurring = numBoolConvert(c.recurring)
+  return c
 }
-*/
 
 const Index = () => {
   const [creditConfigList, setCreditConfigList] = useState<TCreditConfig[]>([])
-  const [loading, setLoading] = useState(false)
+  const [_, setLoading] = useState(false)
   const merchantStore = useMerchantInfoStore()
 
   const defaultCreditConfig: TCreditConfig = {
@@ -50,36 +55,58 @@ const Index = () => {
     name: 'default credit config',
     description: 'default credit config',
     type: CreditType.PROMO_CREDIT,
-    discountCodeExclusive: true,
     currency: 'EUR',
-    exchangeRate: 0,
-    payoutEnable: true,
-    recurring: true,
+    exchangeRate: 100,
+    payoutEnable: false,
+    discountCodeExclusive: false,
+    recurring: false,
     rechargeEnable: false,
     previewDefaultUsed: false
   }
 
+  // check all used currency, re-assign a non-used as 'currency'
+  /*
+  const createNewConfig = () => {
+    let defCurrency = ''
+    if (creditConfigList.findIndex((c) => c.currency == 'EUR') == -1) {
+      defCurrency = 'EUR'
+    }
+    if (creditConfigList.findIndex((c) => c.currency == 'USD') == -1) {
+      defCurrency = 'USD'
+    }
+    if (creditConfigList.findIndex((c) => c.currency == 'JPY') == -1) {
+      defCurrency = 'JPY'
+    }
+    if (defCurrency == '') {
+      message.error('All currencies have been configured')
+      return
+    }
+    setCreditConfigList(
+      update(creditConfigList, {
+        $push: [{ ...defaultCreditConfig, currency: defCurrency }]
+      })
+    )
+  }
+    */
+
   const getCreditConfigList = async () => {
     setLoading(true)
-    const [creditConfigs, err] = await getCreditConfigListReq({
-      types: [CreditType.PROMO_CREDIT],
-      currency: 'EUR'
-    })
+    const [creditConfigs, err] = await getCreditConfigListReq(
+      {
+        types: [CreditType.PROMO_CREDIT],
+        currency: 'EUR'
+      },
+      getCreditConfigList
+    )
     setLoading(false)
     if (null != err) {
       message.error(err.message)
       return
     }
-    console.log('res: ', creditConfigs)
     if (creditConfigs == null || creditConfigs.length == 0) {
       setCreditConfigList([defaultCreditConfig])
     } else {
-      creditConfigs.forEach((c: TCreditConfig) => {
-        c.payoutEnable = numBoolConvert(c.payoutEnable)
-        c.discountCodeExclusive = numBoolConvert(c.discountCodeExclusive)
-        c.recurring = numBoolConvert(c.recurring)
-      })
-      setCreditConfigList(creditConfigs)
+      setCreditConfigList(creditConfigs.map(normalizeCreditConfig))
     }
   }
 
@@ -87,23 +114,35 @@ const Index = () => {
     getCreditConfigList()
   }, [])
 
-  return creditConfigList.map((c) => <CreditConfigItems items={c} />)
+  return (
+    <div>
+      {creditConfigList.map((c) => (
+        <CreditConfigItems key={c.id} items={c} />
+      ))}
+      {/* <div className="my-4 flex justify-end">
+        <Button onClick={createNewConfig}>New</Button>
+      </div> */}
+    </div>
+  )
 }
+export default Index
 
 const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
+  const isNew = items.id == -1
   const [creditConfig, setCreditConfig] = useState<TCreditConfig>(items)
   const [loading, setLoading] = useState(false)
-  const [exCurrency, setExCurrency] = useState('EUR')
   const [editingExchange, setEditingExchange] = useState(false)
-  // const
+  const [exErr, setExErr] = useState('') // empty string means no error
+
   const CurrencySelector = ({ disabled }: { disabled?: boolean }) => (
     <Select
-      disabled={!!disabled || loading}
+      disabled={!!disabled || loading || items.id != -1}
       value={creditConfig.currency}
       style={{ width: '100px' }}
       options={[
-        { label: 'EUR(€)', value: 'EUR' }
-        // { label: 'USD($)', value: 'USD' }
+        { label: 'EUR(€)', value: 'EUR' },
+        { label: 'USD($)', value: 'USD' },
+        { label: 'JPY(¥)', value: 'JPY' }
       ]}
     />
   )
@@ -113,7 +152,67 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
       setEditingExchange(true)
       return
     }
-    setEditingExchange(false)
+    onExRateApply()
+    setEditingExchange(false) // what if onSave failed, in that case, this line should not run.
+  }
+
+  const onExRateApply = () => {
+    const ex = Number(creditConfig.exchangeRate)
+    if (exErr != '') {
+      message.error(exErr)
+      return
+    }
+    onSave('exchangeRate', ex * 100)
+  }
+
+  const onSwitchChange = (key: string) => (value: boolean) => {
+    if (key == 'discountCodeExclusive') {
+      value = !value
+    }
+    onSave(key, numBoolConvert(value))
+    setCreditConfig({ ...creditConfig, [key]: value })
+  }
+
+  const onExChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const ex = Number(e.target.value)
+    if (isNaN(ex)) {
+      setExErr('Invalid exchange rate')
+    } else {
+      setExErr('')
+    }
+    setCreditConfig({ ...creditConfig, exchangeRate: e.target.value })
+  }
+
+  const onSave = async (key: string, value: number | string | boolean) => {
+    if (isNew) {
+      setLoading(true)
+      const [newCreditConfig, err] = await createCreditConfigReq(items)
+      setLoading(false)
+      if (null != err) {
+        message.error(err.message)
+        return
+      }
+      if (newCreditConfig != null) {
+        setCreditConfig(normalizeCreditConfig(newCreditConfig))
+      }
+    } else {
+      setLoading(true)
+      const [newCreditConfig, err] = await saveCreditConfigReq({
+        merchantId: creditConfig.merchantId,
+        type: creditConfig.type,
+        currency: creditConfig.currency,
+        key,
+        value
+      })
+      setLoading(false)
+      if (null != err) {
+        message.error(err.message)
+        return
+      }
+      if (newCreditConfig != null) {
+        setCreditConfig(normalizeCreditConfig(newCreditConfig))
+      }
+    }
   }
 
   const configItems = [
@@ -122,8 +221,10 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
       description: '',
       content: (
         <Switch
+          checked={creditConfig.payoutEnable as boolean}
+          onChange={onSwitchChange('payoutEnable')}
           loading={loading}
-          checked={creditConfig?.payoutEnable as boolean}
+          disabled={loading}
         />
       )
     },
@@ -141,7 +242,11 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
           </Row>
           <Row>
             <Col span={6}>
-              <Input style={{ width: '100%' }} disabled={!editingExchange} />
+              <Input
+                defaultValue={1}
+                style={{ width: '100%' }}
+                disabled={true}
+              />
             </Col>
             <Col span={2} className="flex items-center justify-center">
               <div className="mx-2">
@@ -149,16 +254,25 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
               </div>
             </Col>
             <Col span={6}>
-              <Input style={{ width: '100%' }} disabled={!editingExchange} />
+              <Input
+                status={exErr !== '' ? 'error' : ''}
+                value={creditConfig.exchangeRate}
+                onChange={onExChange}
+                style={{ width: '100%' }}
+                disabled={!editingExchange || !creditConfig.payoutEnable}
+              />
             </Col>
             <Col span={6} className="ml-3">
-              <CurrencySelector disabled={!editingExchange} />
+              <CurrencySelector
+                disabled={!editingExchange || !creditConfig.payoutEnable}
+              />
             </Col>
           </Row>
         </div>
       ),
       content: (
         <Button
+          disabled={!creditConfig.payoutEnable || exErr != ''}
           onClick={toggleEditApply}
           type={editingExchange ? 'primary' : 'default'}
         >
@@ -170,21 +284,24 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
       title: (
         <div>
           <span>
-            Apply both Promo Credit and Discount Code in one invoice.&nbsp;
+            Allow both Promo Credit and Discount Code applied in one
+            invoice.&nbsp;
           </span>
           <Tooltip
             placement="right"
             title="By default, you can allow both Promo Credit and Discount Code be used in one invoice."
           >
-            <QuestionCircleOutlined />
+            <QuestionCircleOutlined className="text-gray-400" />
           </Tooltip>
         </div>
       ),
       description: '',
       content: (
         <Switch
+          checked={creditConfig.discountCodeExclusive as boolean}
+          onChange={onSwitchChange('discountCodeExclusive')}
+          disabled={!creditConfig.payoutEnable}
           loading={loading}
-          checked={creditConfig?.discountCodeExclusive as boolean}
         />
       )
     },
@@ -194,8 +311,10 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
       description: '',
       content: (
         <Switch
+          checked={creditConfig.recurring as boolean}
+          onChange={onSwitchChange('recurring')}
+          disabled={!creditConfig.payoutEnable}
           loading={loading}
-          checked={creditConfig?.recurring as boolean}
         />
       )
     }
@@ -203,6 +322,7 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
 
   return (
     <List
+      className="mb-10"
       dataSource={configItems}
       renderItem={(item) => (
         <List.Item>
@@ -213,5 +333,3 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
     ></List>
   )
 }
-
-export default Index

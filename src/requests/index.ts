@@ -7,6 +7,7 @@ import {
   ExpiredError,
   IProfile,
   ISubscriptionType,
+  TCreditConfig,
   TExportDataType,
   TImportDataType,
   TMerchantInfo,
@@ -2713,20 +2714,18 @@ export const getProductDetailReq = async (productId: number) => {
   }
 }
 
-export const getCreditConfigListReq = async ({
-  types,
-  currency
-}: {
+type TGetCreditConfigList = {
   types: CreditType[]
   currency: string
-}) => {
+}
+export const getCreditConfigListReq = async (
+  body: TGetCreditConfigList,
+  refreshCb?: () => void
+) => {
   try {
-    const res = await request.post(`/merchant/credit/config_list`, {
-      types,
-      currency
-    })
+    const res = await request.post(`/merchant/credit/config_list`, body)
     if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
+      session.setSession({ expired: true, refresh: refreshCb ?? null })
       throw new ExpiredError(
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
@@ -2738,16 +2737,17 @@ export const getCreditConfigListReq = async ({
   }
 }
 
-export const createCreditConfigReq = async () => {
+// create new credit config
+export const createCreditConfigReq = async (c: TCreditConfig) => {
   try {
-    const res = await request.post(`/merchant/credit/config_list`, {})
+    const res = await request.post(`/merchant/credit/new_config`, c)
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
       throw new ExpiredError(
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
     }
-    return [res.data.data.creditConfigs, null]
+    return [res.data.data.creditConfig, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2755,16 +2755,33 @@ export const createCreditConfigReq = async () => {
 }
 
 // save changes for an existing credit config
-export const saveCreditConfigReq = async () => {
+export const saveCreditConfigReq = async ({
+  merchantId,
+  type,
+  currency,
+  key,
+  value
+}: {
+  merchantId: number
+  type: CreditType
+  currency: string
+  key: string
+  value: string | number | boolean
+}) => {
   try {
-    const res = await request.post(`/merchant/credit/config_list`, {})
+    const res = await request.post(`/merchant/credit/edit_config`, {
+      merchantId,
+      type,
+      currency,
+      [key]: value
+    })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
       throw new ExpiredError(
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
     }
-    return [res.data.data.creditConfigs, null]
+    return [res.data.data.creditConfig, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]

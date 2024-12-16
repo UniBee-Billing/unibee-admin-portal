@@ -552,16 +552,16 @@ export enum CreditType {
 }
 
 export type TCreditConfig = {
-  id: number
+  id?: number // when saving a creditConfig, backend doesn't require an id.
   merchantId: number
   createTime: number
   name: string
   description: string
   type: CreditType
-  discountCodeExclusive: 0 | 1 | boolean // 1 | 0(bool like), allow credit and discount be used together
   currency: string
-  exchangeRate: number
+  exchangeRate: number | string // in FE, it's shown in an <input />, so it has to be string
   payoutEnable: 0 | 1 | boolean // 1 | 0 (bool like), global switch to enable/disable credit use
+  discountCodeExclusive: 0 | 1 | boolean // 1 | 0(bool like), allow credit and discount be used together
   recurring: 0 | 1 | boolean
   rechargeEnable: 0 | 1 | boolean // bool like, only used for type: 1
   previewDefaultUsed: 0 | 1 | boolean // 1(used) | 0(not used), bool like. in purchase preview, if not specified whether or not use credit, this default value is assumed.
