@@ -128,7 +128,7 @@ export const DiscountCodeList = () => {
       filters: CODE_STATUS_FILTER
     },
     {
-      title: 'Billing Type',
+      title: 'Type',
       dataIndex: 'billingType',
       key: 'billingType',
       render: (s) => DISCOUNT_CODE_BILLING_TYPE[s],
