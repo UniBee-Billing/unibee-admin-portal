@@ -20,41 +20,51 @@ export type WithDoubleConfirmFields<T> = {
   confirmCurrency: string
 } & T
 
+export type TPromoAccount = {
+  id: number
+  userId: number
+  type: CreditType
+  currency: string
+  amount: number
+  createTime: number
+}
+
 // this is end user profile
 interface IProfile {
-  zipCode: string
-  address: string
-  city: string
-  countryCode: string
-  countryName: string
-  companyName: string
+  id: number | null
+  externalUserId: string
+  token: string
+  firstName: string
+  lastName: string
   email: string
+  type: AccountType
+  status: number // 0-Active, 2-Frozen
   MemberRoles: TRole[]
   isOwner: boolean
   merchantId: number
-  createTime: number
-  facebook: string
-  firstName: string
-  lastName: string
-  id: number | null
-  externalUserId: string
-  type: AccountType
-  status: number // 0-Active, 2-Frozen
-  phone: string
-  mobile: string
-  paymentMethod: string // for card payment, this is the stripe paymentId, used for auto recurring payment
+  promoCreditAccounts?: TPromoAccount[]
   gatewayId?: number // after a successful payment, the payment gateway is saved as default. This is null for newly registered user.
   gateway?: TGateway // ditto.
+  paymentMethod: string // for card payment, this is the stripe paymentId, used for auto recurring payment
+  zipCode: string
+  address: string
+  city: string
+  phone: string
+  mobile: string
+  countryCode: string
+  countryName: string
+  companyName: string
+  vATNumber: string // company account only
+  registrationNumber: string // company account only
+  language: string // en | ru | cn | vi | pt,      English | Russian | Chinese | Vietnamese | Portuguese
+  facebook: string
   linkedIn: string
   telegram: string
   tikTok: string
-  vATNumber: string
-  registrationNumber: string
   weChat: string
   whatsAPP: string
   otherSocialInfo: string
-  token: string
-  language: string // en | ru | cn | vi | pt,      English | Russian | Chinese | Vietnamese | Portuguese
+  createTime: number
 }
 
 // this is admin profile
