@@ -5,6 +5,7 @@ import {
   Input,
   List,
   message,
+  Modal,
   Row,
   Select,
   Switch,
@@ -128,8 +129,9 @@ const Index = () => {
 export default Index
 
 const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
-  const isNew = items.id == -1
   const [creditConfig, setCreditConfig] = useState<TCreditConfig>(items)
+  const [modalOpen, setModalOpen] = useState(false)
+  const toggleModal = () => setModalOpen(!modalOpen)
   const [loading, setLoading] = useState(false)
   const [editingExchange, setEditingExchange] = useState(false)
   const [exErr, setExErr] = useState('') // empty string means no error
@@ -145,6 +147,31 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
         { label: 'JPY(¥)', value: 'JPY' }
       ]}
     />
+  )
+
+  const NoButton = () => (
+    <Button
+      onClick={toggleModal}
+      disabled={loading}
+      type={(creditConfig.payoutEnable as boolean) ? 'primary' : 'default'}
+    >
+      No
+    </Button>
+  )
+  const YesButton = () => (
+    <Button
+      type={(creditConfig.payoutEnable as boolean) ? 'default' : 'primary'}
+      onClick={() => {
+        onSave(
+          'payoutEnable',
+          numBoolConvert(!(creditConfig.payoutEnable as boolean))
+        )
+      }}
+      disabled={loading}
+      loading={loading}
+    >
+      Yes
+    </Button>
   )
 
   const toggleEditApply = () => {
@@ -169,8 +196,11 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
     if (key == 'discountCodeExclusive') {
       value = !value
     }
+    if (key === 'payoutEnable') {
+      toggleModal()
+      return
+    }
     onSave(key, numBoolConvert(value))
-    setCreditConfig({ ...creditConfig, [key]: value })
   }
 
   const onExChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -184,7 +214,8 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
   }
 
   const onSave = async (key: string, value: number | string | boolean) => {
-    if (isNew) {
+    if (creditConfig.id == -1) {
+      // create new credit config
       setLoading(true)
       const [newCreditConfig, err] = await createCreditConfigReq(items)
       setLoading(false)
@@ -212,6 +243,9 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
       if (newCreditConfig != null) {
         setCreditConfig(normalizeCreditConfig(newCreditConfig))
       }
+    }
+    if (key == 'payoutEnable' && modalOpen) {
+      toggleModal()
     }
   }
 
@@ -321,15 +355,50 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
   ]
 
   return (
-    <List
-      className="mb-10"
-      dataSource={configItems}
-      renderItem={(item) => (
-        <List.Item>
-          <List.Item.Meta title={item.title} description={item.description} />
-          <div>{item.content}</div>
-        </List.Item>
+    <>
+      {modalOpen && (
+        <Modal
+          title={
+            (creditConfig.payoutEnable as boolean)
+              ? 'Disable Promo Credits usage'
+              : 'Enable Promo Credits usage'
+          }
+          width={'600px'}
+          open={true}
+          footer={null}
+          closeIcon={null}
+        >
+          <div>
+            {(creditConfig.payoutEnable as boolean)
+              ? 'If you choose this option, all users cannot apply the promo credits in the future invoices, until you re-activate promo credit again.'
+              : 'If you choose this option, all users can apply the promo credits in the future invoices.'}
+          </div>
+
+          <div className="mt-6 flex justify-end gap-4">
+            {(creditConfig.payoutEnable as boolean) ? (
+              <>
+                {' '}
+                <YesButton /> <NoButton />{' '}
+              </>
+            ) : (
+              <>
+                {' '}
+                <NoButton /> <YesButton />{' '}
+              </>
+            )}
+          </div>
+        </Modal>
       )}
-    ></List>
+      <List
+        className="mb-10"
+        dataSource={configItems}
+        renderItem={(item) => (
+          <List.Item>
+            <List.Item.Meta title={item.title} description={item.description} />
+            <div>{item.content}</div>
+          </List.Item>
+        )}
+      />
+    </>
   )
 }
