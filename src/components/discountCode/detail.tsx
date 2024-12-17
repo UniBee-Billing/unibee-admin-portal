@@ -280,7 +280,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    message.success(`Discount code (${code.code}) deleted`)
+    message.success(`Discount code (${code.code}) archived successfully`)
     goBack()
   }
 
