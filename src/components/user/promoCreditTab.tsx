@@ -1,119 +1,144 @@
-import {
-  InfoCircleOutlined,
-  LoadingOutlined,
-  SyncOutlined
-} from '@ant-design/icons'
-import {
-  Button,
-  Col,
-  Empty,
-  Modal,
-  Popover,
-  Row,
-  Spin,
-  Switch,
-  Tooltip,
-  message
-} from 'antd'
-import dayjs from 'dayjs'
-import { CSSProperties, ReactElement, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { normalizeSub, showAmount } from '../../helpers'
-import { getSubDetailInProductReq } from '../../requests'
-import { IProfile, ISubscriptionType, TPromoAccount } from '../../shared.types'
-import { SubscriptionStatus } from '../ui/statusTag'
-import { AssignSubscriptionModal } from './assignSub/assignSubModal'
+import { MinusOutlined } from '@ant-design/icons'
+import { Button, Col, Row, Switch, message } from 'antd'
+import { useEffect, useState } from 'react'
+import { numBoolConvert } from '../../helpers'
+import { toggleUserCreditReq } from '../../requests'
+import { IProfile, TPromoAccount } from '../../shared.types'
+import CreditSwitchConfirmModal from '../settings/creditSwitchConfirmModal'
+import PromoCreditTxHistory from './promoCreditTxHist'
+import UpdatePromoCreditModal from './updatePromoCreditModal'
 
 const Index = ({ userDetail }: { userDetail: IProfile | undefined }) => {
-  const [promoAccount, setPromoAccount] = useState<TPromoAccount[]>(
-    userDetail == undefined ||
-      userDetail.promoCreditAccounts == undefined ||
-      userDetail.promoCreditAccounts.length == 0
-      ? []
-      : userDetail.promoCreditAccounts
+  const normalizePromoAcc = () => {
+    let promoAcc: TPromoAccount | undefined = undefined
+    if (
+      userDetail != undefined &&
+      userDetail.promoCreditAccounts != undefined &&
+      userDetail.promoCreditAccounts.length > 0
+    ) {
+      promoAcc = userDetail.promoCreditAccounts.find(
+        (p) => p.currency === 'EUR'
+      )
+    }
+    if (promoAcc != undefined) {
+      promoAcc.payoutEnable = numBoolConvert(promoAcc.payoutEnable)
+      promoAcc.rechargeEnable = numBoolConvert(promoAcc.rechargeEnable)
+    }
+
+    return promoAcc
+  }
+
+  const [promoAccount, setPromoAccount] = useState<TPromoAccount | undefined>(
+    normalizePromoAcc()
   )
-  const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const toggleModal = () => setModalOpen(!modalOpen)
-  const getUserProfile = () => {}
+
+  const [creditSwitchModalOpen, setCreditSwitchModalOpen] = useState(false)
+  const toggleCreditSwitchModal = () =>
+    setCreditSwitchModalOpen(!creditSwitchModalOpen)
+  // if current is enabled, then the Modal is to disable it
+  const modalTitle = promoAccount?.payoutEnable
+    ? 'Disable Promo Credits usage'
+    : 'Enable Promo Credits usage'
+  const modalContent = promoAccount?.payoutEnable
+    ? 'If you choose this option, this user cannot apply the promo credits in the future invoices, until you re-activate promo credit again.'
+    : 'If you choose this option, this user can apply the promo credits in the future invoices.'
+
+  const [refreshTxHist, setRefreshTxHist] = useState(false)
+
+  const onCreditSwitchChange = async () => {
+    if (promoAccount == undefined) {
+      return
+    }
+    const [UserCreditAccount, err] = await toggleUserCreditReq(
+      promoAccount.id,
+      (promoAccount.payoutEnable as boolean) ? 0 : 1
+    )
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    toggleCreditSwitchModal()
+    UserCreditAccount.payoutEnable = numBoolConvert(
+      UserCreditAccount.payoutEnable
+    )
+    UserCreditAccount.rechargeEnable = numBoolConvert(
+      UserCreditAccount.rechargeEnable
+    )
+    setPromoAccount(UserCreditAccount)
+  }
+
+  useEffect(() => {
+    setPromoAccount(normalizePromoAcc())
+    if (userDetail != undefined) {
+      setRefreshTxHist(true)
+    }
+  }, [userDetail])
 
   return (
-    <>
-      {modalOpen && (
+    <div>
+      {modalOpen && userDetail != undefined && (
         <UpdatePromoCreditModal
+          promoCreditAccount={promoAccount}
           closeModal={toggleModal}
-          refresh={getUserProfile}
+          updatePromoAccount={setPromoAccount}
+          refreshTxList={setRefreshTxHist}
+          userId={userDetail.id as number}
+          currency={'EUR'}
+        />
+      )}
+      {creditSwitchModalOpen && promoAccount != undefined && (
+        <CreditSwitchConfirmModal
+          items={promoAccount}
+          title={modalTitle}
+          content={modalContent}
+          onSave={onCreditSwitchChange}
+          onCancel={toggleCreditSwitchModal}
         />
       )}
       <div className="flex flex-col gap-4">
         <Row>
-          <Col span={6}>Enable Promo credit usage</Col>
+          <Col span={6}>Enable Promo credit usage&nbsp; </Col>
           <Col span={4}>
-            <Switch />
+            <Switch
+              disabled={promoAccount == undefined}
+              checked={promoAccount?.payoutEnable as boolean}
+              onChange={toggleCreditSwitchModal}
+            />
           </Col>
         </Row>
 
         <Row>
           <Col span={6}>Total Added</Col>
-          <Col span={4}> </Col>
+          <Col span={4}>
+            {' '}
+            <MinusOutlined />{' '}
+          </Col>
         </Row>
 
         <Row>
           <Col span={6}>Total Used</Col>
-          <Col span={4}> </Col>
+          <Col span={4}>
+            {' '}
+            <MinusOutlined />
+          </Col>
         </Row>
 
         <Row>
           <Col span={6}>Promo Credit Balance</Col>
-          <Col span={4}></Col>
+          <Col span={4}> {promoAccount?.amount} </Col>
           <Col span={4}>
             <Button onClick={toggleModal}>Update Promo Credit</Button>
           </Col>
         </Row>
       </div>
-    </>
+      <PromoCreditTxHistory
+        userDetail={userDetail}
+        refreshTxHistory={refreshTxHist}
+        setRefreshTxHist={setRefreshTxHist}
+      />
+    </div>
   )
 }
-
 export default Index
-const UpdatePromoCreditModal = ({
-  closeModal,
-  refresh
-}: {
-  closeModal: () => void
-  refresh: () => void
-}) => {
-  const [loading, setLoading] = useState(false)
-  const onOK = () => {
-    closeModal()
-  }
-
-  return (
-    <Modal
-      title="Update promo credits quantity"
-      open={true}
-      width={'640px'}
-      footer={null}
-      closeIcon={null}
-    >
-      <div
-        className="flex items-center justify-end gap-4"
-        style={{
-          marginTop: '24px'
-        }}
-      >
-        <Button onClick={closeModal} disabled={loading}>
-          Cancel
-        </Button>
-        <Button
-          type="primary"
-          onClick={onOK}
-          loading={loading}
-          disabled={loading}
-        >
-          OK
-        </Button>
-      </div>
-    </Modal>
-  )
-}
