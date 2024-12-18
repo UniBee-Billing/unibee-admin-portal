@@ -25,7 +25,9 @@ export type TPromoAccount = {
   userId: number
   type: CreditType
   currency: string
-  amount: number
+  amount: number // current balance
+  payoutEnable: boolean | 1 | 0
+  rechargeEnable: boolean | 1 | 0
   createTime: number
 }
 
@@ -575,6 +577,36 @@ export type TCreditConfig = {
   recurring: 0 | 1 | boolean
   rechargeEnable: 0 | 1 | boolean // bool like, only used for type: 1
   previewDefaultUsed: 0 | 1 | boolean // 1(used) | 0(not used), bool like. in purchase preview, if not specified whether or not use credit, this default value is assumed.
+}
+
+export type TCreditTx = {
+  id: number
+  user: IProfile
+  creditAccount: TPromoAccount
+  accountType: CreditType
+  currency: string
+  transactionId: string
+  transactionType: CreditTxType
+  creditAmountAfter: number
+  creditAmountBefore: number
+  deltaAmount: number
+  bizId: string
+  name: string
+  description: string
+  createTime: number
+  merchantId: number
+  invoiceId: string
+  adminMember: IMerchantMemberProfile
+}
+
+export enum CreditTxType {
+  TOP_UP = 1,
+  CONSUMPTION = 2,
+  REFUND_TOP_UP = 3,
+  WITHDRAWN = 4,
+  WITHDRAWN_FAILED = 5,
+  ADMIN_UPDATE = 6,
+  RECHARGE_REFUND_OUT = 7
 }
 
 export type TExportDataType =

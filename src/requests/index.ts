@@ -2,6 +2,7 @@ import axios from 'axios'
 import { CURRENCY } from '../constants'
 import {
   AccountType,
+  CreditTxType,
   CreditType,
   DiscountCode,
   ExpiredError,
@@ -2737,7 +2738,7 @@ export const getCreditConfigListReq = async (
   }
 }
 
-// create new credit config
+// create new credit config (global setting)
 export const createCreditConfigReq = async (c: TCreditConfig) => {
   try {
     const res = await request.post(`/merchant/credit/new_config`, c)
@@ -2754,7 +2755,7 @@ export const createCreditConfigReq = async (c: TCreditConfig) => {
   }
 }
 
-// save changes for an existing credit config
+// save changes for an existing credit config (global setting)
 export const saveCreditConfigReq = async ({
   merchantId,
   type,
@@ -2782,6 +2783,108 @@ export const saveCreditConfigReq = async ({
       )
     }
     return [res.data.data.creditConfig, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// save credit config changes for single user
+export const saveUserCreditConfigReq = async () => {
+  try {
+    const res = await request.post(`/merchant/credit/edit_credit_account`, {})
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.UserCreditAccount, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+type TCreditTxParams = {
+  accountType: CreditType
+  userId?: number
+  email?: string
+  currency?: string
+  transactionTypes?: CreditTxType[]
+  page?: number
+  count?: number
+  createTimeStart?: number
+  createTimeEnd?: number
+}
+export const getCreditTxListReq = async (body: TCreditTxParams) => {
+  try {
+    const res = await request.post(
+      `/merchant/credit/credit_transaction_list`,
+      body
+    )
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const toggleUserCreditReq = async (id: number, payoutEnable: 1 | 0) => {
+  try {
+    const res = await request.post(`/merchant/credit/edit_credit_account`, {
+      id,
+      payoutEnable
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.UserCreditAccount, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const updateCreditAmtReq = async ({
+  action,
+  userId,
+  currency,
+  amount,
+  description
+}: {
+  action: 'increment' | 'decrement'
+  userId: number
+  currency: string
+  amount: number
+  description: string
+}) => {
+  let url = '/merchant/credit/'
+  url +=
+    action == 'increment' ? 'promo_credit_increment' : 'promo_credit_decrement'
+  try {
+    const res = await request.post(url, {
+      userId,
+      currency,
+      amount,
+      description
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.UserPromoCreditAccount, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
