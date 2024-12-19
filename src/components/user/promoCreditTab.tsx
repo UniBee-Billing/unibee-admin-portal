@@ -1,4 +1,4 @@
-import { InfoCircleOutlined, MinusOutlined } from '@ant-design/icons'
+import { InfoCircleOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Switch, Tooltip, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { CURRENCY } from '../../constants'
