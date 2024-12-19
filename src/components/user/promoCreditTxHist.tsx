@@ -1,5 +1,5 @@
 import { LoadingOutlined } from '@ant-design/icons'
-import { Pagination } from 'antd'
+import { message, Pagination } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { formatDate, showAmount } from '../../helpers'
