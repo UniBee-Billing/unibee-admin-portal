@@ -18,13 +18,6 @@ const Index = ({
   onSave: () => void
   onCancel: () => void
 }) => {
-  /*
-  const [creditConfig, setCreditConfig] = useState<
-    TCreditConfig | TPromoAccount
-  >(items)
-  */
-  // const [loading, setLoading] = useState(false)
-
   const NoButton = () => (
     <Button
       onClick={onCancel}
