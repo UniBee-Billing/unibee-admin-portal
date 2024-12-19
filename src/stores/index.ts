@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 // import { immer } from "zustand/middleware/immer";
+import currency from 'currency.js'
 import { persist } from 'zustand/middleware'
 import {
   CreditType,
