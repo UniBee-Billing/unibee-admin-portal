@@ -26,6 +26,8 @@ export type TPromoAccount = {
   type: CreditType
   currency: string
   amount: number // current balance
+  exchangeRate: number
+  currencyAmount: number
   payoutEnable: boolean | 1 | 0
   rechargeEnable: boolean | 1 | 0
   createTime: number
@@ -590,6 +592,7 @@ export type TCreditTx = {
   creditAmountAfter: number
   creditAmountBefore: number
   deltaAmount: number
+  deltaCurrencyAmount: number
   bizId: string
   name: string
   description: string

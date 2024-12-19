@@ -1,10 +1,13 @@
 import { create } from 'zustand'
 // import { immer } from "zustand/middleware/immer";
+import currency from 'currency.js'
 import { persist } from 'zustand/middleware'
 import {
+  CreditType,
   IAppConfig,
   IProduct,
   IProfile,
+  TCreditConfig,
   TGateway,
   TMerchantInfo
 } from '../shared.types'
@@ -196,3 +199,32 @@ export const usePermissionStore = create<PermissionStoreSlice>()(
     { name: 'permissions' }
   )
 )
+
+const INITIAL_CREDIT_CONFIG: TCreditConfig = {
+  id: -1,
+  merchantId: -1,
+  createTime: 0,
+  name: '',
+  description: '',
+  type: CreditType.PROMO_CREDIT,
+  currency: 'EUR',
+  exchangeRate: 1,
+  payoutEnable: false,
+  discountCodeExclusive: false,
+  recurring: false,
+  rechargeEnable: false,
+  previewDefaultUsed: false
+}
+
+interface CreditConfigSlice extends TCreditConfig {
+  getCreditConfig: () => TCreditConfig
+  setCreditConfig: (c: TCreditConfig) => void
+  reset: () => void
+}
+
+export const useCreditConfigStore = create<CreditConfigSlice>()((set, get) => ({
+  ...INITIAL_CREDIT_CONFIG,
+  getCreditConfig: () => get(),
+  setCreditConfig: (p) => set({ ...p }),
+  reset: () => set(INITIAL_CREDIT_CONFIG)
+}))

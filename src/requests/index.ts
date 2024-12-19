@@ -21,25 +21,32 @@ import { analyticsRequest, request } from './client'
 const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
 
-// after login, we need merchantInfo, appConfig, payment gatewayInfo, etc.
+// after login OR user manually refresh page(and token is still valid), we need merchantInfo, appConfig, payment gatewayInfo, etc.
 // this fn get all these data in one go.
 export const initializeReq = async () => {
   const [
     [appConfig, errConfig],
     [gateways, errGateway],
     [merchantInfo, errMerchant],
-    [products, errProductList]
+    [products, errProductList],
+    [creditConfigs, errCreditConfigs]
   ] = await Promise.all([
     getAppConfigReq(),
     getGatewayListReq(),
     getMerchantInfoReq(),
-    getProductListReq()
+    getProductListReq(),
+    getCreditConfigListReq({
+      types: [CreditType.PROMO_CREDIT],
+      currency: 'EUR'
+    })
   ])
-  const err = errConfig || errGateway || errMerchant || errProductList
+  const err =
+    errConfig || errGateway || errMerchant || errProductList || errCreditConfigs
   if (null != err) {
     return [null, err]
   }
-  return [{ appConfig, gateways, merchantInfo, products }, null]
+
+  return [{ appConfig, gateways, merchantInfo, products, creditConfigs }, null]
 }
 
 // ------------

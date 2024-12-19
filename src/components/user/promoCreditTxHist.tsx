@@ -33,7 +33,8 @@ const Index = ({
       title: 'Amount changed',
       dataIndex: 'deltaAmount',
       key: 'deltaAmount',
-      render: (amt, tx) => `${showAmount(amt, tx.currency, true)}`
+      render: (amt, tx) =>
+        `${amt} (${showAmount(tx.deltaCurrencyAmount, tx.currency)})`
     },
     {
       title: 'By',
