@@ -1,5 +1,5 @@
 import { Button, Modal } from 'antd'
-import { useState } from 'react'
+// import { useState } from 'react'
 import { TCreditConfig, TPromoAccount } from '../../shared.types'
 
 // used in 2 places:
@@ -18,26 +18,28 @@ const Index = ({
   onSave: () => void
   onCancel: () => void
 }) => {
+  /*
   const [creditConfig, setCreditConfig] = useState<
     TCreditConfig | TPromoAccount
   >(items)
-  const [loading, setLoading] = useState(false)
+  */
+  // const [loading, setLoading] = useState(false)
 
   const NoButton = () => (
     <Button
       onClick={onCancel}
-      disabled={loading}
-      type={(creditConfig.payoutEnable as boolean) ? 'primary' : 'default'}
+      // disabled={loading}
+      type={(items.payoutEnable as boolean) ? 'primary' : 'default'}
     >
       No
     </Button>
   )
   const YesButton = () => (
     <Button
-      type={(creditConfig.payoutEnable as boolean) ? 'default' : 'primary'}
+      type={(items.payoutEnable as boolean) ? 'default' : 'primary'}
       onClick={onSave}
-      disabled={loading}
-      loading={loading}
+      // disabled={loading}
+      // loading={loading}
     >
       Yes
     </Button>
@@ -77,7 +79,7 @@ const Index = ({
       <div>{content}</div>
 
       <div className="mt-6 flex justify-end gap-4">
-        {(creditConfig.payoutEnable as boolean) ? (
+        {(items.payoutEnable as boolean) ? (
           <>
             {' '}
             <YesButton /> <NoButton />{' '}
