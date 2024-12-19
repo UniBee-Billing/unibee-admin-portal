@@ -102,11 +102,9 @@ const Index = ({
       message.error(err.message)
       return
     }
-    console.log('newPromoAccaaa : ', newPromoAcc)
     message.success('Credit amount updated.')
     newPromoAcc.payoutEnable = newPromoAcc.payoutEnable == 1 ? true : false
     newPromoAcc.rechargeEnable = newPromoAcc.rechargeEnable == 1 ? true : false
-    console.log('newPromoAccbbbb : ', newPromoAcc)
     updatePromoAccount(newPromoAcc)
     refreshTxList(true)
     closeModal()
