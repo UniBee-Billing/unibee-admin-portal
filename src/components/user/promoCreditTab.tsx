@@ -1,4 +1,4 @@
-import { InfoCircleOutlined, MinusOutlined } from '@ant-design/icons'
+import { InfoCircleOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Switch, Tooltip, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { CURRENCY } from '../../constants'
@@ -112,17 +112,15 @@ const Index = ({ userDetail }: { userDetail: IProfile | undefined }) => {
 
         <Row>
           <Col span={6}>Total Added</Col>
-          <Col span={4}>
-            {' '}
-            <MinusOutlined />{' '}
-          </Col>
+          <Col span={4}>{promoAccount?.totalIncrementAmount}</Col>
         </Row>
 
         <Row>
-          <Col span={6}>Total Used</Col>
+          <Col span={6}>Total Deducted</Col>
           <Col span={4}>
-            {' '}
-            <MinusOutlined />
+            {promoAccount != undefined
+              ? Math.abs(promoAccount?.totalDecrementAmount)
+              : ''}
           </Col>
         </Row>
 

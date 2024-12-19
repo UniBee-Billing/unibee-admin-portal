@@ -32,7 +32,12 @@ import {
   terminateSubReq
 } from '../../requests'
 import '../../shared.css'
-import { IPlan, ISubAddon, ISubscriptionType } from '../../shared.types'
+import {
+  IPlan,
+  IProfile,
+  ISubAddon,
+  ISubscriptionType
+} from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CouponPopover from '../ui/couponPopover'
 import { SubscriptionStatus } from '../ui/statusTag'
@@ -45,10 +50,12 @@ import TerminateSubModal from './modals/terminateSub'
 import UpdateSubPreviewModal from './modals/updateSubPreview'
 
 const Index = ({
+  userProfile,
   setUserId,
   setRefreshSub,
   refreshSub
 }: {
+  userProfile: IProfile | undefined
   setUserId: (userId: number) => void
   setRefreshSub: React.Dispatch<React.SetStateAction<boolean>>
   refreshSub: boolean
@@ -62,6 +69,8 @@ const Index = ({
   const onCodeChange: React.ChangeEventHandler<HTMLInputElement> = (evt) => {
     setDiscountCode(evt.target.value)
   }
+  const [creditAmt, setCreditAmt] = useState<null | number>(null)
+
   const [changePlanModal, setChangePlanModal] = useState(false)
   const [cancelSubModalOpen, setCancelSubModalOpen] = useState(false) // newly created sub has status == pending if user hasn't paid yet, user(or admin) can cancel this sub.
   const [changeSubStatusModal, setChangeSubStatusModal] = useState(false) // admin can mark subStatus from pending to incomplete
@@ -493,12 +502,15 @@ const Index = ({
       />
       {changePlanModal && (
         <ChangePlanModal
+          userProfile={userProfile}
           subInfo={activeSub}
           selectedPlanId={selectedPlan}
           plans={plans}
           setSelectedPlan={setSelectedPlan}
           discountCode={discountCode}
           onCodeChange={onCodeChange}
+          creditAmt={creditAmt}
+          setCreditAmt={setCreditAmt}
           onAddonChange={onAddonChange}
           onCancel={toggleChangPlanModal}
           onConfirm={openPreviewModal}
@@ -506,6 +518,7 @@ const Index = ({
       )}
       {previewModalOpen && (
         <UpdateSubPreviewModal
+          creditAmt={creditAmt}
           discountCode={discountCode}
           subscriptionId={activeSub?.subscriptionId}
           newPlanId={selectedPlan as number}

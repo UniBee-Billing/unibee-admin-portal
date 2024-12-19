@@ -40,9 +40,9 @@ const Index = () => {
     {
       key: 'subscription',
       label: 'Subscription',
-      // children: <SubscriptionList />
       children: (
         <SubscriptionTab
+          userProfile={userProfile}
           setUserId={setUserId}
           setRefreshSub={setRefreshSub}
           refreshSub={refreshSub} // in its useEffect, if (refreshSub == true), do the refresh by fetching the subDetail, then setRefreshSub(false)

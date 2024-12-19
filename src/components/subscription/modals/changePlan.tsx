@@ -1,18 +1,38 @@
-import { Button, Divider, Input, message, Modal } from 'antd'
+import {
+  Button,
+  Divider,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Tooltip
+} from 'antd'
 import { useEffect, useState } from 'react'
 // import HiddenIcon from '../../../assets/hidden.svg?react'
 // import { formatPlanPrice } from '../../../helpers'
+import { InfoCircleOutlined } from '@ant-design/icons'
+import { CURRENCY } from '../../../constants'
+import { showAmount } from '../../../helpers'
 import { applyDiscountPreviewReq } from '../../../requests'
-import { DiscountCode, IPlan, ISubscriptionType } from '../../../shared.types'
+import {
+  DiscountCode,
+  IPlan,
+  IProfile,
+  ISubscriptionType,
+  TPromoAccount
+} from '../../../shared.types'
 import CouponPopover from '../../ui/couponPopover'
 import { PlanSelector } from '../../user/assignSub/planSelector'
 import Plan from '../plan'
 
 interface Props {
+  userProfile: IProfile | undefined
   subInfo: ISubscriptionType | null
   selectedPlanId: number | null
   plans: IPlan[]
   discountCode: string
+  creditAmt: null | number
+  setCreditAmt: (v: number) => void
   onCodeChange: React.ChangeEventHandler<HTMLInputElement>
   // onSelectPlanChange: (planId: number) => void;
   setSelectedPlan: (planId: number) => void
@@ -31,10 +51,13 @@ type DiscountCodePreview = {
 }
 
 const ChangePlan = ({
+  userProfile,
   subInfo,
   selectedPlanId,
   plans,
   discountCode,
+  creditAmt,
+  setCreditAmt,
   onCodeChange,
   setSelectedPlan,
   onAddonChange,
@@ -50,6 +73,13 @@ const ChangePlan = ({
     () => plans.filter((plan) => subInfo?.productId === plan.productId),
     [plans, subInfo]
   )
+    */
+
+  // const [creditAmt, setCreditAmt] = useState<null | number>(null)
+  /*
+  const onCreditAmtChange = (v: number) => {
+    setCreditAmt(v)
+  }
     */
 
   if (selectedPlanId == null) {
@@ -69,6 +99,44 @@ const ChangePlan = ({
       return
     }
     onConfirm()
+  }
+
+  const getCreditInfo = () => {
+    if (
+      userProfile == undefined ||
+      userProfile.promoCreditAccounts == undefined
+    ) {
+      return null
+    }
+    const credit: TPromoAccount | undefined =
+      userProfile.promoCreditAccounts?.find((c) => c.currency == 'EUR')
+    if (credit == undefined) {
+      return { credit: null, note: 'No credit available' }
+    }
+    return {
+      credit: {
+        amount: credit.amount,
+        currencyAmount: credit.currencyAmount / 100,
+        currency: credit.currency,
+        exchangeRate: credit.exchangeRate
+      },
+      note: `Credits available: ${credit.amount} (${showAmount(credit.currencyAmount, credit.currency)})`
+    }
+  }
+
+  const creditUseNote = () => {
+    const credit = getCreditInfo()
+    if (credit?.credit == null) {
+      return null
+    }
+    if (creditAmt == 0 || creditAmt == null) {
+      return <div className="text-xs text-gray-500">No promo credit used</div>
+    }
+    if (creditAmt) {
+      return (
+        <div className="mt-1 text-xs text-green-500">{`${creditAmt} credits (${(creditAmt * credit.credit.exchangeRate) / 100}${CURRENCY[credit.credit.currency].symbol}) to be used.`}</div>
+      )
+    }
   }
 
   useEffect(() => {
@@ -164,8 +232,9 @@ const ChangePlan = ({
       </div>
 
       <div className="mx-auto my-4 flex w-64 flex-col justify-center">
-        <div className="flex gap-5">
+        <div className="flex justify-between">
           <Input
+            style={{ width: 170 }}
             value={discountCode}
             onChange={onCodeChange}
             status={
@@ -195,6 +264,29 @@ const ChangePlan = ({
               <span className="text-xs text-red-500">Code is invalid</span>
             ))}
         </div>
+      </div>
+
+      <div className="mx-auto my-4 flex w-64 flex-col justify-center">
+        <div className="flex justify-between">
+          <div>
+            <InputNumber
+              min={0}
+              max={getCreditInfo()?.credit?.amount}
+              onChange={(v) => setCreditAmt(v as number)}
+              style={{ width: 170 }}
+              value={creditAmt}
+              disabled={getCreditInfo()?.credit == null}
+              placeholder="Promo credit"
+            />
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            {userProfile != undefined && (
+              <Tooltip title={getCreditInfo()?.note}>
+                <InfoCircleOutlined />
+              </Tooltip>
+            )}
+          </div>
+        </div>
+        <div className="flex">{creditUseNote()}</div>
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-4">

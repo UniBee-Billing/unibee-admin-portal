@@ -26,7 +26,7 @@ const Index = ({
   refreshTxList: (v: boolean) => void
 }) => {
   const [loading, setLoading] = useState(false)
-  const [amount, setAmount] = useState(0)
+  const [amount, setAmount] = useState<null | number>(null)
   const [description, setDescription] = useState('')
 
   const onAmtChange: InputNumberProps['onChange'] = (amt) => {
@@ -36,7 +36,7 @@ const Index = ({
   const showAmtNote = () => {
     const currentAmt =
       promoCreditAccount == undefined ? 0 : promoCreditAccount.amount
-    if (amount == 0) {
+    if (amount == 0 || amount == null) {
       return (
         <div className="text-sm text-gray-500">
           Promo credit amount hasn't changed
@@ -69,7 +69,7 @@ const Index = ({
     const currentAmt =
       promoCreditAccount == undefined ? 0 : promoCreditAccount.amount
     const amt = Number(amount)
-    if (isNaN(amt) || amt === 0) {
+    if (amount == null || isNaN(amt) || amt === 0) {
       return false
     }
     if (currentAmt + amount < 0) {
@@ -121,7 +121,12 @@ const Index = ({
       <div className="mb-2 mt-4">
         Increase or decrease the inventory of promo credits
       </div>
-      <InputNumber value={amount} onChange={onAmtChange} disabled={loading} />
+      <InputNumber
+        value={amount}
+        onChange={onAmtChange}
+        disabled={loading}
+        status={amount == 0 || amount == null ? 'error' : ''}
+      />
       <div>{showAmtNote()}</div>
 
       <div className="mb-2 mt-5">Note</div>
