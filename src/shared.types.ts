@@ -27,6 +27,8 @@ export type TPromoAccount = {
   currency: string
   amount: number // current balance
   exchangeRate: number
+  totalIncrementAmount: number // total added
+  totalDecrementAmount: number // total used
   currencyAmount: number
   payoutEnable: boolean | 1 | 0
   rechargeEnable: boolean | 1 | 0
@@ -271,6 +273,7 @@ interface IPreview {
   totalAmount: number
   currency: string
   discount: DiscountCode
+  applyPromoCredit: boolean
   prorationDate: number
   invoice: Invoice
   nextPeriodInvoice: Invoice
@@ -370,6 +373,7 @@ type InvoiceItem = {
 }
 
 // when admin update user subscription, this Invoice is part of the response
+// when admin change user's plan, assign a plan, the preview req will return this as part of the response
 type Invoice = {
   currency: string
   subscriptionAmount: number
@@ -379,6 +383,13 @@ type Invoice = {
   taxPercentage: number
   totalAmount: number
   totalAmountExcludingTax: number
+  promoCreditAccount: TPromoAccount | null // null when promoCredit not used
+  promoCreditDiscountAmount: number // 0 when not promoCredit not used
+  promoCreditPayout: {
+    creditAmount: number
+    currencyAmount: number
+    exchangeRate: number
+  } | null // null when promoCredit not used
   lines: InvoiceItem[]
 }
 

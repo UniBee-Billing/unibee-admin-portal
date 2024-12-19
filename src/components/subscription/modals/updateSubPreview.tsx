@@ -10,15 +10,24 @@ interface Props {
   newPlanId: number
   addons: { quantity: number; addonPlanId: number }[]
   discountCode: string
+  creditAmt: number | null
   onCancel: () => void
   onAfterConfirm: () => void
 }
 
+/*
+     subscriptionId,
+      newPlanId,
+      quantity: 1,
+      addonParams: addons,
+      discountCode
+*/
 const updateSubPreview = ({
   subscriptionId,
   newPlanId,
   addons,
   discountCode,
+  creditAmt,
   onCancel,
   onAfterConfirm
 }: Props) => {
@@ -30,13 +39,22 @@ const updateSubPreview = ({
     if (subscriptionId === undefined) {
       return
     }
-    setLoading(true)
-    const [previewRes, err] = await createPreviewReq(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body: any = {
       subscriptionId,
       newPlanId,
       addons,
-      discountCode
-    )
+      discountCode,
+      applyPromoCredit: creditAmt != null && creditAmt >= 0,
+      applyPromoCreditAmount: creditAmt
+    }
+    if (!body.applyPromoCredit) {
+      delete body.applyPromoCredit
+      delete body.applyPromoCreditAmount
+    }
+
+    setLoading(true)
+    const [previewRes, err] = await createPreviewReq(body)
     setLoading(false)
     if (null != err) {
       message.error(err.message)
@@ -123,7 +141,7 @@ const updateSubPreview = ({
           {previewInfo !== null && (
             <SubtotalInfo
               iv={previewInfo.nextPeriodInvoice}
-              // discount={previewInfo.discount}
+              isCreditUsed={previewInfo.applyPromoCredit}
             />
           )}
 
@@ -137,7 +155,7 @@ const updateSubPreview = ({
           {previewInfo !== null && (
             <SubtotalInfo
               iv={previewInfo.invoice}
-              // discount={previewInfo.discount}
+              isCreditUsed={previewInfo.applyPromoCredit}
             />
           )}
         </>
@@ -182,7 +200,13 @@ const ShowInvoiceItems = ({ items }: { items: InvoiceItem[] }) =>
     </Row>
   ))
 
-const SubtotalInfo = ({ iv }: { iv: Invoice }) => (
+const SubtotalInfo = ({
+  iv,
+  isCreditUsed
+}: {
+  iv: Invoice
+  isCreditUsed: boolean
+}) => (
   <>
     <div className="flex w-full justify-end">
       <div style={{ width: '260px' }}>
@@ -206,6 +230,17 @@ const SubtotalInfo = ({ iv }: { iv: Invoice }) => (
         </Col>
         <Col span={3} style={{ fontWeight: 'bold' }}>
           {showAmount(-1 * iv.discountAmount, iv.currency)}
+        </Col>
+      </Row>
+    )}
+    {isCreditUsed && (
+      <Row>
+        <Col span={17}></Col>
+        <Col span={4}>
+          Credit used({iv.promoCreditPayout?.creditAmount ?? '0'})
+        </Col>
+        <Col span={3} style={{ fontWeight: 'bold' }}>
+          {showAmount(-1 * iv.promoCreditDiscountAmount, iv.currency)}
         </Col>
       </Row>
     )}

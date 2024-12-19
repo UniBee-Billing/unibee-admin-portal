@@ -834,19 +834,30 @@ export const markAsIncompleteReq = async (
   }
 }
 
-export const createPreviewReq = async (
-  subscriptionId: string,
-  newPlanId: number,
-  addons: { quantity: number; addonPlanId: number }[],
+export const createPreviewReq = async ({
+  subscriptionId,
+  newPlanId,
+  addons,
+  discountCode,
+  applyPromoCredit,
+  applyPromoCreditAmount
+}: {
+  subscriptionId: string
+  newPlanId: number
+  addons: { quantity: number; addonPlanId: number }[]
   discountCode?: string
-) => {
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
+}) => {
   try {
     const res = await request.post(`/merchant/subscription/update_preview`, {
       subscriptionId,
       newPlanId,
       quantity: 1,
       addonParams: addons,
-      discountCode
+      discountCode,
+      applyPromoCredit,
+      applyPromoCreditAmount
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
