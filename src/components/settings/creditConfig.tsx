@@ -21,9 +21,9 @@ import {
   saveCreditConfigReq
 } from '../../requests'
 import { CreditType, TCreditConfig } from '../../shared.types'
-import { useMerchantInfoStore } from '../../stores'
+import { useCreditConfigStore, useMerchantInfoStore } from '../../stores'
 
-const normalizeCreditConfig = (c: TCreditConfig): TCreditConfig => {
+export const normalizeCreditConfig = (c: TCreditConfig): TCreditConfig => {
   if (typeof c.payoutEnable == 'number') {
     // when this field type is number, data is from BE directly
     // some fields from backend are 1 | 0 (bool like), I need to convert them to bool for FE use
@@ -49,6 +49,7 @@ const Index = () => {
   const [_, setLoading] = useState(false)
   const merchantStore = useMerchantInfoStore()
 
+  // todo: in zustand store, there is also a initial_config, reuse it.
   const defaultCreditConfig: TCreditConfig = {
     id: -1,
     merchantId: merchantStore.id,
@@ -129,6 +130,7 @@ const Index = () => {
 export default Index
 
 const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
+  const creditConfigStore = useCreditConfigStore()
   const [creditConfig, setCreditConfig] = useState<TCreditConfig>(items)
   const [modalOpen, setModalOpen] = useState(false)
   const toggleModal = () => setModalOpen(!modalOpen)
@@ -205,7 +207,7 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
 
   const onExChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const ex = Number(e.target.value)
-    if (isNaN(ex)) {
+    if (isNaN(ex) || ex <= 0) {
       setExErr('Invalid exchange rate')
     } else {
       setExErr('')
@@ -224,7 +226,9 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
         return
       }
       if (newCreditConfig != null) {
-        setCreditConfig(normalizeCreditConfig(newCreditConfig))
+        const newConfig = normalizeCreditConfig(newCreditConfig)
+        setCreditConfig(newConfig)
+        creditConfigStore.setCreditConfig(newConfig)
       }
     } else {
       setLoading(true)
@@ -241,7 +245,9 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
         return
       }
       if (newCreditConfig != null) {
-        setCreditConfig(normalizeCreditConfig(newCreditConfig))
+        const newConfig = normalizeCreditConfig(newCreditConfig)
+        setCreditConfig(newConfig)
+        creditConfigStore.setCreditConfig(newConfig)
       }
     }
     if (key == 'payoutEnable' && modalOpen) {

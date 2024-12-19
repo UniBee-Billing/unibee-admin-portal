@@ -1,7 +1,8 @@
-import { MinusOutlined } from '@ant-design/icons'
-import { Button, Col, Row, Switch, message } from 'antd'
+import { InfoCircleOutlined, MinusOutlined } from '@ant-design/icons'
+import { Button, Col, Row, Switch, Tooltip, message } from 'antd'
 import { useEffect, useState } from 'react'
-import { numBoolConvert } from '../../helpers'
+import { CURRENCY } from '../../constants'
+import { numBoolConvert, showAmount } from '../../helpers'
 import { toggleUserCreditReq } from '../../requests'
 import { IProfile, TPromoAccount } from '../../shared.types'
 import CreditSwitchConfirmModal from '../settings/creditSwitchConfirmModal'
@@ -126,8 +127,20 @@ const Index = ({ userDetail }: { userDetail: IProfile | undefined }) => {
         </Row>
 
         <Row>
-          <Col span={6}>Promo Credit Balance</Col>
-          <Col span={4}> {promoAccount?.amount} </Col>
+          <Col span={6}>Promo Credit Balance </Col>
+          <Col span={4}>
+            {' '}
+            {promoAccount?.amount} (
+            {showAmount(promoAccount?.currencyAmount, promoAccount?.currency)})
+            &nbsp;
+            {promoAccount != undefined && (
+              <Tooltip
+                title={`1 credit = ${promoAccount?.exchangeRate / 100} ${CURRENCY[promoAccount.currency].symbol}`}
+              >
+                <InfoCircleOutlined />
+              </Tooltip>
+            )}
+          </Col>
           <Col span={4}>
             <Button onClick={toggleModal}>Update Promo Credit</Button>
           </Col>
