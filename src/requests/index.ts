@@ -945,6 +945,8 @@ type TCreateSubReq = {
   vatCountryCode: string | undefined
   vatNumber: string | undefined
   discountCode: string | undefined
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
 }
 
 export const createSubscriptionReq = async ({
@@ -959,7 +961,9 @@ export const createSubscriptionReq = async ({
   user,
   vatCountryCode,
   vatNumber,
-  discountCode
+  discountCode,
+  applyPromoCredit,
+  applyPromoCreditAmount
 }: TCreateSubReq) => {
   try {
     const res = await request.post(`/merchant/subscription/create_submit`, {
@@ -975,7 +979,9 @@ export const createSubscriptionReq = async ({
       user,
       vatCountryCode,
       vatNumber,
-      discountCode
+      discountCode,
+      applyPromoCredit,
+      applyPromoCreditAmount
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })

@@ -314,8 +314,6 @@ export const AssignSubscriptionModal = ({
         })) as TSelectedAddon[]
     }
 
-    // console.log('submitData: ', body)
-    // return
     setLoading(true)
     const [_, err] = await createSubscriptionReq(body)
     setLoading(false)
