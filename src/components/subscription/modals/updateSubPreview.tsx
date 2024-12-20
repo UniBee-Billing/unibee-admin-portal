@@ -223,6 +223,17 @@ const SubtotalInfo = ({
         {showAmount(iv.subscriptionAmountExcludingTax, iv.currency)}
       </Col>
     </Row>
+    {isCreditUsed && (
+      <Row>
+        <Col span={17}></Col>
+        <Col span={4}>
+          Credit used({iv.promoCreditPayout?.creditAmount ?? '0'})
+        </Col>
+        <Col span={3} style={{ fontWeight: 'bold' }}>
+          {showAmount(-1 * iv.promoCreditDiscountAmount, iv.currency)}
+        </Col>
+      </Row>
+    )}
     {iv.discountAmount !== 0 && (
       <Row>
         <Col span={17}></Col>
@@ -235,17 +246,7 @@ const SubtotalInfo = ({
         </Col>
       </Row>
     )}
-    {isCreditUsed && (
-      <Row>
-        <Col span={17}></Col>
-        <Col span={4}>
-          Credit used({iv.promoCreditPayout?.creditAmount ?? '0'})
-        </Col>
-        <Col span={3} style={{ fontWeight: 'bold' }}>
-          {showAmount(-1 * iv.promoCreditDiscountAmount, iv.currency)}
-        </Col>
-      </Row>
-    )}
+
     <Row>
       <Col span={17}></Col>
       <Col span={4}>
