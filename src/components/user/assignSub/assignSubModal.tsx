@@ -1,9 +1,21 @@
-import { Button, Divider, Form, Input, message, Modal, Switch } from 'antd'
+import {
+  Button,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Switch,
+  Tooltip
+} from 'antd'
 import update from 'immutability-helper'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { showAmount } from '../../../helpers'
 import { useLoading } from '../../../hooks'
 // import { PublishStatus } from '../../../hooks/usePlans'
+import { InfoCircleOutlined } from '@ant-design/icons'
+import { CURRENCY } from '../../../constants'
 import {
   BusinessUserData,
   createSubscriptionReq,
@@ -14,6 +26,7 @@ import {
   AccountType,
   IPlan,
   IProfile,
+  TPromoAccount,
   WithDoubleConfirmFields
 } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
@@ -55,6 +68,8 @@ interface CreateSubScriptionBody {
   vatNumber: string | undefined
   discountCode: string | undefined
   addonParams?: TSelectedAddon[]
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
 }
 
 type VATNumberValidateResult = {
@@ -63,8 +78,16 @@ type VATNumberValidateResult = {
 
 interface InvoicePreviewData {
   taxAmount: number
+  currency: string
   subscriptionAmountExcludingTax: number
   discountAmount: number
+  promoCreditDiscountAmount: number
+  promoCreditPayout?: {
+    creditAmount: number
+    currencyAmount: number
+    exchangeRate: number
+  }
+  promoCreditAccount?: TPromoAccount
 }
 
 enum DiscountType {
@@ -109,13 +132,11 @@ export const AssignSubscriptionModal = ({
   )
   const [selectedPlan, setSelectedPlan] = useState<IPlan | undefined>()
   const [requirePayment, setRequirePayment] = useState(true)
-  // const [includeUnpublishedPlan, setIncludeUnpublishedPlan] = useState(false)
-  // const [applyPromo, setApplyPromo] = useState(false)
-  // const onApplyPromoChange = () => setApplyPromo(!applyPromo)
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
   const accountFormValues = useRef<AccountValues | undefined>()
+  const [creditAmt, setCreditAmt] = useState<null | number>(null)
 
   const onAddonChange = (
     addonId: number,
@@ -166,8 +187,8 @@ export const AssignSubscriptionModal = ({
     }
 
     return discount.discountType === DiscountType.PERCENTAGE
-      ? `${discount.discountPercentage / 100}%`
-      : showAmount(discount.discountAmount, selectedPlan?.currency)
+      ? `${(-1 * discount.discountPercentage) / 100}%`
+      : showAmount(-1 * discount.discountAmount, selectedPlan?.currency)
   }, [selectedPlan, previewData])
 
   const formattedDiscountLabel = useMemo(
@@ -217,7 +238,9 @@ export const AssignSubscriptionModal = ({
         vatNumber: vat,
         vatCountryCode: country,
         discountCode: discountCode,
-        addonParams: [] as TSelectedAddon[]
+        addonParams: [] as TSelectedAddon[],
+        applyPromoCredit: creditAmt != null && creditAmt > 0,
+        applyPromoCreditAmount: creditAmt
       }
       if (selectedPlan?.addons != null && selectedPlan.addons.length > 0) {
         submitData.addonParams = selectedPlan.addons
@@ -244,7 +267,7 @@ export const AssignSubscriptionModal = ({
       user,
       accountType,
       discountCode,
-      user,
+      creditAmt,
       requirePayment
     ]
   )
@@ -278,7 +301,9 @@ export const AssignSubscriptionModal = ({
     const body = {
       ...submitData,
       confirmTotalAmount: previewData?.totalAmount,
-      confirmCurrency: selectedPlan?.currency
+      confirmCurrency: selectedPlan?.currency,
+      applyPromoCredit: creditAmt != null && creditAmt > 0,
+      applyPromoCreditAmount: creditAmt
     } as WithDoubleConfirmFields<CreateSubScriptionBody>
     if (selectedPlan.addons != undefined && selectedPlan.addons.length > 0) {
       body.addonParams = selectedPlan.addons
@@ -289,6 +314,8 @@ export const AssignSubscriptionModal = ({
         })) as TSelectedAddon[]
     }
 
+    // console.log('submitData: ', body)
+    // return
     setLoading(true)
     const [_, err] = await createSubscriptionReq(body)
     setLoading(false)
@@ -305,7 +332,6 @@ export const AssignSubscriptionModal = ({
   const updatePrice = useCallback(async () => {
     const [data, err] = await withLoading(async () => {
       const submitData = getSubmitData(accountFormValues.current)
-
       return request.post<Response<PreviewData>>(
         '/merchant/subscription/create_preview',
         submitData
@@ -325,6 +351,46 @@ export const AssignSubscriptionModal = ({
   const debouncedUpdateDiscountCode = useDebouncedCallbackWithDefault(
     (value: string) => setDiscountCode(value)
   )
+
+  const debouncedUpdateCreditAmt = useDebouncedCallbackWithDefault(
+    (value: number) => setCreditAmt(value)
+  )
+
+  const getCreditInfo = () => {
+    if (user == undefined || user.promoCreditAccounts == undefined) {
+      return null
+    }
+    const credit: TPromoAccount | undefined = user.promoCreditAccounts?.find(
+      (c) => c.currency == 'EUR'
+    )
+    if (credit == undefined) {
+      return { credit: null, note: 'No credit available' }
+    }
+    return {
+      credit: {
+        amount: credit.amount,
+        currencyAmount: credit.currencyAmount / 100,
+        currency: credit.currency,
+        exchangeRate: credit.exchangeRate
+      },
+      note: `Credits available: ${credit.amount} (${showAmount(credit.currencyAmount, credit.currency)})`
+    }
+  }
+
+  const creditUseNote = () => {
+    const credit = getCreditInfo()
+    if (credit?.credit == null) {
+      return null
+    }
+    if (creditAmt == 0 || creditAmt == null) {
+      return <div className="text-xs text-gray-500">No promo credit used</div>
+    }
+    if (creditAmt) {
+      return (
+        <div className="mt-1 text-xs text-green-500">{`${creditAmt} credits (${(creditAmt * credit.credit.exchangeRate) / 100}${CURRENCY[credit.credit.currency].symbol}) to be used.`}</div>
+      )
+    }
+  }
 
   useEffect(() => {
     if (!selectedPlan) {
@@ -439,24 +505,28 @@ export const AssignSubscriptionModal = ({
                   />
                 </InfoItem>
               </div>
-              {/* <div className="mt-2">
+              <div className="mt-2">
                 <div className="flex justify-between">
-                  <div>Apply promo credits</div>
                   <div>
-                    <Switch value={applyPromo} onChange={onApplyPromoChange} />
+                    <InputNumber
+                      min={0}
+                      max={getCreditInfo()?.credit?.amount}
+                      onChange={(v) => debouncedUpdateCreditAmt(v)}
+                      style={{ width: 170 }}
+                      value={creditAmt}
+                      disabled={getCreditInfo()?.credit == null}
+                      placeholder="Promo credit"
+                    />
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    {user != undefined && (
+                      <Tooltip title={getCreditInfo()?.note}>
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
+                <div className="flex">{creditUseNote()}</div>
               </div>
-
-              {applyPromo && (
-                <div className="mt-2">
-                  <div className="flex justify-between">
-                    <Input style={{ width: 240 }} />
-                    <div></div>
-                  </div>
-                </div>
-              )}
-                */}
 
               <div className="my-8 h-[1px] w-full bg-gray-100"></div>
               <CheckoutItem
@@ -466,6 +536,22 @@ export const AssignSubscriptionModal = ({
                   previewData?.invoice.subscriptionAmountExcludingTax
                 )}
               />
+              <CheckoutItem
+                label={formattedDiscountLabel}
+                loading={isLoading}
+                value={formattedDiscountValue}
+              />
+              {previewData != undefined &&
+                previewData.invoice.promoCreditDiscountAmount != 0 && (
+                  <CheckoutItem
+                    label={`Credit used(${previewData.invoice.promoCreditPayout?.creditAmount})`}
+                    loading={isLoading}
+                    value={showAmount(
+                      -1 * previewData.invoice.promoCreditDiscountAmount,
+                      previewData.invoice.currency
+                    )}
+                  />
+                )}
               {selectedPlan && (
                 <CheckoutItem
                   loading={isLoading}
@@ -473,11 +559,6 @@ export const AssignSubscriptionModal = ({
                   value={formatAmount(previewData?.invoice.taxAmount)}
                 />
               )}
-              <CheckoutItem
-                label={formattedDiscountLabel}
-                loading={isLoading}
-                value={formattedDiscountValue}
-              />
               {selectedPlan && (
                 <div className="my-8 h-[1px] w-full bg-gray-100"></div>
               )}

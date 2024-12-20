@@ -14,6 +14,7 @@ const Index = ({
   promoCreditAccount,
   userId,
   currency,
+  refreshUser,
   closeModal,
   updatePromoAccount,
   refreshTxList
@@ -21,6 +22,7 @@ const Index = ({
   promoCreditAccount?: TPromoAccount
   userId: number
   currency: string
+  refreshUser: () => void
   closeModal: () => void
   updatePromoAccount: (a: TPromoAccount) => void
   refreshTxList: (v: boolean) => void
@@ -108,6 +110,7 @@ const Index = ({
     updatePromoAccount(newPromoAcc)
     refreshTxList(true)
     closeModal()
+    refreshUser()
   }
 
   return (
