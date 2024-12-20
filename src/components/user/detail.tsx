@@ -93,7 +93,9 @@ const Index = () => {
     {
       key: TAB_KEYS[2],
       label: 'Promo Credits',
-      children: <PromoCredit userDetail={userProfile} />
+      children: (
+        <PromoCredit userDetail={userProfile} refreshUser={fetchUserProfile} />
+      )
     },
     {
       key: TAB_KEYS[3],

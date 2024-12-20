@@ -9,7 +9,13 @@ import CreditSwitchConfirmModal from '../settings/creditSwitchConfirmModal'
 import PromoCreditTxHistory from './promoCreditTxHist'
 import UpdatePromoCreditModal from './updatePromoCreditModal'
 
-const Index = ({ userDetail }: { userDetail: IProfile | undefined }) => {
+const Index = ({
+  userDetail,
+  refreshUser
+}: {
+  userDetail: IProfile | undefined
+  refreshUser: () => void
+}) => {
   const normalizePromoAcc = () => {
     let promoAcc: TPromoAccount | undefined = undefined
     if (
@@ -81,6 +87,7 @@ const Index = ({ userDetail }: { userDetail: IProfile | undefined }) => {
     <div>
       {modalOpen && userDetail != undefined && (
         <UpdatePromoCreditModal
+          refreshUser={refreshUser}
           promoCreditAccount={promoAccount}
           closeModal={toggleModal}
           updatePromoAccount={setPromoAccount}
