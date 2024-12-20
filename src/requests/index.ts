@@ -872,15 +872,27 @@ export const createPreviewReq = async ({
   }
 }
 
-export const updateSubscription = async (
-  subscriptionId: string,
-  newPlanId: number,
-  addons: { quantity: number; addonPlanId: number }[],
-  confirmTotalAmount: number,
-  confirmCurrency: string,
-  prorationDate: number,
+export const updateSubscription = async ({
+  subscriptionId,
+  newPlanId,
+  addons,
+  confirmTotalAmount,
+  confirmCurrency,
+  prorationDate,
+  discountCode,
+  applyPromoCredit,
+  applyPromoCreditAmount
+}: {
+  subscriptionId: string
+  newPlanId: number
+  addons: { quantity: number; addonPlanId: number }[]
+  confirmTotalAmount: number
+  confirmCurrency: string
+  prorationDate: number
   discountCode?: string
-) => {
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
+}) => {
   try {
     const res = await request.post(`/merchant/subscription/update_submit`, {
       subscriptionId,
@@ -890,7 +902,9 @@ export const updateSubscription = async (
       confirmTotalAmount,
       confirmCurrency,
       prorationDate,
-      discountCode
+      discountCode,
+      applyPromoCredit,
+      applyPromoCreditAmount
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })

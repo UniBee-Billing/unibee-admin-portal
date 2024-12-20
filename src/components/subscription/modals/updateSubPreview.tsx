@@ -68,17 +68,24 @@ const updateSubPreview = ({
     if (subscriptionId === undefined || previewInfo === null) {
       return
     }
-
-    setConfirming(true)
-    const [updateSubRes, err] = await updateSubscription(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body: any = {
       subscriptionId,
       newPlanId,
       addons,
-      previewInfo.totalAmount,
-      previewInfo.currency,
-      previewInfo.prorationDate,
-      discountCode
-    )
+      confirmTotalAmount: previewInfo.totalAmount,
+      confirmCurrency: previewInfo.currency,
+      prorationDate: previewInfo.prorationDate,
+      discountCode: discountCode,
+      applyPromoCredit: creditAmt != null && creditAmt >= 0,
+      applyPromoCreditAmount: creditAmt
+    }
+    if (!body.applyPromoCredit) {
+      delete body.applyPromoCredit
+      delete body.applyPromoCreditAmount
+    }
+    setConfirming(true)
+    const [updateSubRes, err] = await updateSubscription(body)
     setConfirming(false)
     if (null != err) {
       message.error(err.message)
@@ -141,7 +148,9 @@ const updateSubPreview = ({
           {previewInfo !== null && (
             <SubtotalInfo
               iv={previewInfo.nextPeriodInvoice}
-              isCreditUsed={previewInfo.applyPromoCredit}
+              isCreditUsed={
+                previewInfo.nextPeriodInvoice.promoCreditDiscountAmount != 0
+              }
             />
           )}
 
@@ -155,7 +164,7 @@ const updateSubPreview = ({
           {previewInfo !== null && (
             <SubtotalInfo
               iv={previewInfo.invoice}
-              isCreditUsed={previewInfo.applyPromoCredit}
+              isCreditUsed={previewInfo.invoice.promoCreditDiscountAmount != 0}
             />
           )}
         </>
