@@ -536,11 +536,6 @@ export const AssignSubscriptionModal = ({
                   previewData?.invoice.subscriptionAmountExcludingTax
                 )}
               />
-              <CheckoutItem
-                label={formattedDiscountLabel}
-                loading={isLoading}
-                value={formattedDiscountValue}
-              />
               {previewData != undefined &&
                 previewData.invoice.promoCreditDiscountAmount != 0 && (
                   <CheckoutItem
@@ -552,6 +547,12 @@ export const AssignSubscriptionModal = ({
                     )}
                   />
                 )}
+              <CheckoutItem
+                label={formattedDiscountLabel}
+                loading={isLoading}
+                value={formattedDiscountValue}
+              />
+
               {selectedPlan && (
                 <CheckoutItem
                   loading={isLoading}
