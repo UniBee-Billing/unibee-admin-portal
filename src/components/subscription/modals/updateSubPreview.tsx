@@ -15,13 +15,6 @@ interface Props {
   onAfterConfirm: () => void
 }
 
-/*
-     subscriptionId,
-      newPlanId,
-      quantity: 1,
-      addonParams: addons,
-      discountCode
-*/
 const updateSubPreview = ({
   subscriptionId,
   newPlanId,
