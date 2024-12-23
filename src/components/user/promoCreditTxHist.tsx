@@ -1,4 +1,4 @@
-import { LoadingOutlined } from '@ant-design/icons'
+import { LoadingOutlined, MinusOutlined } from '@ant-design/icons'
 import { message, Pagination } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
@@ -11,16 +11,19 @@ const PAGE_SIZE = 10
 
 const Index = ({
   userDetail,
-  refreshTxHistory,
-  setRefreshTxHist
+  refreshTxHistory, // when used in user detail -> promoCredit tab, after admin updated credit amt, this component need to re-render to get the latest list
+  // when this props passed as true, run fetchCreditTxList
+  setRefreshTxHist,
+  embeddingMode
 }: {
-  userDetail: IProfile | undefined
+  userDetail?: IProfile
   refreshTxHistory: boolean
-  setRefreshTxHist: (v: boolean) => void
+  setRefreshTxHist?: (v: boolean) => void
+  embeddingMode?: boolean
 }) => {
   const [creditTxList, setCreditTxList] = useState<TCreditTx[]>([])
   const [loading, setLoading] = useState(refreshTxHistory)
-  const { page, onPageChange } = usePagination()
+  const { page, onPageChange, onPageChangeNoParams } = usePagination()
   const [total, setTotal] = useState(0)
 
   const columns: ColumnsType<TCreditTx> = [
@@ -40,7 +43,8 @@ const Index = ({
       title: 'By',
       dataIndex: 'adminMember',
       key: 'adminMember',
-      render: (by) => `${by?.firstName} ${by?.lastName}`
+      render: (by) =>
+        by != undefined ? `${by.firstName} ${by.lastName}` : <MinusOutlined />
     },
     {
       title: 'At',
@@ -51,18 +55,17 @@ const Index = ({
   ]
 
   const fetchCreditTxList = async () => {
-    if (userDetail == undefined) {
-      return
-    }
     setLoading(true)
     const [res, err] = await getCreditTxListReq({
       accountType: CreditType.PROMO_CREDIT,
-      userId: userDetail.id as number,
+      userId: userDetail == undefined ? undefined : (userDetail.id as number),
       page,
       count: PAGE_SIZE
     })
     setLoading(false)
-    setRefreshTxHist(false)
+    if (setRefreshTxHist != undefined) {
+      setRefreshTxHist(false)
+    }
     if (err != null) {
       message.error(err.message)
       return
@@ -84,9 +87,7 @@ const Index = ({
 
   return (
     <>
-      <div className="my-6 text-lg text-gray-600">
-        Promo credit transaction history
-      </div>
+      {!embeddingMode && <div>search area</div>}
       <Table
         columns={columns}
         dataSource={creditTxList}
@@ -98,7 +99,6 @@ const Index = ({
           spinning: loading,
           indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
         }}
-        // onRow={(user) => {          }}
       />
 
       <div className="mx-0 my-4 flex items-center justify-end">
@@ -107,7 +107,7 @@ const Index = ({
           pageSize={PAGE_SIZE}
           total={total}
           size="small"
-          onChange={onPageChange}
+          onChange={embeddingMode ? onPageChangeNoParams : onPageChange}
           disabled={loading}
           showSizeChanger={false}
           showTotal={(total, range) =>

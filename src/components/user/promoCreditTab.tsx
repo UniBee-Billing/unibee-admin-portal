@@ -151,10 +151,14 @@ const Index = ({
           </Col>
         </Row>
       </div>
+      <div className="my-6 text-lg text-gray-600">
+        Promo credit transaction history
+      </div>
       <PromoCreditTxHistory
         userDetail={userDetail}
         refreshTxHistory={refreshTxHist}
         setRefreshTxHist={setRefreshTxHist}
+        embeddingMode={true}
       />
     </div>
   )

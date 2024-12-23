@@ -11,6 +11,7 @@ import DiscountCodeSvg from '../../assets/navIcons/discountCode.svg?react'
 import InvoiceSvg from '../../assets/navIcons/invoice.svg?react'
 import MyAccountSvg from '../../assets/navIcons/myAccount.svg?react'
 import ProductPlanSvg from '../../assets/navIcons/productPlan.svg?react'
+import PromoCreditSvg from '../../assets/navIcons/promoCredit.svg?react'
 import ReportSvg from '../../assets/navIcons/report.svg?react'
 import SubscriptionSvg from '../../assets/navIcons/subscription.svg?react'
 import UserListSvg from '../../assets/navIcons/userList.svg?react'
@@ -45,6 +46,11 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     label: 'Transaction',
     key: 'transaction',
     icon: <TransactionOutlined />
+  },
+  {
+    label: 'Promo Credit',
+    key: 'promoCredit',
+    icon: <Icon component={PromoCreditSvg} />
   },
   { label: 'User List', key: 'user', icon: <Icon component={UserListSvg} /> },
   {
