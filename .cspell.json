@@ -65,6 +65,8 @@
     "changelly",
     "iban",
     "zustand",
-    "linkify"
+    "linkify",
+    "stroke-linecap",
+    "stroke-linejoin"
   ]
 }

@@ -610,7 +610,7 @@ export type TCreditTx = {
   createTime: number
   merchantId: number
   invoiceId: string
-  adminMember: IMerchantMemberProfile
+  adminMember?: IMerchantMemberProfile
 }
 
 export enum CreditTxType {
