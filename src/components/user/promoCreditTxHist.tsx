@@ -87,7 +87,7 @@ const Index = ({
 
   return (
     <>
-      <div>search area</div>
+      {!embeddingMode && <div>search area</div>}
       <Table
         columns={columns}
         dataSource={creditTxList}
