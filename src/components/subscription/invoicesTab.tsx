@@ -45,6 +45,7 @@ import { normalizeAmt } from '../helpers'
 import MarkAsPaidModal from '../invoice/markAsPaidModal'
 import MarkAsRefundedModal from '../invoice/markAsRefundedModal'
 import RefundInfoModal from '../payment/refundModal'
+import CopyToClipboard from '../ui/copyToClipboard'
 import { InvoiceStatus } from '../ui/statusTag'
 import InvoiceDetailModal from './modals/invoiceDetail'
 import NewInvoiceModal from './modals/newInvoice'
@@ -245,14 +246,18 @@ const Index = ({
       dataIndex: 'invoiceId',
       key: 'invoiceId',
       render: (ivId) => (
-        <Button
-          onClick={() => navigate(`/invoice/${ivId}`)}
-          type="link"
-          style={{ padding: 0 }}
-          className="btn-invoiceid-wrapper"
-        >
-          {ivId}
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            onClick={() => navigate(`/invoice/${ivId}`)}
+            type="link"
+            style={{ padding: 0, fontFamily: 'monospace' }}
+          >
+            {ivId}
+          </Button>
+          <span className="btn-copy-to-clipboard">
+            <CopyToClipboard content={ivId} />
+          </span>
+        </div>
       )
     },
     {
@@ -545,6 +550,13 @@ const Index = ({
             return {
               onClick: (event) => {
                 setInvoiceIdx(rowIndex as number)
+                if (
+                  event.target instanceof Element &&
+                  event.target.closest('.btn-copy-to-clipboard') != null
+                ) {
+                  return
+                }
+
                 if (
                   event.target instanceof Element &&
                   event.target.closest('.btn-refund-info-modal-wrapper') != null
