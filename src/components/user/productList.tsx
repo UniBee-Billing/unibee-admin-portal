@@ -12,11 +12,13 @@ import Subscription from './subscriptionTab'
 const Index = ({
   userId,
   userProfile,
-  refreshSub
+  refreshSub,
+  refreshUserProfile
 }: {
   userId: number
   userProfile: IProfile | undefined
   refreshSub: boolean
+  refreshUserProfile: () => void
 }) => {
   const [productId, setProductId] = useState('0') // set default tab
   const [loading, setLoading] = useState(false)
@@ -60,6 +62,7 @@ const Index = ({
                 productId={p.id}
                 userProfile={userProfile}
                 refreshSub={refreshSub}
+                refreshUserProfile={refreshUserProfile}
               />
             )
           }))}

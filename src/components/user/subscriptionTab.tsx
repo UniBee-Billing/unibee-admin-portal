@@ -26,12 +26,14 @@ const Index = ({
   userProfile,
   productId,
   refreshSub,
+  refreshUserProfile,
   extraButton
 }: {
   userId: number
   userProfile: IProfile | undefined
   productId: number
   refreshSub: boolean
+  refreshUserProfile: () => void
   extraButton?: ReactElement
 }) => {
   const [loading, setLoading] = useState(false)
@@ -81,6 +83,7 @@ const Index = ({
           productId={productId}
           closeModal={toggleAssignSub}
           refresh={getSubInProduct}
+          refreshUserProfile={refreshUserProfile}
         />
       )}
       <Spin

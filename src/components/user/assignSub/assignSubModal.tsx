@@ -47,7 +47,8 @@ import { UserInfoCard } from './userInfoCard'
 interface Props {
   user: IProfile
   productId: number
-  refresh: () => void
+  refresh: () => void // after assigning a sub to a user, we need to refresh subscription detail in parent
+  refreshUserProfile: () => void // if credit is used, we need to refresh user profile in grand-grand parent
   closeModal: () => void
 }
 
@@ -121,7 +122,8 @@ export const AssignSubscriptionModal = ({
   user,
   productId,
   closeModal,
-  refresh
+  refresh,
+  refreshUserProfile
 }: Props) => {
   const appConfig = useAppConfigStore()
   const accountTypeFormRef = useRef<AccountTypeFormInstance>(null)
@@ -325,6 +327,10 @@ export const AssignSubscriptionModal = ({
     message.success('Subscription created')
     closeModal()
     refresh()
+    if (creditAmt != null && creditAmt != 0) {
+      // even creditAmt is > 0, it's not necessarily used, discountCode might cover the whole payment
+      refreshUserProfile() // but to make things simple, just refresh it.
+    }
   }
 
   const updatePrice = useCallback(async () => {

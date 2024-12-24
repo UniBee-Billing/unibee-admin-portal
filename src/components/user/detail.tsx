@@ -87,6 +87,7 @@ const Index = () => {
           userId={userId} // setRefreshSub fn is triggered by the above <UserAccountTab /> which will pass this fn to <SuspendModal />
           userProfile={userProfile}
           refreshSub={refreshSub}
+          refreshUserProfile={fetchUserProfile}
         />
       )
     },

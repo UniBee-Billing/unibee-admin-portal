@@ -5,7 +5,7 @@ import svgr from 'vite-plugin-svgr'
 
 // https://vitejs.dev/config/
 export default defineConfig((env) => ({
-  base: env.mode === 'production' ? '/__dynamic_base__/' : '/',
+  base: env.mode === 'production' ? '/__dynamic_base__/' : '/', // don't forget the leading and traililng slash(e.g., '/abc/' ) unless it's bare '/'
   plugins: [
     react(),
     svgr(),

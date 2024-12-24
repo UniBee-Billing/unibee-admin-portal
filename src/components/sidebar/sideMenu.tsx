@@ -1,7 +1,7 @@
 import Icon, { TransactionOutlined } from '@ant-design/icons'
-import { Menu, MenuProps } from 'antd'
+import { Menu, MenuProps, message } from 'antd'
 import { ItemType, MenuItemType } from 'antd/es/menu/interface'
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ActivityLogSvg from '../../assets/navIcons/activityLog.svg?react'
 import AdminListSvg from '../../assets/navIcons/adminList.svg?react'
@@ -15,19 +15,125 @@ import PromoCreditSvg from '../../assets/navIcons/promoCredit.svg?react'
 import ReportSvg from '../../assets/navIcons/report.svg?react'
 import SubscriptionSvg from '../../assets/navIcons/subscription.svg?react'
 import UserListSvg from '../../assets/navIcons/userList.svg?react'
+import { useCopyContent } from '../../hooks'
 import { useAccessiblePages } from '../../hooks/useAccessiblePages'
 import { APP_ROUTES } from '../../routes'
 import { useProfileStore } from '../../stores'
 import { basePathName, trimEnvBasePath } from '../../utils'
+import './sideMenu.css'
+
+const BASE_PATH = import.meta.env.BASE_URL
+// console.log('base path: ', BASE_PATH)
+
+const ContextMenu = ({ label, link }: { label: string; link: string }) => {
+  const [clicked, setClicked] = useState(false)
+  const [points, setPoints] = useState({
+    x: 0,
+    y: 0
+  })
+  useEffect(() => {
+    const handleClick = () => setClicked(false)
+    window.addEventListener('click', handleClick)
+    return () => {
+      window.removeEventListener('click', handleClick)
+    }
+  }, [])
+
+  return (
+    <div>
+      <div
+        style={{ position: 'relative' }}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setClicked(true)
+          setPoints({
+            x: e.pageX,
+            y: e.pageY
+          })
+        }}
+      >
+        {label}
+      </div>
+
+      {clicked && (
+        <div
+          style={{
+            borderRadius: '4px',
+            padding: '6px',
+            position: 'fixed',
+            top: `${points.y}px`,
+            left: `${points.x}px`,
+            color: 'rgb(37, 37, 37)',
+            background: 'rgb(237, 237, 237)',
+            zIndex: 100000
+          }}
+        >
+          <ul className="sidebar-nav-context-menu">
+            <li
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setClicked(false)
+                window.open(`${location.origin}${BASE_PATH}${link}`)
+              }}
+            >
+              Open Link in New Tab
+            </li>
+            <li
+              onClick={async (e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setClicked(false)
+                const url = `${location.origin}${BASE_PATH}${link}`
+                const err = await useCopyContent(url)
+                if (err != null) {
+                  message.error('Copy Link failed')
+                }
+              }}
+            >
+              Copy Link
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/*
+const onRightClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+  e.preventDefault()
+  if (!(e.target instanceof HTMLDivElement)) {
+    return
+  }
+  if (e.nativeEvent.button === 2) {
+    window.open(`${location.origin}${BASE_PATH}${e.target.dataset['link']}`)
+  }
+}
+  */
 
 const MENU_ITEMS: ItemType<MenuItemType>[] = [
   {
-    label: 'Product and Plan',
+    // label: 'Product and Plan',
+    // label: <a href={`${location.origin}/plan/list`}>Product and Plan</a>,
+    /*
+    label: (
+      <div onContextMenu={onRightClick} data-link="plan/list">
+        Product and Plan
+      </div>
+    ),
+    */
+    label: <ContextMenu label="Product and Plan" link="plan/list" />,
     key: 'plan',
     icon: <Icon component={ProductPlanSvg} />
   },
   {
-    label: 'Billable Metric',
+    // label: 'Billable Metric',
+    label: (
+      <a href={`${location.origin}${BASE_PATH}billable-metric`}>
+        Billable Metric
+      </a>
+    ),
     key: 'billable-metric',
     icon: <Icon component={BillableMetricsSvg} />
   },
