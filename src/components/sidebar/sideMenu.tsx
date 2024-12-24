@@ -57,9 +57,10 @@ const ContextMenu = ({ label, link }: { label: string; link: string }) => {
 
       {clicked && (
         <div
+          className="border border-solid border-gray-300 drop-shadow-lg"
           style={{
             borderRadius: '4px',
-            padding: '6px',
+            padding: '4px',
             position: 'fixed',
             top: `${points.y}px`,
             left: `${points.x}px`,
