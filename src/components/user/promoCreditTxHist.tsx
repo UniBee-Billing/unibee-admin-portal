@@ -1,11 +1,19 @@
 import { LoadingOutlined, MinusOutlined } from '@ant-design/icons'
-import { message, Pagination } from 'antd'
+import { Button, message, Pagination } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { CREDIT_TX_TYPE } from '../../constants'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { getCreditTxListReq } from '../../requests'
-import { CreditType, IProfile, TCreditTx } from '../../shared.types'
+import {
+  CreditTxType,
+  CreditType,
+  IProfile,
+  TCreditTx
+} from '../../shared.types'
+import CopyToClipboard from '../ui/copyToClipboard'
 
 const PAGE_SIZE = 10
 
@@ -21,6 +29,7 @@ const Index = ({
   setRefreshTxHist?: (v: boolean) => void
   embeddingMode?: boolean
 }) => {
+  const navigate = useNavigate()
   const [creditTxList, setCreditTxList] = useState<TCreditTx[]>([])
   const [loading, setLoading] = useState(refreshTxHistory)
   const { page, onPageChange, onPageChangeNoParams } = usePagination()
@@ -28,16 +37,32 @@ const Index = ({
 
   const columns: ColumnsType<TCreditTx> = [
     {
-      title: 'id',
-      dataIndex: 'id',
-      key: 'id'
-    },
-    {
       title: 'Amount changed',
       dataIndex: 'deltaAmount',
       key: 'deltaAmount',
       render: (amt, tx) =>
         `${amt} (${showAmount(tx.deltaCurrencyAmount, tx.currency)})`
+    },
+    {
+      title: 'User Email',
+      dataIndex: 'user',
+      key: 'user',
+      render: (user) => (
+        <Button
+          type="link"
+          onClick={() => navigate(`/user/${user.id}`)}
+          style={{ padding: 0 }}
+        >
+          {user.email}
+        </Button>
+      ),
+      hidden: embeddingMode
+    },
+    {
+      title: 'Transaction Type',
+      dataIndex: 'transactionType',
+      key: 'transactionType',
+      render: (type: CreditTxType) => CREDIT_TX_TYPE[type]
     },
     {
       title: 'By',
@@ -51,6 +76,26 @@ const Index = ({
       dataIndex: 'createTime',
       key: 'createTime',
       render: (d) => formatDate(d, true)
+    },
+    {
+      title: 'Invoice Applied',
+      dataIndex: 'invoiceId',
+      key: 'invoiceId',
+      render: (ivId) =>
+        ivId == null || ivId == '' ? (
+          <MinusOutlined />
+        ) : (
+          <div className="flex items-center">
+            <Button
+              type="link"
+              onClick={() => navigate(`/invoice/${ivId}`)}
+              style={{ padding: 0, fontFamily: 'monospace' }}
+            >
+              {ivId}
+            </Button>
+            <CopyToClipboard content={ivId} />
+          </div>
+        )
     }
   ]
 
