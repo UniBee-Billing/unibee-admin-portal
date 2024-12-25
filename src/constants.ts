@@ -1,3 +1,5 @@
+import { CreditTxType } from './shared.types'
+
 export enum PlanType {
   MainPlan = 1,
   Addon = 2,
@@ -131,6 +133,16 @@ export const REFUND_STATUS: { [key: number]: string } = {
   20: 'Refunded',
   30: 'Failed',
   40: 'Cancelled'
+}
+
+export const CREDIT_TX_TYPE: Record<CreditTxType, string> = {
+  [CreditTxType.TOP_UP]: 'Top Up',
+  [CreditTxType.CONSUMPTION]: 'Consumption',
+  [CreditTxType.REFUND_TOP_UP]: 'Refund Top Up',
+  [CreditTxType.WITHDRAWN]: 'Withdrawn',
+  [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed',
+  [CreditTxType.ADMIN_UPDATE]: 'Admin Update',
+  [CreditTxType.RECHARGE_REFUND_OUT]: 'Recharge Refund Out'
 }
 
 const PERMISSIONS = {

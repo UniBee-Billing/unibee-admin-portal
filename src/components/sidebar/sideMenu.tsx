@@ -24,28 +24,154 @@ import './sideMenu.css'
 
 const BASE_PATH = import.meta.env.BASE_URL
 // console.log('base path: ', BASE_PATH)
+/*
+  menuId: string
+  label: string
+  link: string
+  openedMenuId: string
+  setOpenedMenuId: (menuId: string) => void
+*/
+const useContextMenu = () => {
+  const [openedMenuId, setOpenedMenuId] = useState('')
+  // console.log('openedMenuId in parent: ', openedMenuId)
+  const MENU_ITEMS: ItemType<MenuItemType>[] = [
+    {
+      // label: 'Product and Plan',
+      // label: <a href={`${location.origin}/plan/list`}>Product and Plan</a>,
+      /*
+      label: (
+        <div onContextMenu={onRightClick} data-link="plan/list">
+          Product and Plan
+        </div>
+      ),
+      */
+      label: (
+        <ContextMenu
+          menuId="plan"
+          label="Product and Plan"
+          link="plan/list"
+          openedMenuId={openedMenuId}
+          setOpenedMenuId={setOpenedMenuId}
+        />
+      ),
+      key: 'plan',
+      icon: <Icon component={ProductPlanSvg} />
+    },
+    {
+      // label: 'Billable Metric',
+      label: (
+        <a href={`${location.origin}${BASE_PATH}billable-metric`}>
+          Billable Metric
+        </a>
+      ),
+      key: 'billable-metric',
+      icon: <Icon component={BillableMetricsSvg} />
+    },
+    {
+      label: 'Discount Code',
+      key: 'discount-code',
+      icon: <Icon component={DiscountCodeSvg} />
+    },
+    {
+      label: 'Subscription',
+      key: 'subscription',
+      icon: <Icon component={SubscriptionSvg} />
+    },
+    { label: 'Invoice', key: 'invoice', icon: <Icon component={InvoiceSvg} /> },
+    {
+      label: 'Transaction',
+      key: 'transaction',
+      icon: <TransactionOutlined />
+    },
+    {
+      label: 'Promo Credit',
+      key: 'promoCredit',
+      icon: <Icon component={PromoCreditSvg} />
+    },
+    { label: 'User List', key: 'user', icon: <Icon component={UserListSvg} /> },
+    {
+      label: 'Admin List',
+      key: 'admin',
+      icon: <Icon component={AdminListSvg} />
+    },
+    // The backend of Analytics is not completed yet, so it should hide from the menu until backend is ready
+    // { label: 'Analytics', key: 'analytics', icon: <PieChartOutlined /> },
+    {
+      label: 'My Account',
+      key: 'my-account',
+      icon: <Icon component={MyAccountSvg} />
+    },
+    {
+      label: 'Report',
+      key: 'report',
+      icon: <Icon component={ReportSvg} />
+    },
+    {
+      label: 'Configuration',
+      key: 'configuration',
+      icon: <Icon component={ConfigSvg} />
+    },
+    {
+      // label: 'Activity Logs',
+      label: (
+        <ContextMenu
+          menuId="activity-logs"
+          label="Activity Logs"
+          link="activity-logs"
+          openedMenuId={openedMenuId}
+          setOpenedMenuId={setOpenedMenuId}
+        />
+      ),
+      key: 'activity-logs',
+      icon: <Icon component={ActivityLogSvg} />
+    }
+  ]
+  return MENU_ITEMS
+}
 
-const ContextMenu = ({ label, link }: { label: string; link: string }) => {
+const ContextMenu = ({
+  menuId, // myId
+  label,
+  link, // currently opened menuId saved in paremt
+  openedMenuId,
+  setOpenedMenuId
+}: {
+  menuId: string
+  label: string
+  link: string
+  openedMenuId: string
+  setOpenedMenuId: (menuId: string) => void
+}) => {
   const [clicked, setClicked] = useState(false)
   const [points, setPoints] = useState({
     x: 0,
     y: 0
   })
   useEffect(() => {
-    const handleClick = () => setClicked(false)
+    const handleClick = () => {
+      setClicked(false)
+    }
     window.addEventListener('click', handleClick)
     return () => {
       window.removeEventListener('click', handleClick)
     }
   }, [])
 
+  useEffect(() => {
+    if (openedMenuId !== menuId) {
+      setClicked(false)
+    }
+  }, [openedMenuId])
+
   return (
     <div>
       <div
         style={{ position: 'relative' }}
         onContextMenu={(e) => {
+          // console.log('myId/currently open Id: ', menuId, '//', openedMenuId)
           e.preventDefault()
           setClicked(true)
+          setOpenedMenuId(menuId)
           setPoints({
             x: e.pageX,
             y: e.pageY
@@ -113,92 +239,16 @@ const onRightClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
 }
   */
 
-const MENU_ITEMS: ItemType<MenuItemType>[] = [
-  {
-    // label: 'Product and Plan',
-    // label: <a href={`${location.origin}/plan/list`}>Product and Plan</a>,
-    /*
-    label: (
-      <div onContextMenu={onRightClick} data-link="plan/list">
-        Product and Plan
-      </div>
-    ),
-    */
-    label: <ContextMenu label="Product and Plan" link="plan/list" />,
-    key: 'plan',
-    icon: <Icon component={ProductPlanSvg} />
-  },
-  {
-    // label: 'Billable Metric',
-    label: (
-      <a href={`${location.origin}${BASE_PATH}billable-metric`}>
-        Billable Metric
-      </a>
-    ),
-    key: 'billable-metric',
-    icon: <Icon component={BillableMetricsSvg} />
-  },
-  {
-    label: 'Discount Code',
-    key: 'discount-code',
-    icon: <Icon component={DiscountCodeSvg} />
-  },
-  {
-    label: 'Subscription',
-    key: 'subscription',
-    icon: <Icon component={SubscriptionSvg} />
-  },
-  { label: 'Invoice', key: 'invoice', icon: <Icon component={InvoiceSvg} /> },
-  {
-    label: 'Transaction',
-    key: 'transaction',
-    icon: <TransactionOutlined />
-  },
-  {
-    label: 'Promo Credit',
-    key: 'promoCredit',
-    icon: <Icon component={PromoCreditSvg} />
-  },
-  { label: 'User List', key: 'user', icon: <Icon component={UserListSvg} /> },
-  {
-    label: 'Admin List',
-    key: 'admin',
-    icon: <Icon component={AdminListSvg} />
-  },
-  // The backend of Analytics is not completed yet, so it should hide from the menu until backend is ready
-  // { label: 'Analytics', key: 'analytics', icon: <PieChartOutlined /> },
-  {
-    label: 'My Account',
-    key: 'my-account',
-    icon: <Icon component={MyAccountSvg} />
-  },
-  {
-    label: 'Report',
-    key: 'report',
-    icon: <Icon component={ReportSvg} />
-  },
-  {
-    label: 'Configuration',
-    key: 'configuration',
-    icon: <Icon component={ConfigSvg} />
-  },
-  {
-    label: 'Activity Logs',
-    key: 'activity-logs',
-    icon: <Icon component={ActivityLogSvg} />
-  }
-]
-
 const DEFAULT_ACTIVE_MENU_ITEM_KEY = '/plan/list'
-
-const parsedMenuItems: ItemType<MenuItemType>[] = MENU_ITEMS.map((item) => {
-  const route = APP_ROUTES.find(({ id }) => id === item!.key)
-
-  return route ? { ...item, key: route.path! } : undefined
-}).filter((item) => !!item)
 
 export const SideMenu = (props: MenuProps) => {
   const navigate = useNavigate()
+  const MENU_ITEMS = useContextMenu()
+  const parsedMenuItems: ItemType<MenuItemType>[] = MENU_ITEMS.map((item) => {
+    const route = APP_ROUTES.find(({ id }) => id === item!.key)
+
+    return route ? { ...item, key: route.path! } : undefined
+  }).filter((item) => !!item)
   const [activeMenuItem, setActiveMenuItem] = useState<string[]>([
     DEFAULT_ACTIVE_MENU_ITEM_KEY
   ])
