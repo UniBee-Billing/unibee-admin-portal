@@ -180,7 +180,7 @@ export const AssignSubscriptionModal = ({
 
   const formattedDiscountValue = useMemo(() => {
     if (previewData == null) {
-      return null
+      return undefined
     }
 
     return showAmount(-1 * previewData.discountAmount, previewData.currency)
