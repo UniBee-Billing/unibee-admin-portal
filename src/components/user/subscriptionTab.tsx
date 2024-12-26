@@ -144,6 +144,51 @@ const Index = ({
                 {subInfo?.plan?.amount &&
                   showAmount(subInfo?.plan?.amount, subInfo?.plan?.currency)}
               </Col>
+
+              <Col span={4} style={colStyle}>
+                Total Amount
+              </Col>
+              <Col span={6}>
+                {subInfo?.amount &&
+                  showAmount(subInfo.amount, subInfo.currency)}
+                {subInfo &&
+                subInfo.taxPercentage &&
+                subInfo.taxPercentage != 0 ? (
+                  <span className="text-xs text-gray-500">
+                    {` (${subInfo.taxPercentage / 100}% tax incl)`}
+                  </span>
+                ) : null}
+              </Col>
+            </Row>
+
+            <Row style={rowStyle}>
+              <Col span={4} style={colStyle}>
+                Promo Credits
+              </Col>
+              <Col span={6}>
+                {subInfo.latestInvoice &&
+                  subInfo.latestInvoice.promoCreditDiscountAmount > 0 &&
+                  `${Math.abs(
+                    subInfo.latestInvoice.promoCreditTransaction?.deltaAmount ??
+                      0
+                  )}(${showAmount(
+                    subInfo?.latestInvoice?.promoCreditDiscountAmount,
+                    subInfo.currency
+                  )})`}
+              </Col>
+
+              <Col span={4} style={colStyle}>
+                Discount Amount
+              </Col>
+              <Col span={6}>
+                {showAmount(
+                  subInfo?.latestInvoice?.discountAmount,
+                  subInfo.currency
+                )}
+              </Col>
+            </Row>
+
+            <Row style={rowStyle}>
               <Col span={4} style={colStyle}>
                 Addons Price
               </Col>
@@ -187,22 +232,6 @@ const Index = ({
                     </span>
                   </Popover>
                 )}
-              </Col>
-            </Row>
-            <Row style={rowStyle}>
-              <Col span={4} style={colStyle}>
-                Total Amount
-              </Col>
-              <Col span={6}>
-                {subInfo?.amount &&
-                  showAmount(subInfo.amount, subInfo.currency)}
-                {subInfo &&
-                subInfo.taxPercentage &&
-                subInfo.taxPercentage != 0 ? (
-                  <span className="text-xs text-gray-500">
-                    {` (${subInfo.taxPercentage / 100}% tax incl)`}
-                  </span>
-                ) : null}
               </Col>
 
               <Col span={4} style={colStyle}>

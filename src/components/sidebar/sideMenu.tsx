@@ -132,7 +132,7 @@ const useContextMenu = () => {
 const ContextMenu = ({
   menuId, // myId
   label,
-  link, // currently opened menuId saved in paremt
+  link, // currently opened menuId saved in parent
   openedMenuId,
   setOpenedMenuId
 }: {
