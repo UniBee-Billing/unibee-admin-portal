@@ -1,4 +1,4 @@
-import { CreditTxType } from './shared.types'
+import { CreditTxType, InvoiceBizType } from './shared.types'
 
 export enum PlanType {
   MainPlan = 1,
@@ -82,6 +82,12 @@ export const INVOICE_STATUS: { [key: number]: string } = {
   4: 'Failed', // user not pay the invoice before it get expired
   5: 'Cancelled', // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
   6: 'Reversed' // 取消后被通知支付成功的，这种情况一般是要排查的
+}
+
+export const INVOICE_BIZ_TYPE: Record<InvoiceBizType, string> = {
+  [InvoiceBizType.ONE_TIME]: 'One-time',
+  [InvoiceBizType.MANUALLY_CREATED]: 'Manually created',
+  [InvoiceBizType.SUBSCRIPTION]: 'Recurring'
 }
 
 export const METRICS_TYPE: { [key: number]: string } = {

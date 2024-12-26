@@ -1,5 +1,6 @@
-import { Col, Row } from 'antd'
+import { Button, Col, Row } from 'antd'
 import { CSSProperties } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import { UserStatus } from '../ui/statusTag'
@@ -12,6 +13,12 @@ const rowStyle: CSSProperties = {
 }
 const Index = ({ user }: { user: IProfile | undefined }) => {
   const appConfig = useAppConfigStore()
+  const navigate = useNavigate()
+  const goToUserProfile = () => {
+    if (user != undefined) {
+      navigate(`/user/${user?.id}`)
+    }
+  }
   return (
     <div style={{ marginBottom: '24px' }}>
       <Row style={rowStyle}>
@@ -23,8 +30,9 @@ const Index = ({ user }: { user: IProfile | undefined }) => {
             ''
           ) : (
             <>
-              {`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}
-              &nbsp;&nbsp;
+              <Button type="link" onClick={goToUserProfile}>
+                {`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}
+              </Button>{' '}
               {UserStatus(user.status)}
             </>
           )}

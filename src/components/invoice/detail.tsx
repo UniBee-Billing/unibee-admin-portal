@@ -2,6 +2,7 @@ import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Spin, message } from 'antd'
 import React, { CSSProperties, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { INVOICE_BIZ_TYPE } from '../../constants'
 import { getInvoicePermission, showAmount } from '../../helpers'
 import { getInvoiceDetailReq } from '../../requests'
 import { UserInvoice } from '../../shared.types'
@@ -11,7 +12,6 @@ import InvoiceDetailModal from '../subscription/modals/invoiceDetail'
 import { InvoiceStatus } from '../ui/statusTag'
 import MarkAsPaidModal from './markAsPaidModal'
 import MarkAsRefundedModal from './markAsRefundedModal'
-// import InvoiceItemsModal from '../subscription/modals/newInvoice' // obsolete
 
 const rowStyle: CSSProperties = {
   display: 'flex',
@@ -47,7 +47,8 @@ const Index = () => {
   const [delayingPreview, setDelayingPreview] = useState(false)
 
   const goBack = () => navigate(`/invoice/list`)
-  const goToUser = (userId: number) => () => navigate(`/user/${userId}`)
+  const goToUser = (userId: number) => () =>
+    navigate(`/user/${userId}?tab=invoice`)
   const goToSub = (subId: string) => () => navigate(`/subscription/${subId}`)
 
   const fetchData = async () => {
@@ -241,10 +242,12 @@ const Index = () => {
             Payment type
           </Col>
           <Col span={6}>
-            {invoiceDetail?.subscription != null ? 'Recurring' : 'One-time'}
+            {invoiceDetail != null && INVOICE_BIZ_TYPE[invoiceDetail?.bizType]}
           </Col>
-          <Col span={4} style={colStyle}></Col>
-          <Col span={6}></Col>
+          <Col span={4} style={colStyle}>
+            Payment Gateway
+          </Col>
+          <Col span={6}>{invoiceDetail?.gateway.displayName}</Col>
         </Row>
       )}
       <Row style={rowStyle} gutter={[16, 16]}>
@@ -280,11 +283,19 @@ const Index = () => {
       </Row>
       <Row style={rowStyle} gutter={[16, 16]}>
         <Col span={4} style={colStyle}>
-          Payment Gateway
+          Promo Credits{' '}
+          {invoiceDetail?.promoCreditTransaction != null &&
+            `(${Math.abs(invoiceDetail.promoCreditTransaction.deltaAmount)})`}
         </Col>
-        <Col span={6}>{invoiceDetail?.gateway.displayName}</Col>
+        <Col span={6}>
+          {showAmount(
+            invoiceDetail?.promoCreditDiscountAmount,
+            invoiceDetail?.currency
+          )}
+        </Col>
+
         <Col span={4} style={colStyle}>
-          User Name
+          User Name(Email)
         </Col>
         <Col span={6}>
           <span
@@ -292,7 +303,7 @@ const Index = () => {
             onClick={goToUser(invoiceDetail?.userId as number)}
           >
             {invoiceDetail &&
-              `${invoiceDetail?.userAccount.firstName} ${invoiceDetail.userAccount.lastName}`}
+              `${invoiceDetail?.userAccount.firstName} ${invoiceDetail.userAccount.lastName} (${invoiceDetail?.userAccount.email})`}
           </span>
         </Col>
       </Row>
@@ -320,7 +331,7 @@ const Index = () => {
         </object>
       )}
       <div className="m-8 flex justify-center">
-        <Button onClick={goBack}>Go Back</Button>
+        <Button onClick={goBack}>Back to Invoice List</Button>
       </div>
     </div>
   )
