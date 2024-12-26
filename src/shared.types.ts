@@ -278,6 +278,10 @@ interface IPreview {
   invoice: Invoice
   nextPeriodInvoice: Invoice
 }
+export enum DiscountType {
+  PERCENTAGE = 1,
+  AMOUNT
+}
 
 type DiscountCode = {
   id?: number
@@ -286,7 +290,7 @@ type DiscountCode = {
   code: string
   status?: number // when creating a new obj, it has no status. 1: editing, 2-active, 3-deactivate, 4-expired
   billingType: number
-  discountType: number
+  discountType: DiscountType
   discountAmount: number
   discountPercentage: number
   currency: string

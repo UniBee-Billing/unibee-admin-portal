@@ -21,6 +21,7 @@ import {
 import { request, Response } from '../../../requests/client'
 import {
   AccountType,
+  DiscountType,
   IPlan,
   IProfile,
   TPromoAccount,
@@ -83,11 +84,6 @@ interface InvoicePreviewData {
     exchangeRate: number
   }
   promoCreditAccount?: TPromoAccount
-}
-
-enum DiscountType {
-  PERCENTAGE = 1,
-  AMOUNT
 }
 
 interface DiscountData {
@@ -473,6 +469,7 @@ export const AssignSubscriptionModal = ({
               <div className="mt-4 flex justify-center">
                 <Plan
                   plan={selectedPlan}
+                  width="280px"
                   selectedPlan={selectedPlan.id}
                   isThumbnail
                   isActive={false}
@@ -526,6 +523,7 @@ export const AssignSubscriptionModal = ({
               <div className="mb-1 flex justify-between">
                 <InputNumber
                   placeholder={getCreditInfo()?.note}
+                  min={1}
                   style={{ width: 240 }}
                   value={creditAmt}
                   onChange={(value) => setCreditAmt(value)}
@@ -544,45 +542,6 @@ export const AssignSubscriptionModal = ({
                 <Button onClick={onApplyDiscountCode}>Apply</Button>
               </div>
               {discountCodeUseNote()}
-
-              {/* <InfoItem title="Discount code">
-                <Form.Item
-                  validateStatus={getValidStatusByMessage(
-                    previewData?.discountMessage
-                  )}
-                  help={previewData?.discountMessage}
-                >
-                  <Input
-                    onChange={(e) =>
-                      debouncedUpdateDiscountCode(e.target.value)
-                    }
-                    placeholder="Discount code"
-                  />
-                </Form.Item>
-              </InfoItem> */}
-
-              {/* <div className="mt-2">
-                <div className="flex justify-between">
-                  <div>
-                    <InputNumber
-                      min={0}
-                      max={getCreditInfo()?.credit?.amount}
-                      onChange={(v) => debouncedUpdateCreditAmt(v)}
-                      style={{ width: 170 }}
-                      value={creditAmt}
-                      disabled={getCreditInfo()?.credit == null}
-                      placeholder="Promo credit"
-                    />
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    {user != undefined && (
-                      <Tooltip title={getCreditInfo()?.note}>
-                        <InfoCircleOutlined />
-                      </Tooltip>
-                    )}
-                  </div>
-                </div>
-                <div className="flex">{creditUseNote()}</div>
-              </div> */}
 
               <div className="my-8 h-[1px] w-full bg-gray-100"></div>
               <CheckoutItem
