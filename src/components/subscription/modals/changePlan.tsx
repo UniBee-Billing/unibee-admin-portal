@@ -112,11 +112,9 @@ const ChangePlan = ({
     if (creditAmt == 0 || creditAmt == null) {
       return <div className="text-xs text-gray-500">No promo credit used</div>
     }
-    if (creditAmt) {
-      return (
-        <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${(creditAmt * credit.credit.exchangeRate) / 100}${CURRENCY[credit.credit.currency].symbol}) to be used.`}</div>
-      )
-    }
+    return (
+      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${(creditAmt * credit.credit.exchangeRate) / 100}${CURRENCY[credit.credit.currency].symbol}) to be used.`}</div>
+    )
   }
 
   const discountCodeUseNote = () => {
