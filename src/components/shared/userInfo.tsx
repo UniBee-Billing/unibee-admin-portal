@@ -8,7 +8,7 @@ import { UserStatus } from '../ui/statusTag'
 const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  height: '24px',
+  height: '30px',
   color: '#757575'
 }
 const Index = ({ user }: { user: IProfile | undefined }) => {
@@ -30,7 +30,11 @@ const Index = ({ user }: { user: IProfile | undefined }) => {
             ''
           ) : (
             <>
-              <Button type="link" onClick={goToUserProfile}>
+              <Button
+                type="link"
+                onClick={goToUserProfile}
+                style={{ padding: 0 }}
+              >
                 {`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}
               </Button>{' '}
               {UserStatus(user.status)}
