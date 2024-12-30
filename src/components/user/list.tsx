@@ -40,6 +40,7 @@ import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
 import CreateUserModal from './createUserModal'
 import './list.css'
 
+const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const STATUS_FILTER = Object.entries(USER_STATUS).map((s) => {
   const [value, text] = s
@@ -183,24 +184,27 @@ const Index = () => {
   const onMenuClick: MenuProps['onClick'] = (e) => {
     extraActions[e.key]()
   }
-  //   const getColumns = (): ColumnsType<ISubscriptionType> => [
   const getColumns = (): ColumnsType<IProfile> => [
+    {
+      title: 'Uer Id',
+      dataIndex: 'id',
+      key: 'id',
+      render: (id) => (
+        <a href={`${location.origin}${BASE_PATH}user/${id}`}>{id}</a>
+      )
+    },
     {
       title: 'Name',
       dataIndex: 'firstName',
       key: 'userName',
-      render: (_, user) => `${user.firstName} ${user.lastName}`
+      render: (_, user) => user.firstName + ' ' + user.lastName
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email'
     },
-    /* {
-      title: 'Subscription',
-      dataIndex: 'subscriptionName',
-      key: 'subscriptionName'
-    }, */
+
     {
       title: 'Subscription Plan',
       dataIndex: 'subscriptionName',

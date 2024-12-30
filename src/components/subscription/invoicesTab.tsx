@@ -27,7 +27,7 @@ import {
   PlusOutlined,
   SyncOutlined
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+//import { useNavigate } from 'react-router-dom'
 import RefundIcon from '../../assets/refund.svg?react'
 import { CURRENCY, INVOICE_STATUS } from '../../constants'
 import {
@@ -50,6 +50,7 @@ import { InvoiceStatus } from '../ui/statusTag'
 import InvoiceDetailModal from './modals/invoiceDetail'
 import NewInvoiceModal from './modals/newInvoice'
 
+const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const STATUS_FILTER = Object.entries(INVOICE_STATUS).map((s) => {
   const [value, text] = s
@@ -71,7 +72,7 @@ const Index = ({
   embeddingMode: boolean // invoiceList can be embedded as part of a page, or be the page itself.
   enableSearch: boolean
 }) => {
-  const navigate = useNavigate()
+  //   const navigate = useNavigate()
   const appConfig = useAppConfigStore()
   const [form] = Form.useForm()
   const [invoiceList, setInvoiceList] = useState<UserInvoice[]>([])
@@ -246,14 +247,13 @@ const Index = ({
       dataIndex: 'invoiceId',
       key: 'invoiceId',
       render: (ivId) => (
-        <div className="flex justify-center">
-          <Button
-            onClick={() => navigate(`/invoice/${ivId}`)}
-            type="link"
-            style={{ padding: 0, fontFamily: 'monospace' }}
+        <div className="flex items-center">
+          <a
+            href={`${location.origin}${BASE_PATH}invoice/${ivId}`}
+            style={{ fontFamily: 'monospace' }}
           >
             {ivId}
-          </Button>
+          </a>
           <span className="btn-copy-to-clipboard">
             <CopyToClipboard content={ivId} />
           </span>
