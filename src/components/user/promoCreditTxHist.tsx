@@ -4,15 +4,7 @@ import {
   SearchOutlined
 } from '@ant-design/icons'
 import type { TableColumnType, TableProps } from 'antd'
-import {
-  Button,
-  Input,
-  InputRef,
-  message,
-  Pagination,
-  Skeleton,
-  Space
-} from 'antd'
+import { Button, Input, InputRef, message, Pagination, Space } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import type { FilterDropdownProps } from 'antd/es/table/interface'
 import { useEffect, useRef, useState } from 'react'
