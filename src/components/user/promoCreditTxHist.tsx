@@ -4,22 +4,14 @@ import {
   SearchOutlined
 } from '@ant-design/icons'
 import type { TableColumnType, TableProps } from 'antd'
-import {
-  Button,
-  Input,
-  InputRef,
-  message,
-  Pagination,
-  Skeleton,
-  Space
-} from 'antd'
+import { Button, Input, InputRef, message, Pagination, Space } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import type { FilterDropdownProps } from 'antd/es/table/interface'
 import { useEffect, useRef, useState } from 'react'
 import Highlighter from 'react-highlight-words'
 import { useNavigate } from 'react-router-dom'
 import { CREDIT_TX_TYPE } from '../../constants'
-import { formatDate, showAmount } from '../../helpers'
+import { formatDate, numberWithComma, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import {
   exportDataReq,
@@ -385,29 +377,25 @@ const ExtraInfo = ({ exportPayload }: { exportPayload: unknown }) => {
     <div className="mb-4 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <div className="flex" style={{ width: 240 }}>
-          Total added credits:{' '}
+          <TotalAddedCreditsSVG />
+          &nbsp;&nbsp; Total added credits:&nbsp;&nbsp;
           {loadingStat ? (
-            <Skeleton.Input
-              active={loadingStat}
-              style={{ width: 20, height: 20 }}
-            />
-          ) : creditUsageStat.totalIncrementAmount == undefined ? (
+            <LoadingOutlined spin />
+          ) : creditUsageStat.totalIncrementAmount == null ? (
             <MinusOutlined />
           ) : (
-            Math.abs(creditUsageStat.totalIncrementAmount)
+            numberWithComma(Math.abs(creditUsageStat.totalIncrementAmount))
           )}
         </div>
         <div className="flex" style={{ width: 240 }}>
-          Total used credits:{' '}
+          <TotalUsedCreditsSVG />
+          &nbsp;&nbsp; Total used credits:&nbsp;&nbsp;
           {loadingStat ? (
-            <Skeleton.Input
-              active={loadingStat}
-              style={{ width: 20, height: 20 }}
-            />
-          ) : creditUsageStat.totalDecrementAmount == undefined ? (
+            <LoadingOutlined spin />
+          ) : creditUsageStat.totalDecrementAmount == null ? (
             <MinusOutlined />
           ) : (
-            Math.abs(creditUsageStat.totalDecrementAmount)
+            numberWithComma(Math.abs(creditUsageStat.totalDecrementAmount))
           )}
         </div>
       </div>
@@ -417,3 +405,49 @@ const ExtraInfo = ({ exportPayload }: { exportPayload: unknown }) => {
     </div>
   )
 }
+
+const TotalAddedCreditsSVG = () => (
+  <svg
+    width="16"
+    height="17"
+    viewBox="0 0 16 17"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M7.99922 15.3195C4.14141 15.3195 1.00391 12.2668 1.00391 8.51328C1.00391 4.75973 4.14141 1.70703 7.99922 1.70703V2.64656C4.67422 2.64656 1.96953 5.27815 1.96953 8.51328C1.96953 11.7484 4.67422 14.38 7.99922 14.38C11.3242 14.38 14.0289 11.7484 14.0289 8.51328H14.9945C14.9945 12.2668 11.8555 15.3195 7.99922 15.3195Z"
+      fill="#6C6C6C"
+    />
+    <path
+      d="M10.8613 9.37226H7.00195V5.61719H7.96602V8.43273H10.8613V9.37226Z"
+      fill="#6C6C6C"
+    />
+    <path
+      d="M7.30859 8.40906L12.7665 3.09863L13.4493 3.76298L7.99139 9.07339L7.30859 8.40906Z"
+      fill="#6C6C6C"
+    />
+  </svg>
+)
+
+const TotalUsedCreditsSVG = () => (
+  <svg
+    width="16"
+    height="17"
+    viewBox="0 0 16 17"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M7.99922 15.3195C4.14141 15.3195 1.00391 12.2668 1.00391 8.51328C1.00391 4.75973 4.14141 1.70703 7.99922 1.70703V2.64656C4.67422 2.64656 1.96953 5.27815 1.96953 8.51328C1.96953 11.7484 4.67422 14.38 7.99922 14.38C11.3242 14.38 14.0289 11.7484 14.0289 8.51328H14.9945C14.9945 12.2668 11.8555 15.3195 7.99922 15.3195Z"
+      fill="#6C6C6C"
+    />
+    <path
+      d="M9.58984 3.09845H13.4492V6.85352H12.4852V4.03797H9.58984V3.09845Z"
+      fill="#6C6C6C"
+    />
+    <path
+      d="M13.1426 4.06165L7.68464 9.37207L7.00184 8.70773L12.4598 3.39732L13.1426 4.06165Z"
+      fill="#6C6C6C"
+    />
+  </svg>
+)
