@@ -1,13 +1,10 @@
 import { Button, Col, Input, Modal, Row, message } from 'antd'
-// import dayjs from 'dayjs'
 import { useState } from 'react'
-// import { useCopyContent } from '../../hooks'
 import { saveSendGridKeyReq } from '../../../requests'
 const { TextArea } = Input
 
 interface IProps {
   closeModal: () => void
-  // gatewayDetail: TGateway | undefined
 }
 const Index = ({ closeModal }: IProps) => {
   const [loading, setLoading] = useState(false)

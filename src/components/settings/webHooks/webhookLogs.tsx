@@ -1,9 +1,4 @@
-import {
-  CopyOutlined,
-  LoadingOutlined,
-  SendOutlined,
-  SyncOutlined
-} from '@ant-design/icons'
+import { LoadingOutlined, SendOutlined, SyncOutlined } from '@ant-design/icons'
 import {
   Button,
   Pagination,
@@ -20,9 +15,10 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
 import { formatDate } from '../../../helpers'
-import { useCopyContent, usePagination } from '../../../hooks'
+import { usePagination } from '../../../hooks'
 import { getWebhookLogs, resendWebhookEvt } from '../../../requests'
 import { TWebhookLogs } from '../../../shared.types'
+import CopyToClipboard from '../../ui/copyToClipboard'
 SyntaxHighlighter.registerLanguage('json', json)
 
 const PAGE_SIZE = 10
@@ -36,14 +32,6 @@ const Index = () => {
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
   const [logs, setLogs] = useState<TWebhookLogs[]>([])
-  const copyContent = (text: string) => async () => {
-    const err = await useCopyContent(text)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('Copied')
-  }
 
   const fetchData = async () => {
     if (isNaN(endpointId)) {
@@ -104,20 +92,16 @@ const Index = () => {
               {parsedJson}
             </SyntaxHighlighter>
 
-            <Button
-              type="link"
-              size="small"
-              onClick={copyContent(parsedJson)}
-              icon={<CopyOutlined />}
+            <div
               style={{
                 position: 'absolute',
                 right: '22px',
-                bottom: '12px',
+                bottom: '18px',
                 opacity: 0.7
               }}
             >
-              Copy
-            </Button>
+              <CopyToClipboard content={parsedJson} />
+            </div>
           </div>
         }
       >
