@@ -335,3 +335,7 @@ export const numBoolConvert = (val: 0 | 1 | boolean) => {
     throw new Error('unknown value type')
   }
 }
+
+export const numberWithComma = (num: number) => {
+  return Intl.NumberFormat('en-US').format(num)
+}
