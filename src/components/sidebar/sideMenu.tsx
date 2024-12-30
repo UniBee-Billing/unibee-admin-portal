@@ -23,47 +23,17 @@ import { basePathName, trimEnvBasePath } from '../../utils'
 import './sideMenu.css'
 
 const BASE_PATH = import.meta.env.BASE_URL
-// console.log('base path: ', BASE_PATH)
-/*
-  menuId: string
-  label: string
-  link: string
-  openedMenuId: string
-  setOpenedMenuId: (menuId: string) => void
-*/
+
 const useContextMenu = () => {
   const [openedMenuId, setOpenedMenuId] = useState('')
-  // console.log('openedMenuId in parent: ', openedMenuId)
   const MENU_ITEMS: ItemType<MenuItemType>[] = [
     {
-      // label: 'Product and Plan',
-      // label: <a href={`${location.origin}/plan/list`}>Product and Plan</a>,
-      /*
-      label: (
-        <div onContextMenu={onRightClick} data-link="plan/list">
-          Product and Plan
-        </div>
-      ),
-      */
-      label: (
-        <ContextMenu
-          menuId="plan"
-          label="Product and Plan"
-          link="plan/list"
-          openedMenuId={openedMenuId}
-          setOpenedMenuId={setOpenedMenuId}
-        />
-      ),
+      label: 'Product and Plan',
       key: 'plan',
       icon: <Icon component={ProductPlanSvg} />
     },
     {
-      // label: 'Billable Metric',
-      label: (
-        <a href={`${location.origin}${BASE_PATH}billable-metric`}>
-          Billable Metric
-        </a>
-      ),
+      label: 'Billable Metric',
       key: 'billable-metric',
       icon: <Icon component={BillableMetricsSvg} />
     },
@@ -73,11 +43,19 @@ const useContextMenu = () => {
       icon: <Icon component={DiscountCodeSvg} />
     },
     {
-      label: 'Subscription',
+      label: (
+        <a href={`${location.origin}${BASE_PATH}subscription/list`}>
+          Subscription
+        </a>
+      ), // 'Subscription',
       key: 'subscription',
       icon: <Icon component={SubscriptionSvg} />
     },
-    { label: 'Invoice', key: 'invoice', icon: <Icon component={InvoiceSvg} /> },
+    {
+      label: <a href={`${location.origin}${BASE_PATH}invoice/list`}>Invoice</a>, // 'Invoice',
+      key: 'invoice',
+      icon: <Icon component={InvoiceSvg} />
+    },
     {
       label: 'Transaction',
       key: 'transaction',
@@ -88,7 +66,11 @@ const useContextMenu = () => {
       key: 'promoCredit',
       icon: <Icon component={PromoCreditSvg} />
     },
-    { label: 'User List', key: 'user', icon: <Icon component={UserListSvg} /> },
+    {
+      label: <a href={`${location.origin}${BASE_PATH}user/list`}>User List</a>, // 'User List',
+      key: 'user',
+      icon: <Icon component={UserListSvg} />
+    },
     {
       label: 'Admin List',
       key: 'admin',
@@ -226,18 +208,6 @@ const ContextMenu = ({
     </div>
   )
 }
-
-/*
-const onRightClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-  e.preventDefault()
-  if (!(e.target instanceof HTMLDivElement)) {
-    return
-  }
-  if (e.nativeEvent.button === 2) {
-    window.open(`${location.origin}${BASE_PATH}${e.target.dataset['link']}`)
-  }
-}
-  */
 
 const DEFAULT_ACTIVE_MENU_ITEM_KEY = '/plan/list'
 

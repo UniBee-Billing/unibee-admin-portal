@@ -42,6 +42,7 @@ import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus } from '../ui/statusTag'
 
+const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const SUB_STATUS_FILTER = Object.keys(SUBSCRIPTION_STATUS)
   .map((s) => ({
@@ -132,6 +133,28 @@ const Index = () => {
   }
 
   const getColumns = (): ColumnsType<ISubscriptionType> => [
+    {
+      title: 'Sub Id',
+      dataIndex: 'subscriptionId',
+      key: 'subscriptionId',
+      // width: '100',
+      render: (id) => (
+        <Tooltip title={id} overlayClassName="sub-tooltip-wrapper">
+          <div
+            style={{
+              width: '100px',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <a href={`${location.origin}${BASE_PATH}subscription/${id}`}>
+              {id}
+            </a>
+          </div>
+        </Tooltip>
+      )
+    },
     {
       title: 'Plan Name',
       dataIndex: 'planName',
@@ -452,7 +475,13 @@ const Index = () => {
           onChange={onTableChange}
           onRow={(record) => {
             return {
-              onClick: () => {
+              onClick: (evt) => {
+                if (
+                  evt.target instanceof HTMLElement &&
+                  evt.target.closest('.sub-tooltip-wrapper') != null
+                ) {
+                  return
+                }
                 navigate(`/subscription/${record.subscriptionId}`, {
                   state: { subscriptionId: record.subscriptionId }
                 })
