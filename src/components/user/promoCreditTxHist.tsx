@@ -4,7 +4,15 @@ import {
   SearchOutlined
 } from '@ant-design/icons'
 import type { TableColumnType, TableProps } from 'antd'
-import { Button, Input, InputRef, message, Pagination, Space } from 'antd'
+import {
+  Button,
+  Input,
+  InputRef,
+  message,
+  Pagination,
+  Skeleton,
+  Space
+} from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import type { FilterDropdownProps } from 'antd/es/table/interface'
 import { useEffect, useRef, useState } from 'react'
@@ -13,7 +21,12 @@ import { useNavigate } from 'react-router-dom'
 import { CREDIT_TX_TYPE } from '../../constants'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
-import { getCreditTxListReq, TCreditTxParams } from '../../requests'
+import {
+  exportDataReq,
+  getCreditTxListReq,
+  getCreditUsageStatReq,
+  TCreditTxParams
+} from '../../requests'
 import {
   CreditTxType,
   CreditType,
@@ -21,6 +34,7 @@ import {
   TCreditTx
 } from '../../shared.types'
 // import { nextTick } from '../../utils'
+import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 
 const PAGE_SIZE = 10
@@ -288,6 +302,15 @@ const Index = ({
 
   return (
     <>
+      {!embeddingMode && (
+        <ExtraInfo
+          exportPayload={{
+            email: searchText,
+            sortFilter,
+            accountType: CreditType.PROMO_CREDIT
+          }}
+        />
+      )}
       <Table
         columns={columns}
         dataSource={creditTxList}
@@ -320,3 +343,77 @@ const Index = ({
 }
 
 export default Index
+
+const ExtraInfo = ({ exportPayload }: { exportPayload: unknown }) => {
+  const appConfigStore = useAppConfigStore()
+  const [creditUsageStat, setCreditUsageStat] = useState<{
+    totalIncrementAmount: number | null
+    totalDecrementAmount: number | null
+  }>({ totalIncrementAmount: null, totalDecrementAmount: null })
+  const [loadingStat, setLoadingStat] = useState(true)
+  // accountType: 2, email,
+  const onExport = async () => {
+    const [_, err] = await exportDataReq({
+      task: 'CreditTransactionExport',
+      payload: exportPayload
+    })
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success('Credit transaction list is being exported.')
+    appConfigStore.setTaskListOpen(true)
+  }
+
+  const getCreditUsageStat = async () => {
+    setLoadingStat(true)
+    const [res, err] = await getCreditUsageStatReq('EUR') // hard-coded here
+    setLoadingStat(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    const { totalIncrementAmount, totalDecrementAmount } = res
+    setCreditUsageStat({ totalIncrementAmount, totalDecrementAmount })
+  }
+
+  useEffect(() => {
+    getCreditUsageStat()
+  }, [])
+
+  return (
+    <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="flex" style={{ width: 240 }}>
+          Total added credits:{' '}
+          {loadingStat ? (
+            <Skeleton.Input
+              active={loadingStat}
+              style={{ width: 20, height: 20 }}
+            />
+          ) : creditUsageStat.totalIncrementAmount == undefined ? (
+            <MinusOutlined />
+          ) : (
+            Math.abs(creditUsageStat.totalIncrementAmount)
+          )}
+        </div>
+        <div className="flex" style={{ width: 240 }}>
+          Total used credits:{' '}
+          {loadingStat ? (
+            <Skeleton.Input
+              active={loadingStat}
+              style={{ width: 20, height: 20 }}
+            />
+          ) : creditUsageStat.totalDecrementAmount == undefined ? (
+            <MinusOutlined />
+          ) : (
+            Math.abs(creditUsageStat.totalDecrementAmount)
+          )}
+        </div>
+      </div>
+      <div>
+        <Button onClick={onExport}>Export</Button>
+      </div>
+    </div>
+  )
+}

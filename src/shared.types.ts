@@ -644,6 +644,7 @@ export type TExportDataType =
   | 'DiscountExport'
   | 'UserDiscountExport'
   | 'MultiUserDiscountExport'
+  | 'CreditTransactionExport'
 
 export type TImportDataType =
   | 'UserImport'

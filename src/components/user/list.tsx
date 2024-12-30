@@ -60,7 +60,6 @@ type TFilters = {
 const Index = () => {
   const navigate = useNavigate()
   const appConfig = useAppConfigStore()
-  const [exporting, setExporting] = useState(false)
   const { page, onPageChange } = usePagination()
   const [importModalOpen, setImportModalOpen] = useState(false)
   const toggleImportModal = () => setImportModalOpen(!importModalOpen)
@@ -150,10 +149,7 @@ const Index = () => {
     let payload = normalizeSearchTerms()
     payload = { ...payload, ...filters }
 
-    // return
-    setExporting(true)
     const [_, err] = await exportDataReq({ task: 'UserExport', payload })
-    setExporting(false)
     if (err != null) {
       message.error(err.message)
       return
@@ -348,8 +344,6 @@ const Index = () => {
             onPageChange={onPageChange}
             clearFilters={clearFilters}
             searching={loading}
-            exporting={exporting}
-            // normalizeSearchTerms={normalizeSearchTerms}
           />
         </Col>
       </Row>
@@ -417,14 +411,12 @@ export default Index
 const Search = ({
   form,
   searching,
-  exporting,
   goSearch,
   onPageChange,
   clearFilters
 }: {
   form: FormInstance<unknown>
   searching: boolean
-  exporting: boolean
   goSearch: () => void
   onPageChange: (page: number, pageSize: number) => void
   clearFilters: () => void
@@ -513,7 +505,7 @@ const Search = ({
           </Col>
           <Col span={13} className="flex justify-end">
             <Space>
-              <Button onClick={clear} disabled={searching || exporting}>
+              <Button onClick={clear} disabled={searching}>
                 Clear
               </Button>
               <Button
@@ -521,17 +513,10 @@ const Search = ({
                 type="primary"
                 icon={<SearchOutlined />}
                 loading={searching}
-                disabled={searching || exporting}
+                disabled={searching}
               >
                 Search
               </Button>
-              {/* <Button
-                onClick={exportData}
-                loading={exporting}
-                disabled={searching || exporting}
-              >
-                Export
-              </Button> */}
             </Space>
           </Col>
         </Row>
