@@ -2844,7 +2844,7 @@ export const saveUserCreditConfigReq = async () => {
   }
 }
 
-type TCreditTxParams = {
+export type TCreditTxParams = {
   accountType: CreditType
   userId?: number
   email?: string
@@ -2854,6 +2854,8 @@ type TCreditTxParams = {
   count?: number
   createTimeStart?: number
   createTimeEnd?: number
+  sortType?: 'desc' | 'asc'
+  sortField?: 'gmt_create' | 'gmt_modify' // Default is gmt_modify
 }
 export const getCreditTxListReq = async (body: TCreditTxParams) => {
   try {

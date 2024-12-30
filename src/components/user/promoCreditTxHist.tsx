@@ -1,18 +1,26 @@
-import { LoadingOutlined, MinusOutlined } from '@ant-design/icons'
-import { Button, message, Pagination } from 'antd'
+import {
+  LoadingOutlined,
+  MinusOutlined,
+  SearchOutlined
+} from '@ant-design/icons'
+import type { TableColumnType, TableProps } from 'antd'
+import { Button, Input, InputRef, message, Pagination, Space } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
-import { useEffect, useState } from 'react'
+import type { FilterDropdownProps } from 'antd/es/table/interface'
+import { useEffect, useRef, useState } from 'react'
+import Highlighter from 'react-highlight-words'
 import { useNavigate } from 'react-router-dom'
 import { CREDIT_TX_TYPE } from '../../constants'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
-import { getCreditTxListReq } from '../../requests'
+import { getCreditTxListReq, TCreditTxParams } from '../../requests'
 import {
   CreditTxType,
   CreditType,
   IProfile,
   TCreditTx
 } from '../../shared.types'
+// import { nextTick } from '../../utils'
 import CopyToClipboard from '../ui/copyToClipboard'
 
 const PAGE_SIZE = 10
@@ -34,6 +42,133 @@ const Index = ({
   const [loading, setLoading] = useState(refreshTxHistory)
   const { page, onPageChange, onPageChangeNoParams } = usePagination()
   const [total, setTotal] = useState(0)
+  const [searchText, setSearchText] = useState('')
+  const [searchedColumn, setSearchedColumn] = useState('')
+  const searchInput = useRef<InputRef>(null)
+  const [sortFilter, setSortFilter] = useState<{
+    sortField: 'gmt_modify'
+    sortType: 'desc' | 'asc'
+  } | null>(null)
+
+  type DataIndex = keyof TCreditTx
+
+  const handleSearch = (
+    selectedKeys: string[],
+    confirm: FilterDropdownProps['confirm'],
+    dataIndex: DataIndex
+  ) => {
+    confirm()
+    setSearchText(selectedKeys[0])
+    setSearchedColumn(dataIndex)
+  }
+
+  /*
+  const handleReset = (clearFilters: () => void) => {
+    clearFilters()
+    if (searchInput.current?.input) {
+      searchInput.current.input.value = ''
+    }
+    setSearchText('')
+    fetchCreditTxList()
+  }
+    */
+
+  const getColumnSearchProps = (
+    dataIndex: DataIndex
+  ): TableColumnType<TCreditTx> => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close
+    }) => (
+      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() =>
+            handleSearch(selectedKeys as string[], confirm, dataIndex)
+          }
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() =>
+              handleSearch(selectedKeys as string[], confirm, dataIndex)
+            }
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => {
+              if (clearFilters) {
+                clearFilters()
+              }
+              setSearchText('')
+              if (searchInput.current?.input) {
+                searchInput.current.input.value = ''
+              }
+              confirm()
+            }}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Reset
+          </Button>
+          {/* <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              confirm({ closeDropdown: false })
+              setSearchText((selectedKeys as string[])[0])
+              setSearchedColumn(dataIndex)
+            }}
+          >
+            Filter
+          </Button>*/}
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close()
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered: boolean) => (
+      <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+    ),
+    filterDropdownProps: {
+      onOpenChange(open) {
+        if (open) {
+          setTimeout(() => searchInput.current?.select(), 100)
+        }
+      }
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ''}
+        />
+      ) : (
+        text
+      )
+  })
 
   const columns: ColumnsType<TCreditTx> = [
     {
@@ -45,18 +180,10 @@ const Index = ({
     },
     {
       title: 'User Email',
-      dataIndex: 'user',
+      dataIndex: ['user', 'email'],
       key: 'user',
-      render: (user) => (
-        <Button
-          type="link"
-          onClick={() => navigate(`/user/${user.id}`)}
-          style={{ padding: 0 }}
-        >
-          {user.email}
-        </Button>
-      ),
-      hidden: embeddingMode
+      hidden: embeddingMode,
+      ...getColumnSearchProps('user')
     },
     {
       title: 'Transaction Type',
@@ -75,7 +202,9 @@ const Index = ({
       title: 'At',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d) => formatDate(d, true)
+      render: (d) => formatDate(d, true),
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => a.createTime - b.createTime
     },
     {
       title: 'Invoice Applied',
@@ -100,13 +229,19 @@ const Index = ({
   ]
 
   const fetchCreditTxList = async () => {
-    setLoading(true)
-    const [res, err] = await getCreditTxListReq({
+    const body: TCreditTxParams = {
       accountType: CreditType.PROMO_CREDIT,
       userId: userDetail == undefined ? undefined : (userDetail.id as number),
+      email: searchText,
       page,
       count: PAGE_SIZE
-    })
+    }
+    if (sortFilter != null) {
+      body.sortField = sortFilter.sortField
+      body.sortType = sortFilter.sortType
+    }
+    setLoading(true)
+    const [res, err] = await getCreditTxListReq(body)
     setLoading(false)
     if (setRefreshTxHist != undefined) {
       setRefreshTxHist(false)
@@ -120,9 +255,30 @@ const Index = ({
     setTotal(total)
   }
 
+  const onTableChange: TableProps<TCreditTx>['onChange'] = (
+    _,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    filters,
+    sorter
+  ) => {
+    if (Array.isArray(sorter)) {
+      return // Handle array case if needed
+    }
+    if (sorter.columnKey == undefined) {
+      setSortFilter(null)
+    }
+    if (sorter.columnKey === 'createTime') {
+      onPageChange(1, PAGE_SIZE)
+      setSortFilter({
+        sortField: 'gmt_modify',
+        sortType: sorter.order === 'descend' ? 'desc' : 'asc'
+      })
+    }
+  }
+
   useEffect(() => {
     fetchCreditTxList()
-  }, [page])
+  }, [page, sortFilter, searchedColumn, searchText])
 
   useEffect(() => {
     if (refreshTxHistory) {
@@ -132,11 +288,10 @@ const Index = ({
 
   return (
     <>
-      {!embeddingMode && <div>search area</div>}
       <Table
         columns={columns}
         dataSource={creditTxList}
-        // onChange={onTableChange}
+        onChange={onTableChange}
         rowKey={'id'}
         rowClassName="clickable-tbl-row"
         pagination={false}
