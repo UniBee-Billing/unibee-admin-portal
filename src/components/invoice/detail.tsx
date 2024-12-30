@@ -9,6 +9,7 @@ import { UserInvoice } from '../../shared.types'
 import { normalizeAmt } from '../helpers'
 import RefundModal from '../payment/refundModal'
 import InvoiceDetailModal from '../subscription/modals/invoiceDetail'
+import CopyToClipboard from '../ui/copyToClipboard'
 import { InvoiceStatus } from '../ui/statusTag'
 import MarkAsPaidModal from './markAsPaidModal'
 import MarkAsRefundedModal from './markAsRefundedModal'
@@ -141,7 +142,12 @@ const Index = () => {
         <Col span={4} style={colStyle}>
           Invoice Id
         </Col>
-        <Col span={6}>{invoiceDetail?.invoiceId}</Col>
+        <Col span={6} className="flex items-center">
+          {invoiceDetail?.invoiceId}{' '}
+          {invoiceDetail && (
+            <CopyToClipboard content={invoiceDetail.invoiceId} />
+          )}
+        </Col>
         <Col span={4} style={colStyle}>
           Invoice Name
         </Col>

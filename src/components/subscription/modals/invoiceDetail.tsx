@@ -161,7 +161,6 @@ const Index = ({ detail, closeModal }: Props) => {
           <Col className="text-red-800" span={4}>
             <span>
               {`${showAmount(detail.promoCreditDiscountAmount * -1, detail.currency)}`}
-              <CouponPopover coupon={detail.discount} />
             </span>
           </Col>
         </Row>
