@@ -269,9 +269,21 @@ const Index = ({
     },
     {
       title: 'Notes',
-      dataIndex: 'name',
-      key: 'name',
-      render: (note, tx) => <Tooltip title={tx.description}>{note}</Tooltip>
+      dataIndex: 'description',
+      key: 'description',
+      width: 128,
+      render: (note, tx) => (
+        <div
+          style={{
+            width: 128,
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          <Tooltip title={tx.description}>{note}</Tooltip>
+        </div>
+      )
     },
     {
       title: 'By',

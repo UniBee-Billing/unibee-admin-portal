@@ -247,16 +247,14 @@ const Index = ({
       dataIndex: 'invoiceId',
       key: 'invoiceId',
       render: (ivId) => (
-        <div className="flex items-center">
+        <div className="invoice-id-wrapper flex items-center">
           <a
             href={`${location.origin}${BASE_PATH}invoice/${ivId}`}
             style={{ fontFamily: 'monospace' }}
           >
             {ivId}
           </a>
-          <span className="btn-copy-to-clipboard">
-            <CopyToClipboard content={ivId} />
-          </span>
+          <CopyToClipboard content={ivId} />
         </div>
       )
     },
@@ -552,7 +550,7 @@ const Index = ({
                 setInvoiceIdx(rowIndex as number)
                 if (
                   event.target instanceof Element &&
-                  event.target.closest('.btn-copy-to-clipboard') != null
+                  event.target.closest('.invoice-id-wrapper') != null
                 ) {
                   return
                 }
