@@ -142,12 +142,12 @@ export const REFUND_STATUS: { [key: number]: string } = {
 }
 
 export const CREDIT_TX_TYPE: Record<CreditTxType, string> = {
-  [CreditTxType.TOP_UP]: 'Top Up',
-  [CreditTxType.CONSUMPTION]: 'Consumption',
-  [CreditTxType.REFUND_TOP_UP]: 'Refund Top Up',
+  [CreditTxType.TOP_UP]: 'Deposit',
+  [CreditTxType.CONSUMPTION]: 'Applied to an invoice',
+  [CreditTxType.REFUND_TOP_UP]: 'From Refund',
   [CreditTxType.WITHDRAWN]: 'Withdrawn',
   [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed',
-  [CreditTxType.ADMIN_UPDATE]: 'Admin Update',
+  [CreditTxType.ADMIN_CHANGE]: 'Admin Change',
   [CreditTxType.RECHARGE_REFUND_OUT]: 'Recharge Refund Out'
 }
 

@@ -631,7 +631,7 @@ export enum CreditTxType {
   REFUND_TOP_UP = 3,
   WITHDRAWN = 4,
   WITHDRAWN_FAILED = 5,
-  ADMIN_UPDATE = 6,
+  ADMIN_CHANGE = 6,
   RECHARGE_REFUND_OUT = 7
 }
 
