@@ -62,7 +62,7 @@ const Index = ({
   const searchInput = useRef<InputRef>(null)
   const [sortFilter, setSortFilter] = useState<{
     sortField: 'gmt_modify'
-    sortType: 'desc' | 'asc'
+    sortType: 'desc' | 'asc' | undefined
   } | null>(null)
 
   type DataIndex = keyof TCreditTx
@@ -214,25 +214,30 @@ const Index = ({
   const columns: ColumnsType<TCreditTx> = [
     {
       title: 'Record ID',
-      dataIndex: 'transactionId',
-      key: 'transactionId',
+      dataIndex: 'id',
+      key: 'id',
       render: (id) => (
-        <Tooltip title={id} overlayClassName="tx-tooltip-wrapper">
-          <div
-            style={{
-              width: '100px',
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {id}
-          </div>
-        </Tooltip>
+        <div
+          style={{
+            width: '100px',
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {id}
+        </div>
       )
     },
     {
-      title: 'Amount changed',
+      title: 'User Email',
+      dataIndex: ['user', 'email'],
+      key: 'user',
+      hidden: embeddingMode,
+      ...getColumnSearchProps('user')
+    },
+    {
+      title: 'Amount',
       dataIndex: 'deltaAmount',
       key: 'deltaAmount',
       render: (amt, tx) => (
@@ -255,17 +260,17 @@ const Index = ({
       )
     },
     {
-      title: 'User Email',
-      dataIndex: ['user', 'email'],
-      key: 'user',
-      hidden: embeddingMode,
-      ...getColumnSearchProps('user')
-    },
-    {
-      title: 'Transaction Type',
+      title: 'Type',
       dataIndex: 'transactionType',
       key: 'transactionType',
       render: (type: CreditTxType) => CREDIT_TX_TYPE[type]
+    },
+    {
+      title: 'By',
+      dataIndex: 'adminMember',
+      key: 'adminMember',
+      render: (by) =>
+        by != undefined ? `${by.firstName} ${by.lastName}` : <MinusOutlined />
     },
     {
       title: 'Notes',
@@ -286,22 +291,7 @@ const Index = ({
       )
     },
     {
-      title: 'By',
-      dataIndex: 'adminMember',
-      key: 'adminMember',
-      render: (by) =>
-        by != undefined ? `${by.firstName} ${by.lastName}` : <MinusOutlined />
-    },
-    {
-      title: 'At',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      render: (d) => formatDate(d, true),
-      defaultSortOrder: 'descend',
-      sorter: (a, b) => a.createTime - b.createTime
-    },
-    {
-      title: 'Invoice Applied',
+      title: 'Applied Invoice ID',
       dataIndex: 'invoiceId',
       key: 'invoiceId',
       render: (ivId) =>
@@ -320,6 +310,15 @@ const Index = ({
           </div>
         )
     },
+    {
+      title: 'Time',
+      dataIndex: 'createTime',
+      key: 'createTime',
+      render: (d) => formatDate(d, true),
+      // defaultSortOrder: 'descend',
+      sorter: (a, b) => a.createTime - b.createTime
+    },
+
     {
       title: (
         <>
