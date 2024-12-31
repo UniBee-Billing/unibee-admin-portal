@@ -1,4 +1,4 @@
-import { LoadingOutlined } from '@ant-design/icons'
+import { LoadingOutlined, MinusOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Spin, message } from 'antd'
 import React, { CSSProperties, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -276,7 +276,9 @@ const Index = () => {
           {' '}
           {invoiceDetail == null ||
           invoiceDetail.subscriptionId == null ||
-          invoiceDetail.subscriptionId == '' ? null : (
+          invoiceDetail.subscriptionId == '' ? (
+            <MinusOutlined />
+          ) : (
             <span
               className="cursor-pointer text-blue-600"
               onClick={goToSub(invoiceDetail.subscriptionId)}

@@ -369,7 +369,7 @@ export const AssignSubscriptionModal = ({
     }
     if (creditAmt) {
       return (
-        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${(creditAmt * credit.credit.exchangeRate) / 100}${CURRENCY[credit.credit.currency].symbol}) to be used.`}</div>
+        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
       )
     }
   }
@@ -436,10 +436,11 @@ export const AssignSubscriptionModal = ({
       open={true}
       width={'720px'}
       footer={[
-        <Button onClick={closeModal} disabled={loading}>
+        <Button key="cancel" onClick={closeModal} disabled={loading}>
           Cancel
         </Button>,
         <Button
+          key="ok"
           type="primary"
           onClick={onSubmit}
           loading={loading}

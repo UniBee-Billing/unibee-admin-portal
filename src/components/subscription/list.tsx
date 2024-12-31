@@ -137,7 +137,6 @@ const Index = () => {
       title: 'Sub Id',
       dataIndex: 'subscriptionId',
       key: 'subscriptionId',
-      // width: '100',
       render: (id) => (
         <Tooltip title={id} overlayClassName="sub-tooltip-wrapper">
           <div

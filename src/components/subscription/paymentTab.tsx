@@ -20,6 +20,7 @@ import React, { ReactElement, useEffect, useState } from 'react'
 import {
   InfoCircleOutlined,
   LoadingOutlined,
+  MinusOutlined,
   SyncOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -31,6 +32,7 @@ import '../../shared.css'
 import { IProfile, PaymentItem } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import RefundInfoModal from '../payment/refundModal'
+import CopyToClipboard from '../ui/copyToClipboard'
 import { PaymentStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
@@ -225,17 +227,21 @@ const Index = ({
       title: 'Invoice Id',
       dataIndex: 'invoiceId',
       key: 'invoiceId',
+      width: 184,
       render: (ivId) =>
         ivId == '' || ivId == null ? (
-          ''
+          <MinusOutlined />
         ) : (
-          <Button
-            onClick={() => navigate(`/invoice/${ivId}`)}
-            type="link"
-            style={{ padding: 0 }}
-          >
-            {ivId}
-          </Button>
+          <div className="flex items-center">
+            <Button
+              onClick={() => navigate(`/invoice/${ivId}`)}
+              type="link"
+              style={{ padding: 0, fontFamily: 'monospace' }}
+            >
+              {ivId}
+            </Button>
+            <CopyToClipboard content={ivId} />
+          </div>
         )
     },
     {
