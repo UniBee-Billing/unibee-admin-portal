@@ -263,7 +263,12 @@ const Index = ({
       title: 'Type',
       dataIndex: 'transactionType',
       key: 'transactionType',
-      render: (type: CreditTxType) => CREDIT_TX_TYPE[type]
+      render: (type: CreditTxType, tx) => {
+        if (type == CreditTxType.ADMIN_CHANGE) {
+          return tx.deltaAmount > 0 ? 'Added by admin' : 'Reduced by admin'
+        }
+        return CREDIT_TX_TYPE[type]
+      }
     },
     {
       title: 'By',
