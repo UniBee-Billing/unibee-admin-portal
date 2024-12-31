@@ -19,7 +19,7 @@ const Index = ({ coupon }: { coupon?: DiscountCode }) => {
   return (
     <Popover
       placement="top"
-      overlayStyle={{ width: '340px' }}
+      overlayStyle={{ width: '360px' }}
       title="Discount code detail"
       content={
         <div>

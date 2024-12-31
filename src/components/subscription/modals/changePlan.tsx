@@ -113,7 +113,7 @@ const ChangePlan = ({
       return <div className="text-xs text-gray-500">No promo credit used</div>
     }
     return (
-      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${(creditAmt * credit.credit.exchangeRate) / 100}${CURRENCY[credit.credit.currency].symbol}) to be used.`}</div>
+      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
     )
   }
 

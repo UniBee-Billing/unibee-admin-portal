@@ -39,8 +39,9 @@ import {
   ISubscriptionType
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
+import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
-import { SubscriptionStatus } from '../ui/statusTag'
+import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'
 import ChangePlanModal from './modals/changePlan'
 import ChangeSubStatusModal from './modals/changeSubStatus'
@@ -589,6 +590,12 @@ const SubscriptionInfoSection = ({
   const navigate = useNavigate()
   const appConfigStore = useAppConfigStore()
   const goToPlan = (planId: number) => navigate(`/plan/${planId}`)
+  const goToInvoiceDetail = (invoiceId: string | undefined) => {
+    if (invoiceId == undefined) {
+      return
+    }
+    navigate(`/invoice/${invoiceId}`)
+  }
 
   return (
     <>
@@ -668,34 +675,41 @@ const SubscriptionInfoSection = ({
       </Row>
       <Row style={rowStyle}>
         <Col span={4} style={colStyle}>
-          Discount Amount
-        </Col>
-        <Col span={6}>
-          {subInfo &&
-            subInfo.latestInvoice &&
-            showAmount(
-              subInfo.latestInvoice.discountAmount as number,
-              subInfo.latestInvoice.currency
-            )}
-          {subInfo &&
-            subInfo.latestInvoice &&
-            subInfo.latestInvoice.discount && (
-              <CouponPopover coupon={subInfo.latestInvoice.discount} />
-            )}
-        </Col>
-
-        <Col span={4} style={colStyle}>
           Promo Credits
         </Col>
         <Col span={6}>
           {subInfo?.latestInvoice &&
-            subInfo.latestInvoice.promoCreditDiscountAmount > 0 &&
+          subInfo.latestInvoice.promoCreditDiscountAmount > 0 ? (
             `${Math.abs(
               subInfo.latestInvoice.promoCreditTransaction?.deltaAmount ?? 0
             )}(${showAmount(
               subInfo?.latestInvoice?.promoCreditDiscountAmount,
               subInfo.currency
-            )})`}
+            )})`
+          ) : (
+            <MinusOutlined />
+          )}
+        </Col>
+        <Col span={4} style={colStyle}>
+          Discount Amount
+        </Col>
+        <Col span={6}>
+          {subInfo &&
+          subInfo.latestInvoice &&
+          subInfo.latestInvoice.discountAmount > 0 ? (
+            <span>
+              {' '}
+              {showAmount(
+                subInfo.latestInvoice.discountAmount as number,
+                subInfo.latestInvoice.currency
+              )}{' '}
+              {subInfo.latestInvoice.discount && (
+                <CouponPopover coupon={subInfo.latestInvoice.discount} />
+              )}{' '}
+            </span>
+          ) : (
+            <MinusOutlined />
+          )}
         </Col>
       </Row>
       <Row style={rowStyle}>
@@ -740,6 +754,28 @@ const SubscriptionInfoSection = ({
                 <InfoCircleOutlined />
               </span>
             </Popover>
+          )}
+        </Col>
+        <Col span={4} style={colStyle}>
+          Latest Invoice Id
+        </Col>
+        <Col span={10}>
+          {subInfo?.latestInvoice == undefined ? (
+            <MinusOutlined />
+          ) : (
+            <div className="flex items-center">
+              <Button
+                style={{ padding: 0 }}
+                type="link"
+                onClick={() =>
+                  goToInvoiceDetail(subInfo.latestInvoice?.invoiceId)
+                }
+              >
+                {subInfo.latestInvoice.invoiceId}
+              </Button>
+              <CopyToClipboard content={subInfo.latestInvoice.invoiceId} />
+              {InvoiceStatus(subInfo.latestInvoice.status)}{' '}
+            </div>
           )}
         </Col>
       </Row>

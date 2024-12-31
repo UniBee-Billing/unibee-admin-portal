@@ -150,21 +150,33 @@ const Index = ({ detail, closeModal }: Props) => {
           </Row>
         ))}
       <Divider />
-      {
-        <Row className="flex items-center">
-          <Col span={14}> </Col>
-          <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
-            Promo Credit{' '}
-            {detail?.promoCreditTransaction != null &&
-              `(${Math.abs(detail.promoCreditTransaction.deltaAmount)})`}
-          </Col>
-          <Col className="text-red-800" span={4}>
-            <span>
-              {`${showAmount(detail.promoCreditDiscountAmount * -1, detail.currency)}`}
-            </span>
-          </Col>
-        </Row>
-      }
+
+      <Row className="flex items-center">
+        <Col span={14}> </Col>
+        <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
+          Subtotal
+        </Col>
+        <Col className="text-red-800" span={4}>
+          <span>
+            {`${showAmount(detail.subscriptionAmountExcludingTax, detail.currency, true)}`}
+          </span>
+        </Col>
+      </Row>
+
+      <Row className="flex items-center">
+        <Col span={14}> </Col>
+        <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
+          Promo Credit{' '}
+          {detail?.promoCreditTransaction != null &&
+            `(${Math.abs(detail.promoCreditTransaction.deltaAmount)})`}
+        </Col>
+        <Col className="text-red-800" span={4}>
+          <span>
+            {`${showAmount(detail.promoCreditDiscountAmount * -1, detail.currency)}`}
+          </span>
+        </Col>
+      </Row>
+
       <Row className="flex items-center">
         <Col span={14}> </Col>
         <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">

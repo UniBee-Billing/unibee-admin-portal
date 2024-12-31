@@ -1,6 +1,7 @@
 import {
   InfoCircleOutlined,
   LoadingOutlined,
+  MinusOutlined,
   SyncOutlined
 } from '@ant-design/icons'
 import { Button, Col, Empty, Popover, Row, Spin, Tooltip, message } from 'antd'
@@ -10,7 +11,9 @@ import { useNavigate } from 'react-router-dom'
 import { normalizeSub, showAmount } from '../../helpers'
 import { getSubDetailInProductReq } from '../../requests'
 import { IProfile, ISubscriptionType } from '../../shared.types'
-import { SubscriptionStatus } from '../ui/statusTag'
+import CopyToClipboard from '../ui/copyToClipboard'
+import CouponPopover from '../ui/couponPopover'
+import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
 import { AssignSubscriptionModal } from './assignSub/assignSubModal'
 
 const rowStyle: CSSProperties = {
@@ -74,6 +77,13 @@ const Index = ({
       getSubInProduct()
     }
   }, [refreshSub])
+
+  const goToInvoiceDetail = (invoiceId: string | undefined) => {
+    if (invoiceId == undefined) {
+      return
+    }
+    navigate(`/invoice/${invoiceId}`)
+  }
 
   return (
     <div>
@@ -181,9 +191,17 @@ const Index = ({
                 Discount Amount
               </Col>
               <Col span={6}>
-                {showAmount(
-                  subInfo?.latestInvoice?.discountAmount,
-                  subInfo.currency
+                {subInfo?.latestInvoice?.discountAmount != undefined &&
+                subInfo?.latestInvoice?.discountAmount > 0 ? (
+                  <span>
+                    {showAmount(
+                      subInfo?.latestInvoice?.discountAmount,
+                      subInfo.currency
+                    )}{' '}
+                    <CouponPopover coupon={subInfo.latestInvoice.discount} />{' '}
+                  </span>
+                ) : (
+                  <MinusOutlined />
                 )}
               </Col>
             </Row>
@@ -235,6 +253,32 @@ const Index = ({
               </Col>
 
               <Col span={4} style={colStyle}>
+                Latest Invoice Id
+              </Col>
+              <Col span={10}>
+                {subInfo?.latestInvoice == undefined ? (
+                  <MinusOutlined />
+                ) : (
+                  <div className="flex items-center">
+                    <Button
+                      style={{ padding: 0 }}
+                      type="link"
+                      onClick={() =>
+                        goToInvoiceDetail(subInfo.latestInvoice?.invoiceId)
+                      }
+                    >
+                      {subInfo.latestInvoice.invoiceId}
+                    </Button>
+                    <CopyToClipboard
+                      content={subInfo.latestInvoice.invoiceId}
+                    />
+                    {InvoiceStatus(subInfo.latestInvoice.status)}{' '}
+                  </div>
+                )}
+              </Col>
+            </Row>
+            <Row style={rowStyle}>
+              <Col span={4} style={colStyle}>
                 Bill Period
               </Col>
               <Col span={6}>
@@ -243,6 +287,7 @@ const Index = ({
                   : ''}
               </Col>
             </Row>
+
             <Row style={rowStyle}>
               <Col span={4} style={colStyle}>
                 First pay

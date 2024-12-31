@@ -1,10 +1,19 @@
 import {
   LoadingOutlined,
   MinusOutlined,
-  SearchOutlined
+  SearchOutlined,
+  SyncOutlined
 } from '@ant-design/icons'
 import type { TableColumnType, TableProps } from 'antd'
-import { Button, Input, InputRef, message, Pagination, Space } from 'antd'
+import {
+  Button,
+  Input,
+  InputRef,
+  message,
+  Pagination,
+  Space,
+  Tooltip
+} from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import type { FilterDropdownProps } from 'antd/es/table/interface'
 import { useEffect, useRef, useState } from 'react'
@@ -35,7 +44,7 @@ const Index = ({
   userDetail,
   refreshTxHistory, // when used in user detail -> promoCredit tab, after admin updated credit amt, this component need to re-render to get the latest list
   // when this props passed as true, run fetchCreditTxList
-  setRefreshTxHist,
+  setRefreshTxHist, // after refresh is done, set this to false
   embeddingMode
 }: {
   userDetail?: IProfile
@@ -68,16 +77,53 @@ const Index = ({
     setSearchedColumn(dataIndex)
   }
 
-  /*
-  const handleReset = (clearFilters: () => void) => {
-    clearFilters()
-    if (searchInput.current?.input) {
-      searchInput.current.input.value = ''
+  const fetchCreditTxList = async () => {
+    const body: TCreditTxParams = {
+      accountType: CreditType.PROMO_CREDIT,
+      userId: userDetail == undefined ? undefined : (userDetail.id as number),
+      email: searchText,
+      page,
+      count: PAGE_SIZE
     }
-    setSearchText('')
-    fetchCreditTxList()
+    if (sortFilter != null) {
+      body.sortField = sortFilter.sortField
+      body.sortType = sortFilter.sortType
+    }
+    setLoading(true)
+    const [res, err] = await getCreditTxListReq(body)
+    setLoading(false)
+    if (setRefreshTxHist != undefined) {
+      setRefreshTxHist(false)
+    }
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    const { creditTransactions, total } = res
+    setCreditTxList(creditTransactions ?? [])
+    setTotal(total)
   }
-    */
+
+  const onTableChange: TableProps<TCreditTx>['onChange'] = (
+    _,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    filters,
+    sorter
+  ) => {
+    if (Array.isArray(sorter)) {
+      return // Handle array case if needed
+    }
+    if (sorter.columnKey == undefined) {
+      setSortFilter(null)
+    }
+    if (sorter.columnKey === 'createTime') {
+      onPageChange(1, PAGE_SIZE)
+      setSortFilter({
+        sortField: 'gmt_modify',
+        sortType: sorter.order === 'descend' ? 'desc' : 'asc'
+      })
+    }
+  }
 
   const getColumnSearchProps = (
     dataIndex: DataIndex
@@ -130,17 +176,6 @@ const Index = ({
           >
             Reset
           </Button>
-          {/* <Button
-            type="link"
-            size="small"
-            onClick={() => {
-              confirm({ closeDropdown: false })
-              setSearchText((selectedKeys as string[])[0])
-              setSearchedColumn(dataIndex)
-            }}
-          >
-            Filter
-          </Button>*/}
           <Button
             type="link"
             size="small"
@@ -178,11 +213,46 @@ const Index = ({
 
   const columns: ColumnsType<TCreditTx> = [
     {
+      title: 'Record ID',
+      dataIndex: 'transactionId',
+      key: 'transactionId',
+      render: (id) => (
+        <Tooltip title={id} overlayClassName="tx-tooltip-wrapper">
+          <div
+            style={{
+              width: '100px',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {id}
+          </div>
+        </Tooltip>
+      )
+    },
+    {
       title: 'Amount changed',
       dataIndex: 'deltaAmount',
       key: 'deltaAmount',
-      render: (amt, tx) =>
-        `${amt} (${showAmount(tx.deltaCurrencyAmount, tx.currency)})`
+      render: (amt, tx) => (
+        <Tooltip
+          title={
+            <div style={{ width: 128 }}>
+              <div className="flex justify-between">
+                <div>Pre-change:</div>
+                {tx.creditAmountBefore}
+              </div>
+              <div className="flex justify-between">
+                <div>Post-change:</div> {tx.creditAmountAfter}
+              </div>
+            </div>
+          }
+          overlayClassName="tx-tooltip-wrapper"
+        >
+          {`${amt} (${showAmount(tx.deltaCurrencyAmount, tx.currency)})`}
+        </Tooltip>
+      )
     },
     {
       title: 'User Email',
@@ -196,6 +266,12 @@ const Index = ({
       dataIndex: 'transactionType',
       key: 'transactionType',
       render: (type: CreditTxType) => CREDIT_TX_TYPE[type]
+    },
+    {
+      title: 'Notes',
+      dataIndex: 'name',
+      key: 'name',
+      render: (note, tx) => <Tooltip title={tx.description}>{note}</Tooltip>
     },
     {
       title: 'By',
@@ -231,56 +307,24 @@ const Index = ({
             <CopyToClipboard content={ivId} />
           </div>
         )
+    },
+    {
+      title: (
+        <>
+          <Tooltip title="Refresh">
+            <Button
+              size="small"
+              style={{ marginLeft: '8px' }}
+              disabled={loading}
+              onClick={fetchCreditTxList}
+              icon={<SyncOutlined />}
+            ></Button>
+          </Tooltip>
+        </>
+      ),
+      key: 'action'
     }
   ]
-
-  const fetchCreditTxList = async () => {
-    const body: TCreditTxParams = {
-      accountType: CreditType.PROMO_CREDIT,
-      userId: userDetail == undefined ? undefined : (userDetail.id as number),
-      email: searchText,
-      page,
-      count: PAGE_SIZE
-    }
-    if (sortFilter != null) {
-      body.sortField = sortFilter.sortField
-      body.sortType = sortFilter.sortType
-    }
-    setLoading(true)
-    const [res, err] = await getCreditTxListReq(body)
-    setLoading(false)
-    if (setRefreshTxHist != undefined) {
-      setRefreshTxHist(false)
-    }
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    const { creditTransactions, total } = res
-    setCreditTxList(creditTransactions ?? [])
-    setTotal(total)
-  }
-
-  const onTableChange: TableProps<TCreditTx>['onChange'] = (
-    _,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    filters,
-    sorter
-  ) => {
-    if (Array.isArray(sorter)) {
-      return // Handle array case if needed
-    }
-    if (sorter.columnKey == undefined) {
-      setSortFilter(null)
-    }
-    if (sorter.columnKey === 'createTime') {
-      onPageChange(1, PAGE_SIZE)
-      setSortFilter({
-        sortField: 'gmt_modify',
-        sortType: sorter.order === 'descend' ? 'desc' : 'asc'
-      })
-    }
-  }
 
   useEffect(() => {
     fetchCreditTxList()

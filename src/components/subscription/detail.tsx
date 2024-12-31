@@ -117,7 +117,7 @@ const Index = () => {
         />
         <div className="mt-4 flex items-center justify-center">
           <Button onClick={() => navigate(`/subscription/list`)}>
-            Go Back
+            Go Back to Subscription List
           </Button>
         </div>
       </div>
