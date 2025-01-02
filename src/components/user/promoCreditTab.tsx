@@ -140,7 +140,7 @@ const Index = ({
             &nbsp;
             {promoAccount != undefined && (
               <Tooltip
-                title={`1 credit = ${promoAccount?.exchangeRate / 100} ${CURRENCY[promoAccount.currency].symbol}`}
+                title={`1 credit = ${CURRENCY[promoAccount.currency].symbol}${promoAccount?.exchangeRate / 100}`}
               >
                 <InfoCircleOutlined />
               </Tooltip>

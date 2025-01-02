@@ -141,14 +141,17 @@ export const REFUND_STATUS: { [key: number]: string } = {
   40: 'Cancelled'
 }
 
+// when credit amount has changed, we need the following types to track what caused the change.
 export const CREDIT_TX_TYPE: Record<CreditTxType, string> = {
-  [CreditTxType.TOP_UP]: 'Deposit',
-  [CreditTxType.CONSUMPTION]: 'Applied to an invoice',
-  [CreditTxType.REFUND_TOP_UP]: 'From Refund',
-  [CreditTxType.WITHDRAWN]: 'Withdrawn',
-  [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed',
-  [CreditTxType.ADMIN_CHANGE]: 'Admin Change',
-  [CreditTxType.RECHARGE_REFUND_OUT]: 'Recharge Refund Out'
+  [CreditTxType.TOP_UP]: 'Deposit', // this is for deposit credit(e.g. user saved 100 eur as 100 credits), not for promo credit. Added here for future use.
+  [CreditTxType.CONSUMPTION]: 'Applied to an invoice', // credit used for invoice payment
+  [CreditTxType.FROM_REFUND]: 'From Refund', // user used few credit for invoice payment, but later apply for a refund, this type track this event.
+  // But only when it's full refund, partial invoice refund has no credit returned.
+  // because credit amount is always an integer number, partial refund might involve decimal credit amount.
+  [CreditTxType.WITHDRAWN]: 'Withdrawn', // this is for deposite credit only. Added for future use.
+  [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed', // Withdraw failed, the credit returned to user. This is for deposite credit only. Added for future use.
+  [CreditTxType.ADMIN_CHANGE]: 'Admin Change', // admin manually change the credit amount
+  [CreditTxType.DEPOSIT_REFUND]: 'Deposit refund' // similar to Withdraw. It's the opposite of Deposit.
 }
 
 const PERMISSIONS = {

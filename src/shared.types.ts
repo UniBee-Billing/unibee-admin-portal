@@ -628,11 +628,11 @@ export type TCreditTx = {
 export enum CreditTxType {
   TOP_UP = 1,
   CONSUMPTION = 2,
-  REFUND_TOP_UP = 3,
+  FROM_REFUND = 3,
   WITHDRAWN = 4,
   WITHDRAWN_FAILED = 5,
   ADMIN_CHANGE = 6,
-  RECHARGE_REFUND_OUT = 7
+  DEPOSIT_REFUND = 7
 }
 
 export type TExportDataType =
