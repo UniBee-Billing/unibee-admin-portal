@@ -17,7 +17,7 @@ import {
 import Table, { ColumnsType } from 'antd/es/table'
 import type { FilterDropdownProps } from 'antd/es/table/interface'
 import { useEffect, useRef, useState } from 'react'
-import Highlighter from 'react-highlight-words'
+// import Highlighter from 'react-highlight-words'
 import { useNavigate } from 'react-router-dom'
 import { CREDIT_TX_TYPE } from '../../constants'
 import { formatDate, numberWithComma, showAmount } from '../../helpers'
@@ -110,6 +110,13 @@ const Index = ({
     filters,
     sorter
   ) => {
+    // console.log('filter/sorter: ', filters, '//', sorter)
+    // user search for 'abc' first, go to page 10, then search for 'xyz', I need to reset page = 1
+    // otherwise, it'll show xyz in page 10 which might contain no records.
+    if (filters != null && filters.user != null) {
+      onPageChange(1, PAGE_SIZE)
+      return
+    }
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
     }
@@ -117,7 +124,6 @@ const Index = ({
       setSortFilter(null)
     }
     if (sorter.columnKey === 'createTime') {
-      onPageChange(1, PAGE_SIZE)
       setSortFilter({
         sortField: 'gmt_modify',
         sortType: sorter.order === 'descend' ? 'desc' : 'asc'
@@ -198,14 +204,15 @@ const Index = ({
         }
       }
     },
-    render: (text) =>
-      searchedColumn === dataIndex ? (
-        <Highlighter
-          highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-          searchWords={[searchText]}
-          autoEscape
-          textToHighlight={text ? text.toString() : ''}
-        />
+    render: (text, record) =>
+      dataIndex == 'user' ? (
+        <Button
+          type="link"
+          style={{ padding: 0 }}
+          onClick={() => navigate(`/user/${record.user.id}?tab=promoCredits`)}
+        >
+          {text}
+        </Button>
       ) : (
         text
       )
