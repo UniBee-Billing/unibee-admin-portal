@@ -190,7 +190,7 @@ export const APP_ROUTES: RouteObject[] = [
     ]
   },
   {
-    id: 'promoCredit',
+    id: 'promo-credit',
     path: 'promo-credit',
     element: <PromoCredits />
   },
