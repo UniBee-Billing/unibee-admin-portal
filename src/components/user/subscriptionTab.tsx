@@ -177,14 +177,17 @@ const Index = ({
               </Col>
               <Col span={6}>
                 {subInfo.latestInvoice &&
-                  subInfo.latestInvoice.promoCreditDiscountAmount > 0 &&
+                subInfo.latestInvoice.promoCreditDiscountAmount > 0 ? (
                   `${Math.abs(
                     subInfo.latestInvoice.promoCreditTransaction?.deltaAmount ??
                       0
                   )}(${showAmount(
                     subInfo?.latestInvoice?.promoCreditDiscountAmount,
                     subInfo.currency
-                  )})`}
+                  )})`
+                ) : (
+                  <MinusOutlined />
+                )}
               </Col>
 
               <Col span={4} style={colStyle}>
@@ -211,8 +214,7 @@ const Index = ({
                 Addons Price
               </Col>
               <Col span={6}>
-                {subInfo &&
-                  subInfo.addons &&
+                {subInfo && subInfo.addons ? (
                   showAmount(
                     subInfo!.addons!.reduce(
                       (
@@ -225,7 +227,10 @@ const Index = ({
                       0
                     ),
                     subInfo!.currency
-                  )}
+                  )
+                ) : (
+                  <MinusOutlined />
+                )}
 
                 {subInfo.addons && subInfo.addons.length > 0 && (
                   <Popover

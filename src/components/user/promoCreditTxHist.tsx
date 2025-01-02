@@ -330,7 +330,7 @@ const Index = ({
           <Tooltip title="Refresh">
             <Button
               size="small"
-              style={{ marginLeft: '8px' }}
+              style={{ marginLeft: '8px', border: 'none' }}
               disabled={loading}
               onClick={fetchCreditTxList}
               icon={<SyncOutlined />}

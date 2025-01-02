@@ -717,8 +717,7 @@ const SubscriptionInfoSection = ({
           Addons Price
         </Col>
         <Col span={6}>
-          {subInfo &&
-            subInfo.addons &&
+          {subInfo && subInfo.addons ? (
             showAmount(
               subInfo!.addons!.reduce(
                 (
@@ -728,7 +727,10 @@ const SubscriptionInfoSection = ({
                 0
               ),
               subInfo!.currency
-            )}
+            )
+          ) : (
+            <MinusOutlined />
+          )}
 
           {subInfo && subInfo.addons && subInfo.addons.length > 0 && (
             <Popover
