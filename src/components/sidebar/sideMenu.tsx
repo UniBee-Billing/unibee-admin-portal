@@ -63,7 +63,7 @@ const useContextMenu = () => {
     },
     {
       label: 'Promo Credit',
-      key: 'promoCredit',
+      key: 'promo-credit',
       icon: <Icon component={PromoCreditSvg} />
     },
     {
