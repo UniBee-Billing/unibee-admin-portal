@@ -1,4 +1,4 @@
-import { InfoCircleOutlined } from '@ant-design/icons'
+import { InfoCircleOutlined, MinusOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Switch, Tooltip, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { CURRENCY } from '../../constants'
@@ -134,16 +134,24 @@ const Index = ({
         <Row>
           <Col span={6}>Promo Credit Balance </Col>
           <Col span={4}>
-            {' '}
-            {promoAccount?.amount} (
-            {showAmount(promoAccount?.currencyAmount, promoAccount?.currency)})
-            &nbsp;
-            {promoAccount != undefined && (
-              <Tooltip
-                title={`1 credit = ${CURRENCY[promoAccount.currency].symbol}${promoAccount?.exchangeRate / 100}`}
-              >
-                <InfoCircleOutlined />
-              </Tooltip>
+            {promoAccount?.amount == undefined ? (
+              <MinusOutlined />
+            ) : (
+              <>
+                {promoAccount?.amount} (
+                {showAmount(
+                  promoAccount?.currencyAmount,
+                  promoAccount?.currency
+                )}
+                ) &nbsp;
+                {promoAccount != undefined && (
+                  <Tooltip
+                    title={`1 credit = ${CURRENCY[promoAccount.currency].symbol}${promoAccount?.exchangeRate / 100}`}
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                )}
+              </>
             )}
           </Col>
           <Col span={4}>
