@@ -148,8 +148,8 @@ export const CREDIT_TX_TYPE: Record<CreditTxType, string> = {
   [CreditTxType.FROM_REFUND]: 'From Refund', // user used few credit for invoice payment, but later apply for a refund, this type track this event.
   // But only when it's full refund, partial invoice refund has no credit returned.
   // because credit amount is always an integer number, partial refund might involve decimal credit amount.
-  [CreditTxType.WITHDRAWN]: 'Withdrawn', // this is for deposite credit only. Added for future use.
-  [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed', // Withdraw failed, the credit returned to user. This is for deposite credit only. Added for future use.
+  [CreditTxType.WITHDRAWN]: 'Withdrawn', // this is for deposit credit only. Added for future use.
+  [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed', // Withdraw failed, the credit returned to user. This is for deposit credit only. Added for future use.
   [CreditTxType.ADMIN_CHANGE]: 'Admin Change', // admin manually change the credit amount
   [CreditTxType.DEPOSIT_REFUND]: 'Deposit refund' // similar to Withdraw. It's the opposite of Deposit.
 }
