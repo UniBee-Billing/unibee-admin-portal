@@ -182,7 +182,7 @@ const Index = () => {
   }
   const getColumns = (): ColumnsType<IProfile> => [
     {
-      title: 'Uer Id',
+      title: 'User Id',
       dataIndex: 'id',
       key: 'id',
       render: (id) => (
