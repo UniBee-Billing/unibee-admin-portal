@@ -629,6 +629,7 @@ export type TCreditTx = {
   merchantId: number
   invoiceId: string
   adminMember?: IMerchantMemberProfile
+  by: string // if credit amt is updated by admin, adminMember is not null. if amt is updated by user themselves(consumed, earned or other methods), this field is not empty.
 }
 
 export enum CreditTxType {

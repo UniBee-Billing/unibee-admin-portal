@@ -284,8 +284,8 @@ const Index = ({
       title: 'By',
       dataIndex: 'adminMember',
       key: 'adminMember',
-      render: (by) =>
-        by != undefined ? `${by.firstName} ${by.lastName}` : <MinusOutlined />
+      render: (by, txRecord) =>
+        by != undefined ? `${by.firstName} ${by.lastName}` : txRecord.by
     },
     {
       title: 'Notes',
