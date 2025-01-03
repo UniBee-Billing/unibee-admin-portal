@@ -1,19 +1,19 @@
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
-  Col,
+  // Col,
   DatePicker,
-  Divider,
+  // Divider,
   Form,
   Input,
   InputNumber,
   Popconfirm,
-  Radio,
-  Row,
+  // Radio,
+  // Row,
   Select,
-  Space,
+  // Space,
   Spin,
-  Switch,
+  // Switch,
   message
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
@@ -30,7 +30,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
-  numBoolConvert,
+  // numBoolConvert,
   showAmount,
   toFixedNumber
 } from '../../helpers'
@@ -105,7 +105,7 @@ const Index = () => {
   const watchBillingType = Form.useWatch('billingType', form)
   const watchCurrency = Form.useWatch('currency', form)
   const watchPlanIds = Form.useWatch('planIds', form)
-  const watchAdvancedConfig = Form.useWatch('advance', form)
+  // const watchAdvancedConfig = Form.useWatch('advance', form)
 
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
@@ -204,7 +204,7 @@ const Index = () => {
       discount.discountPercentage /= 100
     }
 
-    discount.userLimit = numBoolConvert(discount.userLimit)
+    // discount.userLimit = numBoolConvert(discount.userLimit)
 
     setCode(discount)
   }
@@ -249,7 +249,7 @@ const Index = () => {
     code.discountAmount = Number(code.discountAmount)
     code.discountPercentage = Number(code.discountPercentage) * 100
     delete code.validityRange
-    code.userLimit = numBoolConvert(code.userLimit)
+    // code.userLimit = numBoolConvert(code.userLimit)
 
     if (code.discountType == 1) {
       // percentage
@@ -392,8 +392,9 @@ const Index = () => {
           disabled={!formEditable}
         >
           <div className="flex">
-            <div className="w-1/2">
-              <div className="mb-6 flex items-center">
+            {/* <div className="w-1/2"> */}
+            <div className="w-full">
+              {/*<div className="mb-6 flex items-center">
                 <Divider
                   type="vertical"
                   style={{
@@ -403,7 +404,7 @@ const Index = () => {
                   }}
                 />
                 <div className="text-lg">General configuration</div>
-              </div>
+              </div> */}
               {!isNew && (
                 <Form.Item label="ID" name="id" hidden>
                   <Input disabled />
@@ -700,7 +701,7 @@ const Index = () => {
                 />
               </Form.Item>
             </div>
-            <div className="w-1/2 pl-10">
+            {/* <div className="w-1/2 pl-10">
               <div className="mb-6 flex items-center">
                 <Divider
                   type="vertical"
@@ -769,7 +770,7 @@ const Index = () => {
                   </Form.Item>
                 </Col>
               </Row>
-            </div>
+            </div> */}
           </div>
         </Form>
       )}
