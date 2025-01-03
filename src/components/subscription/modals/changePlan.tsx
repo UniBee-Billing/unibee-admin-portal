@@ -1,18 +1,29 @@
-import { Button, Divider, Input, message, Modal } from 'antd'
+import { Button, Divider, Input, InputNumber, message, Modal } from 'antd'
 import { useEffect, useState } from 'react'
 // import HiddenIcon from '../../../assets/hidden.svg?react'
 // import { formatPlanPrice } from '../../../helpers'
+import { CURRENCY } from '../../../constants'
+import { showAmount } from '../../../helpers'
 import { applyDiscountPreviewReq } from '../../../requests'
-import { DiscountCode, IPlan, ISubscriptionType } from '../../../shared.types'
-import CouponPopover from '../../ui/couponPopover'
+import {
+  DiscountCode,
+  DiscountType,
+  IPlan,
+  IProfile,
+  ISubscriptionType,
+  TPromoAccount
+} from '../../../shared.types'
 import { PlanSelector } from '../../user/assignSub/planSelector'
 import Plan from '../plan'
 
 interface Props {
+  userProfile: IProfile | undefined
   subInfo: ISubscriptionType | null
   selectedPlanId: number | null
   plans: IPlan[]
   discountCode: string
+  creditAmt: null | number
+  setCreditAmt: (v: number) => void
   onCodeChange: React.ChangeEventHandler<HTMLInputElement>
   // onSelectPlanChange: (planId: number) => void;
   setSelectedPlan: (planId: number) => void
@@ -27,14 +38,19 @@ interface Props {
 
 type DiscountCodePreview = {
   isValid: boolean
-  preview: DiscountCode | null // null is used when isValid: false
+  discountAmount: number
+  discountCode: DiscountCode | null // null is used when isValid: false
+  failureReason: string
 }
 
 const ChangePlan = ({
+  userProfile,
   subInfo,
   selectedPlanId,
   plans,
   discountCode,
+  creditAmt,
+  setCreditAmt,
   onCodeChange,
   setSelectedPlan,
   onAddonChange,
@@ -45,12 +61,6 @@ const ChangePlan = ({
     null
   ) // null: no code provided
   const [codeChecking, setCodeChecking] = useState(false)
-  /*
-  const sameProductPlans = useMemo(
-    () => plans.filter((plan) => subInfo?.productId === plan.productId),
-    [plans, subInfo]
-  )
-    */
 
   if (selectedPlanId == null) {
     return null
@@ -62,8 +72,8 @@ const ChangePlan = ({
 
   const onOK = () => {
     if (
-      (codePreview === null && discountCode !== '') || // code provided, but not applied
-      (codePreview !== null && codePreview.preview?.code !== discountCode) // code provided and applied, but changed in input field
+      (codePreview === null && discountCode !== '') || // code provided, but not applied(apply btn not clicked)
+      (codePreview !== null && codePreview.discountCode?.code !== discountCode) // code provided and applied, but changed in input field
     ) {
       onPreviewCode()
       return
@@ -71,12 +81,72 @@ const ChangePlan = ({
     onConfirm()
   }
 
-  useEffect(() => {
-    if (discountCode === '') {
-      // user manually cleared the code, preview obj also need to be cleared
-      setCodePreview(null)
+  const getCreditInfo = () => {
+    if (
+      userProfile == undefined ||
+      userProfile.promoCreditAccounts == undefined
+    ) {
+      return null
     }
-  }, [discountCode])
+    const credit: TPromoAccount | undefined =
+      userProfile.promoCreditAccounts?.find((c) => c.currency == 'EUR')
+    if (credit == undefined) {
+      return { credit: null, note: 'No credit available' }
+    }
+    return {
+      credit: {
+        amount: credit.amount,
+        currencyAmount: credit.currencyAmount / 100,
+        currency: credit.currency,
+        exchangeRate: credit.exchangeRate
+      },
+      note: `Credits available: ${credit.amount} (${showAmount(credit.currencyAmount, credit.currency)})`
+    }
+  }
+
+  const creditUseNote = () => {
+    const credit = getCreditInfo()
+    if (credit?.credit == null) {
+      return null
+    }
+    if (creditAmt == 0 || creditAmt == null) {
+      return <div className="text-xs text-gray-500">No promo credit used</div>
+    }
+    return (
+      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
+    )
+  }
+
+  const discountCodeUseNote = () => {
+    if (discountCode == '' || codePreview == null) {
+      return <div className="text-xs text-gray-500">No discount code used</div>
+    }
+    if (codePreview != null) {
+      if (codePreview.isValid) {
+        return (
+          <div className="text-xs text-green-500">
+            Discount code is valid(
+            {`${
+              codePreview.discountCode?.discountType == DiscountType.PERCENTAGE
+                ? codePreview.discountCode?.discountPercentage / 100 + '%'
+                : showAmount(
+                    codePreview.discountCode?.discountAmount,
+                    codePreview.discountCode?.currency
+                  )
+            } off`}
+            )
+          </div>
+        )
+      } else {
+        return (
+          <div className="text-xs text-red-500">
+            {codePreview.failureReason}
+          </div>
+        )
+      }
+    }
+    return null
+  }
 
   const onPreviewCode = async () => {
     setCodeChecking(true)
@@ -89,8 +159,21 @@ const ChangePlan = ({
       message.error(err.message)
       return
     }
-    setCodePreview({ isValid: res.valid, preview: res.discountCode })
+    const { discountAmount, failureReason, valid } = res
+    setCodePreview({
+      isValid: valid,
+      discountCode: res.discountCode,
+      failureReason,
+      discountAmount
+    })
   }
+
+  useEffect(() => {
+    if (discountCode === '') {
+      // user manually cleared the code, preview obj also need to be cleared
+      setCodePreview(null)
+    }
+  }, [discountCode])
 
   return (
     <Modal
@@ -108,54 +191,12 @@ const ChangePlan = ({
           productId={subInfo!.productId}
           onPlanSelected={(p: IPlan) => setSelectedPlan(p.id)}
         />
-        {/* <Select
-          style={{ width: 420 }}
-          value={selectedPlanId}
-          onChange={setSelectedPlan}
-          options={sameProductPlans.map((p) => ({
-            label:
-              subInfo?.planId == p.id ? (
-                <div className="flex w-full items-center justify-between">
-                  <div>
-                    {p.planName}
-                    {`(${formatPlanPrice(p)})`}
-                  </div>
-                  <div className="mr-3">
-                    <Tag color="orange">Current Plan</Tag>
-                  </div>
-                  {p.publishStatus == 1 && (
-                    <div
-                      className="absolute flex h-4 w-4"
-                      style={{ right: '14px' }}
-                    >
-                      <HiddenIcon />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <span>
-                    {p.planName}
-                    {`(${formatPlanPrice(p)})`}
-                  </span>
-                  {p.publishStatus == 1 && (
-                    <div
-                      className="absolute flex h-4 w-4"
-                      style={{ right: '14px' }}
-                    >
-                      <HiddenIcon />
-                    </div>
-                  )}
-                </div>
-              ),
-            value: p.id
-          }))}
-        /> */}
       </div>
 
       <div className="flex items-center justify-center">
         <Plan
           plan={selectedPlan}
+          width="320px"
           selectedPlan={selectedPlanId}
           setSelectedPlan={setSelectedPlan}
           onAddonChange={onAddonChange}
@@ -163,9 +204,32 @@ const ChangePlan = ({
         />
       </div>
 
-      <div className="mx-auto my-4 flex w-64 flex-col justify-center">
-        <div className="flex gap-5">
+      <div
+        style={{ width: '320px' }}
+        className="mx-auto my-4 flex w-64 flex-col justify-center"
+      >
+        <div className="flex justify-between">
+          <InputNumber
+            min={1}
+            max={getCreditInfo()?.credit?.amount}
+            onChange={(v) => setCreditAmt(v as number)}
+            style={{ width: 240 }}
+            value={creditAmt}
+            disabled={getCreditInfo()?.credit == null}
+            placeholder={getCreditInfo()?.note}
+          />
+          <Button>Apply</Button>
+        </div>
+        <div className="flex">{creditUseNote()}</div>
+      </div>
+
+      <div
+        style={{ width: '320px' }}
+        className="mx-auto my-4 flex w-full flex-col justify-center"
+      >
+        <div className="flex justify-between">
           <Input
+            style={{ width: 240 }}
             value={discountCode}
             onChange={onCodeChange}
             status={
@@ -182,19 +246,7 @@ const ChangePlan = ({
             Apply
           </Button>
         </div>
-        <div className="flex">
-          {codePreview !== null &&
-            (codePreview.isValid ? (
-              <>
-                <span className="text-xs text-green-500">
-                  Code is valid{' '}
-                  <CouponPopover coupon={codePreview.preview as DiscountCode} />
-                </span>
-              </>
-            ) : (
-              <span className="text-xs text-red-500">Code is invalid</span>
-            ))}
-        </div>
+        <div className="flex">{discountCodeUseNote()}</div>
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-4">

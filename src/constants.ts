@@ -1,3 +1,5 @@
+import { CreditTxType, InvoiceBizType } from './shared.types'
+
 export enum PlanType {
   MainPlan = 1,
   Addon = 2,
@@ -82,6 +84,12 @@ export const INVOICE_STATUS: { [key: number]: string } = {
   6: 'Reversed' // 取消后被通知支付成功的，这种情况一般是要排查的
 }
 
+export const INVOICE_BIZ_TYPE: Record<InvoiceBizType, string> = {
+  [InvoiceBizType.ONE_TIME]: 'One-time',
+  [InvoiceBizType.MANUALLY_CREATED]: 'Manually created',
+  [InvoiceBizType.SUBSCRIPTION]: 'Recurring'
+}
+
 export const METRICS_TYPE: { [key: number]: string } = {
   1: 'limit_metered',
   2: 'charge_metered', // not used yet
@@ -133,6 +141,19 @@ export const REFUND_STATUS: { [key: number]: string } = {
   40: 'Cancelled'
 }
 
+// when credit amount has changed, we need the following types to track what caused the change.
+export const CREDIT_TX_TYPE: Record<CreditTxType, string> = {
+  [CreditTxType.TOP_UP]: 'Deposit', // this is for deposit credit(e.g. user saved 100 eur as 100 credits), not for promo credit. Added here for future use.
+  [CreditTxType.CONSUMPTION]: 'Applied to an invoice', // credit used for invoice payment
+  [CreditTxType.FROM_REFUND]: 'From Refund', // user used few credit for invoice payment, but later apply for a refund, this type track this event.
+  // But only when it's full refund, partial invoice refund has no credit returned.
+  // because credit amount is always an integer number, partial refund might involve decimal credit amount.
+  [CreditTxType.WITHDRAWN]: 'Withdrawn', // this is for deposit credit only. Added for future use.
+  [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed', // Withdraw failed, the credit returned to user. This is for deposit credit only. Added for future use.
+  [CreditTxType.ADMIN_CHANGE]: 'Admin Change', // admin manually change the credit amount
+  [CreditTxType.DEPOSIT_REFUND]: 'Deposit refund' // similar to Withdraw. It's the opposite of Deposit.
+}
+
 const PERMISSIONS = {
   plan: {
     order: 0,
@@ -176,50 +197,57 @@ const PERMISSIONS = {
     width: 100,
     permissions: ['access']
   },
-  user: {
+  'promo-credit': {
     order: 6,
+    group: 'promo-credit',
+    label: 'Promo credit',
+    width: 100,
+    permissions: ['access']
+  },
+  user: {
+    order: 7,
     group: 'user',
     label: 'User List',
     width: 100,
     permissions: ['access']
   },
   admin: {
-    order: 7,
+    order: 8,
     group: 'admin',
     label: 'Admin List',
     width: 100,
     permissions: ['access']
   },
   /* analytics: {
-    order: 8,
+    order: 9,
     group: 'analytics',
     label: 'Analytics',
     width: 100,
     permissions: ['access']
   }, */
   report: {
-    order: 9,
+    order: 10,
     group: 'report',
     label: 'Report',
     width: 100,
     permissions: ['access']
   },
   'my-account': {
-    order: 10,
+    order: 11,
     group: 'my-account',
     label: 'My Account',
     width: 100,
     permissions: ['access']
   },
   'activity-logs': {
-    order: 11,
+    order: 12,
     group: 'activity-logs',
     label: 'Activity Logs',
     width: 100,
     permissions: ['access']
   },
   configuration: {
-    order: 12,
+    order: 13,
     group: 'configuration',
     label: 'Configuration',
     width: 140,

@@ -40,6 +40,7 @@ import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
 import CreateUserModal from './createUserModal'
 import './list.css'
 
+const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const STATUS_FILTER = Object.entries(USER_STATUS).map((s) => {
   const [value, text] = s
@@ -59,7 +60,6 @@ type TFilters = {
 const Index = () => {
   const navigate = useNavigate()
   const appConfig = useAppConfigStore()
-  const [exporting, setExporting] = useState(false)
   const { page, onPageChange } = usePagination()
   const [importModalOpen, setImportModalOpen] = useState(false)
   const toggleImportModal = () => setImportModalOpen(!importModalOpen)
@@ -149,10 +149,7 @@ const Index = () => {
     let payload = normalizeSearchTerms()
     payload = { ...payload, ...filters }
 
-    // return
-    setExporting(true)
     const [_, err] = await exportDataReq({ task: 'UserExport', payload })
-    setExporting(false)
     if (err != null) {
       message.error(err.message)
       return
@@ -183,24 +180,27 @@ const Index = () => {
   const onMenuClick: MenuProps['onClick'] = (e) => {
     extraActions[e.key]()
   }
-  //   const getColumns = (): ColumnsType<ISubscriptionType> => [
   const getColumns = (): ColumnsType<IProfile> => [
+    {
+      title: 'User Id',
+      dataIndex: 'id',
+      key: 'id',
+      render: (id) => (
+        <a href={`${location.origin}${BASE_PATH}user/${id}`}>{id}</a>
+      )
+    },
     {
       title: 'Name',
       dataIndex: 'firstName',
       key: 'userName',
-      render: (_, user) => `${user.firstName} ${user.lastName}`
+      render: (_, user) => user.firstName + ' ' + user.lastName
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email'
     },
-    /* {
-      title: 'Subscription',
-      dataIndex: 'subscriptionName',
-      key: 'subscriptionName'
-    }, */
+
     {
       title: 'Subscription Plan',
       dataIndex: 'subscriptionName',
@@ -344,8 +344,6 @@ const Index = () => {
             onPageChange={onPageChange}
             clearFilters={clearFilters}
             searching={loading}
-            exporting={exporting}
-            // normalizeSearchTerms={normalizeSearchTerms}
           />
         </Col>
       </Row>
@@ -413,14 +411,12 @@ export default Index
 const Search = ({
   form,
   searching,
-  exporting,
   goSearch,
   onPageChange,
   clearFilters
 }: {
   form: FormInstance<unknown>
   searching: boolean
-  exporting: boolean
   goSearch: () => void
   onPageChange: (page: number, pageSize: number) => void
   clearFilters: () => void
@@ -509,7 +505,7 @@ const Search = ({
           </Col>
           <Col span={13} className="flex justify-end">
             <Space>
-              <Button onClick={clear} disabled={searching || exporting}>
+              <Button onClick={clear} disabled={searching}>
                 Clear
               </Button>
               <Button
@@ -517,17 +513,10 @@ const Search = ({
                 type="primary"
                 icon={<SearchOutlined />}
                 loading={searching}
-                disabled={searching || exporting}
+                disabled={searching}
               >
                 Search
               </Button>
-              {/* <Button
-                onClick={exportData}
-                loading={exporting}
-                disabled={searching || exporting}
-              >
-                Export
-              </Button> */}
             </Space>
           </Col>
         </Row>

@@ -1,13 +1,19 @@
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
+  // Col,
   DatePicker,
+  // Divider,
   Form,
   Input,
   InputNumber,
   Popconfirm,
+  // Radio,
+  // Row,
   Select,
+  // Space,
   Spin,
+  // Switch,
   message
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
@@ -24,6 +30,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
+  // numBoolConvert,
   showAmount,
   toFixedNumber
 } from '../../helpers'
@@ -58,7 +65,12 @@ const DEFAULT_CODE: DiscountCode = {
   endTime: 0,
   validityRange: [null, null],
   planIds: [],
-  quantity: 0
+  quantity: 0,
+  advance: false,
+  userScope: 0,
+  userLimit: true,
+  upgradeOnly: false,
+  upgradeLongerOnly: false
 }
 
 const CAN_EDIT_ITEM_STATUSES = [
@@ -93,6 +105,7 @@ const Index = () => {
   const watchBillingType = Form.useWatch('billingType', form)
   const watchCurrency = Form.useWatch('currency', form)
   const watchPlanIds = Form.useWatch('planIds', form)
+  // const watchAdvancedConfig = Form.useWatch('advance', form)
 
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
@@ -191,6 +204,8 @@ const Index = () => {
       discount.discountPercentage /= 100
     }
 
+    // discount.userLimit = numBoolConvert(discount.userLimit)
+
     setCode(discount)
   }
 
@@ -234,6 +249,7 @@ const Index = () => {
     code.discountAmount = Number(code.discountAmount)
     code.discountPercentage = Number(code.discountPercentage) * 100
     delete code.validityRange
+    // code.userLimit = numBoolConvert(code.userLimit)
 
     if (code.discountType == 1) {
       // percentage
@@ -246,6 +262,8 @@ const Index = () => {
       code.discountAmount = toFixedNumber(code.discountAmount, 2)
     }
 
+    // console.log('on save: ', code)
+    // return
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
 
     setLoading(true)
@@ -373,222 +391,267 @@ const Index = () => {
           initialValues={code}
           disabled={!formEditable}
         >
-          {!isNew && (
-            <Form.Item label="ID" name="id" hidden>
-              <Input disabled />
-            </Form.Item>
-          )}
-
-          <Form.Item label="merchant Id" name="merchantId" hidden>
-            <Input disabled />
-          </Form.Item>
-
-          <Form.Item
-            label="Name"
-            name="name"
-            rules={[
-              {
-                required: true,
-                message: 'Please input your discount code name!'
-              }
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="Code"
-            name="code"
-            rules={[
-              {
-                required: true,
-                message: 'Please input your discount code!'
-              }
-            ]}
-          >
-            <Input disabled={!isNew} />
-          </Form.Item>
-
-          {!isNew && (
-            <Form.Item label="Status">
-              {getDiscountCodeStatusTagById(code.status as number)}
-            </Form.Item>
-          )}
-
-          <Form.Item
-            label="Quantity"
-            name="quantity"
-            rules={[
-              {
-                required: true,
-                message: 'Please input valid quantity'
-              }
-            ]}
-            extra={'If quantity is 0, it means the quantity is unlimited.'}
-          >
-            {renderedQuantityItems}
-          </Form.Item>
-
-          <Form.Item
-            label="Discount Type"
-            name="discountType"
-            className="mb-0"
-            rules={[
-              {
-                required: true,
-                message: 'Please choose your discountType type!'
-              }
-            ]}
-          >
-            <Select
-              style={{ width: 180 }}
-              options={[
-                { value: 1, label: 'Percentage' },
-                { value: 2, label: 'Fixed amount' }
-              ]}
-            />
-          </Form.Item>
-
-          <SubForm>
-            <Form.Item
-              label="Discount percentage"
-              name="discountPercentage"
-              rules={[
-                {
-                  required: watchDiscountType == 1,
-                  message: 'Please choose your discount percentage!'
-                },
-                () => ({
-                  validator(_, value) {
-                    if (watchDiscountType == 2) {
-                      // 2: fixed amount
-                      return Promise.resolve()
-                    }
-                    const num = Number(value)
-                    if (isNaN(num) || num <= 0 || num > 100) {
-                      return Promise.reject(
-                        'Please input a valid percentage number between 0 ~ 100.'
-                      )
-                    }
-                    return Promise.resolve()
-                  }
-                })
-              ]}
-            >
-              <Input
-                style={{ width: 180 }}
-                disabled={watchDiscountType == 2 || !formEditable}
-                suffix="%"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Currency"
-              name="currency"
-              rules={[
-                {
-                  required: watchDiscountType != 1,
-                  message: 'Please select your currency!'
-                }
-              ]}
-            >
-              <Select
-                disabled={watchDiscountType == 1 || !formEditable}
-                style={{ width: 180 }}
-                options={[
-                  { value: 'EUR', label: 'EUR' },
-                  { value: 'USD', label: 'USD' },
-                  { value: 'JPY', label: 'JPY' }
-                ]}
-              />
-            </Form.Item>
-            <Form.Item
-              label="Discount Amount"
-              name="discountAmount"
-              dependencies={['currency']}
-              className="mb-0"
-              rules={[
-                {
-                  required: watchDiscountType != 1, // 1: percentage, 2: fixed-amt
-                  message: 'Please choose your discount amount!'
-                },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (watchDiscountType == 1) {
-                      return Promise.resolve()
-                    }
-                    const num = Number(value)
-                    if (isNaN(num) || num <= 0) {
-                      return Promise.reject(
-                        'Please input a valid amount (> 0).'
-                      )
-                    }
-                    if (
-                      !currencyDecimalValidate(num, getFieldValue('currency'))
-                    ) {
-                      return Promise.reject('Please input a valid amount')
-                    }
-                    return Promise.resolve()
-                  }
-                })
-              ]}
-            >
-              <Input
-                style={{ width: 180 }}
-                prefix={
-                  watchCurrency == null || watchCurrency == ''
-                    ? ''
-                    : CURRENCY[watchCurrency].symbol
-                }
-                disabled={watchDiscountType == 1 || !formEditable}
-              />
-            </Form.Item>
-          </SubForm>
-
-          <Form.Item
-            label="One-time or recurring"
-            name="billingType"
-            className=""
-            rules={[
-              {
-                required: true,
-                message: 'Please choose your billing type!'
-              }
-            ]}
-          >
-            <Select
-              style={{ width: 180 }}
-              options={[
-                { value: 1, label: 'One time use' },
-                { value: 2, label: 'Recurring' }
-              ]}
-            />
-          </Form.Item>
-
-          <SubForm>
-            <Form.Item
-              label="Recurring cycle"
-              extra="How many billing cycles this discount code can be applied on a
-              recurring subscription (0 means no-limit)."
-            >
+          <div className="flex">
+            {/* <div className="w-1/2"> */}
+            <div className="w-full">
+              {/*<div className="mb-6 flex items-center">
+                <Divider
+                  type="vertical"
+                  style={{
+                    backgroundColor: '#1677FF',
+                    width: '3px',
+                    height: '28px'
+                  }}
+                />
+                <div className="text-lg">General configuration</div>
+              </div> */}
+              {!isNew && (
+                <Form.Item label="ID" name="id" hidden>
+                  <Input disabled />
+                </Form.Item>
+              )}
+              <Form.Item label="merchant Id" name="merchantId" hidden>
+                <Input disabled />
+              </Form.Item>
               <Form.Item
-                noStyle
-                name="cycleLimit"
+                label="Name"
+                name="name"
                 rules={[
                   {
-                    required: watchBillingType != 1,
-                    message: 'Please input your cycleLimit!'
+                    required: true,
+                    message: 'Please input your discount code name!'
+                  }
+                ]}
+              >
+                <Input />
+              </Form.Item>
+
+              <Form.Item
+                label="Code"
+                name="code"
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please input your discount code!'
+                  }
+                ]}
+              >
+                <Input disabled={!isNew} />
+              </Form.Item>
+              {!isNew && (
+                <Form.Item label="Status">
+                  {getDiscountCodeStatusTagById(code.status as number)}
+                </Form.Item>
+              )}
+              <Form.Item
+                label="Quantity"
+                name="quantity"
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please input valid quantity'
+                  }
+                ]}
+                extra={'If quantity is 0, it means the quantity is unlimited.'}
+              >
+                {renderedQuantityItems}
+              </Form.Item>
+              <Form.Item
+                label="Discount Type"
+                name="discountType"
+                className="mb-0"
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please choose your discountType type!'
+                  }
+                ]}
+              >
+                <Select
+                  style={{ width: 180 }}
+                  options={[
+                    { value: 1, label: 'Percentage' },
+                    { value: 2, label: 'Fixed amount' }
+                  ]}
+                />
+              </Form.Item>
+              <SubForm>
+                <Form.Item
+                  label="Discount percentage"
+                  name="discountPercentage"
+                  rules={[
+                    {
+                      required: watchDiscountType == 1,
+                      message: 'Please choose your discount percentage!'
+                    },
+                    () => ({
+                      validator(_, value) {
+                        if (watchDiscountType == 2) {
+                          // 2: fixed amount
+                          return Promise.resolve()
+                        }
+                        const num = Number(value)
+                        if (isNaN(num) || num <= 0 || num > 100) {
+                          return Promise.reject(
+                            'Please input a valid percentage number between 0 ~ 100.'
+                          )
+                        }
+                        return Promise.resolve()
+                      }
+                    })
+                  ]}
+                >
+                  <Input
+                    style={{ width: 180 }}
+                    disabled={watchDiscountType == 2 || !formEditable}
+                    suffix="%"
+                  />
+                </Form.Item>
+                <Form.Item
+                  label="Currency"
+                  name="currency"
+                  rules={[
+                    {
+                      required: watchDiscountType != 1,
+                      message: 'Please select your currency!'
+                    }
+                  ]}
+                >
+                  <Select
+                    disabled={watchDiscountType == 1 || !formEditable}
+                    style={{ width: 180 }}
+                    options={[
+                      { value: 'EUR', label: 'EUR' },
+                      { value: 'USD', label: 'USD' },
+                      { value: 'JPY', label: 'JPY' }
+                    ]}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label="Discount Amount"
+                  name="discountAmount"
+                  dependencies={['currency']}
+                  className="mb-0"
+                  rules={[
+                    {
+                      required: watchDiscountType != 1, // 1: percentage, 2: fixed-amt
+                      message: 'Please choose your discount amount!'
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (watchDiscountType == 1) {
+                          return Promise.resolve()
+                        }
+                        const num = Number(value)
+                        if (isNaN(num) || num <= 0) {
+                          return Promise.reject(
+                            'Please input a valid amount (> 0).'
+                          )
+                        }
+                        if (
+                          !currencyDecimalValidate(
+                            num,
+                            getFieldValue('currency')
+                          )
+                        ) {
+                          return Promise.reject('Please input a valid amount')
+                        }
+                        return Promise.resolve()
+                      }
+                    })
+                  ]}
+                >
+                  <Input
+                    style={{ width: 180 }}
+                    prefix={
+                      watchCurrency == null || watchCurrency == ''
+                        ? ''
+                        : CURRENCY[watchCurrency].symbol
+                    }
+                    disabled={watchDiscountType == 1 || !formEditable}
+                  />
+                </Form.Item>
+              </SubForm>
+              <Form.Item
+                label="One-time or recurring"
+                name="billingType"
+                className=""
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please choose your billing type!'
+                  }
+                ]}
+              >
+                <Select
+                  style={{ width: 180 }}
+                  options={[
+                    { value: 1, label: 'One time use' },
+                    { value: 2, label: 'Recurring' }
+                  ]}
+                />
+              </Form.Item>
+              <SubForm>
+                <Form.Item
+                  label="Recurring cycle"
+                  extra="How many billing cycles this discount code can be applied on a
+              recurring subscription (0 means no-limit)."
+                >
+                  <Form.Item
+                    noStyle
+                    name="cycleLimit"
+                    rules={[
+                      {
+                        required: watchBillingType != 1,
+                        message: 'Please input your cycleLimit!'
+                      },
+                      () => ({
+                        validator(_, value) {
+                          const num = Number(value)
+                          if (!Number.isInteger(num)) {
+                            return Promise.reject(
+                              'Please input a valid cycle limit number between 0 ~ 1000.'
+                            )
+                          }
+                          if (isNaN(num) || num < 0 || num > 999) {
+                            return Promise.reject(
+                              'Please input a valid cycle limit number between 0 ~ 1000.'
+                            )
+                          }
+                          return Promise.resolve()
+                        }
+                      })
+                    ]}
+                  >
+                    <Input
+                      style={{ width: 180 }}
+                      disabled={watchBillingType == 1 || !formEditable}
+                    />
+                    {/* 1: one-time use */}
+                  </Form.Item>
+                </Form.Item>
+              </SubForm>
+
+              <Form.Item
+                label="Code Apply Date Range"
+                name="validityRange"
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please choose your validity range!'
                   },
                   () => ({
                     validator(_, value) {
-                      const num = Number(value)
-                      if (!Number.isInteger(num)) {
+                      if (value[0] == null || value[1] == null) {
                         return Promise.reject(
-                          'Please input a valid cycle limit number between 0 ~ 1000.'
+                          'Please select a valid date range.'
                         )
                       }
-                      if (isNaN(num) || num < 0 || num > 999) {
+                      const d = new Date()
+                      const sec = Math.round(d.getTime() / 1000)
+                      if (value[1].unix() < sec) {
                         return Promise.reject(
-                          'Please input a valid cycle limit number between 0 ~ 1000.'
+                          'End date must be greater than now.'
                         )
                       }
                       return Promise.resolve()
@@ -596,77 +659,119 @@ const Index = () => {
                   })
                 ]}
               >
-                <Input
-                  style={{ width: 180 }}
-                  disabled={watchBillingType == 1 || !formEditable}
+                <RangePicker
+                  showTime
+                  disabled={!canActiveItemEdit(code?.status)}
                 />
-                {/* 1: one-time use */}
               </Form.Item>
-            </Form.Item>
-          </SubForm>
-
-          <Form.Item
-            label="Code Apply Date Range"
-            name="validityRange"
-            rules={[
-              {
-                required: true,
-                message: 'Please choose your validity range!'
-              },
-              () => ({
-                validator(_, value) {
-                  if (value[0] == null || value[1] == null) {
-                    return Promise.reject('Please select a valid date range.')
-                  }
-                  const d = new Date()
-                  const sec = Math.round(d.getTime() / 1000)
-                  if (value[1].unix() < sec) {
-                    return Promise.reject('End date must be greater than now.')
-                  }
-                  return Promise.resolve()
-                }
-              })
-            ]}
-          >
-            <RangePicker showTime disabled={!canActiveItemEdit(code?.status)} />
-          </Form.Item>
-
-          <Form.Item
-            label="Apply to which plans"
-            name="planIds"
-            rules={[
-              {
-                required: watchPlanIds != null && watchPlanIds.length > 0
-              },
-              () => ({
-                validator(_, plans) {
-                  if (plans == null || plans.length == 0) {
-                    return Promise.resolve()
-                  }
-                  for (let i = 0; i < plans.length; i++) {
-                    if (planList.findIndex((p) => p.id == plans[i]) == -1) {
-                      return Promise.reject(
-                        `${getPlanLabel(plans[i])} doesn't exist in plan list, please remove it.`
-                      )
+              <Form.Item
+                label="Apply to which plans"
+                name="planIds"
+                rules={[
+                  {
+                    required: watchPlanIds != null && watchPlanIds.length > 0
+                  },
+                  () => ({
+                    validator(_, plans) {
+                      if (plans == null || plans.length == 0) {
+                        return Promise.resolve()
+                      }
+                      for (let i = 0; i < plans.length; i++) {
+                        if (planList.findIndex((p) => p.id == plans[i]) == -1) {
+                          return Promise.reject(
+                            `${getPlanLabel(plans[i])} doesn't exist in plan list, please remove it.`
+                          )
+                        }
+                      }
+                      return Promise.resolve()
                     }
-                  }
-                  return Promise.resolve()
-                }
-              })
-            ]}
-            extra="If no plan is selected, the discount code will be applied to all plans."
-          >
-            <Select
-              mode="multiple"
-              disabled={!canActiveItemEdit(code?.status)}
-              allowClear
-              style={{ width: '100%' }}
-              options={planList.map((p) => ({
-                label: getPlanLabel(p.id),
-                value: p.id
-              }))}
-            />
-          </Form.Item>
+                  })
+                ]}
+                extra="If no plan is selected, the discount code will be applied to all plans."
+              >
+                <Select
+                  mode="multiple"
+                  disabled={!canActiveItemEdit(code?.status)}
+                  allowClear
+                  style={{ width: '100%' }}
+                  options={planList.map((p) => ({
+                    label: getPlanLabel(p.id),
+                    value: p.id
+                  }))}
+                />
+              </Form.Item>
+            </div>
+            {/* <div className="w-1/2 pl-10">
+              <div className="mb-6 flex items-center">
+                <Divider
+                  type="vertical"
+                  style={{
+                    backgroundColor: '#1677FF',
+                    width: '3px',
+                    height: '28px'
+                  }}
+                />
+                <div className="text-lg">Advanced configuration</div>
+              </div>
+              <Row
+                className="border-1 mb-3 flex h-16 items-center rounded-lg border-solid border-gray-300 bg-gray-100"
+                gutter={[8, 8]}
+              >
+                <Col span={20}>
+                  <div className="ml-2">
+                    Enable advanced configuration with one click
+                  </div>
+                </Col>
+                <Col span={4} style={{ textAlign: 'right' }}>
+                  {' '}
+                  <Form.Item name="advance" noStyle={true}>
+                    <Switch />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <div className="mb-2 mt-6">Discount Code Applicable Scope</div>
+              <Form.Item name="userScope">
+                <Radio.Group disabled={!watchAdvancedConfig}>
+                  <Space direction="vertical">
+                    <Radio value={0}>Apply for all</Radio>
+                    <Radio value={1}>Apply only for new users </Radio>
+                    <Radio value={2}>Apply only for renewals</Radio>
+                  </Space>
+                </Radio.Group>
+              </Form.Item>
+              <Divider style={{ margin: '4px 0' }} />{' '}
+              <Row>
+                <Col span={20}>Apply only for upgrades.</Col>
+                <Col span={4} style={{ textAlign: 'right' }}>
+                  <Form.Item name="upgradeOnly">
+                    <Switch disabled={!watchAdvancedConfig} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Divider style={{ margin: '4px 0' }} />{' '}
+              <Row>
+                <Col span={20}>
+                  Apply only for switching to longer subscriptions.
+                </Col>
+                <Col span={4} style={{ textAlign: 'right' }}>
+                  <Form.Item name="upgradeLongerOnly">
+                    <Switch disabled={!watchAdvancedConfig} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Divider style={{ margin: '4px 0' }} />{' '}
+              <Row>
+                <Col span={20}>
+                  Same user cannot use the same discount code again.
+                </Col>
+                <Col span={4} style={{ textAlign: 'right' }}>
+                  <Form.Item name="userLimit">
+                    <Switch disabled={!watchAdvancedConfig} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </div> */}
+          </div>
         </Form>
       )}
       <div className={`flex ${isNew ? 'justify-end' : 'justify-between'}`}>

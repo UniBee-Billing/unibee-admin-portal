@@ -8,6 +8,7 @@ import InvoiceTab from '../subscription/invoicesTab'
 import TransactionTab from '../subscription/paymentTab'
 import UserAccountTab from '../subscription/userAccountTab'
 import ProductList from './productList'
+import PromoCredit from './promoCreditTab'
 import UserNote from './userNote'
 
 const GoBackBtn = () => {
@@ -16,7 +17,13 @@ const GoBackBtn = () => {
   return <Button onClick={goBack}>Go back</Button>
 }
 
-const TAB_KEYS = ['account', 'subscription', 'invoice', 'transaction']
+const TAB_KEYS = [
+  'account',
+  'subscription',
+  'promoCredits',
+  'invoice',
+  'transaction'
+]
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -80,11 +87,19 @@ const Index = () => {
           userId={userId} // setRefreshSub fn is triggered by the above <UserAccountTab /> which will pass this fn to <SuspendModal />
           userProfile={userProfile}
           refreshSub={refreshSub}
+          refreshUserProfile={fetchUserProfile}
         />
       )
     },
     {
       key: TAB_KEYS[2],
+      label: 'Promo Credits',
+      children: (
+        <PromoCredit userDetail={userProfile} refreshUser={fetchUserProfile} />
+      )
+    },
+    {
+      key: TAB_KEYS[3],
       label: 'Invoices',
       children: (
         <InvoiceTab
@@ -96,7 +111,7 @@ const Index = () => {
       )
     },
     {
-      key: TAB_KEYS[3],
+      key: TAB_KEYS[4],
       label: 'Transactions',
       children: (
         <TransactionTab

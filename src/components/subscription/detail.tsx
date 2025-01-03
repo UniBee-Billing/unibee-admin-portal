@@ -40,9 +40,9 @@ const Index = () => {
     {
       key: 'subscription',
       label: 'Subscription',
-      // children: <SubscriptionList />
       children: (
         <SubscriptionTab
+          userProfile={userProfile}
           setUserId={setUserId}
           setRefreshSub={setRefreshSub}
           refreshSub={refreshSub} // in its useEffect, if (refreshSub == true), do the refresh by fetching the subDetail, then setRefreshSub(false)
@@ -117,7 +117,7 @@ const Index = () => {
         />
         <div className="mt-4 flex items-center justify-center">
           <Button onClick={() => navigate(`/subscription/list`)}>
-            Go Back
+            Go Back to Subscription List
           </Button>
         </div>
       </div>

@@ -19,9 +19,10 @@ const Index = ({ coupon }: { coupon?: DiscountCode }) => {
   return (
     <Popover
       placement="top"
-      title="Coupon code detail"
+      overlayStyle={{ width: '360px' }}
+      title="Discount code detail"
       content={
-        <div style={{ width: '280px' }}>
+        <div>
           <Row>
             <Col span={10} className="font-bold text-gray-800">
               Code

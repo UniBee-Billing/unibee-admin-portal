@@ -1,4 +1,4 @@
-import { CopyOutlined, LoadingOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -16,8 +16,8 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
 import { METRICS_AGGREGATE_TYPE } from '../../constants'
-import { useCopyContent } from '../../hooks'
 import { getMetricDetailReq, saveMetricsReq } from '../../requests'
+import CopyToClipboard from '../ui/copyToClipboard'
 const { TextArea } = Input
 
 SyntaxHighlighter.registerLanguage('bash', bash)
@@ -85,15 +85,6 @@ const Index = () => {
       return
     }
     form.setFieldsValue(merchantMetric)
-  }
-
-  const copyContent = async () => {
-    const err = await useCopyContent(curlCmd)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('Copied')
   }
 
   const getPropsArg = () =>
@@ -283,9 +274,10 @@ const Index = () => {
 ${watchAggreType == 1 ? '' : '# __PROPERTY_VALUE__'}`}
           </SyntaxHighlighter>
           <div className="absolute bottom-6 flex w-full justify-center">
-            <Button type="link" onClick={copyContent} icon={<CopyOutlined />}>
+            <CopyToClipboard content={curlCmd} />
+            {/* <Button type="link" onClick={copyContent} icon={<CopyOutlined />}>
               Copy to clipboard
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

@@ -32,10 +32,16 @@ import {
   terminateSubReq
 } from '../../requests'
 import '../../shared.css'
-import { IPlan, ISubAddon, ISubscriptionType } from '../../shared.types'
+import {
+  IPlan,
+  IProfile,
+  ISubAddon,
+  ISubscriptionType
+} from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
+import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
-import { SubscriptionStatus } from '../ui/statusTag'
+import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'
 import ChangePlanModal from './modals/changePlan'
 import ChangeSubStatusModal from './modals/changeSubStatus'
@@ -45,10 +51,12 @@ import TerminateSubModal from './modals/terminateSub'
 import UpdateSubPreviewModal from './modals/updateSubPreview'
 
 const Index = ({
+  userProfile,
   setUserId,
   setRefreshSub,
   refreshSub
 }: {
+  userProfile: IProfile | undefined
   setUserId: (userId: number) => void
   setRefreshSub: React.Dispatch<React.SetStateAction<boolean>>
   refreshSub: boolean
@@ -62,6 +70,8 @@ const Index = ({
   const onCodeChange: React.ChangeEventHandler<HTMLInputElement> = (evt) => {
     setDiscountCode(evt.target.value)
   }
+  const [creditAmt, setCreditAmt] = useState<null | number>(null)
+
   const [changePlanModal, setChangePlanModal] = useState(false)
   const [cancelSubModalOpen, setCancelSubModalOpen] = useState(false) // newly created sub has status == pending if user hasn't paid yet, user(or admin) can cancel this sub.
   const [changeSubStatusModal, setChangeSubStatusModal] = useState(false) // admin can mark subStatus from pending to incomplete
@@ -493,12 +503,15 @@ const Index = ({
       />
       {changePlanModal && (
         <ChangePlanModal
+          userProfile={userProfile}
           subInfo={activeSub}
           selectedPlanId={selectedPlan}
           plans={plans}
           setSelectedPlan={setSelectedPlan}
           discountCode={discountCode}
           onCodeChange={onCodeChange}
+          creditAmt={creditAmt}
+          setCreditAmt={setCreditAmt}
           onAddonChange={onAddonChange}
           onCancel={toggleChangPlanModal}
           onConfirm={openPreviewModal}
@@ -506,6 +519,7 @@ const Index = ({
       )}
       {previewModalOpen && (
         <UpdateSubPreviewModal
+          creditAmt={creditAmt}
           discountCode={discountCode}
           subscriptionId={activeSub?.subscriptionId}
           newPlanId={selectedPlan as number}
@@ -576,6 +590,12 @@ const SubscriptionInfoSection = ({
   const navigate = useNavigate()
   const appConfigStore = useAppConfigStore()
   const goToPlan = (planId: number) => navigate(`/plan/${planId}`)
+  const goToInvoiceDetail = (invoiceId: string | undefined) => {
+    if (invoiceId == undefined) {
+      return
+    }
+    navigate(`/invoice/${invoiceId}`)
+  }
 
   return (
     <>
@@ -642,11 +662,62 @@ const SubscriptionInfoSection = ({
             showAmount(subInfo?.plan?.amount, subInfo?.plan?.currency)}
         </Col>
         <Col span={4} style={colStyle}>
-          Addons Price
+          Total Amount
+        </Col>
+        <Col span={6}>
+          {subInfo?.amount && showAmount(subInfo.amount, subInfo.currency)}
+          {subInfo && subInfo.taxPercentage && subInfo.taxPercentage != 0 ? (
+            <span className="text-xs text-gray-500">
+              {` (${subInfo.taxPercentage / 100}% tax incl)`}
+            </span>
+          ) : null}
+        </Col>
+      </Row>
+      <Row style={rowStyle}>
+        <Col span={4} style={colStyle}>
+          Promo Credits
+        </Col>
+        <Col span={6}>
+          {subInfo?.latestInvoice &&
+          subInfo.latestInvoice.promoCreditDiscountAmount > 0 ? (
+            `${Math.abs(
+              subInfo.latestInvoice.promoCreditTransaction?.deltaAmount ?? 0
+            )}(${showAmount(
+              subInfo?.latestInvoice?.promoCreditDiscountAmount,
+              subInfo.currency
+            )})`
+          ) : (
+            <MinusOutlined />
+          )}
+        </Col>
+        <Col span={4} style={colStyle}>
+          Discount Amount
         </Col>
         <Col span={6}>
           {subInfo &&
-            subInfo.addons &&
+          subInfo.latestInvoice &&
+          subInfo.latestInvoice.discountAmount > 0 ? (
+            <span>
+              {' '}
+              {showAmount(
+                subInfo.latestInvoice.discountAmount as number,
+                subInfo.latestInvoice.currency
+              )}{' '}
+              {subInfo.latestInvoice.discount && (
+                <CouponPopover coupon={subInfo.latestInvoice.discount} />
+              )}{' '}
+            </span>
+          ) : (
+            <MinusOutlined />
+          )}
+        </Col>
+      </Row>
+      <Row style={rowStyle}>
+        <Col span={4} style={colStyle}>
+          Addons Price
+        </Col>
+        <Col span={6}>
+          {subInfo && subInfo.addons ? (
             showAmount(
               subInfo!.addons!.reduce(
                 (
@@ -656,7 +727,10 @@ const SubscriptionInfoSection = ({
                 0
               ),
               subInfo!.currency
-            )}
+            )
+          ) : (
+            <MinusOutlined />
+          )}
 
           {subInfo && subInfo.addons && subInfo.addons.length > 0 && (
             <Popover
@@ -684,35 +758,27 @@ const SubscriptionInfoSection = ({
             </Popover>
           )}
         </Col>
-      </Row>
-      <Row style={rowStyle}>
         <Col span={4} style={colStyle}>
-          Discount Amount
+          Latest Invoice Id
         </Col>
-        <Col span={6}>
-          {subInfo &&
-            subInfo.latestInvoice &&
-            showAmount(
-              subInfo.latestInvoice.discountAmount as number,
-              subInfo.latestInvoice.currency
-            )}
-          {subInfo &&
-            subInfo.latestInvoice &&
-            subInfo.latestInvoice.discount && (
-              <CouponPopover coupon={subInfo.latestInvoice.discount} />
-            )}
-        </Col>
-
-        <Col span={4} style={colStyle}>
-          Total Amount
-        </Col>
-        <Col span={6}>
-          {subInfo?.amount && showAmount(subInfo.amount, subInfo.currency)}
-          {subInfo && subInfo.taxPercentage && subInfo.taxPercentage != 0 ? (
-            <span className="text-xs text-gray-500">
-              {` (${subInfo.taxPercentage / 100}% tax incl)`}
-            </span>
-          ) : null}
+        <Col span={10}>
+          {subInfo?.latestInvoice == undefined ? (
+            <MinusOutlined />
+          ) : (
+            <div className="flex items-center">
+              <Button
+                style={{ padding: 0 }}
+                type="link"
+                onClick={() =>
+                  goToInvoiceDetail(subInfo.latestInvoice?.invoiceId)
+                }
+              >
+                {subInfo.latestInvoice.invoiceId}
+              </Button>
+              <CopyToClipboard content={subInfo.latestInvoice.invoiceId} />
+              {InvoiceStatus(subInfo.latestInvoice.status)}{' '}
+            </div>
+          )}
         </Col>
       </Row>
       <Row style={rowStyle}>

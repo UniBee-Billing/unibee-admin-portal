@@ -4,6 +4,7 @@ import ActivityLogs from './components/activityLogs'
 import Analytics from './components/analytics'
 import BillableMetricsDetail from './components/billableMetrics/detail'
 import BillableMetricsList from './components/billableMetrics/list'
+import PromoCredits from './components/credit'
 import DiscountCodeDetail from './components/discountCode/detail'
 import { DiscountCodeList } from './components/discountCode/list'
 import DiscountCodeUsage from './components/discountCode/usageDetail'
@@ -187,6 +188,11 @@ export const APP_ROUTES: RouteObject[] = [
         element: <PaymentDetail />
       }
     ]
+  },
+  {
+    id: 'promo-credit',
+    path: 'promo-credit',
+    element: <PromoCredits />
   },
   {
     id: 'activity-logs',

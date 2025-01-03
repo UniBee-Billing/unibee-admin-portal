@@ -1,9 +1,17 @@
-import { Button, Divider, Form, Input, message, Modal, Switch } from 'antd'
+import {
+  Button,
+  Divider,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Switch
+} from 'antd'
 import update from 'immutability-helper'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { CURRENCY } from '../../../constants'
 import { showAmount } from '../../../helpers'
 import { useLoading } from '../../../hooks'
-// import { PublishStatus } from '../../../hooks/usePlans'
 import {
   BusinessUserData,
   createSubscriptionReq,
@@ -12,19 +20,18 @@ import {
 import { request, Response } from '../../../requests/client'
 import {
   AccountType,
+  DiscountType,
   IPlan,
   IProfile,
+  TPromoAccount,
   WithDoubleConfirmFields
 } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
-import { isEmpty, useDebouncedCallbackWithDefault } from '../../../utils'
+import { isEmpty } from '../../../utils'
 import Plan from '../../subscription/plan'
 import PaymentMethodSelector from '../../ui/paymentSelector'
 import { AccountTypeForm, AccountTypeFormInstance } from './accountTypeForm'
-import {
-  BusinessAccountValues,
-  getValidStatusByMessage
-} from './businessAccountForm'
+import { BusinessAccountValues } from './businessAccountForm'
 import { CheckoutItem } from './checkoutItem'
 import { InfoItem } from './infoItem'
 import { PersonalAccountValues } from './personalAccountForm'
@@ -34,7 +41,8 @@ import { UserInfoCard } from './userInfoCard'
 interface Props {
   user: IProfile
   productId: number
-  refresh: () => void
+  refresh: () => void // after assigning a sub to a user, we need to refresh subscription detail in parent
+  refreshUserProfile: () => void // if credit is used, we need to refresh user profile in grand-grand parent
   closeModal: () => void
 }
 
@@ -55,6 +63,8 @@ interface CreateSubScriptionBody {
   vatNumber: string | undefined
   discountCode: string | undefined
   addonParams?: TSelectedAddon[]
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
 }
 
 type VATNumberValidateResult = {
@@ -63,26 +73,32 @@ type VATNumberValidateResult = {
 
 interface InvoicePreviewData {
   taxAmount: number
+  currency: string
   subscriptionAmountExcludingTax: number
   discountAmount: number
-}
-
-enum DiscountType {
-  PERCENTAGE = 1,
-  AMOUNT
+  promoCreditDiscountAmount: number
+  promoCreditPayout?: {
+    creditAmount: number
+    currencyAmount: number
+    exchangeRate: number
+  }
+  promoCreditAccount?: TPromoAccount
 }
 
 interface DiscountData {
   discountAmount: number
   discountPercentage: number
   discountType: DiscountType
+  currency: string
 }
 
 export interface PreviewData {
+  currency: string
   taxPercentage: number
   totalAmount: number
   originAmount: number
   discountMessage: string
+  discountAmount: number
   vatNumberValidate: VATNumberValidateResult
   vatNumberValidateMessage: string
   invoice: InvoicePreviewData
@@ -98,7 +114,8 @@ export const AssignSubscriptionModal = ({
   user,
   productId,
   closeModal,
-  refresh
+  refresh,
+  refreshUserProfile
 }: Props) => {
   const appConfig = useAppConfigStore()
   const accountTypeFormRef = useRef<AccountTypeFormInstance>(null)
@@ -109,13 +126,11 @@ export const AssignSubscriptionModal = ({
   )
   const [selectedPlan, setSelectedPlan] = useState<IPlan | undefined>()
   const [requirePayment, setRequirePayment] = useState(true)
-  // const [includeUnpublishedPlan, setIncludeUnpublishedPlan] = useState(false)
-  // const [applyPromo, setApplyPromo] = useState(false)
-  // const onApplyPromoChange = () => setApplyPromo(!applyPromo)
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
   const accountFormValues = useRef<AccountValues | undefined>()
+  const [creditAmt, setCreditAmt] = useState<null | number>(null)
 
   const onAddonChange = (
     addonId: number,
@@ -159,95 +174,82 @@ export const AssignSubscriptionModal = ({
   )
 
   const formattedDiscountValue = useMemo(() => {
-    const discount = previewData?.discount
-
-    if (!discount) {
-      return
+    if (previewData == null) {
+      return undefined
     }
 
-    return discount.discountType === DiscountType.PERCENTAGE
-      ? `${discount.discountPercentage / 100}%`
-      : showAmount(discount.discountAmount, selectedPlan?.currency)
+    return showAmount(-1 * previewData.discountAmount, previewData.currency)
   }, [selectedPlan, previewData])
 
   const formattedDiscountLabel = useMemo(
     () =>
       previewData?.discount?.discountType === DiscountType.PERCENTAGE
-        ? 'Discounted percentage'
-        : 'Discounted amount',
+        ? `Discounted Amount(${previewData.discount.discountPercentage / 100}%)`
+        : 'Discounted Amount',
     [previewData]
   )
 
-  const getSubmitData = useCallback(
-    (values?: AccountValues) => {
-      const {
-        country,
-        address,
-        companyName,
-        vat,
-        postalCode,
-        registrationNumber,
-        city
-      } = values ?? {}
+  const getSubmitData = (values?: AccountValues) => {
+    const {
+      country,
+      address,
+      companyName,
+      vat,
+      postalCode,
+      registrationNumber,
+      city
+    } = values ?? {}
 
-      const personalUserData = {
-        email: user.email,
-        countryCode: country,
-        type: accountType
+    const personalUserData = {
+      email: user.email,
+      countryCode: country,
+      type: accountType
+    }
+    const userData =
+      accountType === AccountType.PERSONAL
+        ? personalUserData
+        : {
+            ...personalUserData,
+            address,
+            companyName,
+            zipCode: postalCode,
+            vatNumber: vat,
+            registrationNumber,
+            city
+          }
+
+    const submitData = {
+      planId: selectedPlan?.id,
+      gatewayId: gatewayId,
+      userId: user.id!,
+      startIncomplete: false,
+      user: userData,
+      vatNumber: vat,
+      vatCountryCode: country,
+      discountCode: discountCode,
+      addonParams: [] as TSelectedAddon[],
+      applyPromoCredit: creditAmt != null && creditAmt > 0,
+      applyPromoCreditAmount: creditAmt
+    }
+    if (selectedPlan?.addons != null && selectedPlan.addons.length > 0) {
+      submitData.addonParams = selectedPlan.addons
+        .filter((a) => a.checked)
+        .map((a) => ({ quantity: a.quantity as number, addonPlanId: a.id }))
+    }
+
+    if (!requirePayment) {
+      const fiveYearFromNow = new Date(
+        new Date().setFullYear(new Date().getFullYear() + 5)
+      )
+
+      return {
+        ...submitData,
+        trialEnd: Math.round(fiveYearFromNow.getTime() / 1000)
       }
-      const userData =
-        accountType === AccountType.PERSONAL
-          ? personalUserData
-          : {
-              ...personalUserData,
-              address,
-              companyName,
-              zipCode: postalCode,
-              vatNumber: vat,
-              registrationNumber,
-              city
-            }
+    }
 
-      const submitData = {
-        planId: selectedPlan?.id,
-        gatewayId: gatewayId,
-        userId: user.id!,
-        startIncomplete: false,
-        user: userData,
-        vatNumber: vat,
-        vatCountryCode: country,
-        discountCode: discountCode,
-        addonParams: [] as TSelectedAddon[]
-      }
-      if (selectedPlan?.addons != null && selectedPlan.addons.length > 0) {
-        submitData.addonParams = selectedPlan.addons
-          .filter((a) => a.checked)
-          .map((a) => ({ quantity: a.quantity as number, addonPlanId: a.id }))
-      }
-
-      if (!requirePayment) {
-        const fiveYearFromNow = new Date(
-          new Date().setFullYear(new Date().getFullYear() + 5)
-        )
-
-        return {
-          ...submitData,
-          trialEnd: Math.round(fiveYearFromNow.getTime() / 1000)
-        }
-      }
-
-      return { ...submitData, startIncomplete: true }
-    },
-    [
-      selectedPlan,
-      gatewayId,
-      user,
-      accountType,
-      discountCode,
-      user,
-      requirePayment
-    ]
-  )
+    return { ...submitData, startIncomplete: true }
+  }
 
   const onSubmit = async () => {
     const values = await accountTypeFormRef.current?.submit()
@@ -278,7 +280,9 @@ export const AssignSubscriptionModal = ({
     const body = {
       ...submitData,
       confirmTotalAmount: previewData?.totalAmount,
-      confirmCurrency: selectedPlan?.currency
+      confirmCurrency: selectedPlan?.currency,
+      applyPromoCredit: creditAmt != null && creditAmt > 0,
+      applyPromoCreditAmount: creditAmt
     } as WithDoubleConfirmFields<CreateSubScriptionBody>
     if (selectedPlan.addons != undefined && selectedPlan.addons.length > 0) {
       body.addonParams = selectedPlan.addons
@@ -300,12 +304,23 @@ export const AssignSubscriptionModal = ({
     message.success('Subscription created')
     closeModal()
     refresh()
+    if (creditAmt != null && creditAmt != 0) {
+      // even creditAmt is > 0, it's not necessarily used, discountCode might cover the whole payment
+      refreshUserProfile() // but to make things simple, just refresh it.
+    }
   }
 
-  const updatePrice = useCallback(async () => {
+  const updatePrice = async () => {
+    if (selectedPlan == null) {
+      message.error('Please choose a plan')
+      return
+    }
+    if (gatewayId == null) {
+      message.error('Please choose a payment method')
+      return
+    }
     const [data, err] = await withLoading(async () => {
       const submitData = getSubmitData(accountFormValues.current)
-
       return request.post<Response<PreviewData>>(
         '/merchant/subscription/create_preview',
         submitData
@@ -320,11 +335,92 @@ export const AssignSubscriptionModal = ({
     const previewData = data?.data?.data
 
     setPreviewData(previewData)
-  }, [getSubmitData])
+  }
+  // }, [getSubmitData])
 
-  const debouncedUpdateDiscountCode = useDebouncedCallbackWithDefault(
-    (value: string) => setDiscountCode(value)
-  )
+  const getCreditInfo = () => {
+    if (user == undefined || user.promoCreditAccounts == undefined) {
+      return null
+    }
+    const credit: TPromoAccount | undefined = user.promoCreditAccounts?.find(
+      (c) => c.currency == 'EUR'
+    )
+    if (credit == undefined) {
+      return { credit: null, note: 'No credit available' }
+    }
+    return {
+      credit: {
+        amount: credit.amount,
+        currencyAmount: credit.currencyAmount / 100,
+        currency: credit.currency,
+        exchangeRate: credit.exchangeRate
+      },
+      note: `Credits available: ${credit.amount} (${showAmount(credit.currencyAmount, credit.currency)})`
+    }
+  }
+
+  const creditUseNote = () => {
+    const credit = getCreditInfo()
+    if (credit?.credit == null) {
+      return null
+    }
+    if (creditAmt == 0 || creditAmt == null) {
+      return <div className="text-xs text-gray-500">No promo credit used</div>
+    }
+    if (creditAmt) {
+      return (
+        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
+      )
+    }
+  }
+
+  const discountCodeUseNote = () => {
+    if (
+      previewData == null ||
+      (previewData.discount == null && previewData.discountMessage == '')
+    ) {
+      return <div className="text-xs text-gray-500">No discount code used</div>
+    }
+    // discountMessage is discount related error message
+    if (previewData.discount == null && previewData.discountMessage != '') {
+      // invalid discount code or other error
+      return (
+        <div className="text-xs text-red-500">
+          {previewData.discountMessage}
+        </div>
+      )
+    }
+    if (previewData.discount != null) {
+      if (previewData.discount.discountType == DiscountType.PERCENTAGE) {
+        return (
+          <div className="text-xs text-green-500">{`
+            Discount code is valid(${previewData.discount.discountPercentage / 100}% off).
+            `}</div>
+        )
+      } else {
+        return (
+          <div className="text-xs text-green-500">
+            {`Discount code is valid(${showAmount(
+              previewData.discount.discountAmount,
+              previewData.discount.currency
+            )} off).`}
+          </div>
+        )
+      }
+    }
+    return null
+  }
+
+  const onApplyPromoCredit = () => {
+    if (creditAmt != null && creditAmt <= 0) {
+      message.error('Please enter a valid amount')
+      return
+    }
+    updatePrice()
+  }
+  const onApplyDiscountCode = () => {
+    updatePrice()
+  }
 
   useEffect(() => {
     if (!selectedPlan) {
@@ -332,7 +428,7 @@ export const AssignSubscriptionModal = ({
     }
 
     updatePrice()
-  }, [selectedPlan, updatePrice])
+  }, [selectedPlan])
 
   return (
     <Modal
@@ -340,10 +436,11 @@ export const AssignSubscriptionModal = ({
       open={true}
       width={'720px'}
       footer={[
-        <Button onClick={closeModal} disabled={loading}>
+        <Button key="cancel" onClick={closeModal} disabled={loading}>
           Cancel
         </Button>,
         <Button
+          key="ok"
           type="primary"
           onClick={onSubmit}
           loading={loading}
@@ -359,9 +456,7 @@ export const AssignSubscriptionModal = ({
         <Divider orientation="left" style={{ margin: '16px 0' }} />
         <div className="flex gap-8">
           <div className="w-1/2">
-            <div className="mb-2 text-lg font-bold text-gray-600">
-              Choose plan
-            </div>
+            <div className="mb-2 text-lg text-gray-800">Choose plan</div>
             <PlanSelector
               onPlanSelected={setSelectedPlan}
               productId={productId}
@@ -374,6 +469,7 @@ export const AssignSubscriptionModal = ({
               <div className="mt-4 flex justify-center">
                 <Plan
                   plan={selectedPlan}
+                  width="280px"
                   selectedPlan={selectedPlan.id}
                   isThumbnail
                   isActive={false}
@@ -405,58 +501,47 @@ export const AssignSubscriptionModal = ({
           </div>
 
           <div className="w-1/2">
-            <div className="mb-2 text-lg font-bold text-gray-600">Payment</div>
+            <div className="text-lg text-gray-800">Payment</div>
+            <div className="my-4">
+              <InfoItem title="Require payment" horizontal isBold={false}>
+                <Switch
+                  value={requirePayment}
+                  onChange={(switched) => setRequirePayment(switched)}
+                />
+              </InfoItem>
+            </div>
             <div className="mr-16 w-full flex-1">
               <PaymentMethodSelector
                 selected={gatewayId}
                 onSelect={setGatewayId}
-                disabled={isLoading}
+                disabled={isLoading || !requirePayment}
               />
             </div>
 
             <div className="mt-4 flex-1">
-              <InfoItem title="Discount code">
-                <Form.Item
-                  validateStatus={getValidStatusByMessage(
-                    previewData?.discountMessage
-                  )}
-                  help={previewData?.discountMessage}
-                >
-                  <Input
-                    onChange={(e) =>
-                      debouncedUpdateDiscountCode(e.target.value)
-                    }
-                    placeholder="Discount code"
-                  />
-                </Form.Item>
-              </InfoItem>
-
-              <div className="mt-1">
-                <InfoItem title="Require payment" horizontal isBold={false}>
-                  <Switch
-                    value={requirePayment}
-                    onChange={(switched) => setRequirePayment(switched)}
-                  />
-                </InfoItem>
+              <div className="mb-1 mt-2 text-gray-700">Promo Credit</div>
+              <div className="mb-1 flex justify-between">
+                <InputNumber
+                  placeholder={getCreditInfo()?.note}
+                  min={1}
+                  style={{ width: 240 }}
+                  value={creditAmt}
+                  onChange={(value) => setCreditAmt(value)}
+                />
+                <Button onClick={onApplyPromoCredit}>Apply</Button>
               </div>
-              {/* <div className="mt-2">
-                <div className="flex justify-between">
-                  <div>Apply promo credits</div>
-                  <div>
-                    <Switch value={applyPromo} onChange={onApplyPromoChange} />
-                  </div>
-                </div>
-              </div>
+              {creditUseNote()}
 
-              {applyPromo && (
-                <div className="mt-2">
-                  <div className="flex justify-between">
-                    <Input style={{ width: 240 }} />
-                    <div></div>
-                  </div>
-                </div>
-              )}
-                */}
+              <div className="mb-1 mt-4 text-gray-700">Discount Code</div>
+              <div className="mb-1 flex justify-between">
+                <Input
+                  style={{ width: 240 }}
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                />
+                <Button onClick={onApplyDiscountCode}>Apply</Button>
+              </div>
+              {discountCodeUseNote()}
 
               <div className="my-8 h-[1px] w-full bg-gray-100"></div>
               <CheckoutItem
@@ -466,6 +551,23 @@ export const AssignSubscriptionModal = ({
                   previewData?.invoice.subscriptionAmountExcludingTax
                 )}
               />
+              {previewData != undefined &&
+                previewData.invoice.promoCreditDiscountAmount != 0 && (
+                  <CheckoutItem
+                    label={`Credit used(${previewData.invoice.promoCreditPayout?.creditAmount})`}
+                    loading={isLoading}
+                    value={showAmount(
+                      -1 * previewData.invoice.promoCreditDiscountAmount,
+                      previewData.invoice.currency
+                    )}
+                  />
+                )}
+              <CheckoutItem
+                label={formattedDiscountLabel}
+                loading={isLoading}
+                value={formattedDiscountValue}
+              />
+
               {selectedPlan && (
                 <CheckoutItem
                   loading={isLoading}
@@ -473,11 +575,6 @@ export const AssignSubscriptionModal = ({
                   value={formatAmount(previewData?.invoice.taxAmount)}
                 />
               )}
-              <CheckoutItem
-                label={formattedDiscountLabel}
-                loading={isLoading}
-                value={formattedDiscountValue}
-              />
               {selectedPlan && (
                 <div className="my-8 h-[1px] w-full bg-gray-100"></div>
               )}

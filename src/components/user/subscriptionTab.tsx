@@ -1,6 +1,7 @@
 import {
   InfoCircleOutlined,
   LoadingOutlined,
+  MinusOutlined,
   SyncOutlined
 } from '@ant-design/icons'
 import { Button, Col, Empty, Popover, Row, Spin, Tooltip, message } from 'antd'
@@ -10,7 +11,9 @@ import { useNavigate } from 'react-router-dom'
 import { normalizeSub, showAmount } from '../../helpers'
 import { getSubDetailInProductReq } from '../../requests'
 import { IProfile, ISubscriptionType } from '../../shared.types'
-import { SubscriptionStatus } from '../ui/statusTag'
+import CopyToClipboard from '../ui/copyToClipboard'
+import CouponPopover from '../ui/couponPopover'
+import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
 import { AssignSubscriptionModal } from './assignSub/assignSubModal'
 
 const rowStyle: CSSProperties = {
@@ -26,12 +29,14 @@ const Index = ({
   userProfile,
   productId,
   refreshSub,
+  refreshUserProfile,
   extraButton
 }: {
   userId: number
   userProfile: IProfile | undefined
   productId: number
   refreshSub: boolean
+  refreshUserProfile: () => void
   extraButton?: ReactElement
 }) => {
   const [loading, setLoading] = useState(false)
@@ -73,6 +78,13 @@ const Index = ({
     }
   }, [refreshSub])
 
+  const goToInvoiceDetail = (invoiceId: string | undefined) => {
+    if (invoiceId == undefined) {
+      return
+    }
+    navigate(`/invoice/${invoiceId}`)
+  }
+
   return (
     <div>
       {assignSubModalOpen && userProfile != null && (
@@ -81,6 +93,7 @@ const Index = ({
           productId={productId}
           closeModal={toggleAssignSub}
           refresh={getSubInProduct}
+          refreshUserProfile={refreshUserProfile}
         />
       )}
       <Spin
@@ -141,12 +154,67 @@ const Index = ({
                 {subInfo?.plan?.amount &&
                   showAmount(subInfo?.plan?.amount, subInfo?.plan?.currency)}
               </Col>
+
+              <Col span={4} style={colStyle}>
+                Total Amount
+              </Col>
+              <Col span={6}>
+                {subInfo?.amount &&
+                  showAmount(subInfo.amount, subInfo.currency)}
+                {subInfo &&
+                subInfo.taxPercentage &&
+                subInfo.taxPercentage != 0 ? (
+                  <span className="text-xs text-gray-500">
+                    {` (${subInfo.taxPercentage / 100}% tax incl)`}
+                  </span>
+                ) : null}
+              </Col>
+            </Row>
+
+            <Row style={rowStyle}>
+              <Col span={4} style={colStyle}>
+                Promo Credits
+              </Col>
+              <Col span={6}>
+                {subInfo.latestInvoice &&
+                subInfo.latestInvoice.promoCreditDiscountAmount > 0 ? (
+                  `${Math.abs(
+                    subInfo.latestInvoice.promoCreditTransaction?.deltaAmount ??
+                      0
+                  )}(${showAmount(
+                    subInfo?.latestInvoice?.promoCreditDiscountAmount,
+                    subInfo.currency
+                  )})`
+                ) : (
+                  <MinusOutlined />
+                )}
+              </Col>
+
+              <Col span={4} style={colStyle}>
+                Discount Amount
+              </Col>
+              <Col span={6}>
+                {subInfo?.latestInvoice?.discountAmount != undefined &&
+                subInfo?.latestInvoice?.discountAmount > 0 ? (
+                  <span>
+                    {showAmount(
+                      subInfo?.latestInvoice?.discountAmount,
+                      subInfo.currency
+                    )}{' '}
+                    <CouponPopover coupon={subInfo.latestInvoice.discount} />{' '}
+                  </span>
+                ) : (
+                  <MinusOutlined />
+                )}
+              </Col>
+            </Row>
+
+            <Row style={rowStyle}>
               <Col span={4} style={colStyle}>
                 Addons Price
               </Col>
               <Col span={6}>
-                {subInfo &&
-                  subInfo.addons &&
+                {subInfo && subInfo.addons ? (
                   showAmount(
                     subInfo!.addons!.reduce(
                       (
@@ -159,7 +227,10 @@ const Index = ({
                       0
                     ),
                     subInfo!.currency
-                  )}
+                  )
+                ) : (
+                  <MinusOutlined />
+                )}
 
                 {subInfo.addons && subInfo.addons.length > 0 && (
                   <Popover
@@ -185,23 +256,33 @@ const Index = ({
                   </Popover>
                 )}
               </Col>
+
+              <Col span={4} style={colStyle}>
+                Latest Invoice Id
+              </Col>
+              <Col span={10}>
+                {subInfo?.latestInvoice == undefined ? (
+                  <MinusOutlined />
+                ) : (
+                  <div className="flex items-center">
+                    <Button
+                      style={{ padding: 0 }}
+                      type="link"
+                      onClick={() =>
+                        goToInvoiceDetail(subInfo.latestInvoice?.invoiceId)
+                      }
+                    >
+                      {subInfo.latestInvoice.invoiceId}
+                    </Button>
+                    <CopyToClipboard
+                      content={subInfo.latestInvoice.invoiceId}
+                    />
+                    {InvoiceStatus(subInfo.latestInvoice.status)}{' '}
+                  </div>
+                )}
+              </Col>
             </Row>
             <Row style={rowStyle}>
-              <Col span={4} style={colStyle}>
-                Total Amount
-              </Col>
-              <Col span={6}>
-                {subInfo?.amount &&
-                  showAmount(subInfo.amount, subInfo.currency)}
-                {subInfo &&
-                subInfo.taxPercentage &&
-                subInfo.taxPercentage != 0 ? (
-                  <span className="text-xs text-gray-500">
-                    {` (${subInfo.taxPercentage / 100}% tax incl)`}
-                  </span>
-                ) : null}
-              </Col>
-
               <Col span={4} style={colStyle}>
                 Bill Period
               </Col>
@@ -211,6 +292,7 @@ const Index = ({
                   : ''}
               </Col>
             </Row>
+
             <Row style={rowStyle}>
               <Col span={4} style={colStyle}>
                 First pay

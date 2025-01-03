@@ -26,6 +26,7 @@ interface IPLanProps {
   plan: IPlan
   selectedPlan: number | null
   isActive: boolean // whether current plan is the one user has subscribed(Y: highlight it)
+  width?: string // '100%' or arbitrary width like '240px', '16rem' is assumed if not specified.
   isThumbnail?: boolean
   setSelectedPlan?: (p: number) => void
   onAddonChange?: (
@@ -39,6 +40,7 @@ const Index = ({
   plan,
   selectedPlan,
   isActive,
+  width,
   setSelectedPlan,
   onAddonChange
   // isThumbnail = false
@@ -109,10 +111,10 @@ const Index = ({
   }, [plan])
 
   return (
-    <div>
+    <div style={{ width: width ?? '16rem' }}>
       <div
         onClick={() => setSelectedPlan?.(plan.id)}
-        className="flex w-64 cursor-pointer flex-col items-center justify-center gap-6 rounded-md px-2 py-2"
+        className={`flex cursor-pointer flex-col items-center justify-center gap-6 rounded-md px-2 py-2`}
         style={{
           border: `1px solid ${isActive ? 'orange' : '#BDBDBD'}`,
           background: selectedPlan == plan.id ? '#FFF' : '#FBFBFB'

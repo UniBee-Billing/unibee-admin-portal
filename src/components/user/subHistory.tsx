@@ -130,7 +130,7 @@ const Index = ({ userId }: { userId: number }) => {
             content={
               <div style={{ width: '280px' }}>
                 {addons.map((addon) => (
-                  <Row key={addon.id}>
+                  <Row key={addon.addonPlan.id}>
                     <Col span={10} className="font-bold text-gray-500">
                       {addon.addonPlan.planName}
                     </Col>

@@ -2,6 +2,7 @@ import axios from 'axios'
 import { CURRENCY } from '../constants'
 import {
   AccountType,
+  CreditTxType,
   CreditType,
   DiscountCode,
   ExpiredError,
@@ -20,25 +21,32 @@ import { analyticsRequest, request } from './client'
 const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
 
-// after login, we need merchantInfo, appConfig, payment gatewayInfo, etc.
+// after login OR user manually refresh page(and token is still valid), we need merchantInfo, appConfig, payment gatewayInfo, etc.
 // this fn get all these data in one go.
 export const initializeReq = async () => {
   const [
     [appConfig, errConfig],
     [gateways, errGateway],
     [merchantInfo, errMerchant],
-    [products, errProductList]
+    [products, errProductList],
+    [creditConfigs, errCreditConfigs]
   ] = await Promise.all([
     getAppConfigReq(),
     getGatewayListReq(),
     getMerchantInfoReq(),
-    getProductListReq()
+    getProductListReq(),
+    getCreditConfigListReq({
+      types: [CreditType.PROMO_CREDIT],
+      currency: 'EUR'
+    })
   ])
-  const err = errConfig || errGateway || errMerchant || errProductList
+  const err =
+    errConfig || errGateway || errMerchant || errProductList || errCreditConfigs
   if (null != err) {
     return [null, err]
   }
-  return [{ appConfig, gateways, merchantInfo, products }, null]
+
+  return [{ appConfig, gateways, merchantInfo, products, creditConfigs }, null]
 }
 
 // ------------
@@ -826,19 +834,30 @@ export const markAsIncompleteReq = async (
   }
 }
 
-export const createPreviewReq = async (
-  subscriptionId: string,
-  newPlanId: number,
-  addons: { quantity: number; addonPlanId: number }[],
+export const createPreviewReq = async ({
+  subscriptionId,
+  newPlanId,
+  addons,
+  discountCode,
+  applyPromoCredit,
+  applyPromoCreditAmount
+}: {
+  subscriptionId: string
+  newPlanId: number
+  addons: { quantity: number; addonPlanId: number }[]
   discountCode?: string
-) => {
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
+}) => {
   try {
     const res = await request.post(`/merchant/subscription/update_preview`, {
       subscriptionId,
       newPlanId,
       quantity: 1,
       addonParams: addons,
-      discountCode
+      discountCode,
+      applyPromoCredit,
+      applyPromoCreditAmount
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -853,15 +872,27 @@ export const createPreviewReq = async (
   }
 }
 
-export const updateSubscription = async (
-  subscriptionId: string,
-  newPlanId: number,
-  addons: { quantity: number; addonPlanId: number }[],
-  confirmTotalAmount: number,
-  confirmCurrency: string,
-  prorationDate: number,
+export const updateSubscription = async ({
+  subscriptionId,
+  newPlanId,
+  addons,
+  confirmTotalAmount,
+  confirmCurrency,
+  prorationDate,
+  discountCode,
+  applyPromoCredit,
+  applyPromoCreditAmount
+}: {
+  subscriptionId: string
+  newPlanId: number
+  addons: { quantity: number; addonPlanId: number }[]
+  confirmTotalAmount: number
+  confirmCurrency: string
+  prorationDate: number
   discountCode?: string
-) => {
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
+}) => {
   try {
     const res = await request.post(`/merchant/subscription/update_submit`, {
       subscriptionId,
@@ -871,7 +902,9 @@ export const updateSubscription = async (
       confirmTotalAmount,
       confirmCurrency,
       prorationDate,
-      discountCode
+      discountCode,
+      applyPromoCredit,
+      applyPromoCreditAmount
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -912,6 +945,8 @@ type TCreateSubReq = {
   vatCountryCode: string | undefined
   vatNumber: string | undefined
   discountCode: string | undefined
+  applyPromoCredit?: boolean
+  applyPromoCreditAmount?: number
 }
 
 export const createSubscriptionReq = async ({
@@ -926,7 +961,9 @@ export const createSubscriptionReq = async ({
   user,
   vatCountryCode,
   vatNumber,
-  discountCode
+  discountCode,
+  applyPromoCredit,
+  applyPromoCreditAmount
 }: TCreateSubReq) => {
   try {
     const res = await request.post(`/merchant/subscription/create_submit`, {
@@ -942,7 +979,9 @@ export const createSubscriptionReq = async ({
       user,
       vatCountryCode,
       vatNumber,
-      discountCode
+      discountCode,
+      applyPromoCredit,
+      applyPromoCreditAmount
     })
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })
@@ -2737,7 +2776,7 @@ export const getCreditConfigListReq = async (
   }
 }
 
-// create new credit config
+// create new credit config (global setting)
 export const createCreditConfigReq = async (c: TCreditConfig) => {
   try {
     const res = await request.post(`/merchant/credit/new_config`, c)
@@ -2754,7 +2793,7 @@ export const createCreditConfigReq = async (c: TCreditConfig) => {
   }
 }
 
-// save changes for an existing credit config
+// save changes for an existing credit config (global setting)
 export const saveCreditConfigReq = async ({
   merchantId,
   type,
@@ -2782,6 +2821,129 @@ export const saveCreditConfigReq = async ({
       )
     }
     return [res.data.data.creditConfig, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// save credit config changes for single user
+export const saveUserCreditConfigReq = async () => {
+  try {
+    const res = await request.post(`/merchant/credit/edit_credit_account`, {})
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.UserCreditAccount, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export type TCreditTxParams = {
+  accountType: CreditType
+  userId?: number
+  email?: string
+  currency?: string
+  transactionTypes?: CreditTxType[]
+  page?: number
+  count?: number
+  createTimeStart?: number
+  createTimeEnd?: number
+  sortType?: 'desc' | 'asc'
+  sortField?: 'gmt_create' | 'gmt_modify' // Default is gmt_modify
+}
+export const getCreditTxListReq = async (body: TCreditTxParams) => {
+  try {
+    const res = await request.post(
+      `/merchant/credit/credit_transaction_list`,
+      body
+    )
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getCreditUsageStatReq = async (currency: string) => {
+  try {
+    const res = await request.post(
+      `/merchant/credit/get_promo_config_statistics`,
+      { currency }
+    )
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.creditConfigStatistics, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const toggleUserCreditReq = async (id: number, payoutEnable: 1 | 0) => {
+  try {
+    const res = await request.post(`/merchant/credit/edit_credit_account`, {
+      id,
+      payoutEnable
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.UserCreditAccount, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const updateCreditAmtReq = async ({
+  action,
+  userId,
+  currency,
+  amount,
+  description
+}: {
+  action: 'increment' | 'decrement'
+  userId: number
+  currency: string
+  amount: number
+  description: string
+}) => {
+  let url = '/merchant/credit/'
+  url +=
+    action == 'increment' ? 'promo_credit_increment' : 'promo_credit_decrement'
+  try {
+    const res = await request.post(url, {
+      userId,
+      currency,
+      amount,
+      description
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.UserPromoCreditAccount, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]

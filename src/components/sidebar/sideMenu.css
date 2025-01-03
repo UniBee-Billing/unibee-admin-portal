@@ -1,0 +1,18 @@
+.sidebar-nav-context-menu {
+  box-sizing: border-box;
+  padding: 4px;
+  margin: 0;
+  list-style: none;
+}
+
+.sidebar-nav-context-menu li {
+  border-radius: 6px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.sidebar-nav-context-menu li:hover {
+  cursor: pointer;
+  background-color: #1677ff;
+  color: #fff;
+}
