@@ -99,7 +99,7 @@ const updateSubPreview = ({
 
   return (
     <Modal
-      title="Subscription Upgrade Preview"
+      title="Subscription Update Preview"
       open={true}
       width={'920px'}
       footer={null}
