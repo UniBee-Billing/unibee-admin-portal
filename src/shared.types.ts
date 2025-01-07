@@ -273,6 +273,8 @@ interface IPreview {
   totalAmount: number
   currency: string
   discount: DiscountCode
+  discountAmount: number
+  discountMessage: string // this should be named as 'discountErrorMessage', non empty means: something wrong with this discount code, and you cannot use it.
   applyPromoCredit: boolean
   prorationDate: number
   invoice: Invoice

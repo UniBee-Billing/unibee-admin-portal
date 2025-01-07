@@ -2,7 +2,7 @@ import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Empty, message, Modal, Row, Spin } from 'antd'
 import { useEffect, useState } from 'react'
 import { showAmount } from '../../../helpers'
-import { createPreviewReq, updateSubscription } from '../../../requests'
+import { updateSubscription } from '../../../requests'
 import { Invoice, InvoiceItem, IPreview } from '../../../shared.types'
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   creditAmt: number | null
   onCancel: () => void
   onAfterConfirm: () => void
+  createPreview: () => Promise<[IPreview | null, Error | null]>
 }
 
 const updateSubPreview = ({
@@ -22,40 +23,12 @@ const updateSubPreview = ({
   discountCode,
   creditAmt,
   onCancel,
-  onAfterConfirm
+  onAfterConfirm,
+  createPreview
 }: Props) => {
   const [loading, setLoading] = useState(true)
   const [confirming, setConfirming] = useState(false)
   const [previewInfo, setPreviewInfo] = useState<IPreview | null>(null)
-
-  const createPreview = async () => {
-    if (subscriptionId === undefined) {
-      return
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const body: any = {
-      subscriptionId,
-      newPlanId,
-      addons,
-      discountCode,
-      applyPromoCredit: creditAmt != null && creditAmt >= 0,
-      applyPromoCreditAmount: creditAmt
-    }
-    if (!body.applyPromoCredit) {
-      delete body.applyPromoCredit
-      delete body.applyPromoCreditAmount
-    }
-
-    setLoading(true)
-    const [previewRes, err] = await createPreviewReq(body)
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
-      return err
-    }
-    setPreviewInfo(previewRes)
-    return null
-  }
 
   const onOK = async () => {
     if (subscriptionId === undefined || previewInfo === null) {
@@ -93,8 +66,19 @@ const updateSubPreview = ({
     onAfterConfirm()
   }
 
+  const fetchPreview = async () => {
+    setLoading(true)
+    const [previewRes, err] = await createPreview()
+    setLoading(false)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+    setPreviewInfo(previewRes)
+  }
+
   useEffect(() => {
-    createPreview()
+    fetchPreview()
   }, [])
 
   return (
@@ -123,8 +107,7 @@ const updateSubPreview = ({
             <Col span={4}>
               <div style={{ fontWeight: 'bold' }}>Unit price</div>
             </Col>
-            <Col span={1}></Col>
-            <Col span={3}>
+            <Col span={4}>
               <span style={{ fontWeight: 'bold' }}>Quantity</span>
             </Col>
             <Col span={3}>
@@ -190,12 +173,7 @@ const ShowInvoiceItems = ({ items }: { items: InvoiceItem[] }) =>
       <Col span={4}>
         {showAmount(i.unitAmountExcludingTax as number, i.currency)}
       </Col>
-      <Col span={1}></Col>
-      <Col span={3}>{i.quantity}</Col>
-      {/* <Col span={4}>
-        {showAmount(i.tax as number, i.currency)}
-        <span className="text-xs text-gray-500">{` (${(i.taxPercentage as number) / 100}%)`}</span>
-      </Col> */}
+      <Col span={4}>{i.quantity}</Col>
       <Col span={3}>
         {showAmount(i.amountExcludingTax as number, i.currency)}
       </Col>

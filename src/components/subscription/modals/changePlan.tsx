@@ -9,6 +9,7 @@ import {
   DiscountCode,
   DiscountType,
   IPlan,
+  IPreview,
   IProfile,
   ISubscriptionType,
   TPromoAccount
@@ -25,7 +26,6 @@ interface Props {
   creditAmt: null | number
   setCreditAmt: (v: number) => void
   onCodeChange: React.ChangeEventHandler<HTMLInputElement>
-  // onSelectPlanChange: (planId: number) => void;
   setSelectedPlan: (planId: number) => void
   onAddonChange: (
     addonId: number,
@@ -34,6 +34,7 @@ interface Props {
   ) => void
   onCancel: () => void
   onConfirm: () => void
+  createPreview: () => Promise<[IPreview | null, Error | null]>
 }
 
 type DiscountCodePreview = {
@@ -55,12 +56,14 @@ const ChangePlan = ({
   setSelectedPlan,
   onAddonChange,
   onCancel,
-  onConfirm
+  onConfirm,
+  createPreview
 }: Props) => {
   const [codePreview, setCodePreview] = useState<DiscountCodePreview | null>(
     null
   ) // null: no code provided
   const [codeChecking, setCodeChecking] = useState(false)
+  const [previewInfo, setPreviewInfo] = useState<IPreview | null>(null)
 
   if (selectedPlanId == null) {
     return null
@@ -123,6 +126,16 @@ const ChangePlan = ({
     }
     if (codePreview != null) {
       if (codePreview.isValid) {
+        // code valid doesn't mean you can use it, there might be other restriction:
+        if (previewInfo?.discountMessage != '') {
+          // this code could only be used for long period plan upgrade(monthly to yearly)
+          return (
+            <div className="text-xs text-red-500">
+              {previewInfo?.discountMessage}
+            </div>
+          )
+        }
+
         return (
           <div className="text-xs text-green-500">
             Discount code is valid(
@@ -166,18 +179,28 @@ const ChangePlan = ({
       failureReason,
       discountAmount
     })
+
+    if (valid) {
+      const [previewRes, err] = await createPreview()
+      if (null != err) {
+        message.error(err.message)
+        return
+      }
+      setPreviewInfo(previewRes)
+    }
   }
 
   useEffect(() => {
     if (discountCode === '') {
       // user manually cleared the code, preview obj also need to be cleared
       setCodePreview(null)
+      setPreviewInfo(null)
     }
   }, [discountCode])
 
   return (
     <Modal
-      title="Change plan"
+      title="Change Plan"
       open={true}
       width={'480px'}
       footer={null}
@@ -258,7 +281,9 @@ const ChangePlan = ({
           onClick={onOK}
           loading={codeChecking}
           disabled={
-            codeChecking || (codePreview !== null && !codePreview.isValid)
+            codeChecking ||
+            (codePreview !== null && !codePreview.isValid) ||
+            (previewInfo != null && previewInfo?.discountMessage != '')
           }
         >
           OK

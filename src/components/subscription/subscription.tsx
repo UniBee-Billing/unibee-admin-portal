@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
 import { daysBetweenDate, showAmount } from '../../helpers'
 import {
+  createPreviewReq,
   extendDueDateReq,
   getAppConfigReq,
   getSubDetailWithMore,
@@ -34,6 +35,7 @@ import {
 import '../../shared.css'
 import {
   IPlan,
+  IPreview,
   IProfile,
   ISubAddon,
   ISubscriptionType
@@ -238,6 +240,36 @@ const Index = ({
     toggleResumeSubModal()
     message.success('Subscription resumed.')
     fetchData()
+  }
+
+  // create preview for change plan
+  const createPreview = async (): Promise<[IPreview | null, Error | null]> => {
+    if (activeSub == undefined) {
+      return [null, new Error('Subscription not found')]
+    }
+    if (selectedPlan == undefined) {
+      return [null, new Error('New plan not selected')]
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body: any = {
+      subscriptionId: activeSub?.subscriptionId,
+      newPlanId: selectedPlan,
+      addons: getSelectedAddons(),
+      discountCode,
+      applyPromoCredit: creditAmt != null && creditAmt >= 0,
+      applyPromoCreditAmount: creditAmt
+    }
+    if (!body.applyPromoCredit) {
+      delete body.applyPromoCredit
+      delete body.applyPromoCreditAmount
+    }
+
+    const [previewRes, err] = await createPreviewReq(body)
+    if (null != err) {
+      return [null, err]
+    }
+    // setPreviewInfo(previewRes)
+    return [previewRes, null]
   }
 
   // fetch current subscription detail, and all active plans.
@@ -515,6 +547,7 @@ const Index = ({
           onAddonChange={onAddonChange}
           onCancel={toggleChangPlanModal}
           onConfirm={openPreviewModal}
+          createPreview={createPreview}
         />
       )}
       {previewModalOpen && (
@@ -526,6 +559,7 @@ const Index = ({
           addons={getSelectedAddons()}
           onCancel={togglePreviewModal}
           onAfterConfirm={onAfterConfirm}
+          createPreview={createPreview}
         />
       )}
       {cancelSubModalOpen && (
