@@ -1,4 +1,4 @@
-import { LoadingOutlined } from '@ant-design/icons'
+import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -8,6 +8,7 @@ import {
   Input,
   InputNumber,
   Popconfirm,
+  Popover,
   Radio,
   Row,
   Select,
@@ -707,13 +708,14 @@ const Index = () => {
                   style={{
                     backgroundColor: '#1677FF',
                     width: '3px',
-                    height: '28px'
+                    height: '28px',
+                    marginLeft: 0
                   }}
                 />
                 <div className="text-lg">Advanced configuration</div>
               </div>
               <Row
-                className="border-1 mb-3 flex h-16 items-center rounded-lg border-solid border-gray-300 bg-gray-100"
+                className="border-1 mb-3 flex h-16 items-center rounded-lg border-solid border-[#D9D9D9] bg-[#FAFAFA]"
                 gutter={[8, 8]}
               >
                 <Col span={20}>
@@ -738,33 +740,51 @@ const Index = () => {
                   </Space>
                 </Radio.Group>
               </Form.Item>
-              <Divider style={{ margin: '4px 0' }} />{' '}
+              <Divider style={{ margin: '24px 0' }} />{' '}
               <Row>
-                <Col span={20}>Apply only for upgrades.</Col>
-                <Col span={4} style={{ textAlign: 'right' }}>
-                  <Form.Item name="upgradeOnly">
+                <Col span={20} className="flex items-center">
+                  Apply only for upgrades&nbsp;{' '}
+                  <Popover
+                    overlayStyle={{ maxWidth: '250px' }}
+                    content={
+                      'A plan which costs more per month, switching from Silver yearly (500/year) to Gold monthly (300/month) is not an upgrade.'
+                    }
+                  >
+                    <InfoCircleOutlined className="cursor-pointer" />
+                  </Popover>
+                </Col>
+                <Col span={4} className="flex items-center justify-end">
+                  <Form.Item name="upgradeOnly" noStyle={true}>
                     <Switch disabled={!watchAdvancedConfig} />
                   </Form.Item>
                 </Col>
               </Row>
-              <Divider style={{ margin: '4px 0' }} />{' '}
+              <Divider style={{ margin: '24px 0' }} />{' '}
               <Row>
-                <Col span={20}>
-                  Apply only for switching to longer subscriptions.
+                <Col span={20} className="flex items-center">
+                  Apply only for switching to longer subscriptions&nbsp;{' '}
+                  <Popover
+                    overlayStyle={{ maxWidth: '250px' }}
+                    content={
+                      'Example: switching from a Team monthly plan to a Team yearly plan.'
+                    }
+                  >
+                    <InfoCircleOutlined className="cursor-pointer" />
+                  </Popover>
                 </Col>
-                <Col span={4} style={{ textAlign: 'right' }}>
-                  <Form.Item name="upgradeLongerOnly">
+                <Col span={4} className="flex items-center justify-end">
+                  <Form.Item name="upgradeLongerOnly" noStyle={true}>
                     <Switch disabled={!watchAdvancedConfig} />
                   </Form.Item>
                 </Col>
               </Row>
-              <Divider style={{ margin: '4px 0' }} />{' '}
+              <Divider style={{ margin: '24px 0' }} />{' '}
               <Row>
-                <Col span={20}>
-                  Same user cannot use the same discount code again.
+                <Col span={20} className="flex items-center">
+                  Same user cannot use the same discount code again
                 </Col>
-                <Col span={4} style={{ textAlign: 'right' }}>
-                  <Form.Item name="userLimit">
+                <Col span={4} className="flex items-center justify-end">
+                  <Form.Item name="userLimit" noStyle={true}>
                     <Switch disabled={!watchAdvancedConfig} />
                   </Form.Item>
                 </Col>

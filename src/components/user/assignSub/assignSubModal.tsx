@@ -8,7 +8,14 @@ import {
   Switch
 } from 'antd'
 import update from 'immutability-helper'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import { CURRENCY } from '../../../constants'
 import { showAmount } from '../../../helpers'
 import { useLoading } from '../../../hooks'
@@ -430,9 +437,20 @@ export const AssignSubscriptionModal = ({
     updatePrice()
   }, [selectedPlan])
 
+  const onDiscountCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setDiscountCode(e.target.value)
+    if (e.target.value == '' && previewData != null) {
+      const preview = JSON.parse(JSON.stringify(previewData))
+      preview.discount = null
+      preview.discountMessage = ''
+      preview.discountAmount = 0
+      setPreviewData(preview)
+    }
+  }
+
   return (
     <Modal
-      title="Choose a subscription plan"
+      title="Choose a Subscription Plan"
       open={true}
       width={'720px'}
       footer={[
@@ -444,7 +462,11 @@ export const AssignSubscriptionModal = ({
           type="primary"
           onClick={onSubmit}
           loading={loading}
-          disabled={loading || isEmpty(selectedPlan)}
+          disabled={
+            loading ||
+            isEmpty(selectedPlan) ||
+            (previewData != null && previewData.discountMessage != '')
+          }
         >
           OK
         </Button>
@@ -537,7 +559,7 @@ export const AssignSubscriptionModal = ({
                 <Input
                   style={{ width: 240 }}
                   value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
+                  onChange={onDiscountCodeChange}
                 />
                 <Button onClick={onApplyDiscountCode}>Apply</Button>
               </div>
