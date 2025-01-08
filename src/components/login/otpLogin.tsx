@@ -4,19 +4,9 @@ import OtpInput from 'react-otp-input'
 import { useNavigate } from 'react-router-dom'
 import { emailValidate } from '../../helpers'
 import { useCountdown } from '../../hooks'
-import {
-  initializeReq,
-  loginWithOTPReq,
-  loginWithOTPVerifyReq
-} from '../../requests'
-import {
-  useAppConfigStore,
-  useMerchantInfoStore,
-  usePermissionStore,
-  useProductListStore,
-  useProfileStore,
-  useSessionStore
-} from '../../stores'
+import { useAppInitialize } from '../../hooks/useAppInitialize'
+import { loginWithOTPReq, loginWithOTPVerifyReq } from '../../requests'
+import { useProfileStore, useSessionStore } from '../../stores'
 
 const Index = ({
   email,
@@ -180,13 +170,10 @@ const OTPForm = ({
   triggeredByExpired,
   setLogging
 }: IOtpFormProps) => {
+  const appInitialize = useAppInitialize()
   const navigate = useNavigate()
-  const appConfigStore = useAppConfigStore()
-  const productsStore = useProductListStore()
   const profileStore = useProfileStore()
   const sessionStore = useSessionStore()
-  const merchantStore = useMerchantInfoStore()
-  const permStore = usePermissionStore()
   const [submitting, setSubmitting] = useState(false)
   const [otp, setOtp] = useState('')
   const [errMsg, setErrMsg] = useState('')
@@ -216,6 +203,7 @@ const OTPForm = ({
     profileStore.setProfile(merchantMember)
     // sessionStore.setSession({ expired: false, refresh: null })
 
+    /*
     const [initRes, errInit] = await initializeReq()
     setSubmitting(false)
     setLogging(false)
@@ -228,18 +216,22 @@ const OTPForm = ({
     appConfigStore.setGateway(gateways)
     productsStore.setProductList({ list: products.products })
     merchantStore.setMerchantInfo(merchantInfo.merchant)
+    */
+    /*
     permStore.setPerm({
       role: merchantInfo.merchantMember.role,
       permissions: merchantInfo.merchantMember.permissions
     })
+      */
 
+    const defaultPage = await appInitialize()
     if (triggeredByExpired) {
       sessionStore.refresh?.()
       sessionStore.setSession({ expired: false, refresh: null })
       message.success('Login succeeded')
     } else {
       sessionStore.setSession({ expired: false, refresh: null })
-      navigate('/')
+      navigate(defaultPage)
     }
   }
 

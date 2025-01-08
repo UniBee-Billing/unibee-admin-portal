@@ -1,6 +1,6 @@
-import { Button, Divider, Empty, Tabs, TabsProps, message } from 'antd'
+import { Divider, Empty, Tabs, TabsProps, message } from 'antd'
 import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { getUserProfile } from '../../requests'
 import { IProfile } from '../../shared.types'
 import UserInfo from '../shared/userInfo'
@@ -11,11 +11,13 @@ import ProductList from './productList'
 import PromoCredit from './promoCreditTab'
 import UserNote from './userNote'
 
+/*
 const GoBackBtn = () => {
   const navigate = useNavigate()
   const goBack = () => navigate(`/user/list`)
   return <Button onClick={goBack}>Go back</Button>
 }
+  */
 
 const TAB_KEYS = [
   'account',
@@ -75,7 +77,6 @@ const Index = () => {
           setUserProfile={setUserProfile}
           setRefreshSub={setRefreshSub}
           refresh={fetchUserProfile}
-          extraButton={<GoBackBtn />}
         />
       )
     },
@@ -105,7 +106,7 @@ const Index = () => {
         <InvoiceTab
           user={userProfile}
           embeddingMode={true}
-          extraButton={<GoBackBtn />}
+          embeddedIn="userInvoicePage"
           enableSearch={false}
         />
       )
@@ -113,13 +114,7 @@ const Index = () => {
     {
       key: TAB_KEYS[4],
       label: 'Transactions',
-      children: (
-        <TransactionTab
-          user={userProfile}
-          extraButton={<GoBackBtn />}
-          embeddingMode={true}
-        />
-      )
+      children: <TransactionTab user={userProfile} embeddingMode={true} />
     }
   ]
 

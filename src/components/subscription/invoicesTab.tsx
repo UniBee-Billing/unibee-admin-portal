@@ -65,11 +65,16 @@ const Index = ({
   user,
   extraButton,
   embeddingMode,
+  embeddedIn, // undefined means it's used in /invoice/list,
   enableSearch
 }: {
   user?: IProfile | undefined
   extraButton?: ReactElement
   embeddingMode: boolean // invoiceList can be embedded as part of a page, or be the page itself.
+  embeddedIn?: 'userInvoicePage' | 'subscriptionDetailPage' // invoiceList is used in /invoice/list, user detail (invoice tab), subscription detail (invoice tab)
+  // clcick the ivId go directly to invoice detail, but there is a go-back button, click to go back to where it came from.
+  // invoiceList, subList, userList are opened in new page using <a href=*** />, not in-app navigate
+  // so I have to pass embeddedIn to know which parent I'm in.
   enableSearch: boolean
 }) => {
   //   const navigate = useNavigate()
@@ -78,8 +83,9 @@ const Index = ({
   const [invoiceList, setInvoiceList] = useState<UserInvoice[]>([])
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
-  const { page, onPageChange, onPageChangeNoParams } = usePagination()
-  const pageChange = embeddingMode ? onPageChangeNoParams : onPageChange
+  const pageName = embeddedIn ?? 'page'
+  const { page, onPageChange } = usePagination(pageName)
+  const pageChange = onPageChange // embeddingMode ? onPageChangeNoParams : onPageChange
   const [filters, setFilters] = useState<TFilters>({
     status: null
   })
@@ -184,6 +190,13 @@ const Index = ({
   }
 
   const fetchData = async () => {
+    // in embedding mode, invoice table is inside user detail component or subscription component, or other in the future.
+    // in these cases, userId must be ready to get the invoices for this specific user.
+    // most of times, user obj might take a while to be ready(other component are running req to get it).
+    // if we run fetchData now, userId(optional to run getInvoiceList) is still null, then all user invoices will be returned.
+    if (embeddingMode && user == null) {
+      return
+    }
     let searchTerm = normalizeSearchTerms()
     if (null == searchTerm) {
       return
@@ -246,17 +259,22 @@ const Index = ({
       title: 'Invoice Id',
       dataIndex: 'invoiceId',
       key: 'invoiceId',
-      render: (ivId) => (
-        <div className="invoice-id-wrapper flex items-center">
-          <a
-            href={`${location.origin}${BASE_PATH}invoice/${ivId}`}
-            style={{ fontFamily: 'monospace' }}
-          >
-            {ivId}
-          </a>
-          <CopyToClipboard content={ivId} />
-        </div>
-      )
+      render: (ivId) => {
+        const referer = encodeURIComponent(
+          window.location.pathname + window.location.search
+        )
+        return (
+          <div className="invoice-id-wrapper flex items-center">
+            <a
+              href={`${location.origin}${BASE_PATH}invoice/${ivId}?&referer=${referer}`}
+              style={{ fontFamily: 'monospace' }}
+            >
+              {ivId}
+            </a>
+            <CopyToClipboard content={ivId} />
+          </div>
+        )
+      }
     },
     {
       title: 'Amount',
