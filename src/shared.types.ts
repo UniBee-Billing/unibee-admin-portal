@@ -45,6 +45,7 @@ interface IProfile {
   email: string
   type: AccountType
   status: number // 0-Active, 2-Frozen
+  taxPercentage: number
   MemberRoles: TRole[]
   isOwner: boolean
   merchantId: number

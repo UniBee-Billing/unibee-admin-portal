@@ -1,4 +1,4 @@
-import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -8,7 +8,6 @@ import {
   Input,
   InputNumber,
   Popconfirm,
-  Popover,
   Radio,
   Row,
   Select,
@@ -748,14 +747,14 @@ const Index = () => {
               <Row>
                 <Col span={20} className="flex items-center">
                   Apply only for upgrades&nbsp;{' '}
-                  <Popover
+                  {/* <Popover
                     overlayStyle={{ maxWidth: '250px' }}
                     content={
                       'A plan which costs more per month, switching from Silver yearly (500/year) to Gold monthly (300/month) is not an upgrade.'
                     }
                   >
                     <InfoCircleOutlined className="cursor-pointer" />
-                  </Popover>
+                  </Popover> */}
                 </Col>
                 <Col span={4} className="flex items-center justify-end">
                   <Form.Item name="upgradeOnly" noStyle={true}>
@@ -771,14 +770,14 @@ const Index = () => {
               <Row>
                 <Col span={20} className="flex items-center">
                   Apply only for switching to longer subscriptions&nbsp;{' '}
-                  <Popover
+                  {/* <Popover
                     overlayStyle={{ maxWidth: '250px' }}
                     content={
                       'Example: switching from a Team monthly plan to a Team yearly plan.'
                     }
                   >
                     <InfoCircleOutlined className="cursor-pointer" />
-                  </Popover>
+                  </Popover> */}
                 </Col>
                 <Col span={4} className="flex items-center justify-end">
                   <Form.Item name="upgradeLongerOnly" noStyle={true}>
