@@ -19,6 +19,7 @@ const INITIAL_PROFILE: IProfile = {
   email: '',
   MemberRoles: [],
   isOwner: false,
+  taxPercentage: 0,
   merchantId: 0,
   mobile: '',
   facebook: '',

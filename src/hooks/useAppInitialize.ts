@@ -69,14 +69,21 @@ export const useAppInitialize = (): (() => Promise<string>) => {
 
     const permissions: Set<string> | string[] = new Set<string>()
     merchantInfo.merchantMember.MemberRoles.forEach(
-      (memberRole: { permissions: Array<{ group: string }> }) =>
-        memberRole.permissions.forEach((permission) =>
-          permissions.add(permission.group)
-        )
+      (
+        memberRole: {
+          permissions: Array<{ group: string; permissions: string[] }> // group is the page name, "plan", "user" as used in route "/plan", "/user"
+        } // permissions: string[], could be ['access', 'write', 'execute'], only 'access' is implemented right now.
+      ) =>
+        memberRole.permissions.forEach((permission) => {
+          if (
+            permission.permissions != null &&
+            permission.permissions.length > 0
+          ) {
+            // permissions could be an empty array, which means: you don't have access to this page, equivalent to that the whole permissions object doesn't exist.
+            permissions.add(permission.group)
+          }
+        })
     )
-
-    console.log('merchantInfo: ', merchantInfo)
-    console.log('permission: ', permissions)
 
     if (merchantInfo.isOwner) {
       return '/plan'

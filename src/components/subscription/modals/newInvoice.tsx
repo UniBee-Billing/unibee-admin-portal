@@ -36,7 +36,7 @@ const newPlaceholderItem = (): InvoiceItem => ({
 
 // this component is used for creating new invoice(including refund invoice) or editing existing draft invoice.
 interface Props {
-  user: IProfile | undefined
+  user: IProfile
   isOpen: boolean
   detail: UserInvoice | null // null means creating a draft invoice, non-null means: creating refund invoice or editing a draft invoice, in these cases, invoice object already exist.
   permission: TInvoicePerm
@@ -70,7 +70,9 @@ const Index = ({
       : detail.lines[0].currency // assume all invoice items have the same currencies.
   const [currency, setCurrency] = useState(defaultCurrency)
   const [taxPercentage, setTaxScale] = useState<string>(
-    detail == null ? '' : detail.taxPercentage / 100 + ''
+    detail == null // detail == null: creating invoice from scratch,
+      ? user.taxPercentage / 100 + '' // read default taxRate from profile
+      : detail.taxPercentage / 100 + '' // non-null: editing existing invoice.
   )
   const [invoiceName, setInvoiceName] = useState(
     detail == null ? '' : detail.invoiceName

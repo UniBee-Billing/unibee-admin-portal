@@ -518,7 +518,7 @@ const Index = ({
           invoiceId={invoiceList[invoiceIdx].invoiceId}
         />
       )}
-      {newInvoiceModalOpen && (
+      {newInvoiceModalOpen && user != null && (
         <NewInvoiceModal
           isOpen={true}
           refundMode={refundMode}
