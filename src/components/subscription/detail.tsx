@@ -89,7 +89,8 @@ const Index = () => {
 
   const onTabChange = (key: string) => {
     setActiveTab(key)
-    setSearchParams({ tab: key })
+    searchParams.set('tab', key)
+    setSearchParams(searchParams)
   }
 
   useEffect(() => {
