@@ -75,6 +75,9 @@ export const useAppInitialize = (): (() => Promise<string>) => {
         )
     )
 
+    console.log('merchantInfo: ', merchantInfo)
+    console.log('permission: ', permissions)
+
     if (merchantInfo.isOwner) {
       return '/plan'
     }
