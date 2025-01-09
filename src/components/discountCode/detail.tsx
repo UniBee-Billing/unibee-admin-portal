@@ -726,13 +726,17 @@ const Index = () => {
                 <Col span={4} style={{ textAlign: 'right' }}>
                   {' '}
                   <Form.Item name="advance" noStyle={true}>
-                    <Switch />
+                    <Switch disabled={!canActiveItemEdit(code?.status)} />
                   </Form.Item>
                 </Col>
               </Row>
               <div className="mb-2 mt-6">Discount Code Applicable Scope</div>
               <Form.Item name="userScope">
-                <Radio.Group disabled={!watchAdvancedConfig}>
+                <Radio.Group
+                  disabled={
+                    !watchAdvancedConfig || !canActiveItemEdit(code?.status)
+                  }
+                >
                   <Space direction="vertical">
                     <Radio value={0}>Apply for all</Radio>
                     <Radio value={1}>Apply only for new users </Radio>
@@ -755,7 +759,11 @@ const Index = () => {
                 </Col>
                 <Col span={4} className="flex items-center justify-end">
                   <Form.Item name="upgradeOnly" noStyle={true}>
-                    <Switch disabled={!watchAdvancedConfig} />
+                    <Switch
+                      disabled={
+                        !watchAdvancedConfig || !canActiveItemEdit(code?.status)
+                      }
+                    />
                   </Form.Item>
                 </Col>
               </Row>
@@ -774,7 +782,11 @@ const Index = () => {
                 </Col>
                 <Col span={4} className="flex items-center justify-end">
                   <Form.Item name="upgradeLongerOnly" noStyle={true}>
-                    <Switch disabled={!watchAdvancedConfig} />
+                    <Switch
+                      disabled={
+                        !watchAdvancedConfig || !canActiveItemEdit(code?.status)
+                      }
+                    />
                   </Form.Item>
                 </Col>
               </Row>
@@ -785,7 +797,11 @@ const Index = () => {
                 </Col>
                 <Col span={4} className="flex items-center justify-end">
                   <Form.Item name="userLimit" noStyle={true}>
-                    <Switch disabled={!watchAdvancedConfig} />
+                    <Switch
+                      disabled={
+                        !watchAdvancedConfig || !canActiveItemEdit(code?.status)
+                      }
+                    />
                   </Form.Item>
                 </Col>
               </Row>

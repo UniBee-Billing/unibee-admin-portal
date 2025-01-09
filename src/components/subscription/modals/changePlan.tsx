@@ -167,8 +167,8 @@ const ChangePlan = ({
       discountCode,
       selectedPlanId
     )
-    setCodeChecking(false)
     if (null != err) {
+      setCodeChecking(false)
       message.error(err.message)
       return
     }
@@ -183,11 +183,15 @@ const ChangePlan = ({
     if (valid) {
       const [previewRes, err] = await createPreview()
       if (null != err) {
+        setCodeChecking(false)
         message.error(err.message)
         return
       }
       setPreviewInfo(previewRes)
     }
+    // if discount code returned valid, UpdateSubPreviewModal will open, upon mounted, another createPreview will be running.
+    // BE might complains 2 calls happened almost at the same time, and refuse to make the 2nd call.
+    setTimeout(() => setCodeChecking(false), 1000)
   }
 
   useEffect(() => {

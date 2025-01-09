@@ -1,7 +1,7 @@
 import type { TabsProps } from 'antd'
 import { Button, Divider, Tabs, message } from 'antd'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getUserProfile } from '../../requests'
 import { IProfile } from '../../shared.types'
 import UserInfoSection from '../shared/userInfo'
@@ -14,8 +14,12 @@ import UserAccount from './userAccountTab'
 
 const Index = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [userProfile, setUserProfile] = useState<IProfile | undefined>(
     undefined
+  )
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') ?? 'subscription'
   )
   const [userId, setUserId] = useState<number | null>(null) // subscription obj has user account data, and admin can update it in AccountTab.
   // and the user data on subscription obj might be obsolete,
@@ -40,6 +44,9 @@ const Index = () => {
     {
       key: 'subscription',
       label: 'Subscription',
+      forceRender: true, // user might click link to go directly to <InvoiceTab />, which need to have userId ready to getInvoiceList.
+      // but userId is fetched inside subscription tab. If subscription tab is not active, userid is null.
+      // forceRender can fix this.
       children: (
         <SubscriptionTab
           userProfile={userProfile}
@@ -68,6 +75,7 @@ const Index = () => {
         <InvoiceTab
           user={userProfile}
           embeddingMode={true}
+          embeddedIn="subscriptionDetailPage"
           enableSearch={false}
         />
       )
@@ -78,6 +86,12 @@ const Index = () => {
       children: <PaymentTab user={userProfile} embeddingMode={true} />
     }
   ]
+
+  const onTabChange = (key: string) => {
+    setActiveTab(key)
+    searchParams.set('tab', key)
+    setSearchParams(searchParams)
+  }
 
   useEffect(() => {
     if (userId == null) {
@@ -110,11 +124,7 @@ const Index = () => {
           User Info
         </Divider>
         <UserInfoSection user={userProfile} />
-        <Tabs
-          defaultActiveKey={'subscription'}
-          items={tabItems}
-          onChange={() => {}}
-        />
+        <Tabs activeKey={activeTab} items={tabItems} onChange={onTabChange} />
         <div className="mt-4 flex items-center justify-center">
           <Button onClick={() => navigate(`/subscription/list`)}>
             Go Back to Subscription List

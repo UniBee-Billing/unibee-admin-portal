@@ -47,7 +47,15 @@ const Index = () => {
   // I have to deley 2.5s after refresh, then show the pdf file.
   const [delayingPreview, setDelayingPreview] = useState(false)
 
-  const goBack = () => navigate(`/invoice/list`)
+  const goBack = () => {
+    const params = new URL(window.location.href).searchParams
+    const referer = params.get('referer')
+    let refererURL = '/invoice/list'
+    if (referer != undefined) {
+      refererURL = decodeURIComponent(referer)
+    }
+    navigate(refererURL)
+  }
   const goToUser = (userId: number) => () =>
     navigate(`/user/${userId}?tab=invoice`)
   const goToSub = (subId: string) => () => navigate(`/subscription/${subId}`)

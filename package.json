@@ -2,7 +2,7 @@
   "name": "unibee-merchant-portal-front",
   "version": "1.4.0",
   "type": "module",
-  "license": "AGPL-3.0 license",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
