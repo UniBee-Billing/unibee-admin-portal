@@ -86,7 +86,7 @@ export const useAppInitialize = (): (() => Promise<string>) => {
     } else if (permissions.has('invoice')) {
       return '/invoice'
     } else {
-      return Array.from(permissions)[0] ?? '/'
+      return '/' + (Array.from(permissions)[0] ?? '')
     }
   }, [appConfigStore, merchantInfoStore, productsStore, creditConfigStore])
 
