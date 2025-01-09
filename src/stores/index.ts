@@ -176,7 +176,7 @@ export const useSessionStore = create<SessionStoreSlice>()(
 // --------------------------------
 interface IPermission {
   roles: string[] // ['power user', 'Customer Support']
-  permissions: string[] // ['plan', 'subscription', 'user', 'invoice', 'payment', 'report'], these items are the accessable pages, like /plan, /subscription.
+  permissions: string[] // ['plan', 'subscription', 'user', 'invoice', 'payment', 'report'], these items are the accessible pages, like /plan, /subscription.
 }
 const INITIAL_PERM: IPermission = {
   roles: [],
