@@ -58,7 +58,7 @@ const Index = () => {
     description: 'default credit config',
     type: CreditType.PROMO_CREDIT,
     currency: 'EUR',
-    exchangeRate: 100,
+    exchangeRate: 1,
     payoutEnable: false,
     discountCodeExclusive: false,
     recurring: false,

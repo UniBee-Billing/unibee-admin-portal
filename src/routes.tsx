@@ -25,7 +25,7 @@ import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
 import CustomerDetail from './components/user/detail'
 import CustomerList from './components/user/list'
-import { useAccessiblePages, useDefaultPage } from './hooks'
+import { useAccessiblePages } from './hooks'
 import { useProfileStore } from './stores'
 
 export const APP_ROUTES: RouteObject[] = [
@@ -213,18 +213,20 @@ export const APP_ROUTES: RouteObject[] = [
 export const useAppRoutesConfig = () => {
   const profileStore = useProfileStore()
   const accessiblePages = useAccessiblePages()
-  const defaultPage = useDefaultPage()
+  // const defaultPage = useDefaultPage()
+  /*
   const appRoutesConfig = useMemo(
     () =>
       APP_ROUTES.concat([
-        { path: '/', element: <Navigate to={defaultPage} replace /> }
+        { path: '/', element: <Navigate to={'/'} replace /> }
       ]),
     [defaultPage]
   )
+    */
 
   return useMemo(
     () =>
-      appRoutesConfig.filter(
+      APP_ROUTES.filter(
         ({ id }) =>
           profileStore.isOwner || !!accessiblePages.find((page) => page === id)
       ),

@@ -4,19 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { emailValidate } from '../../helpers'
 import { useCountdown } from '../../hooks'
-import {
-  forgetPassReq,
-  initializeReq,
-  loginWithPasswordReq
-} from '../../requests'
-import {
-  useAppConfigStore,
-  useMerchantInfoStore,
-  usePermissionStore,
-  useProductListStore,
-  useProfileStore,
-  useSessionStore
-} from '../../stores'
+import { useAppInitialize } from '../../hooks/useAppInitialize'
+// import { useInitData } from '../../hooks/useInitData'
+import { forgetPassReq, loginWithPasswordReq } from '../../requests'
+import { useProfileStore, useSessionStore } from '../../stores'
 import ForgetPasswordForm from './forgetPasswordForm'
 
 const Index = ({
@@ -30,12 +21,9 @@ const Index = ({
   triggeredByExpired: boolean
   setLogging: (val: boolean) => void
 }) => {
+  const appInitialize = useAppInitialize()
   const profileStore = useProfileStore()
-  const appConfigStore = useAppConfigStore()
-  const productsStore = useProductListStore()
   const sessionStore = useSessionStore()
-  const merchantStore = useMerchantInfoStore()
-  const permStore = usePermissionStore()
   const [errMsg, setErrMsg] = useState('')
   const [countVal, counting, startCount, stopCounter] = useCountdown(60)
   const navigate = useNavigate()
@@ -85,33 +73,36 @@ const Index = ({
     merchantMember.token = token
     profileStore.setProfile(merchantMember)
     // sessionStore.setSession({ expired: false, refresh: null })
+    // useInitData()
 
+    /*
     const [initRes, errInit] = await initializeReq()
-
     setSubmitting(false)
     setLogging(false)
     if (null != errInit) {
       setErrMsg(errInit.message)
       return
     }
-
+    
     const { appConfig, gateways, merchantInfo, products } = initRes
     appConfigStore.setAppConfig(appConfig)
     appConfigStore.setGateway(gateways)
     productsStore.setProductList({ list: products.products })
     merchantStore.setMerchantInfo(merchantInfo.merchant)
     permStore.setPerm({
-      role: merchantInfo.merchantMember.role,
+      roles: merchantInfo.merchantMember.roles,
       permissions: merchantInfo.merchantMember.permissions
     })
 
+    */
+    const defaultPage = await appInitialize()
     if (triggeredByExpired) {
       sessionStore.refresh?.()
       sessionStore.setSession({ expired: false, refresh: null })
       message.success('Login succeeded')
     } else {
       sessionStore.setSession({ expired: false, refresh: null })
-      navigate('/')
+      navigate(defaultPage)
     }
   }
 

@@ -2,6 +2,7 @@ import {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
+  LoadingOutlined,
   ProfileOutlined
 } from '@ant-design/icons'
 import { Modal, Space, Table, message } from 'antd'
@@ -387,7 +388,10 @@ export const DiscountCodeList = () => {
         onChange={handleTableChange}
         rowKey="id"
         rowClassName="clickable-tbl-row"
-        loading={isTableLoading}
+        loading={{
+          spinning: isTableLoading,
+          indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+        }}
         pagination={{
           total,
           pageSize: PAGE_SIZE,

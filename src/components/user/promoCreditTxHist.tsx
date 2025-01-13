@@ -284,8 +284,8 @@ const Index = ({
       title: 'By',
       dataIndex: 'adminMember',
       key: 'adminMember',
-      render: (by) =>
-        by != undefined ? `${by.firstName} ${by.lastName}` : <MinusOutlined />
+      render: (by, txRecord) =>
+        by != undefined ? `${by.firstName} ${by.lastName}` : txRecord.by
     },
     {
       title: 'Notes',
@@ -348,7 +348,8 @@ const Index = ({
           </Tooltip>
         </>
       ),
-      key: 'action'
+      key: 'action',
+      hidden: !embeddingMode
     }
   ]
 
@@ -366,6 +367,7 @@ const Index = ({
     <>
       {!embeddingMode && (
         <ExtraInfo
+          refresh={fetchCreditTxList}
           exportPayload={{
             email: searchText,
             sortFilter,
@@ -406,7 +408,13 @@ const Index = ({
 
 export default Index
 
-const ExtraInfo = ({ exportPayload }: { exportPayload: unknown }) => {
+const ExtraInfo = ({
+  exportPayload,
+  refresh
+}: {
+  exportPayload: unknown
+  refresh: () => void
+}) => {
   const appConfigStore = useAppConfigStore()
   const [creditUsageStat, setCreditUsageStat] = useState<{
     totalIncrementAmount: number | null
@@ -470,6 +478,7 @@ const ExtraInfo = ({ exportPayload }: { exportPayload: unknown }) => {
         </div>
       </div>
       <div>
+        <Button onClick={refresh}>Refresh</Button>&nbsp;&nbsp;
         <Button onClick={onExport}>Export</Button>
       </div>
     </div>

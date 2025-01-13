@@ -2,6 +2,7 @@
   "name": "unibee-merchant-portal-front",
   "version": "1.5.0",
   "type": "module",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

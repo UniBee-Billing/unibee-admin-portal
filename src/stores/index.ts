@@ -19,6 +19,7 @@ const INITIAL_PROFILE: IProfile = {
   email: '',
   MemberRoles: [],
   isOwner: false,
+  taxPercentage: 0,
   merchantId: 0,
   mobile: '',
   facebook: '',
@@ -175,11 +176,11 @@ export const useSessionStore = create<SessionStoreSlice>()(
 
 // --------------------------------
 interface IPermission {
-  role: string // Owner | Customer Support
-  permissions: string[] // not used yet
+  roles: string[] // ['power user', 'Customer Support']
+  permissions: string[] // ['plan', 'subscription', 'user', 'invoice', 'payment', 'report'], these items are the accessible pages, like /plan, /subscription.
 }
 const INITIAL_PERM: IPermission = {
-  role: '',
+  roles: [],
   permissions: []
 }
 interface PermissionStoreSlice extends IPermission {

@@ -45,6 +45,7 @@ interface IProfile {
   email: string
   type: AccountType
   status: number // 0-Active, 2-Frozen
+  taxPercentage: number
   MemberRoles: TRole[]
   isOwner: boolean
   merchantId: number
@@ -273,6 +274,8 @@ interface IPreview {
   totalAmount: number
   currency: string
   discount: DiscountCode
+  discountAmount: number
+  discountMessage: string // this should be named as 'discountErrorMessage', non empty means: something wrong with this discount code, and you cannot use it.
   applyPromoCredit: boolean
   prorationDate: number
   invoice: Invoice
@@ -629,6 +632,7 @@ export type TCreditTx = {
   merchantId: number
   invoiceId: string
   adminMember?: IMerchantMemberProfile
+  by: string // if credit amt is updated by admin, adminMember is not null. if amt is updated by user themselves(consumed, earned or other methods), this field is not empty.
 }
 
 export enum CreditTxType {
