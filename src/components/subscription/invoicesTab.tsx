@@ -320,13 +320,21 @@ const Index = ({
       key: 'payment',
       width: 140,
       render: (payment, iv) =>
-        iv.refund == null
-          ? payment == null || payment.paidTime == 0
-            ? '―'
-            : formatDate(payment.paidTime, true)
-          : iv.refund.refundTime == 0
-            ? '―'
-            : formatDate(iv.refund.refundTime, true)
+        iv.refund == null ? (
+          payment == null || payment.paidTime == 0 ? (
+            '―'
+          ) : (
+            <div className="w-[130px] font-mono">
+              {formatDate(payment.paidTime, true)}
+            </div>
+          )
+        ) : iv.refund.refundTime == 0 ? (
+          '―'
+        ) : (
+          <div className="w-[130px] font-mono">
+            {formatDate(iv.refund.refundTime, true)}
+          </div>
+        )
     },
     {
       title: 'Gateway',

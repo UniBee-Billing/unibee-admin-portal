@@ -435,7 +435,7 @@ export const AssignSubscriptionModal = ({
     }
 
     updatePrice()
-  }, [selectedPlan])
+  }, [selectedPlan, requirePayment])
 
   const onDiscountCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDiscountCode(e.target.value)
