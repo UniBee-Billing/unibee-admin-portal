@@ -34,6 +34,7 @@ import {
   showAmount,
   toFixedNumber
 } from '../../helpers'
+import { useSkipFirstRender } from '../../hooks'
 import {
   createDiscountCodeReq,
   deleteDiscountCodeReq,
@@ -69,7 +70,7 @@ const DEFAULT_CODE: DiscountCode = {
   advance: false,
   userScope: 0,
   userLimit: true,
-  upgradeOnly: false,
+  upgradeOnly: true, // upgradeOnly and longerUpgradeOnly are exclusive to each other.
   upgradeLongerOnly: false
 }
 
@@ -106,6 +107,8 @@ const Index = () => {
   const watchCurrency = Form.useWatch('currency', form)
   const watchPlanIds = Form.useWatch('planIds', form)
   const watchAdvancedConfig = Form.useWatch('advance', form)
+  const watchUpgradeOnly = Form.useWatch('upgradeOnly', form)
+  const watchLongerUpgradeOnly = Form.useWatch('upgradeLongerOnly', form)
 
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
@@ -202,6 +205,16 @@ const Index = () => {
     } else if (discount.discountType == 1) {
       // percentage
       discount.discountPercentage /= 100
+    }
+
+    if (
+      (discount.upgradeOnly && discount.upgradeLongerOnly) ||
+      (!discount.upgradeOnly && !discount.upgradeLongerOnly)
+    ) {
+      // upgradeOnly and upgradeLongerOnly are exclusive to each other(one is true, the other must be false)
+      // but in the first release, they are not.
+      // To prevent inconsistencies in old data, force them to be exclusive.
+      discount.upgradeLongerOnly = !discount.upgradeOnly
     }
 
     discount.userLimit = numBoolConvert(discount.userLimit)
@@ -363,6 +376,15 @@ const Index = () => {
       )
     }
   }, [watchDiscountType, watchCurrency])
+
+  // this hook is to prevent the running in initial render, useEffect() will cause infinite running due to these 2 value's circular dependencies
+  useSkipFirstRender(() => {
+    form.setFieldValue('upgradeLongerOnly', !watchUpgradeOnly)
+  }, [watchUpgradeOnly])
+
+  useSkipFirstRender(() => {
+    form.setFieldValue('upgradeOnly', !watchLongerUpgradeOnly)
+  }, [watchLongerUpgradeOnly])
 
   return (
     <div>
