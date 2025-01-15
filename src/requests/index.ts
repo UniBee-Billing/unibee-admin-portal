@@ -2176,6 +2176,23 @@ const getPaymentGatewayListReq = async () => {
   }
 }
 
+// how many gateway we have, their config items, etc
+export const getPaymentGatewayConfigListReq = async () => {
+  try {
+    const res = await request.get(`/merchant/gateway/setup_list`)
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [res.data.data.gateways, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 export const getAppKeysWithMore = async (refreshCb: () => void) => {
   const [[merchantInfo, errMerchantInfo], [gateways, errGateways]] =
     await Promise.all([getMerchantInfoReq(), getPaymentGatewayListReq()])

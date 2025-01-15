@@ -96,6 +96,7 @@ const Index = ({
 
     */
     const defaultPage = await appInitialize()
+    console.log('defaultPage: ', defaultPage)
     if (triggeredByExpired) {
       sessionStore.refresh?.()
       sessionStore.setSession({ expired: false, refresh: null })

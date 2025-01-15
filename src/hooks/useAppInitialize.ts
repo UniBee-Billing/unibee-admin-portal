@@ -85,6 +85,13 @@ export const useAppInitialize = (): (() => Promise<string>) => {
         })
     )
 
+    console.log(
+      'permissions set /role: ',
+      permissions,
+      '///',
+      merchantInfo.merchantMember.MemberRoles
+    )
+
     if (merchantInfo.isOwner) {
       return '/plan'
     }
