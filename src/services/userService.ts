@@ -6,15 +6,15 @@ import { logoutReq } from '../requests'
 import {
   useAppConfigStore,
   useMerchantInfoStore,
+  useMerchantMemberProfileStore,
   usePermissionStore,
-  useProfileStore,
   useSessionStore
 } from '../stores'
 
 // Refactor TODO: add login to this service
 export const useUser = () => {
   const sessionStore = useSessionStore()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const merchantInfoStore = useMerchantInfoStore()
   const permissionStore = usePermissionStore()
   const appConfigStore = useAppConfigStore()
@@ -22,7 +22,7 @@ export const useUser = () => {
 
   const resetData = useCallback(() => {
     sessionStore.reset()
-    profileStore.reset()
+    merchantMemberProfile.reset()
     merchantInfoStore.reset()
     appConfigStore.reset()
     permissionStore.reset()
@@ -35,7 +35,7 @@ export const useUser = () => {
     localStorage.removeItem('permissions')
   }, [
     sessionStore,
-    profileStore,
+    merchantMemberProfile,
     merchantInfoStore,
     permissionStore,
     appConfigStore
@@ -59,7 +59,10 @@ export const useUser = () => {
     [resetData]
   )
 
-  const profile = useMemo(() => profileStore.getProfile(), [profileStore])
+  const profile = useMemo(
+    () => merchantMemberProfile.getProfile(),
+    [merchantMemberProfile]
+  )
 
   return { logout, profile }
 }

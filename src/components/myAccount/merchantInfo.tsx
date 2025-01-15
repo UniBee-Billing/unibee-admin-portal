@@ -8,11 +8,14 @@ import {
   uploadLogoReq
 } from '../../requests'
 import { TMerchantInfo } from '../../shared.types'
-import { useMerchantInfoStore, useProfileStore } from '../../stores'
+import {
+  useMerchantInfoStore,
+  useMerchantMemberProfileStore
+} from '../../stores'
 
 const Index = () => {
   const merchantInfoStore = useMerchantInfoStore()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false) // page loading
   const [uploading, setUploading] = useState(false) // logo upload
@@ -93,7 +96,7 @@ const Index = () => {
           <Form
             form={form}
             onFinish={onSubmit}
-            disabled={!profileStore.isOwner}
+            disabled={!merchantMemberProfile.isOwner}
             name="company-info-form"
             labelCol={{
               span: 10
@@ -208,7 +211,7 @@ const Index = () => {
             </Form.Item>
 
             <div className="mx-8 my-8 flex justify-center">
-              {profileStore.isOwner && (
+              {merchantMemberProfile.isOwner && (
                 <Button
                   type="primary"
                   onClick={form.submit}

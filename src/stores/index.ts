@@ -4,68 +4,43 @@ import { persist } from 'zustand/middleware'
 import {
   CreditType,
   IAppConfig,
+  IMerchantMemberProfile,
   IProduct,
-  IProfile,
+  // IProfile,
   TCreditConfig,
   TGateway,
   TMerchantInfo
 } from '../shared.types'
 // import { createStore } from "zustand";
 
-// logged-in user profile
-const INITIAL_PROFILE: IProfile = {
-  address: '',
-  companyName: '',
+// logged-in admin profile
+const INITIAL_MERCHANT_MEMBER_PROFILE: IMerchantMemberProfile = {
+  id: -1,
+  merchantId: -1,
   email: '',
-  MemberRoles: [],
-  isOwner: false,
-  taxPercentage: 0,
-  merchantId: 0,
-  mobile: '',
-  facebook: '',
   firstName: '',
   lastName: '',
-  countryCode: '',
-  countryName: '',
   createTime: 0,
-  status: 0, // 0-Active, 2-Frozen
-  id: null,
-  externalUserId: '',
-  type: 1, // 1: individual, 2: business
-  phone: '',
-  paymentMethod: '',
-  linkedIn: '',
-  telegram: '',
-  tikTok: '',
-  vATNumber: '',
-  registrationNumber: '',
-  weChat: '',
-  whatsAPP: '',
-  otherSocialInfo: '',
-  token: '',
-  language: 'en',
-  zipCode: '',
-  city: ''
+  mobile: '',
+  isOwner: false,
+  status: 0,
+  MemberRoles: []
 }
 
-interface ProfileSlice extends IProfile {
-  getProfile: () => IProfile
-  setProfile: (p: IProfile) => void
+interface MerchantMemberProfileSlice extends IMerchantMemberProfile {
+  getProfile: () => IMerchantMemberProfile
+  setProfile: (p: IMerchantMemberProfile) => void
   reset: () => void
   // setProfileField: (field: string, value: any) => void;
 }
 
-export const useProfileStore = create<ProfileSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_PROFILE,
-      getProfile: () => get(),
-      setProfile: (p) => set({ ...p }),
-      reset: () => set(INITIAL_PROFILE)
-    }),
-    { name: 'profile' }
-  )
-)
+export const useMerchantMemberProfileStore =
+  create<MerchantMemberProfileSlice>()((set, get) => ({
+    ...INITIAL_MERCHANT_MEMBER_PROFILE,
+    getProfile: () => get(),
+    setProfile: (p) => set({ ...p }),
+    reset: () => set(INITIAL_MERCHANT_MEMBER_PROFILE)
+  }))
 
 type TProductList = { list: IProduct[] }
 const INITIAL_PRODUCT_LIST: TProductList = { list: [] }
@@ -178,10 +153,12 @@ export const useSessionStore = create<SessionStoreSlice>()(
 interface IPermission {
   roles: string[] // ['power user', 'Customer Support']
   permissions: string[] // ['plan', 'subscription', 'user', 'invoice', 'payment', 'report'], these items are the accessible pages, like /plan, /subscription.
+  defaultPage: string // the page to go after login, or: if url has no path, just domain, like: https://merchant.unibee.top/. It's one of the item in the above permission array.
 }
 const INITIAL_PERM: IPermission = {
   roles: [],
-  permissions: []
+  permissions: [],
+  defaultPage: ''
 }
 interface PermissionStoreSlice extends IPermission {
   getPerm: () => IPermission
@@ -189,15 +166,12 @@ interface PermissionStoreSlice extends IPermission {
   reset: () => void
 }
 export const usePermissionStore = create<PermissionStoreSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_PERM,
-      getPerm: () => get(),
-      setPerm: (a) => set({ ...a }),
-      reset: () => set(INITIAL_PERM)
-    }),
-    { name: 'permissions' }
-  )
+  (set, get) => ({
+    ...INITIAL_PERM,
+    getPerm: () => get(),
+    setPerm: (a) => set({ ...a }),
+    reset: () => set(INITIAL_PERM)
+  })
 )
 
 const INITIAL_CREDIT_CONFIG: TCreditConfig = {

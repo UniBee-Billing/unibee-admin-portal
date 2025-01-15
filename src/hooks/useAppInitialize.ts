@@ -6,7 +6,8 @@ import {
   useAppConfigStore,
   useCreditConfigStore,
   useMerchantInfoStore,
-  // usePermissionStore,
+  useMerchantMemberProfileStore,
+  usePermissionStore,
   useProductListStore
 } from '../stores'
 
@@ -29,12 +30,11 @@ const defaultCreditConfig: TCreditConfig = {
 
 export const useAppInitialize = (): (() => Promise<string>) => {
   const merchantInfoStore = useMerchantInfoStore()
-  // const permissionStore = usePermissionStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
+  const permissionStore = usePermissionStore()
   const productsStore = useProductListStore()
   const appConfigStore = useAppConfigStore()
   const creditConfigStore = useCreditConfigStore()
-
-  // const [defaultPage, setDefaultPage] = useState<string|null>(null)
 
   const appInitialize = useCallback(async () => {
     const [initRes, errInit] = await initializeReq()
@@ -48,13 +48,8 @@ export const useAppInitialize = (): (() => Promise<string>) => {
     appConfigStore.setAppConfig(appConfig)
     appConfigStore.setGateway(gateways)
     merchantInfoStore.setMerchantInfo(merchantInfo.merchant)
+    merchantMemberProfile.setProfile(merchantInfo.merchantMember)
     productsStore.setProductList({ list: products.products })
-    /*
-      permissionStore.setPerm({
-        role: merchantInfo.merchantMember.role,
-        permissions: merchantInfo.merchantMember.permissions
-      })
-      */
 
     if (creditConfigs == null || creditConfigs.length == 0) {
       creditConfigStore.setCreditConfig(defaultCreditConfig)
@@ -85,27 +80,28 @@ export const useAppInitialize = (): (() => Promise<string>) => {
         })
     )
 
-    console.log(
-      'permissions set /role: ',
-      permissions,
-      '///',
-      merchantInfo.merchantMember.MemberRoles
-    )
-
+    let defaultPage = ''
     if (merchantInfo.isOwner) {
-      return '/plan'
-    }
-
-    if (permissions.has('user')) {
-      return '/user'
+      defaultPage = '/plan'
+    } else if (permissions.has('user')) {
+      defaultPage = '/user'
     } else if (permissions.has('subscription')) {
-      return '/subscription'
+      defaultPage = '/subscription'
     } else if (permissions.has('invoice')) {
-      return '/invoice'
+      defaultPage = '/invoice'
     } else {
-      return '/' + (Array.from(permissions)[0] ?? '')
+      defaultPage = '/' + (Array.from(permissions)[0] ?? '')
     }
-  }, [appConfigStore, merchantInfoStore, productsStore, creditConfigStore])
+    permissionStore.setPerm({
+      roles: merchantInfo.merchantMember.MemberRoles.map(
+        (r: { role: string }) => r.role
+      ),
+      permissions: Array.from(permissions),
+      defaultPage
+    })
+
+    return defaultPage
+  }, [])
 
   return appInitialize
 }

@@ -1,44 +1,27 @@
-import Icon, {
-  CheckOutlined,
-  ExclamationOutlined,
-  QuestionCircleOutlined
-} from '@ant-design/icons'
+import { CheckOutlined, ExclamationOutlined } from '@ant-design/icons'
 import {
   Avatar,
   Button,
-  Col,
   Form,
   Input,
   List,
   message,
   Modal,
-  Row,
-  Select,
   Space,
-  Switch,
-  Tag,
-  Tooltip
+  Tag
 } from 'antd'
 // import update from 'immutability-helper'
 import TextArea from 'antd/es/input/TextArea'
-import { useEffect, useMemo, useState } from 'react'
-import ExchangeIcon from '../../assets/exchange.svg?react'
-import { numBoolConvert } from '../../helpers'
-import {
-  createCreditConfigReq,
-  getCreditConfigListReq,
-  getPaymentGatewayConfigListReq,
-  saveCreditConfigReq
-} from '../../requests'
-import { CreditType, TCreditConfig, TGatewayConfig } from '../../shared.types'
-import { useCreditConfigStore, useMerchantInfoStore } from '../../stores'
+import { useEffect, useState } from 'react'
+import { getPaymentGatewayConfigListReq } from '../../requests'
+import { TGatewayConfig } from '../../shared.types'
 
 const Index = () => {
   // prefill WireTransfer in this list
   const [gatewayConfigList, setGatewayConfigList] = useState<TGatewayConfig[]>(
     []
   )
-  const [loading, setLoading] = useState(false)
+  // const [loading, setLoading] = useState(false)
   const [gatewayIndex, setGatewayIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (gatewayIdx?: number) => {

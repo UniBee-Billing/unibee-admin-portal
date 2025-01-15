@@ -1,7 +1,7 @@
 import { Alert, Button, ConfigProvider, Modal } from 'antd'
 import React, { useState } from 'react'
 import { useLicense, useVersion } from '../../../hooks/useVersion'
-import { useProfileStore } from '../../../stores'
+import { useMerchantMemberProfileStore } from '../../../stores'
 import { withWeakTextLoading, writeClipboardText } from '../../../utils'
 import { ContactCard } from './ContactCard'
 
@@ -26,7 +26,7 @@ export const AboutUniBee: React.FC = () => {
     licenseName,
     error: fetchLicenseError
   } = useLicense()
-  const profile = useProfileStore()
+  const profile = useMerchantMemberProfileStore()
 
   return (
     <ConfigProvider modal={{ styles: modalStyle }}>

@@ -2,23 +2,25 @@ import { LogoutOutlined } from '@ant-design/icons'
 import { Layout } from 'antd'
 import { useMemo, useState } from 'react'
 import { useUser } from '../../services'
+import { useMerchantMemberProfileStore } from '../../stores'
 import { AboutUniBee } from './about/aboutUniBee'
 import { Logo } from './logo'
 import { SideMenu } from './sideMenu'
 
 export const Sidebar = () => {
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const [collapsed, setCollapsed] = useState(false)
-  const { logout, profile } = useUser()
+  const { logout } = useUser()
   const role = useMemo(
     () =>
-      profile.isOwner
+      merchantMemberProfile.isOwner
         ? 'Owner'
-        : profile.MemberRoles.map(({ role }) => (
+        : merchantMemberProfile.MemberRoles.map(({ role }) => (
             <div key={role} className="flex justify-center">
               {role}
             </div>
           )),
-    [profile]
+    [merchantMemberProfile]
   )
 
   return (
@@ -35,8 +37,10 @@ export const Sidebar = () => {
         </div>
         <div className="flex flex-col items-center">
           <div className="flex flex-col items-center">
-            <div className="text-xs text-white">{profile.email}</div>
-            <div className="text-white">{`${profile.firstName} ${profile.lastName}`}</div>
+            <div className="text-xs text-white">
+              {merchantMemberProfile.email}
+            </div>
+            <div className="text-white">{`${merchantMemberProfile.firstName} ${merchantMemberProfile.lastName}`}</div>
             <div className="text-xs text-gray-400">{role}</div>
           </div>
           <AboutUniBee />

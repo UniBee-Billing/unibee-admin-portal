@@ -1,7 +1,7 @@
 import Icon, { TransactionOutlined } from '@ant-design/icons'
-import { Menu, MenuProps, message } from 'antd'
+import { Menu, MenuProps } from 'antd'
 import { ItemType, MenuItemType } from 'antd/es/menu/interface'
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ActivityLogSvg from '../../assets/navIcons/activityLog.svg?react'
 import AdminListSvg from '../../assets/navIcons/adminList.svg?react'
@@ -15,205 +15,92 @@ import PromoCreditSvg from '../../assets/navIcons/promoCredit.svg?react'
 import ReportSvg from '../../assets/navIcons/report.svg?react'
 import SubscriptionSvg from '../../assets/navIcons/subscription.svg?react'
 import UserListSvg from '../../assets/navIcons/userList.svg?react'
-import { useCopyContent } from '../../hooks'
-import { useAccessiblePages } from '../../hooks/useAccessiblePages'
 import { APP_ROUTES } from '../../routes'
-import { useProfileStore } from '../../stores'
+import { useMerchantMemberProfileStore, usePermissionStore } from '../../stores'
 import { basePathName, trimEnvBasePath } from '../../utils'
 import './sideMenu.css'
 
 const BASE_PATH = import.meta.env.BASE_URL
 
-const useContextMenu = () => {
-  const [openedMenuId, setOpenedMenuId] = useState('')
-  const MENU_ITEMS: ItemType<MenuItemType>[] = [
-    {
-      label: 'Product and Plan',
-      key: 'plan',
-      icon: <Icon component={ProductPlanSvg} />
-    },
-    {
-      label: 'Billable Metric',
-      key: 'billable-metric',
-      icon: <Icon component={BillableMetricsSvg} />
-    },
-    {
-      label: 'Discount Code',
-      key: 'discount-code',
-      icon: <Icon component={DiscountCodeSvg} />
-    },
-    {
-      label: (
-        <a href={`${location.origin}${BASE_PATH}subscription/list`}>
-          Subscription
-        </a>
-      ), // 'Subscription',
-      key: 'subscription',
-      icon: <Icon component={SubscriptionSvg} />
-    },
-    {
-      label: <a href={`${location.origin}${BASE_PATH}invoice/list`}>Invoice</a>, // 'Invoice',
-      key: 'invoice',
-      icon: <Icon component={InvoiceSvg} />
-    },
-    {
-      label: 'Transaction',
-      key: 'transaction',
-      icon: <TransactionOutlined />
-    },
-    {
-      label: 'Promo Credit',
-      key: 'promo-credit',
-      icon: <Icon component={PromoCreditSvg} />
-    },
-    {
-      label: <a href={`${location.origin}${BASE_PATH}user/list`}>User List</a>, // 'User List',
-      key: 'user',
-      icon: <Icon component={UserListSvg} />
-    },
-    {
-      label: 'Admin List',
-      key: 'admin',
-      icon: <Icon component={AdminListSvg} />
-    },
-    // The backend of Analytics is not completed yet, so it should hide from the menu until backend is ready
-    // { label: 'Analytics', key: 'analytics', icon: <PieChartOutlined /> },
-    {
-      label: 'My Account',
-      key: 'my-account',
-      icon: <Icon component={MyAccountSvg} />
-    },
-    {
-      label: 'Report',
-      key: 'report',
-      icon: <Icon component={ReportSvg} />
-    },
-    {
-      label: 'Configuration',
-      key: 'configuration',
-      icon: <Icon component={ConfigSvg} />
-    },
-    {
-      // label: 'Activity Logs',
-      label: (
-        <ContextMenu
-          menuId="activity-logs"
-          label="Activity Logs"
-          link="activity-logs"
-          openedMenuId={openedMenuId}
-          setOpenedMenuId={setOpenedMenuId}
-        />
-      ),
-      key: 'activity-logs',
-      icon: <Icon component={ActivityLogSvg} />
-    }
-  ]
-  return MENU_ITEMS
-}
-
-const ContextMenu = ({
-  menuId, // myId
-  label,
-  link, // currently opened menuId saved in parent
-  openedMenuId,
-  setOpenedMenuId
-}: {
-  menuId: string
-  label: string
-  link: string
-  openedMenuId: string
-  setOpenedMenuId: (menuId: string) => void
-}) => {
-  const [clicked, setClicked] = useState(false)
-  const [points, setPoints] = useState({
-    x: 0,
-    y: 0
-  })
-  useEffect(() => {
-    const handleClick = () => {
-      setClicked(false)
-    }
-    window.addEventListener('click', handleClick)
-    return () => {
-      window.removeEventListener('click', handleClick)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (openedMenuId !== menuId) {
-      setClicked(false)
-    }
-  }, [openedMenuId])
-
-  return (
-    <div>
-      <div
-        style={{ position: 'relative' }}
-        onContextMenu={(e) => {
-          // console.log('myId/currently open Id: ', menuId, '//', openedMenuId)
-          e.preventDefault()
-          setClicked(true)
-          setOpenedMenuId(menuId)
-          setPoints({
-            x: e.pageX,
-            y: e.pageY
-          })
-        }}
-      >
-        {label}
-      </div>
-
-      {clicked && (
-        <div
-          className="border border-solid border-gray-300 drop-shadow-lg"
-          style={{
-            borderRadius: '4px',
-            padding: '4px',
-            position: 'fixed',
-            top: `${points.y}px`,
-            left: `${points.x}px`,
-            color: 'rgb(37, 37, 37)',
-            background: 'rgb(237, 237, 237)',
-            zIndex: 100000
-          }}
-        >
-          <ul className="sidebar-nav-context-menu">
-            <li
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setClicked(false)
-                window.open(`${location.origin}${BASE_PATH}${link}`)
-              }}
-            >
-              Open Link in New Tab
-            </li>
-            <li
-              onClick={async (e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setClicked(false)
-                const url = `${location.origin}${BASE_PATH}${link}`
-                const err = await useCopyContent(url)
-                if (err != null) {
-                  message.error('Copy Link failed')
-                }
-              }}
-            >
-              Copy Link
-            </li>
-          </ul>
-        </div>
-      )}
-    </div>
-  )
-}
+const MENU_ITEMS: ItemType<MenuItemType>[] = [
+  {
+    label: 'Product and Plan',
+    key: 'plan',
+    icon: <Icon component={ProductPlanSvg} />
+  },
+  {
+    label: 'Billable Metric',
+    key: 'billable-metric',
+    icon: <Icon component={BillableMetricsSvg} />
+  },
+  {
+    label: 'Discount Code',
+    key: 'discount-code',
+    icon: <Icon component={DiscountCodeSvg} />
+  },
+  {
+    label: (
+      <a href={`${location.origin}${BASE_PATH}subscription/list`}>
+        Subscription
+      </a>
+    ), // 'Subscription',
+    key: 'subscription',
+    icon: <Icon component={SubscriptionSvg} />
+  },
+  {
+    label: <a href={`${location.origin}${BASE_PATH}invoice/list`}>Invoice</a>, // 'Invoice',
+    key: 'invoice',
+    icon: <Icon component={InvoiceSvg} />
+  },
+  {
+    label: 'Transaction',
+    key: 'transaction',
+    icon: <TransactionOutlined />
+  },
+  {
+    label: 'Promo Credit',
+    key: 'promo-credit',
+    icon: <Icon component={PromoCreditSvg} />
+  },
+  {
+    label: <a href={`${location.origin}${BASE_PATH}user/list`}>User List</a>, // 'User List',
+    key: 'user',
+    icon: <Icon component={UserListSvg} />
+  },
+  {
+    label: 'Admin List',
+    key: 'admin',
+    icon: <Icon component={AdminListSvg} />
+  },
+  // The backend of Analytics is not completed yet, so it should hide from the menu until backend is ready
+  // { label: 'Analytics', key: 'analytics', icon: <PieChartOutlined /> },
+  {
+    label: 'My Account',
+    key: 'my-account',
+    icon: <Icon component={MyAccountSvg} />
+  },
+  {
+    label: 'Report',
+    key: 'report',
+    icon: <Icon component={ReportSvg} />
+  },
+  {
+    label: 'Configuration',
+    key: 'configuration',
+    icon: <Icon component={ConfigSvg} />
+  },
+  {
+    label: 'Activity Logs',
+    key: 'activity-logs',
+    icon: <Icon component={ActivityLogSvg} />
+  }
+]
 
 const DEFAULT_ACTIVE_MENU_ITEM_KEY = '/plan/list'
 
 export const SideMenu = (props: MenuProps) => {
+  const permStore = usePermissionStore()
   const navigate = useNavigate()
-  const MENU_ITEMS = useContextMenu()
   const parsedMenuItems: ItemType<MenuItemType>[] = MENU_ITEMS.map((item) => {
     const route = APP_ROUTES.find(({ id }) => id === item!.key)
 
@@ -222,18 +109,17 @@ export const SideMenu = (props: MenuProps) => {
   const [activeMenuItem, setActiveMenuItem] = useState<string[]>([
     DEFAULT_ACTIVE_MENU_ITEM_KEY
   ])
-  const accessiblePages = useAccessiblePages()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const items = useMemo(
     () =>
-      !profileStore.isOwner
+      !merchantMemberProfile.isOwner
         ? parsedMenuItems.filter((item) =>
-            accessiblePages.find(
+            permStore.permissions.find(
               (page) => page === basePathName((item?.key as string) ?? '')
             )
           )
         : parsedMenuItems,
-    [profileStore.isOwner, accessiblePages]
+    [merchantMemberProfile.isOwner, permStore.permissions]
   )
 
   useLayoutEffect(() => {

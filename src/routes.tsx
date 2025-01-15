@@ -25,8 +25,7 @@ import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
 import CustomerDetail from './components/user/detail'
 import CustomerList from './components/user/list'
-import { useAccessiblePages } from './hooks'
-import { useProfileStore } from './stores'
+import { useMerchantMemberProfileStore, usePermissionStore } from './stores'
 
 export const APP_ROUTES: RouteObject[] = [
   {
@@ -211,26 +210,21 @@ export const APP_ROUTES: RouteObject[] = [
 ]
 
 export const useAppRoutesConfig = () => {
-  const profileStore = useProfileStore()
-  const accessiblePages = useAccessiblePages()
-  // const defaultPage = useDefaultPage()
-  /*
-  const appRoutesConfig = useMemo(
-    () =>
-      APP_ROUTES.concat([
-        { path: '/', element: <Navigate to={'/'} replace /> }
-      ]),
-    [defaultPage]
-  )
-    */
+  const merchantMemberProfile = useMerchantMemberProfileStore()
+  const permStore = usePermissionStore()
 
   return useMemo(
     () =>
       APP_ROUTES.filter(
         ({ id }) =>
-          profileStore.isOwner || !!accessiblePages.find((page) => page === id)
-      ),
-    [profileStore.isOwner, accessiblePages]
+          merchantMemberProfile.isOwner ||
+          permStore.permissions.find((p) => p == id)
+      ).concat({
+        id: 'root-path',
+        path: '/',
+        element: <Navigate to={permStore.defaultPage} replace />
+      }),
+    [merchantMemberProfile.isOwner, permStore]
   )
 }
 

@@ -27,14 +27,14 @@ import { IMerchantMemberProfile, TRole } from '../../shared.types'
 import {
   useAppConfigStore,
   useMerchantInfoStore,
+  useMerchantMemberProfileStore,
   usePermissionStore,
-  useProfileStore,
   useSessionStore
 } from '../../stores'
 import ResetPasswordWithOTP from '../login/forgetPasswordForm'
 
 const Index = () => {
-  const profileStore = useProfileStore()
+  const merchantProfile = useMerchantMemberProfileStore()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false) // page loading
   const [submitting] = useState(false)
@@ -63,7 +63,7 @@ const Index = () => {
       {resetPasswordModal && (
         <ResetPasswordModal
           closeModal={togglePasswordModal}
-          email={profileStore.email}
+          email={merchantProfile.email}
         />
       )}
       {loading && (
@@ -139,7 +139,7 @@ const Index = () => {
         <Row>
           <Col span={12}>
             <Form.Item label="Roles">
-              {profileStore.isOwner ? (
+              {merchantProfile.isOwner ? (
                 <Tag>Owner</Tag>
               ) : (
                 <Space size={[0, 8]} wrap>
@@ -183,7 +183,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
   const navigate = useNavigate()
   const [countVal, counting, startCount, stopCounter] = useCountdown(60)
   const merchantInfoStore = useMerchantInfoStore()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const sessionStore = useSessionStore()
   const permStore = usePermissionStore()
   const appConfig = useAppConfigStore()
@@ -200,7 +200,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
       return
     }
     sessionStore.reset()
-    profileStore.reset()
+    merchantMemberProfile.reset()
     merchantInfoStore.reset()
     appConfig.reset()
     permStore.reset()
