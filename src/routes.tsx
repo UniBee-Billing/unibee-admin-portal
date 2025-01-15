@@ -202,10 +202,6 @@ export const APP_ROUTES: RouteObject[] = [
     id: 'report',
     path: 'report',
     element: <ReportPage />
-  },
-  {
-    path: '*',
-    element: <NotFound />
   }
 ]
 
@@ -219,11 +215,14 @@ export const useAppRoutesConfig = () => {
         ({ id }) =>
           merchantMemberProfile.isOwner ||
           permStore.permissions.find((p) => p == id)
-      ).concat({
-        id: 'root-path',
-        path: '/',
-        element: <Navigate to={permStore.defaultPage} replace />
-      }),
+      ).concat(
+        {
+          id: 'root-path',
+          path: '/',
+          element: <Navigate to={permStore.defaultPage} replace />
+        },
+        { id: 'not-found', path: '*', element: <NotFound /> } // catch-all NOT-FOUND has to be defined in the last item.
+      ),
     [merchantMemberProfile.isOwner, permStore]
   )
 }
