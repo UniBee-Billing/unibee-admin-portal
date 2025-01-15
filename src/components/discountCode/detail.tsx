@@ -768,7 +768,7 @@ const Index = () => {
               <Divider style={{ margin: '24px 0' }} />{' '}
               <Row>
                 <Col span={20} className="flex items-center">
-                  Apply only for upgrades&nbsp;{' '}
+                  Apply only for upgrades (same recurring cycle)&nbsp;{' '}
                   {/* <Popover
                     overlayStyle={{ maxWidth: '250px' }}
                     content={

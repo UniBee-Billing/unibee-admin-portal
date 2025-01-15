@@ -7,6 +7,7 @@ import '../../shared.css'
 import AppConfig from './appConfig'
 import CreditConfig from './creditConfig'
 import EmailTemplates from './emailTemplates'
+import PaymentGatewayConfig from './paymentGateways'
 import Permissions from './permissions'
 import { SubscriptionConfig } from './subscriptionConfig'
 import WebhookList from './webHooks/list'
@@ -17,6 +18,11 @@ const Index = () => {
     searchParams.get('tab') ?? 'appConfig'
   )
   const tabItems: TabsProps['items'] = [
+    {
+      key: 'paymentGateways',
+      label: 'Payment Gateways',
+      children: <PaymentGatewayConfig />
+    },
     {
       key: 'appConfig',
       label: 'App Config',

@@ -555,6 +555,28 @@ type TGateway = {
   }
 }
 
+export type TGatewayConfig = {
+  IsSetupFinished: boolean
+  gatewayId: number // 0: also means setup unfinished
+  gatewayName: string // stripe
+  gatewayType: number
+  displayName: string // Bank Cards
+  description: string
+  name: string // Stripe
+  gatewayIcons: string[]
+  gatewayLogo: string
+  gatewayWebsiteLink: string
+  gatewaySecret: string // public key(desentisized)
+  gatewayKey: string // private key(desensitized)
+  gatewayWebhookIntegrationLink: string
+  currency: string
+  sort: number //
+  webhookEndpointUrl: string
+  webhookSecret: string // desensitized
+  minimumAmount: number
+  createTime: number
+}
+
 export interface TRolePermission {
   group: string
   permissions: string[]
