@@ -29,7 +29,7 @@ const Index = () => (
         </div>
       </Divider>
       <div className="flex flex-col items-center justify-center gap-3 text-white">
-        <span>Copyright © 2024</span>
+        <span>Copyright © 2025</span>
       </div>
     </div>
   </div>

@@ -1,7 +1,7 @@
 import { Modal } from 'antd'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useProfileStore, useSessionStore } from '../../stores'
+import { useMerchantMemberProfileStore, useSessionStore } from '../../stores'
 import LoginContainer from './loginContainer'
 
 interface LoginModalProps {
@@ -26,7 +26,7 @@ export const LoginModal = ({ email, isOpen }: LoginModalProps) => {
 
 export const useLoginModal = () => {
   const sessionStore = useSessionStore()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const navigate = useNavigate()
   const [isOpenLoginModal, setIsOpenLoginModal] = useState(false)
 
@@ -35,13 +35,13 @@ export const useLoginModal = () => {
       return setIsOpenLoginModal(false)
     }
 
-    if (null == profileStore.id || window.redirectToLogin) {
-      // is it better to use email?
+    if (merchantMemberProfile.id == -1 || window.redirectToLogin) {
+      // == -1: new users, never used our system before, their initial id is -1 (set in store)
       return navigate('login')
     }
 
     setIsOpenLoginModal(true)
-  }, [sessionStore.expired, profileStore.id])
+  }, [sessionStore.expired, merchantMemberProfile.id])
 
   return { isOpenLoginModal, setIsOpenLoginModal }
 }

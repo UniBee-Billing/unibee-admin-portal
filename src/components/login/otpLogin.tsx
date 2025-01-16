@@ -6,7 +6,7 @@ import { emailValidate } from '../../helpers'
 import { useCountdown } from '../../hooks'
 import { useAppInitialize } from '../../hooks/useAppInitialize'
 import { loginWithOTPReq, loginWithOTPVerifyReq } from '../../requests'
-import { useProfileStore, useSessionStore } from '../../stores'
+import { useMerchantMemberProfileStore, useSessionStore } from '../../stores'
 
 const Index = ({
   email,
@@ -172,7 +172,7 @@ const OTPForm = ({
 }: IOtpFormProps) => {
   const appInitialize = useAppInitialize()
   const navigate = useNavigate()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const sessionStore = useSessionStore()
   const [submitting, setSubmitting] = useState(false)
   const [otp, setOtp] = useState('')
@@ -200,29 +200,7 @@ const OTPForm = ({
     const { token, merchantMember } = loginRes
     localStorage.setItem('merchantToken', token)
     merchantMember.token = token
-    profileStore.setProfile(merchantMember)
-    // sessionStore.setSession({ expired: false, refresh: null })
-
-    /*
-    const [initRes, errInit] = await initializeReq()
-    setSubmitting(false)
-    setLogging(false)
-    if (null != errInit) {
-      setErrMsg(errInit.message)
-      return
-    }
-    const { appConfig, gateways, merchantInfo, products } = initRes
-    appConfigStore.setAppConfig(appConfig)
-    appConfigStore.setGateway(gateways)
-    productsStore.setProductList({ list: products.products })
-    merchantStore.setMerchantInfo(merchantInfo.merchant)
-    */
-    /*
-    permStore.setPerm({
-      role: merchantInfo.merchantMember.role,
-      permissions: merchantInfo.merchantMember.permissions
-    })
-      */
+    merchantMemberProfile.setProfile(merchantMember)
 
     const defaultPage = await appInitialize()
     if (triggeredByExpired) {

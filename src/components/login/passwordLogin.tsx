@@ -5,9 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import { emailValidate } from '../../helpers'
 import { useCountdown } from '../../hooks'
 import { useAppInitialize } from '../../hooks/useAppInitialize'
-// import { useInitData } from '../../hooks/useInitData'
 import { forgetPassReq, loginWithPasswordReq } from '../../requests'
-import { useProfileStore, useSessionStore } from '../../stores'
+import { useMerchantMemberProfileStore, useSessionStore } from '../../stores'
 import ForgetPasswordForm from './forgetPasswordForm'
 
 const Index = ({
@@ -22,7 +21,7 @@ const Index = ({
   setLogging: (val: boolean) => void
 }) => {
   const appInitialize = useAppInitialize()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const sessionStore = useSessionStore()
   const [errMsg, setErrMsg] = useState('')
   const [countVal, counting, startCount, stopCounter] = useCountdown(60)
@@ -71,32 +70,9 @@ const Index = ({
     const { merchantMember, token } = loginRes
     localStorage.setItem('merchantToken', token)
     merchantMember.token = token
-    profileStore.setProfile(merchantMember)
-    // sessionStore.setSession({ expired: false, refresh: null })
-    // useInitData()
+    merchantMemberProfile.setProfile(merchantMember)
 
-    /*
-    const [initRes, errInit] = await initializeReq()
-    setSubmitting(false)
-    setLogging(false)
-    if (null != errInit) {
-      setErrMsg(errInit.message)
-      return
-    }
-    
-    const { appConfig, gateways, merchantInfo, products } = initRes
-    appConfigStore.setAppConfig(appConfig)
-    appConfigStore.setGateway(gateways)
-    productsStore.setProductList({ list: products.products })
-    merchantStore.setMerchantInfo(merchantInfo.merchant)
-    permStore.setPerm({
-      roles: merchantInfo.merchantMember.roles,
-      permissions: merchantInfo.merchantMember.permissions
-    })
-
-    */
     const defaultPage = await appInitialize()
-    console.log('defaultPage: ', defaultPage)
     if (triggeredByExpired) {
       sessionStore.refresh?.()
       sessionStore.setSession({ expired: false, refresh: null })

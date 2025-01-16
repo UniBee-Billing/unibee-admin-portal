@@ -13,7 +13,7 @@ import InvoiceList from './components/invoice/list'
 import MerchantUserDetail from './components/merchantUser/userDetail'
 import MerchantUserList from './components/merchantUser/userList'
 import MyAccount from './components/myAccount/'
-import NotFound from './components/notFound'
+// import NotFound from './components/notFound'
 import PaymentDetail from './components/payment/detail'
 import PaymentList from './components/payment/list'
 import PricePlanList from './components/plan'
@@ -25,8 +25,7 @@ import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
 import CustomerDetail from './components/user/detail'
 import CustomerList from './components/user/list'
-import { useAccessiblePages } from './hooks'
-import { useProfileStore } from './stores'
+import { useMerchantMemberProfileStore, usePermissionStore } from './stores'
 
 export const APP_ROUTES: RouteObject[] = [
   {
@@ -203,34 +202,28 @@ export const APP_ROUTES: RouteObject[] = [
     id: 'report',
     path: 'report',
     element: <ReportPage />
-  },
-  {
-    path: '*',
-    element: <NotFound />
   }
 ]
 
 export const useAppRoutesConfig = () => {
-  const profileStore = useProfileStore()
-  const accessiblePages = useAccessiblePages()
-  // const defaultPage = useDefaultPage()
-  /*
-  const appRoutesConfig = useMemo(
-    () =>
-      APP_ROUTES.concat([
-        { path: '/', element: <Navigate to={'/'} replace /> }
-      ]),
-    [defaultPage]
-  )
-    */
+  const merchantMemberProfile = useMerchantMemberProfileStore()
+  const permStore = usePermissionStore()
 
   return useMemo(
     () =>
       APP_ROUTES.filter(
         ({ id }) =>
-          profileStore.isOwner || !!accessiblePages.find((page) => page === id)
+          merchantMemberProfile.isOwner ||
+          permStore.permissions.find((p) => p == id)
+      ).concat(
+        {
+          id: 'root-path',
+          path: '/',
+          element: <Navigate to={permStore.defaultPage} replace />
+        }
+        // { id: 'not-found', path: '*', element: <NotFound /> } // catch-all NOT-FOUND has to be defined in the last item.
       ),
-    [profileStore.isOwner, accessiblePages]
+    [merchantMemberProfile.isOwner, permStore]
   )
 }
 

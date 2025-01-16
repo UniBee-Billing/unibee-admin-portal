@@ -34,7 +34,7 @@ import {
 } from '../../requests'
 import '../../shared.css'
 import { IMerchantUserProfile, TRole } from '../../shared.types'
-import { useProfileStore } from '../../stores'
+import { useMerchantMemberProfileStore } from '../../stores'
 import { MerchantUserStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
@@ -46,7 +46,7 @@ type TFilters = {
 const Index = () => {
   // const navigate = useNavigate()
   const isMountingRef = useRef(false)
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const { page, onPageChange } = usePagination()
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -256,7 +256,7 @@ const Index = () => {
         />
       )}
       {/* <Search form={form} goSearch={fetchData} searching={loading} /> */}
-      {/* profileStore.isOwner && (
+      {/* merchantMemberProfile.isOwner && (
         <div className="my-2 flex justify-end">
           <Button type="primary" onClick={toggleInviteModal}>
             Invite
@@ -277,7 +277,7 @@ const Index = () => {
         onRow={(user) => {
           return {
             onClick: (evt) => {
-              if (!profileStore.isOwner) {
+              if (!merchantMemberProfile.isOwner) {
                 // return
               }
               const tgt = evt.target

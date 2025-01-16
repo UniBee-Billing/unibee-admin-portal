@@ -275,8 +275,6 @@ const Index = () => {
       code.discountAmount = toFixedNumber(code.discountAmount, 2)
     }
 
-    // console.log('on save: ', code)
-    // return
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
 
     setLoading(true)

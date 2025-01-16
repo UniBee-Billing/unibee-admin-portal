@@ -1,6 +1,6 @@
 import { UnorderedListOutlined } from '@ant-design/icons'
 import { Button, Layout, theme } from 'antd'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import AppSearch from './components/appSearch'
 import Login from './components/login'
@@ -9,9 +9,13 @@ import { Sidebar } from './components/sidebar/sidebar'
 import Signup from './components/signup'
 import TaskList from './components/taskList'
 // import { useAppInitialize } from './hooks/useAppInitialize'
-import { useInitData } from './hooks/useInitData'
+import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppRoutes } from './routes'
-import { useAppConfigStore, useProfileStore, useSessionStore } from './stores'
+import {
+  useAppConfigStore,
+  useMerchantMemberProfileStore,
+  useSessionStore
+} from './stores'
 
 const { Header, Content, Footer } = Layout
 
@@ -19,8 +23,9 @@ const APP_PATH = import.meta.env.BASE_URL
 const noSiderRoutes = [`${APP_PATH}login`, `${APP_PATH}signup`]
 
 const App: React.FC = () => {
+  const appInitialize = useAppInitialize()
   const sessionStore = useSessionStore()
-  const profileStore = useProfileStore()
+  const merchantMemberProfile = useMerchantMemberProfileStore()
   const appConfigStore = useAppConfigStore()
   const {
     token: { colorBgContainer, borderRadiusLG }
@@ -32,15 +37,20 @@ const App: React.FC = () => {
     [appConfigStore]
   )
 
-  const navigationEntries = window.performance.getEntriesByType('navigation')
-  if (
-    navigationEntries.length > 0 &&
-    (navigationEntries[0] as PerformanceNavigationTiming).type === 'reload'
-  ) {
-    // console.log('reloading....')
-    useInitData()
-    // appInitialize()
+  const initilize = () => {
+    // if session expired, a login modal will open, which will handle the initialize.
+    // the following appInitialize() is to handle page refresh by pressing F5, or right-click opening the app in a new tab.
+    if (!sessionStore.expired) {
+      appInitialize()
+    }
   }
+
+  useEffect(() => {
+    window.addEventListener('load', initilize)
+    return () => {
+      window.removeEventListener('load', initilize)
+    }
+  }, [])
 
   return (
     <>
@@ -54,9 +64,9 @@ const App: React.FC = () => {
       ) : (
         <Layout style={{ minHeight: '100vh' }}>
           {sessionStore.getSession().expired && (
-            <LoginModal isOpen={true} email={profileStore.email} />
+            <LoginModal isOpen={true} email={merchantMemberProfile.email} />
           )}
-          <Sidebar></Sidebar>
+          <Sidebar />
           {appConfigStore.taskListOpen && (
             <TaskList onClose={toggleTaskListOpen} />
           )}
@@ -92,7 +102,7 @@ const App: React.FC = () => {
                 {appRoutes}
               </div>
             </Content>
-            <Footer style={{ textAlign: 'center' }}>Copyright © 2024</Footer>
+            <Footer style={{ textAlign: 'center' }}>Copyright © 2025</Footer>
           </Layout>
         </Layout>
       )}

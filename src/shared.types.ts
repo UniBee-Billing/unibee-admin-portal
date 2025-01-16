@@ -46,7 +46,7 @@ interface IProfile {
   type: AccountType
   status: number // 0-Active, 2-Frozen
   taxPercentage: number
-  MemberRoles: TRole[]
+  // MemberRoles: TRole[]
   isOwner: boolean
   merchantId: number
   promoCreditAccounts?: TPromoAccount[]
