@@ -113,7 +113,7 @@ const Index = ({
     setDefaultPaymentMethod(evt.target.value)
   }
 
-  const setDefaultCard = async (paymentMethodId: string) => {
+  const setDefaultCard = async () => {
     if (gatewayId == undefined) {
       return
     }
@@ -121,7 +121,7 @@ const Index = ({
     const [_, err] = await changeUserPaymentMethodReq(
       userId,
       gatewayId,
-      paymentMethodId
+      defaultPaymentMethodId
     )
     setLoading(false)
     if (null != err) {
