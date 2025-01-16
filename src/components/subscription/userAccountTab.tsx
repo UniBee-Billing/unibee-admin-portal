@@ -322,7 +322,7 @@ const UserAccountTab = ({
                     }}
                   >
                     <PaymentCardList
-                      readonly={true}
+                      readonly={false}
                       userId={user.id as number}
                       gatewayId={gatewayId}
                       refreshUserProfile={refresh}

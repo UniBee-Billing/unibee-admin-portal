@@ -168,12 +168,15 @@ interface PermissionStoreSlice extends IPermission {
   reset: () => void
 }
 export const usePermissionStore = create<PermissionStoreSlice>()(
-  (set, get) => ({
-    ...INITIAL_PERM,
-    getPerm: () => get(),
-    setPerm: (a) => set({ ...a }),
-    reset: () => set(INITIAL_PERM)
-  })
+  persist(
+    (set, get) => ({
+      ...INITIAL_PERM,
+      getPerm: () => get(),
+      setPerm: (a) => set({ ...a }),
+      reset: () => set(INITIAL_PERM)
+    }),
+    { name: 'permission' }
+  )
 )
 
 const INITIAL_CREDIT_CONFIG: TCreditConfig = {

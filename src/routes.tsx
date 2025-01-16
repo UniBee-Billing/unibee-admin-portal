@@ -14,6 +14,7 @@ import MerchantUserDetail from './components/merchantUser/userDetail'
 import MerchantUserList from './components/merchantUser/userList'
 import MyAccount from './components/myAccount/'
 // import NotFound from './components/notFound'
+// import NotFound from './components/notFound'
 import PaymentDetail from './components/payment/detail'
 import PaymentList from './components/payment/list'
 import PricePlanList from './components/plan'
@@ -229,6 +230,5 @@ export const useAppRoutesConfig = () => {
 
 export const useAppRoutes = () => {
   const appRoutesConfig = useAppRoutesConfig()
-
   return useRoutes(appRoutesConfig)
 }

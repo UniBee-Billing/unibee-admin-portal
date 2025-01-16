@@ -1344,6 +1344,31 @@ export const getUserProfile = async (userId: number, refreshCb: () => void) => {
   }
 }
 
+// for Stripe, set another card as default payment card
+export const changeUserPaymentMethodReq = async (
+  userId: number,
+  gatewayId: number,
+  paymentMethodId: string
+) => {
+  try {
+    const res = await request.post(`/merchant/user/change_gateway`, {
+      userId,
+      gatewayId,
+      paymentMethodId
+    })
+    if (res.data.code == 61 || res.data.code == 62) {
+      session.setSession({ expired: true, refresh: null })
+      throw new ExpiredError(
+        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+      )
+    }
+    return [null, null] // no meaningful return
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // billing admin can also update user profile.
 export const saveUserProfileReq = async (newProfile: IProfile) => {
   const session = useSessionStore.getState()
