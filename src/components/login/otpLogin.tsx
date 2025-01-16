@@ -201,28 +201,6 @@ const OTPForm = ({
     localStorage.setItem('merchantToken', token)
     merchantMember.token = token
     merchantMemberProfile.setProfile(merchantMember)
-    // sessionStore.setSession({ expired: false, refresh: null })
-
-    /*
-    const [initRes, errInit] = await initializeReq()
-    setSubmitting(false)
-    setLogging(false)
-    if (null != errInit) {
-      setErrMsg(errInit.message)
-      return
-    }
-    const { appConfig, gateways, merchantInfo, products } = initRes
-    appConfigStore.setAppConfig(appConfig)
-    appConfigStore.setGateway(gateways)
-    productsStore.setProductList({ list: products.products })
-    merchantStore.setMerchantInfo(merchantInfo.merchant)
-    */
-    /*
-    permStore.setPerm({
-      role: merchantInfo.merchantMember.role,
-      permissions: merchantInfo.merchantMember.permissions
-    })
-      */
 
     const defaultPage = await appInitialize()
     if (triggeredByExpired) {

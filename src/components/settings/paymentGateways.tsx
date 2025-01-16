@@ -38,7 +38,7 @@ const Index = () => {
       return
     }
     setGatewayConfigList(gateways)
-    console.log('gateways: ', gateways)
+    // console.log('gateways: ', gateways)
   }
 
   useEffect(() => {
@@ -96,9 +96,9 @@ const PaymentGatewaySetupModal = ({
   closeModal: () => void
 }) => {
   const [form] = Form.useForm()
-  const [loading, setLoading] = useState(false)
+  const [loading, _] = useState(false)
   const onSave = () => {}
-  console.log('config: ', gatewayConfig)
+  // console.log('config: ', gatewayConfig)
   return (
     <Modal
       title={

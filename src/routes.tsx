@@ -13,7 +13,7 @@ import InvoiceList from './components/invoice/list'
 import MerchantUserDetail from './components/merchantUser/userDetail'
 import MerchantUserList from './components/merchantUser/userList'
 import MyAccount from './components/myAccount/'
-import NotFound from './components/notFound'
+// import NotFound from './components/notFound'
 import PaymentDetail from './components/payment/detail'
 import PaymentList from './components/payment/list'
 import PricePlanList from './components/plan'
@@ -220,8 +220,8 @@ export const useAppRoutesConfig = () => {
           id: 'root-path',
           path: '/',
           element: <Navigate to={permStore.defaultPage} replace />
-        },
-        { id: 'not-found', path: '*', element: <NotFound /> } // catch-all NOT-FOUND has to be defined in the last item.
+        }
+        // { id: 'not-found', path: '*', element: <NotFound /> } // catch-all NOT-FOUND has to be defined in the last item.
       ),
     [merchantMemberProfile.isOwner, permStore]
   )

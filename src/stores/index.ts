@@ -125,7 +125,9 @@ export const useAppConfigStore = create<AppConfigSlice>()(
 // ---------------
 interface ISession {
   expired: boolean
-  refresh: null | (() => void) // if session is expired when making an async fn call, save this fn here, so after re-login, re-run this fn
+  refresh: null | (() => void) // if session is expired when making an async fn call, save this fn here, so after re-login, re-run this fn.
+  // needRedirect?: boolean // after login from /login, user will be redirected to a default page(different role might have different page)
+  // login from LoginModal doesn't need redirect
 }
 const INITIAL_SESSION: ISession = {
   expired: true,

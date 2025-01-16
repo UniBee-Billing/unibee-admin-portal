@@ -37,23 +37,10 @@ const App: React.FC = () => {
     [appConfigStore]
   )
 
-  /*
-  const navigationEntries = window.performance.getEntriesByType('navigation')
-  if (
-    navigationEntries.length > 0 &&
-    (navigationEntries[0] as PerformanceNavigationTiming).type === 'reload'
-  ) {
-    console.log('reloading....')
-    // useInitData()
-    // appInitialize()
-  }
-    */
-
   const initilize = () => {
     // if session expired, a login modal will open, which will handle the initialize.
     // the following appInitialize() is to handle page refresh by pressing F5, or right-click opening the app in a new tab.
     if (!sessionStore.expired) {
-      console.log('initialzing in app')
       appInitialize()
     }
   }
