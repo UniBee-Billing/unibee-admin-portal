@@ -248,7 +248,7 @@ const Index = ({
       </div>
       <div className="my-2 flex items-center justify-end">
         <Button
-          onClick={() => setDefaultCard(defaultPaymentId)}
+          onClick={setDefaultCard}
           // loading={loading}
           // size="small"
           disabled={
