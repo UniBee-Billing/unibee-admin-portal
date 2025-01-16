@@ -566,7 +566,7 @@ export type TGatewayConfig = {
   gatewayIcons: string[]
   gatewayLogo: string
   gatewayWebsiteLink: string
-  gatewaySecret: string // public key(desentisized)
+  gatewaySecret: string // public key(desensitized)
   gatewayKey: string // private key(desensitized)
   gatewayWebhookIntegrationLink: string
   currency: string

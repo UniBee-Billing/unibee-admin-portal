@@ -1,7 +1,17 @@
 import { LoadingOutlined, MinusOutlined, SyncOutlined } from '@ant-design/icons'
-import { Col, Empty, Popconfirm, Row, Spin, Tooltip, message } from 'antd'
+import {
+  Button,
+  Col,
+  Empty,
+  Popconfirm,
+  Row,
+  Spin,
+  Tooltip,
+  message
+} from 'antd'
 import { useEffect, useState } from 'react'
 import {
+  changeUserPaymentMethodReq,
   getUserPaymentMethodListReq,
   removeCardPaymentMethodReq
 } from '../../requests'
@@ -9,6 +19,7 @@ import {
 type TCard = {
   id: string
   type: string
+  isDefault: boolean
   brand: string
   country: string
   expiredAt: string
@@ -33,6 +44,7 @@ interface MethodData {
 interface Method {
   id: string
   type: string
+  isDefault: boolean
   data: MethodData
 }
 
@@ -62,20 +74,20 @@ const Index = ({
       message.error(err.message)
       return
     }
-    const cards =
+    const cards: TCard[] =
       methodList == null
         ? []
         : methodList.map((m: Method) => ({
             id: m.id,
             type: m.type,
             ...m.data,
-            expiredAt: m.data.expYear + '-' + m.data.expMonth
+            expiredAt: m.data.expYear + '-' + m.data.expMonth,
+            isDefault: m.isDefault
           }))
     setCards(cards)
-    // on user portal, user might have updated paymentId, after we refresh the page, we need to update paymentId in local state
-    if (defaultPaymentId != defaultPaymentMethodId) {
-      setDefaultPaymentMethod(defaultPaymentId)
-    }
+    const defaultCard = cards.find((c: { isDefault: boolean }) => c.isDefault)
+    // console.log('fetching cards/def: ', cards, '//', defaultCard)
+    setDefaultPaymentMethod(defaultCard == undefined ? '' : defaultCard.id)
   }
 
   const onDeleteCard = (paymentMethodId: string) => async () => {
@@ -95,6 +107,30 @@ const Index = ({
     refresh()
   }
 
+  const onPaymentMethodChange: React.ChangeEventHandler<HTMLInputElement> = (
+    evt
+  ) => {
+    setDefaultPaymentMethod(evt.target.value)
+  }
+
+  const setDefaultCard = async (paymentMethodId: string) => {
+    if (gatewayId == undefined) {
+      return
+    }
+    setLoading(true)
+    const [_, err] = await changeUserPaymentMethodReq(
+      userId,
+      gatewayId,
+      paymentMethodId
+    )
+    setLoading(false)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+    refresh()
+  }
+
   const refresh = () => {
     if (refreshUserProfile != null) {
       refreshUserProfile()
@@ -102,7 +138,6 @@ const Index = ({
     }
   }
 
-  // defaultPaymentId is passed from parent
   useEffect(() => {
     fetchCards()
   }, [gatewayId, defaultPaymentId])
@@ -148,18 +183,51 @@ const Index = ({
             >
               <Col span={4}>
                 <input
-                  disabled={true}
+                  // disabled={readonly}
                   type="radio"
                   name="payment-methods"
                   id={c.id}
                   value={c.id}
                   checked={defaultPaymentMethodId == c.id}
+                  onChange={onPaymentMethodChange}
                 />
               </Col>
-              <Col span={4}>{c.brand}</Col>
-              <Col span={4}>{c.country}</Col>
-              <Col span={5}>{c.expiredAt}</Col>
-              <Col span={5}>{c.last4}</Col>
+              <Col span={4}>
+                {' '}
+                <label
+                  className="inline-block w-full cursor-pointer"
+                  htmlFor={c.id}
+                >
+                  {c.brand}
+                </label>
+              </Col>
+              <Col span={4}>
+                {' '}
+                <label
+                  className="inline-block w-full cursor-pointer"
+                  htmlFor={c.id}
+                >
+                  {c.country}
+                </label>
+              </Col>
+              <Col span={5}>
+                {' '}
+                <label
+                  className="inline-block w-full cursor-pointer"
+                  htmlFor={c.id}
+                >
+                  {c.expiredAt}
+                </label>
+              </Col>
+              <Col span={5}>
+                {' '}
+                <label
+                  className="inline-block w-full cursor-pointer"
+                  htmlFor={c.id}
+                >
+                  {c.last4}
+                </label>
+              </Col>
               <Col span={2}>
                 <Popconfirm
                   title="Delete confirm"
@@ -177,6 +245,18 @@ const Index = ({
             </Row>
           ))
         )}
+      </div>
+      <div className="my-2 flex items-center justify-end">
+        <Button
+          onClick={() => setDefaultCard(defaultPaymentId)}
+          // loading={loading}
+          // size="small"
+          disabled={
+            loading || defaultPaymentId == undefined || defaultPaymentId == ''
+          }
+        >
+          Set as auto payment card
+        </Button>
       </div>
     </>
   )
