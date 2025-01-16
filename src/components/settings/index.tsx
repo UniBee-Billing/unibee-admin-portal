@@ -24,6 +24,11 @@ const Index = () => {
       children: <PaymentGatewayConfig />
     },
     {
+      key: 'integrations',
+      label: 'Integrations',
+      children: <PaymentGatewayConfig />
+    },
+    {
       key: 'appConfig',
       label: 'App Config',
       children: <AppConfig />

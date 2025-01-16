@@ -32,7 +32,7 @@ export const initializeReq = async () => {
     [creditConfigs, errCreditConfigs]
   ] = await Promise.all([
     getAppConfigReq(),
-    getGatewayListReq(),
+    getPaymentGatewayListReq(),
     getMerchantInfoReq(),
     getProductListReq(),
     getCreditConfigListReq({
@@ -187,23 +187,6 @@ export const getAppConfigReq = async () => {
       )
     }
     return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-
-const getGatewayListReq = async () => {
-  const session = useSessionStore.getState()
-  try {
-    const res = await request.get(`/merchant/gateway/list`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data.gateways, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]

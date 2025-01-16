@@ -5,67 +5,15 @@ import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
 import { useCopyContent } from '../../hooks'
 import { getPaymentGatewayConfigListReq } from '../../requests'
-import { TGateway } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
+import { TGatewayConfig } from '../../shared.types'
 import CopyToClipboard from '../ui/copyToClipboard'
-import ModalWireTransfer from './appConfig/wireTransferModal'
 
-const NEW_WIRE_TRANSFER: TGateway = {
-  gatewayId: -1,
-  gatewayKey: '',
-  gatewayName: 'wire_transfer',
-  webhookEndpointUrl: '',
-  webhookSecret: '',
-  gatewayLogo: '',
-  gatewayType: 3,
-  createTime: 0,
-  minimumAmount: 0,
-  currency: 'EUR',
-  bank: {
-    accountHolder: '',
-    bic: '',
-    iban: '',
-    address: ''
-  },
-  IsSetupFinished: false,
-  name: '',
-  description: '',
-  gatewaySecret: '',
-  displayName: '',
-  gatewayIcons: [],
-  gatewayWebsiteLink: '',
-  gatewayWebhookIntegrationLink: '',
-  sort: 0
-}
-/*
-export type TGatewayConfig = {
-  IsSetupFinished: boolean
-  gatewayId: number // 0: also means setup unfinished
-  gatewayName: string // stripe
-  gatewayType: number
-  displayName: string // Bank Cards
-  description: string
-  name: string // Stripe
-  gatewayIcons: string[]
-  gatewayLogo: string
-  gatewayWebsiteLink: string
-  gatewayKey: string // public key(desensitized)
-  gatewaySecret: string // private key(desensitized)
-  gatewayWebhookIntegrationLink: string
-  currency: string
-  sort: number //
-  webhookEndpointUrl: string
-  webhookSecret: string // desensitized
-  minimumAmount: number
-  createTime: number
-}
-*/
-
+const WireTransferConfig = {}
 const Index = () => {
   // prefill WireTransfer in this list
-  const gatewayStore = useAppConfigStore()
-  console.log('gatewaysotre: ', gatewayStore)
-  const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
+  const [gatewayConfigList, setGatewayConfigList] = useState<TGatewayConfig[]>(
+    []
+  )
   // const [loading, setLoading] = useState(false)
   const [gatewayIndex, setGatewayIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
@@ -82,11 +30,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const wiredTransfer = gatewayStore.gateway.find(
-      (g) => g.gatewayName == 'wire_transfer'
-    )
-
-    setGatewayConfigList(gateways.concat(wiredTransfer ?? NEW_WIRE_TRANSFER))
+    setGatewayConfigList(gateways)
     // console.log('gateways: ', gateways)
   }
 
@@ -96,19 +40,12 @@ const Index = () => {
 
   return (
     <div>
-      {openSetupModal &&
-        (gatewayConfigList[gatewayIndex].gatewayName != 'wire_transfer' ? (
-          <PaymentGatewaySetupModal
-            closeModal={toggleSetupModal}
-            gatewayConfig={gatewayConfigList[gatewayIndex]}
-          />
-        ) : (
-          <ModalWireTransfer
-            closeModal={toggleSetupModal}
-            detail={gatewayConfigList[gatewayIndex]}
-            refresh={getPaymentGatewayConfigList}
-          />
-        ))}
+      {openSetupModal && (
+        <PaymentGatewaySetupModal
+          closeModal={toggleSetupModal}
+          gatewayConfig={gatewayConfigList[gatewayIndex]}
+        />
+      )}
       <List
         itemLayout="horizontal"
         dataSource={gatewayConfigList}
@@ -116,22 +53,14 @@ const Index = () => {
           <List.Item>
             <List.Item.Meta
               avatar={
-                item.gatewayWebsiteLink == '' ? (
+                <a href={item.gatewayWebsiteLink} target="_blank">
                   <Avatar src={<img src={item.gatewayLogo} />} />
-                ) : (
-                  <a href={item.gatewayWebsiteLink} target="_blank">
-                    <Avatar src={<img src={item.gatewayLogo} />} />
-                  </a>
-                )
+                </a>
               }
               title={
-                item.gatewayWebsiteLink == '' ? (
-                  item.name
-                ) : (
-                  <a href={item.gatewayWebsiteLink} target="_blank">
-                    {item.name}
-                  </a>
-                )
+                <a href={item.gatewayWebsiteLink} target="_blank">
+                  {item.name}
+                </a>
               }
               description={item.description}
             />
@@ -164,7 +93,7 @@ const PaymentGatewaySetupModal = ({
   gatewayConfig,
   closeModal
 }: {
-  gatewayConfig: TGateway
+  gatewayConfig: TGatewayConfig
   closeModal: () => void
 }) => {
   const [form] = Form.useForm()
