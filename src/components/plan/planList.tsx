@@ -9,21 +9,21 @@ import {
 } from '@ant-design/icons'
 import {
   Button,
+  message,
   Pagination,
   Result,
   Space,
   Table,
-  Tooltip,
-  message
+  Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 // import currency from 'currency.js'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PLAN_STATUS } from '../../constants'
-import { formatPlanPrice } from '../../helpers'
+import { formatDate, formatPlanPrice } from '../../helpers'
 import { usePagination } from '../../hooks'
-import { copyPlanReq, getPlanList } from '../../requests'
+import { copyPlanReq, getPlanList, TPlanListBody } from '../../requests'
 import '../../shared.css'
 import { IPlan } from '../../shared.types'
 import { PlanStatus } from '../ui/statusTag'
@@ -64,6 +64,10 @@ const Index = ({
     type: null,
     status: null
   })
+  const [sortFilter, setSortFilter] = useState<{
+    sortField: 'planName'
+    sortType: 'desc' | 'asc' | undefined
+  } | null>(null)
 
   const goToDetail = (planId: number) =>
     navigate(`/plan/${planId}?productId=${productId}`)
@@ -85,18 +89,22 @@ const Index = ({
   }
 
   const fetchPlan = async () => {
+    const body: TPlanListBody = {
+      // type: undefined, // get main plan and addon
+      // status: undefined, // active, inactive, expired, editing, all of them
+      ...filters,
+      productIds: [productId],
+      page: page,
+      count: PAGE_SIZE
+    }
+    if (sortFilter != null) {
+      body.sortField =
+        sortFilter.sortField == 'planName' ? 'plan_name' : 'gmt_create'
+      body.sortType = sortFilter.sortType
+    }
+
     setLoading(true)
-    const [planList, err] = await getPlanList(
-      {
-        // type: undefined, // get main plan and addon
-        // status: undefined, // active, inactive, expired, editing, all of them
-        ...filters,
-        productIds: [productId],
-        page: page,
-        count: PAGE_SIZE
-      },
-      fetchPlan
-    )
+    const [planList, err] = await getPlanList(body, fetchPlan)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
@@ -123,7 +131,8 @@ const Index = ({
     {
       title: 'Name',
       dataIndex: 'planName',
-      key: 'planName'
+      key: 'planName',
+      sorter: (a, b) => a.planName.localeCompare(b.planName)
       // render: (text) => <a>{text}</a>,
     },
     {
@@ -188,12 +197,20 @@ const Index = ({
     {
       title: 'Billable metrics',
       dataIndex: 'metricPlanLimits',
-      render: (m) => (null == m || 0 == m.length ? 'No' : m.length)
+      render: (m) => (null == m || 0 == m.length ? 'No' : m.length),
+      hidden: true
     },
     {
       title: 'External Id',
       dataIndex: 'externalPlanId',
-      width: 120
+      width: 120,
+      hidden: true
+    },
+    {
+      title: 'Creation Time',
+      dataIndex: 'createTime',
+      render: (t) => (t == 0 ? '' : formatDate(t))
+      // sorter: (a, b) => a.createTime - b.createTime,
     },
     {
       title: (
@@ -245,17 +262,27 @@ const Index = ({
     }
   ]
 
-  const onTableChange: TableProps<IPlan>['onChange'] = (_, filters) => {
-    onPageChange(1, PAGE_SIZE)
-
+  const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
+    // onPageChange(1, PAGE_SIZE)
     setFilters(filters as TFilters)
+    if (Array.isArray(sorter)) {
+      return // Handle array case if needed
+    }
+    if (sorter.columnKey == undefined) {
+      setSortFilter(null)
+    } else if (sorter.columnKey === 'planName') {
+      setSortFilter({
+        sortField: 'planName',
+        sortType: sorter.order === 'descend' ? 'desc' : 'asc'
+      })
+    }
   }
 
   useEffect(() => {
     if (isProductValid) {
       fetchPlan()
     }
-  }, [filters, page])
+  }, [filters, page, sortFilter])
 
   return (
     <>

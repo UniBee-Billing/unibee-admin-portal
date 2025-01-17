@@ -361,6 +361,8 @@ export type TPlanListBody = {
   status?: number[] | null
   productIds?: number[] | null
   publishStatus?: number // 1-UnPublished，2-Published
+  sortField?: 'plan_name' | 'gmt_create' | 'gmt_modify'
+  sortType?: 'asc' | 'desc'
   page: number
   count: number
 }
