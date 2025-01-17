@@ -1,26 +1,24 @@
 import { CheckOutlined, ExclamationOutlined } from '@ant-design/icons'
-import {
-  Avatar,
-  Button,
-  Form,
-  Input,
-  List,
-  message,
-  Modal,
-  Space,
-  Tag
-} from 'antd'
+import { Button, Form, Input, List, message, Modal, Tag } from 'antd'
 // import update from 'immutability-helper'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
-import { getPaymentGatewayConfigListReq } from '../../requests'
-import { TGatewayConfig } from '../../shared.types'
+import { useCopyContent } from '../../hooks'
+import {
+  getPaymentGatewayConfigListReq,
+  saveGatewayKeyReq
+} from '../../requests'
+import { TGateway } from '../../shared.types'
+import { useAppConfigStore } from '../../stores'
+import CopyToClipboard from '../ui/copyToClipboard'
+import ModalWireTransfer, {
+  NEW_WIRE_TRANSFER
+} from './appConfig/wireTransferModal'
 
 const Index = () => {
   // prefill WireTransfer in this list
-  const [gatewayConfigList, setGatewayConfigList] = useState<TGatewayConfig[]>(
-    []
-  )
+  const gatewayStore = useAppConfigStore()
+  const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
   // const [loading, setLoading] = useState(false)
   const [gatewayIndex, setGatewayIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
@@ -37,7 +35,11 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    setGatewayConfigList(gateways)
+    const wiredTransfer = gatewayStore.gateway.find(
+      (g) => g.gatewayName == 'wire_transfer'
+    )
+
+    setGatewayConfigList(gateways.concat(wiredTransfer ?? NEW_WIRE_TRANSFER))
     // console.log('gateways: ', gateways)
   }
 
@@ -47,23 +49,51 @@ const Index = () => {
 
   return (
     <div>
-      {openSetupModal && (
-        <PaymentGatewaySetupModal
-          closeModal={toggleSetupModal}
-          gatewayConfig={gatewayConfigList[gatewayIndex]}
-        />
-      )}
+      {openSetupModal &&
+        (gatewayConfigList[gatewayIndex].gatewayName != 'wire_transfer' ? (
+          <PaymentGatewaySetupModal
+            closeModal={toggleSetupModal}
+            gatewayConfig={gatewayConfigList[gatewayIndex]}
+            refresh={getPaymentGatewayConfigList}
+          />
+        ) : (
+          <ModalWireTransfer
+            closeModal={toggleSetupModal}
+            detail={gatewayConfigList[gatewayIndex]}
+            refresh={getPaymentGatewayConfigList}
+          />
+        ))}
       <List
         itemLayout="horizontal"
         dataSource={gatewayConfigList}
         renderItem={(item, index) => (
           <List.Item>
             <List.Item.Meta
-              avatar={<Avatar src={<img src={item.gatewayLogo} />} />}
-              title={item.displayName}
+              avatar={
+                item.gatewayWebsiteLink == '' ? (
+                  <div style={{ height: '36px' }}>
+                    <img height={'100%'} src={item.gatewayLogo} />
+                  </div>
+                ) : (
+                  <a href={item.gatewayWebsiteLink} target="_blank">
+                    <div style={{ height: '36px' }}>
+                      <img height={'100%'} src={item.gatewayLogo} />
+                    </div>
+                  </a>
+                )
+              }
+              title={
+                item.gatewayWebsiteLink == '' ? (
+                  item.name
+                ) : (
+                  <a href={item.gatewayWebsiteLink} target="_blank">
+                    {item.name}
+                  </a>
+                )
+              }
               description={item.description}
             />
-            <Space size={[8, 0]} wrap>
+            <div className="flex w-[180px] items-center justify-between">
               {item.IsSetupFinished ? (
                 <Tag icon={<CheckOutlined />} color="#34C759">
                   Ready
@@ -79,7 +109,7 @@ const Index = () => {
               >
                 {item.IsSetupFinished ? 'Edit' : 'Set up'}
               </Button>
-            </Space>
+            </div>
           </List.Item>
         )}
       />
@@ -90,15 +120,62 @@ export default Index
 
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
+  refresh,
   closeModal
 }: {
-  gatewayConfig: TGatewayConfig
+  gatewayConfig: TGateway
+  refresh: () => void
   closeModal: () => void
 }) => {
   const [form] = Form.useForm()
-  const [loading, _] = useState(false)
-  const onSave = () => {}
-  // console.log('config: ', gatewayConfig)
+  const [loading, setLoading] = useState(false)
+
+  const onSave = async () => {
+    return
+    const pubKey = form.getFieldValue('gatewayKey')
+    if (pubKey.trim() == '') {
+      message.error('Public Key is empty')
+      return
+    }
+
+    const privateKey = form.getFieldValue('gatewaySecret')
+    if (privateKey.trim() == '') {
+      message.error('Private Key is empty')
+      return
+    }
+    const body = {
+      gatewayKey: pubKey,
+      gatewaySecret: privateKey,
+      gatewayName: !gatewayConfig.IsSetupFinished
+        ? gatewayConfig.gatewayName
+        : undefined,
+      gatewayId: !gatewayConfig.IsSetupFinished
+        ? undefined
+        : gatewayConfig.gatewayId
+    }
+
+    setLoading(true)
+    const [_, err] = await saveGatewayKeyReq(
+      body,
+      !gatewayConfig.IsSetupFinished
+    )
+    setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success(`${gatewayConfig?.gatewayName} keys saved`)
+    refresh()
+    closeModal()
+  }
+  const copyContent = async () => {
+    const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+    message.success('Copied')
+  }
   return (
     <Modal
       title={
@@ -106,7 +183,7 @@ const PaymentGatewaySetupModal = ({
           ? `Editing keys for ${gatewayConfig.name}`
           : `New keys for ${gatewayConfig.name}`
       }
-      width={'600px'}
+      width={'720px'}
       open={true}
       footer={null}
       closeIcon={null}
@@ -115,50 +192,91 @@ const PaymentGatewaySetupModal = ({
         form={form}
         layout="vertical"
         onFinish={onSave}
-        // labelCol={{ flex: '180px' }}
-        // wrapperCol={{ flex: 1 }}
         colon={false}
         initialValues={gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
           <Input disabled />
         </Form.Item>
-      </Form>
-      <div className="my-6 w-full">
-        {/* gatewayConfig.gatewayName == 'paypal' ? 'Client Id' : 'Public Key' */}
-        <div>Public Key</div>
-        <Form.Item label="Public Key" name="gatewayPubKey">
-          <TextArea
-            rows={4}
-            // value={pubKey}
-            // onChange={onKeyChange('public')}
-          />
+        <div className="h-2" />
+
+        <Form.Item
+          label={
+            gatewayConfig.gatewayName == 'paypal' ? 'Client Id' : 'Public Key'
+          }
+          name="gatewayKey"
+        >
+          <TextArea rows={4} />
         </Form.Item>
+        <div className="h-2" />
 
-        {/* gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key' */}
-
-        <Form.Item label="Private Key" name="gatewayKey">
-          <TextArea
-            rows={4}
-            // value={privateKey}
-            // onChange={onKeyChange('private')}
-          />
+        <Form.Item
+          label={
+            gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'
+          }
+          name="gatewaySecret"
+          help={
+            <div className="text-xs text-gray-400">
+              For security reason, your{' '}
+              {gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'}{' '}
+              won't show up here after submit.
+            </div>
+          }
+        >
+          <TextArea rows={4} />
         </Form.Item>
+        <div className="h-2" />
 
-        <div className="text-xs text-gray-400">
-          For security reason, your{' '}
-          {gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'}{' '}
-          won't show up here after submit.
-        </div>
-
-        {/* <div>Callback URL</div> */}
-        <Form.Item label="Callback URL" name="webhookEndpointUrl">
+        <Form.Item
+          label="Callback URL"
+          name="webhookEndpointUrl"
+          hidden={gatewayConfig.gatewayName !== 'changelly'}
+        >
           <Input
-          // value={privateKey}
-          // onChange={onKeyChange('private')}
+            disabled
+            suffix={
+              <CopyToClipboard content={gatewayConfig.webhookEndpointUrl} />
+            }
           />
         </Form.Item>
-      </div>
+        <div className="h-2" />
+        <Form.Item
+          label="Callback Key"
+          name="webhookSecret"
+          hidden={gatewayConfig.gatewayName !== 'changelly'}
+          help={
+            <div className="mt-2 text-sm">
+              <Button
+                type="link"
+                onClick={copyContent}
+                style={{ padding: 0 }}
+                size="small"
+              >
+                Copy
+              </Button>
+              &nbsp;
+              <span className="text-xs text-gray-400">
+                the above URL, use this URL to generate your public key
+                on&nbsp;&nbsp;
+              </span>
+              <a
+                href="https://app.pay.changelly.com/integrations"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs"
+              >
+                https://app.pay.changelly.com/integrations
+              </a>
+              <span className="text-xs text-gray-400">
+                , then paste it here.
+              </span>
+            </div>
+          }
+        >
+          <TextArea rows={4} />
+        </Form.Item>
+        <div className="h-2" />
+      </Form>
 
       <div className="mt-6 flex items-center justify-end gap-4">
         <Button onClick={closeModal} disabled={loading}>

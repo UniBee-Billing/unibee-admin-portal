@@ -8,15 +8,15 @@ import {
 } from '../../../requests'
 import { TGateway } from '../../../shared.types'
 
-const NEW_WIRE_TRANSFER_ACC: TGateway = {
-  // gatewayId?: number
-  // gatewayKey?: string
+export const NEW_WIRE_TRANSFER: TGateway = {
+  gatewayId: -1,
+  gatewayKey: '',
   gatewayName: 'wire_transfer',
   webhookEndpointUrl: '',
   webhookSecret: '',
-  // gatewayLogo: string
-  // gatewayType?: number
-  // createTime?: number
+  gatewayLogo: '',
+  gatewayType: 3,
+  createTime: 0,
   minimumAmount: 0,
   currency: 'EUR',
   bank: {
@@ -24,7 +24,16 @@ const NEW_WIRE_TRANSFER_ACC: TGateway = {
     bic: '',
     iban: '',
     address: ''
-  }
+  },
+  IsSetupFinished: false,
+  name: '',
+  description: '',
+  gatewaySecret: '',
+  displayName: '',
+  gatewayIcons: [],
+  gatewayWebsiteLink: '',
+  gatewayWebhookIntegrationLink: '',
+  sort: 0
 }
 
 interface IProps {
@@ -37,7 +46,7 @@ const Index = ({ closeModal, detail, refresh }: IProps) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [currency, setCurrency] = useState('EUR')
-  const gateway: TGateway = isNew ? NEW_WIRE_TRANSFER_ACC : detail
+  const gateway: TGateway = isNew ? NEW_WIRE_TRANSFER : detail
   const onCurrencyChange = (value: string) => setCurrency(value)
 
   const selectAfter = (

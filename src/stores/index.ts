@@ -9,6 +9,7 @@ import {
   // IProfile,
   TCreditConfig,
   TGateway,
+  TIntegrationKeys,
   TMerchantInfo
 } from '../shared.types'
 // import { createStore } from "zustand";
@@ -93,13 +94,22 @@ const INITIAL_APP_VALUE: IAppConfig = {
   supportCurrency: [],
   supportTimeZone: [],
   gateway: [],
-  taskListOpen: false
+  taskListOpen: false,
+  integrationKeys: {
+    openApiKey: '', // UniBee API key
+    sendGridKey: '',
+    vatSenseKey: '',
+    exchangeRateApiKey: '',
+    segmentServerSideKey: '',
+    segmentUserPortalKey: ''
+  }
 }
 
 interface AppConfigSlice extends IAppConfig {
   getAppConfig: () => IAppConfig
   setAppConfig: (a: IAppConfig) => void
   setGateway: (g: TGateway[]) => void
+  setIntegrationKeys: (k: TIntegrationKeys) => void
   setTaskListOpen: (isOpen: boolean) => void
   reset: () => void
 }
@@ -112,6 +122,9 @@ export const useAppConfigStore = create<AppConfigSlice>()(
       setAppConfig: (a) => set({ ...a }),
       setGateway: (g: TGateway[]) => {
         set({ ...get(), gateway: g })
+      },
+      setIntegrationKeys: (k: TIntegrationKeys) => {
+        set({ ...get(), integrationKeys: k })
       },
       setTaskListOpen: (isOpen) => {
         set({ ...get(), taskListOpen: isOpen })
