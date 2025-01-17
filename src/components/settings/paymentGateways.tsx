@@ -71,13 +71,39 @@ const Index = () => {
             <List.Item.Meta
               avatar={
                 item.gatewayWebsiteLink == '' ? (
-                  <div style={{ height: '36px' }}>
-                    <img height={'100%'} src={item.gatewayLogo} />
+                  <div
+                    style={{
+                      height: '36px',
+                      width: '140px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <img
+                      style={{ flexShrink: 0 }}
+                      height={'100%'}
+                      src={item.gatewayLogo}
+                    />
                   </div>
                 ) : (
                   <a href={item.gatewayWebsiteLink} target="_blank">
-                    <div style={{ height: '36px' }}>
-                      <img height={'100%'} src={item.gatewayLogo} />
+                    <div
+                      style={{
+                        height: '36px',
+                        width: '140px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <img
+                        style={{ flexShrink: 0 }}
+                        height={'100%'}
+                        src={item.gatewayLogo}
+                      />
                     </div>
                   </a>
                 )
