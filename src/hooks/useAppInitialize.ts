@@ -47,6 +47,22 @@ export const useAppInitialize = (): (() => Promise<string>) => {
 
     appConfigStore.setAppConfig(appConfig)
     appConfigStore.setGateway(gateways)
+    const {
+      openApiKey,
+      sendGridKey,
+      vatSenseKey,
+      segmentServerSideKey,
+      segmentUserPortalKey,
+      exchangeRateApiKey
+    } = merchantInfo
+    appConfigStore.setIntegrationKeys({
+      openApiKey,
+      sendGridKey,
+      vatSenseKey,
+      segmentServerSideKey,
+      segmentUserPortalKey,
+      exchangeRateApiKey
+    })
     merchantInfoStore.setMerchantInfo(merchantInfo.merchant)
     merchantMemberProfile.setProfile(merchantInfo.merchantMember)
     productsStore.setProductList({ list: products.products })

@@ -7,6 +7,7 @@ import '../../shared.css'
 import AppConfig from './appConfig'
 import CreditConfig from './creditConfig'
 import EmailTemplates from './emailTemplates'
+import AppIntegrationServices from './integrations'
 import PaymentGatewayConfig from './paymentGateways'
 import Permissions from './permissions'
 import { SubscriptionConfig } from './subscriptionConfig'
@@ -20,13 +21,15 @@ const Index = () => {
   const tabItems: TabsProps['items'] = [
     {
       key: 'paymentGateways',
-      label: 'Payment Gateways',
+      label: (
+        <span className="text-red-500">Payment Gateways(NOT FINISHED)</span>
+      ),
       children: <PaymentGatewayConfig />
     },
     {
       key: 'integrations',
-      label: 'Integrations',
-      children: <PaymentGatewayConfig />
+      label: <span className="text-red-500">Integrations(NOT FINISHED)</span>,
+      children: <AppIntegrationServices />
     },
     {
       key: 'appConfig',

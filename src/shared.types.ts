@@ -115,6 +115,15 @@ type Country = {
   name: string
 }
 
+export type TIntegrationKeys = {
+  openApiKey: string // UniBee API key
+  sendGridKey: string
+  vatSenseKey: string
+  exchangeRateApiKey: string // money exchange rate service provider key
+  segmentServerSideKey: string
+  segmentUserPortalKey: string
+}
+
 interface IAppConfig {
   env: string
   isProd: boolean
@@ -122,6 +131,7 @@ interface IAppConfig {
   supportCurrency: { Currency: string; Symbol: string; Scale: number }[]
   gateway: TGateway[]
   taskListOpen: boolean // task list is in app.tsx, which is accessible to all pages.
+  integrationKeys: TIntegrationKeys
 }
 
 interface IAddon extends IPlan {

@@ -1,66 +1,200 @@
 import { CheckOutlined, ExclamationOutlined } from '@ant-design/icons'
-import { Avatar, Button, Form, Input, List, message, Modal, Tag } from 'antd'
+import { Avatar, Button, List, Tag } from 'antd'
 // import update from 'immutability-helper'
-import TextArea from 'antd/es/input/TextArea'
-import { useEffect, useState } from 'react'
-import { useCopyContent } from '../../hooks'
-import { getPaymentGatewayConfigListReq } from '../../requests'
-import { TGatewayConfig } from '../../shared.types'
-import CopyToClipboard from '../ui/copyToClipboard'
+import { ReactNode, useState } from 'react'
+import ExchangeRateLogo from '../../assets/integrationsKeysIcon/ExchangeRateService.svg?react'
+import SegmentLogo from '../../assets/integrationsKeysIcon/Segment.svg?react'
+import SendGridLogo from '../../assets/integrationsKeysIcon/SendGrid.svg?react'
+import UniBeeLogo from '../../assets/integrationsKeysIcon/UniBeeKeys.svg?react'
+import VATsenseLogo from '../../assets/integrationsKeysIcon/VATsense.svg?react'
+import { useAppConfigStore } from '../../stores'
+import UniBeeAPIKeyModal from './appConfig/apiKeyModal'
+import SegmentModal from './appConfig/segmentModal'
+import SendGridModal from './appConfig/sendGridKeyModal'
+import VATModal from './appConfig/vatKeyModal'
 
-const WireTransferConfig = {}
+type TAPP_Integratoin = {
+  IsSetupFinished: boolean
+  name: string
+  description: string
+  logo: ReactNode
+  gatewayWebsiteLink: string
+  keyName: string | string[]
+  keyValue: string | string[]
+  compositeKey?: boolean
+  setupModal: ReactNode
+}
+
 const Index = () => {
-  // prefill WireTransfer in this list
-  const [gatewayConfigList, setGatewayConfigList] = useState<TGatewayConfig[]>(
-    []
-  )
-  // const [loading, setLoading] = useState(false)
-  const [gatewayIndex, setGatewayIndex] = useState(-1)
+  const [itemIndex, setItemIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
-  const toggleSetupModal = (gatewayIdx?: number) => {
+  const toggleSetupModal = (itemIndex?: number) => {
     setOpenSetupModal(!openSetupModal)
-    if (gatewayIdx != undefined) {
-      setGatewayIndex(gatewayIdx)
+    if (typeof itemIndex == 'number') {
+      setItemIndex(itemIndex)
     }
   }
 
-  const getPaymentGatewayConfigList = async () => {
-    const [gateways, err] = await getPaymentGatewayConfigListReq()
-    if (null != err) {
-      message.error(err.message)
+  const integration_items: TAPP_Integratoin[] = [
+    {
+      IsSetupFinished: false,
+      name: 'UniBee API Key',
+      description:
+        'Use public and private keys to secure the bank card payment.',
+      logo: <UniBeeLogo />,
+      gatewayWebsiteLink: '',
+      keyName: 'openApiKey',
+      keyValue: '',
+      setupModal: <UniBeeAPIKeyModal closeModal={() => toggleSetupModal()} />
+    },
+    {
+      IsSetupFinished: false,
+      name: 'VAT Sense Key',
+      description: 'Use this key to calculate VAT for your payment.',
+      logo: <VATsenseLogo />,
+      gatewayWebsiteLink: 'https://vatsense.com',
+      keyName: 'vatSenseKey',
+      keyValue: '',
+      setupModal: <VATModal closeModal={() => toggleSetupModal()} />
+    },
+    {
+      IsSetupFinished: false,
+      name: 'SendGrid Email Key',
+      description: 'Use this key to send email to your customers.',
+      logo: <SendGridLogo />,
+      gatewayWebsiteLink: 'https://sendgrid.com/',
+      keyName: 'sendGridKey',
+      keyValue: '',
+      setupModal: <SendGridModal closeModal={() => toggleSetupModal()} />
+    },
+    {
+      IsSetupFinished: false,
+      name: 'Segment setup',
+      description: 'Use these server/client keys to track user behavior.',
+      logo: <SegmentLogo />,
+      gatewayWebsiteLink: 'https://segment.com/',
+      keyName: ['segmentServerSideKey', 'segmentUserPortalKey'],
+      keyValue: ['', ''],
+      compositeKey: true,
+      setupModal: (
+        <SegmentModal
+          serverSideKey={''}
+          refresh={() => {}}
+          closeModal={() => toggleSetupModal()}
+        />
+      )
+    },
+    {
+      IsSetupFinished: false,
+      name: 'Exchange API key',
+      description:
+        'Use it to access Exchange, allowing for secure ops and user behavior tracking.',
+      logo: <ExchangeRateLogo />,
+      gatewayWebsiteLink: '',
+      keyName: 'exchangeRateApiKey',
+      keyValue: '',
+      setupModal: null
+    }
+  ]
+
+  const initializeKeys = (keyName: string, keyValue: string) => {
+    if (
+      keyName == 'segmentServerSideKey' &&
+      keyValue != '' &&
+      keyValue != null
+    ) {
+      const keyIdx = integration_items.findIndex((i) => i.compositeKey)
+      if (keyIdx >= 0) {
+        integration_items[keyIdx].IsSetupFinished = true
+        ;(integration_items[keyIdx].keyValue as string[])[0] = keyValue
+      }
       return
     }
-    setGatewayConfigList(gateways)
-    // console.log('gateways: ', gateways)
+
+    if (
+      keyName == 'segmentUserPortalKey' &&
+      keyValue != '' &&
+      keyValue != null
+    ) {
+      const keyIdx = integration_items.findIndex((i) => i.compositeKey)
+      if (keyIdx >= 0) {
+        integration_items[keyIdx].IsSetupFinished = true
+        ;(integration_items[keyIdx].keyValue as string[])[1] = keyValue
+      }
+      return
+    }
+
+    if (keyValue != '' && keyValue != null) {
+      const keyIdx = integration_items.findIndex((i) => i.keyName == keyName)
+      integration_items[keyIdx].IsSetupFinished = true
+      integration_items[keyIdx].keyValue = keyValue
+    }
   }
 
-  useEffect(() => {
-    getPaymentGatewayConfigList()
-  }, [])
+  const appConfigStore = useAppConfigStore()
+  const {
+    openApiKey,
+    sendGridKey,
+    vatSenseKey,
+    segmentServerSideKey,
+    segmentUserPortalKey,
+    exchangeRateApiKey
+  } = appConfigStore.integrationKeys
+
+  initializeKeys('openApiKey', openApiKey)
+  initializeKeys('sendGridKey', sendGridKey)
+  initializeKeys('vatSenseKey', vatSenseKey)
+  initializeKeys('exchangeRateApiKey', exchangeRateApiKey)
+  initializeKeys('segmentServerSideKey', segmentServerSideKey)
+  initializeKeys('segmentUserPortalKey', segmentUserPortalKey)
+
+  const [integrationList] = useState<TAPP_Integratoin[]>(integration_items)
 
   return (
     <div>
-      {openSetupModal && (
-        <PaymentGatewaySetupModal
+      {openSetupModal && integrationList[itemIndex].keyName == 'openApiKey' && (
+        <UniBeeAPIKeyModal closeModal={toggleSetupModal} />
+      )}
+      {openSetupModal &&
+        integrationList[itemIndex].keyName == 'vatSenseKey' && (
+          <VATModal closeModal={toggleSetupModal} />
+        )}
+      {openSetupModal && integrationList[itemIndex].compositeKey && (
+        <SegmentModal
+          serverSideKey=""
+          refresh={() => {}}
           closeModal={toggleSetupModal}
-          gatewayConfig={gatewayConfigList[gatewayIndex]}
         />
       )}
+
+      {openSetupModal &&
+        integrationList[itemIndex].keyName == 'sendGridKey' && (
+          <SendGridModal closeModal={toggleSetupModal} />
+        )}
+
       <List
         itemLayout="horizontal"
-        dataSource={gatewayConfigList}
+        dataSource={integrationList}
         renderItem={(item, index) => (
           <List.Item>
             <List.Item.Meta
               avatar={
-                <a href={item.gatewayWebsiteLink} target="_blank">
-                  <Avatar src={<img src={item.gatewayLogo} />} />
-                </a>
+                item.gatewayWebsiteLink == '' ? (
+                  <Avatar shape="square" src={item.logo} />
+                ) : (
+                  <a href={item.gatewayWebsiteLink} target="_blank">
+                    <Avatar shape="square" src={item.logo} />
+                  </a>
+                )
               }
               title={
-                <a href={item.gatewayWebsiteLink} target="_blank">
-                  {item.name}
-                </a>
+                item.gatewayWebsiteLink == '' ? (
+                  item.name
+                ) : (
+                  <a href={item.gatewayWebsiteLink} target="_blank">
+                    {item.name}
+                  </a>
+                )
               }
               description={item.description}
             />
@@ -89,6 +223,7 @@ const Index = () => {
 }
 export default Index
 
+/*
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
   closeModal
@@ -225,3 +360,5 @@ const PaymentGatewaySetupModal = ({
     </Modal>
   )
 }
+
+*/

@@ -2257,7 +2257,7 @@ export const updateWireTransferAccountReq = async (
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
     }
-    return [null, null]
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]

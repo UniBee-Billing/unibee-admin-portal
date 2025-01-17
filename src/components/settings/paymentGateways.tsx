@@ -1,70 +1,23 @@
 import { CheckOutlined, ExclamationOutlined } from '@ant-design/icons'
-import { Avatar, Button, Form, Input, List, message, Modal, Tag } from 'antd'
+import { Button, Form, Input, List, message, Modal, Tag } from 'antd'
 // import update from 'immutability-helper'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
 import { useCopyContent } from '../../hooks'
-import { getPaymentGatewayConfigListReq } from '../../requests'
+import {
+  getPaymentGatewayConfigListReq,
+  saveGatewayKeyReq
+} from '../../requests'
 import { TGateway } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
-import ModalWireTransfer from './appConfig/wireTransferModal'
-
-const NEW_WIRE_TRANSFER: TGateway = {
-  gatewayId: -1,
-  gatewayKey: '',
-  gatewayName: 'wire_transfer',
-  webhookEndpointUrl: '',
-  webhookSecret: '',
-  gatewayLogo: '',
-  gatewayType: 3,
-  createTime: 0,
-  minimumAmount: 0,
-  currency: 'EUR',
-  bank: {
-    accountHolder: '',
-    bic: '',
-    iban: '',
-    address: ''
-  },
-  IsSetupFinished: false,
-  name: '',
-  description: '',
-  gatewaySecret: '',
-  displayName: '',
-  gatewayIcons: [],
-  gatewayWebsiteLink: '',
-  gatewayWebhookIntegrationLink: '',
-  sort: 0
-}
-/*
-export type TGatewayConfig = {
-  IsSetupFinished: boolean
-  gatewayId: number // 0: also means setup unfinished
-  gatewayName: string // stripe
-  gatewayType: number
-  displayName: string // Bank Cards
-  description: string
-  name: string // Stripe
-  gatewayIcons: string[]
-  gatewayLogo: string
-  gatewayWebsiteLink: string
-  gatewayKey: string // public key(desensitized)
-  gatewaySecret: string // private key(desensitized)
-  gatewayWebhookIntegrationLink: string
-  currency: string
-  sort: number //
-  webhookEndpointUrl: string
-  webhookSecret: string // desensitized
-  minimumAmount: number
-  createTime: number
-}
-*/
+import ModalWireTransfer, {
+  NEW_WIRE_TRANSFER
+} from './appConfig/wireTransferModal'
 
 const Index = () => {
   // prefill WireTransfer in this list
   const gatewayStore = useAppConfigStore()
-  console.log('gatewaysotre: ', gatewayStore)
   const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
   // const [loading, setLoading] = useState(false)
   const [gatewayIndex, setGatewayIndex] = useState(-1)
@@ -101,6 +54,7 @@ const Index = () => {
           <PaymentGatewaySetupModal
             closeModal={toggleSetupModal}
             gatewayConfig={gatewayConfigList[gatewayIndex]}
+            refresh={getPaymentGatewayConfigList}
           />
         ) : (
           <ModalWireTransfer
@@ -117,10 +71,14 @@ const Index = () => {
             <List.Item.Meta
               avatar={
                 item.gatewayWebsiteLink == '' ? (
-                  <Avatar src={<img src={item.gatewayLogo} />} />
+                  <div style={{ height: '36px' }}>
+                    <img height={'100%'} src={item.gatewayLogo} />
+                  </div>
                 ) : (
                   <a href={item.gatewayWebsiteLink} target="_blank">
-                    <Avatar src={<img src={item.gatewayLogo} />} />
+                    <div style={{ height: '36px' }}>
+                      <img height={'100%'} src={item.gatewayLogo} />
+                    </div>
                   </a>
                 )
               }
@@ -162,14 +120,54 @@ export default Index
 
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
+  refresh,
   closeModal
 }: {
   gatewayConfig: TGateway
+  refresh: () => void
   closeModal: () => void
 }) => {
   const [form] = Form.useForm()
-  const [loading, _] = useState(false)
-  const onSave = () => {}
+  const [loading, setLoading] = useState(false)
+
+  const onSave = async () => {
+    return
+    const pubKey = form.getFieldValue('gatewayKey')
+    if (pubKey.trim() == '') {
+      message.error('Public Key is empty')
+      return
+    }
+
+    const privateKey = form.getFieldValue('gatewaySecret')
+    if (privateKey.trim() == '') {
+      message.error('Private Key is empty')
+      return
+    }
+    const body = {
+      gatewayKey: pubKey,
+      gatewaySecret: privateKey,
+      gatewayName: !gatewayConfig.IsSetupFinished
+        ? gatewayConfig.gatewayName
+        : undefined,
+      gatewayId: !gatewayConfig.IsSetupFinished
+        ? undefined
+        : gatewayConfig.gatewayId
+    }
+
+    setLoading(true)
+    const [_, err] = await saveGatewayKeyReq(
+      body,
+      !gatewayConfig.IsSetupFinished
+    )
+    setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success(`${gatewayConfig?.gatewayName} keys saved`)
+    refresh()
+    closeModal()
+  }
   const copyContent = async () => {
     const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
     if (null != err) {
