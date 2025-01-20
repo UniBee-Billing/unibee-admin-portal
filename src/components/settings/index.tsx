@@ -36,11 +36,13 @@ const Index = () => {
       label: 'App Config',
       children: <AppConfig />
     },
+    /*
     {
       key: 'emailTemplate',
       label: 'Email Templates',
       children: <EmailTemplates />
     },
+    */
     /* {
       key: 'invoiceTemplate',
       label: 'Invoice Templates',

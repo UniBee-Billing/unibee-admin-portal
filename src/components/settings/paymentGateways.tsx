@@ -1,4 +1,8 @@
-import { CheckOutlined, ExclamationOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  ExclamationOutlined,
+  LoadingOutlined
+} from '@ant-design/icons'
 import { Button, Form, Input, List, message, Modal, Tag } from 'antd'
 // import update from 'immutability-helper'
 import TextArea from 'antd/es/input/TextArea'
@@ -16,10 +20,9 @@ import ModalWireTransfer, {
 } from './appConfig/wireTransferModal'
 
 const Index = () => {
-  // prefill WireTransfer in this list
   const gatewayStore = useAppConfigStore()
   const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
-  // const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [gatewayIndex, setGatewayIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (gatewayIdx?: number) => {
@@ -30,7 +33,11 @@ const Index = () => {
   }
 
   const getPaymentGatewayConfigList = async () => {
-    const [gateways, err] = await getPaymentGatewayConfigListReq()
+    setLoading(true)
+    const [gateways, err] = await getPaymentGatewayConfigListReq({
+      refreshCb: getPaymentGatewayConfigList
+    })
+    setLoading(false)
     if (null != err) {
       message.error(err.message)
       return
@@ -40,7 +47,6 @@ const Index = () => {
     )
 
     setGatewayConfigList(gateways.concat(wiredTransfer ?? NEW_WIRE_TRANSFER))
-    // console.log('gateways: ', gateways)
   }
 
   useEffect(() => {
@@ -65,6 +71,7 @@ const Index = () => {
         ))}
       <List
         itemLayout="horizontal"
+        loading={{ indicator: <LoadingOutlined spin />, spinning: loading }}
         dataSource={gatewayConfigList}
         renderItem={(item, index) => (
           <List.Item>

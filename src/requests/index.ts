@@ -1,4 +1,5 @@
 import axios from 'axios'
+// import update from 'immutability-helper'
 import { CURRENCY } from '../constants'
 import {
   AccountType,
@@ -21,6 +22,16 @@ import { analyticsRequest, request } from './client'
 const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
 
+const handleStatusCode = (code: number, refreshCb?: () => void) => {
+  // better to use | to limit the code range
+  if (code == 61 || code == 62) {
+    session.setSession({ expired: true, refresh: refreshCb ?? null })
+    throw new ExpiredError(
+      `${code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
+    )
+  }
+}
+
 // after login OR user manually refresh page(and token is still valid), we need merchantInfo, appConfig, payment gatewayInfo, etc.
 // this fn get all these data in one go.
 export const initializeReq = async () => {
@@ -34,7 +45,7 @@ export const initializeReq = async () => {
     getAppConfigReq(),
     getPaymentGatewayListReq(),
     getMerchantInfoReq(),
-    getProductListReq(),
+    getProductListReq({}),
     getCreditConfigListReq({
       types: [CreditType.PROMO_CREDIT],
       currency: 'EUR'
@@ -374,7 +385,16 @@ export const getPlanList = async (
   try {
     const res = await request.post('/merchant/plan/list', body)
     if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
+      session.setSession({
+        expired: true,
+        refresh: refreshCb
+        /*
+        refreshCallbacks: update(session.refreshCallbacks, {
+          $push: [refreshCb]
+        })
+          */
+      })
+
       throw new ExpiredError(
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )
@@ -446,7 +466,7 @@ export const getPlanDetailWithMore = async (
     planDetailRes,
     getPlanList({ type: [2, 3], status: [2], page: 0, count: 150 }, null), // type: [2,3] -> [addon, one-time-pay], status: 2 -> active
     getMetricsListReq(null),
-    getProductListReq()
+    getProductListReq({})
   ])
   const err = errDetail || addonErr || errMetrics || errProduct
   if (null != err) {
@@ -2173,12 +2193,7 @@ export const getMemberProfileReq = async (refreshCb?: () => void) => {
 const getPaymentGatewayListReq = async () => {
   try {
     const res = await request.get(`/merchant/gateway/list`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.gateways, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2187,19 +2202,18 @@ const getPaymentGatewayListReq = async () => {
 }
 
 // how many gateway we have, their config items, etc
-export const getPaymentGatewayConfigListReq = async () => {
+export const getPaymentGatewayConfigListReq = async ({
+  refreshCb
+}: {
+  refreshCb?: () => void
+}) => {
   try {
     const res = await request.get(`/merchant/gateway/setup_list`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data.gateways, null]
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data.gateways, null, res.data.code]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
+    return [null, e, -1]
   }
 }
 
@@ -2691,14 +2705,30 @@ export const removeExportTmplReq = async ({
   }
 }
 
-export const getProductListReq = async (count?: number, page?: number) => {
+export const getProductListReq = async ({
+  count,
+  page,
+  refreshCb
+}: {
+  count?: number
+  page?: number
+  refreshCb?: () => void
+}) => {
   try {
     const res = await request.post(`/merchant/product/list`, {
       count: count ?? 60,
       page: page ?? 0
     })
     if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
+      session.setSession({
+        expired: true,
+        refresh: refreshCb ?? null
+        /*
+        refreshCallbacks: update(session.refreshCallbacks, {
+          $push: [refreshCb]
+        })
+          */
+      })
       throw new ExpiredError(
         `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
       )

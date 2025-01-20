@@ -13,6 +13,7 @@ import {
   TMerchantInfo
 } from '../shared.types'
 // import { createStore } from "zustand";
+// import update from 'immutability-helper'
 
 // logged-in admin profile
 const INITIAL_MERCHANT_MEMBER_PROFILE: IMerchantMemberProfile = {
@@ -141,15 +142,18 @@ interface ISession {
   refresh: null | (() => void) // if session is expired when making an async fn call, save this fn here, so after re-login, re-run this fn.
   // needRedirect?: boolean // after login from /login, user will be redirected to a default page(different role might have different page)
   // login from LoginModal doesn't need redirect
+  refreshCallbacks?: (() => void)[]
 }
 const INITIAL_SESSION: ISession = {
   expired: true,
-  refresh: null
+  refresh: null,
+  refreshCallbacks: []
 }
 interface SessionStoreSlice extends ISession {
   getSession: () => ISession
   setSession: (s: ISession) => void
   reset: () => void
+  resetCallback: () => void
 }
 
 export const useSessionStore = create<SessionStoreSlice>()(
@@ -158,7 +162,10 @@ export const useSessionStore = create<SessionStoreSlice>()(
       ...INITIAL_SESSION,
       getSession: () => get(),
       setSession: (a) => set({ ...a }),
-      reset: () => set(INITIAL_SESSION)
+      reset: () => set(INITIAL_SESSION),
+      resetCallback: () => {
+        set({ ...get(), refreshCallbacks: [] })
+      }
     }),
     { name: 'session' }
   )

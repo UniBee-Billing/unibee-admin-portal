@@ -49,7 +49,7 @@ const Index = ({ userId }: { userId: number }) => {
 
   const getProductList = async () => {
     setLoadingProducts(true)
-    const [res, err] = await getProductListReq()
+    const [res, err] = await getProductListReq({ refreshCb: getProductList })
     setLoadingProducts(false)
     if (null != err) {
       return

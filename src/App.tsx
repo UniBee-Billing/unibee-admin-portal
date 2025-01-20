@@ -52,6 +52,21 @@ const App: React.FC = () => {
     }
   }, [])
 
+  /*
+  useEffect(() => {
+    if (
+      !sessionStore.expired &&
+      sessionStore.refreshCallbacks != undefined &&
+      sessionStore.refreshCallbacks.length > 0
+    ) {
+      sessionStore.refreshCallbacks.forEach((r) => r && r())
+      sessionStore.resetCallback()
+    }
+  }, [sessionStore.expired])
+  */
+
+  // console.log('in app.js, sessioncbList: ', sessionStore.refreshCallbacks)
+
   return (
     <>
       {noSiderRoutes.find((r) => r === location.pathname) ? (

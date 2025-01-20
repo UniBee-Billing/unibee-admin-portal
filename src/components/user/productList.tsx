@@ -29,7 +29,7 @@ const Index = ({
 
   const getProductList = async () => {
     setLoading(true)
-    const [res, err] = await getProductListReq()
+    const [res, err] = await getProductListReq({ refreshCb: getProductList })
     setLoading(false)
     if (null != err) {
       message.error(err.message)
