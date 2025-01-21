@@ -289,14 +289,6 @@ const EssentialSetup = ({
     file,
     event
   }) => {
-    console.log(
-      'file change, newFileList: ',
-      newFileList,
-      '//',
-      file,
-      '//',
-      event
-    )
     setFileList(newFileList)
   }
 
