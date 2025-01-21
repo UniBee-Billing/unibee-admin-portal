@@ -86,8 +86,8 @@ const Index = ({
   disabled?: boolean
 }) => {
   const appConfig = useAppConfigStore()
-
   const gateways = appConfig.gateway
+    .filter((g) => g.IsSetupFinished)
     .map((g) => ({
       ...g,
       label: PAYMENTS[g.gatewayName as PAYMENT_METHODS].label,

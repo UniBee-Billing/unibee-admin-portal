@@ -2,13 +2,13 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import Dinero from 'dinero.js'
 import passwordValidator from 'password-validator'
-import { CURRENCY } from '../constants'
 import {
   IPlan,
   ISubscriptionType,
   TInvoicePerm,
   UserInvoice
 } from '../shared.types'
+import { useAppConfigStore } from '../stores'
 
 export const passwordSchema = new passwordValidator()
 passwordSchema
@@ -30,7 +30,7 @@ passwordSchema
 
 export const showAmount = (
   amount: number | undefined,
-  currency: keyof typeof CURRENCY | undefined,
+  currency: string | undefined,
   ignoreFactor?: boolean
 ): string => {
   if (amount == undefined || currency == undefined) {
@@ -41,8 +41,12 @@ export const showAmount = (
     amount *= -1
   }
 
-  const c = CURRENCY[currency]
-  return `${isNegative ? '-' : ''}${c.symbol}${amount / (ignoreFactor ? 1 : c.stripe_factor)}`
+  const CURRENCIES = useAppConfigStore.getState().supportCurrency
+  const c = CURRENCIES.find((c) => c.Currency == currency)
+  if (c == undefined) {
+    return ''
+  }
+  return `${isNegative ? '-' : ''}${c.Symbol}${amount / (ignoreFactor ? 1 : c.Scale)}`
 }
 
 export const daysBetweenDate = (
@@ -66,11 +70,16 @@ export const currencyDecimalValidate = (val: number, currency: string) => {
   if (Number.isInteger(val)) {
     return true
   }
-  const decimalCnt = val.toString().split('.')[1].length
-  if (CURRENCY[currency].decimal_places == null) {
-    return true
+  const c = useAppConfigStore
+    .getState()
+    .supportCurrency.find((c) => c.Currency == currency)
+  if (c == undefined) {
+    // should throw error
+    return false
   }
-  return CURRENCY[currency]!.decimal_places! >= decimalCnt
+  const decimalPlaces = Math.log10(c.Scale)
+  const decimalCnt = val.toString().split('.')[1].length
+  return decimalPlaces >= decimalCnt
 }
 
 export const formatPlanPrice = (plan: IPlan) => {

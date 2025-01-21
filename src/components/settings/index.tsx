@@ -7,8 +7,8 @@ import '../../shared.css'
 import AppConfig from './appConfig'
 import CreditConfig from './creditConfig'
 // import EmailTemplates from './emailTemplates'
-import AppIntegrationServices from './integrations'
-import PaymentGatewayConfig from './paymentGateways'
+// import AppIntegrationServices from './integrations'
+// import PaymentGatewayConfig from './paymentGateways'
 import Permissions from './permissions'
 import { SubscriptionConfig } from './subscriptionConfig'
 import WebhookList from './webHooks/list'
@@ -19,6 +19,7 @@ const Index = () => {
     searchParams.get('tab') ?? 'appConfig'
   )
   const tabItems: TabsProps['items'] = [
+    /*
     {
       key: 'paymentGateways',
       label: (
@@ -31,6 +32,7 @@ const Index = () => {
       label: <span className="text-red-500">Integrations(NOT FINISHED)</span>,
       children: <AppIntegrationServices />
     },
+    */
     {
       key: 'appConfig',
       label: 'App Config',

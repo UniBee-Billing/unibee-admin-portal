@@ -1,6 +1,5 @@
 import axios from 'axios'
 // import update from 'immutability-helper'
-import { CURRENCY } from '../constants'
 import {
   AccountType,
   CreditTxType,
@@ -15,12 +14,17 @@ import {
   TMerchantInfo,
   TRole
 } from '../shared.types'
-import { useMerchantInfoStore, useSessionStore } from '../stores'
+import {
+  useAppConfigStore,
+  useMerchantInfoStore,
+  useSessionStore
+} from '../stores'
 import { serializeSearchParams } from '../utils/query'
 import { analyticsRequest, request } from './client'
 
 const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
+const appConfig = useAppConfigStore.getState()
 
 const handleStatusCode = (code: number, refreshCb?: () => void) => {
   // better to use | to limit the code range
@@ -1953,9 +1957,14 @@ export const refundReq = async (
   },
   currency: string
 ) => {
-  body.refundAmount *= CURRENCY[currency].stripe_factor
-  body.refundAmount = Math.round(body.refundAmount)
   try {
+    const c = appConfig.supportCurrency.find((c) => c.Currency == currency)
+    if (c == undefined) {
+      throw new Error(`Currency ${currency} not found`)
+    }
+    body.refundAmount *= c.Scale
+    body.refundAmount = Math.round(body.refundAmount)
+
     const res = await request.post(`/merchant/invoice/refund`, body)
     if (res.data.code == 61 || res.data.code == 62) {
       session.setSession({ expired: true, refresh: null })

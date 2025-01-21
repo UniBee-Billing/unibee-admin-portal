@@ -554,7 +554,7 @@ const Index = () => {
                   rules={[
                     {
                       required: watchDiscountType != 1, // 1: percentage, 2: fixed-amt
-                      message: 'Please choose your discount amount!'
+                      message: 'Please input your discount amount!'
                     },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
