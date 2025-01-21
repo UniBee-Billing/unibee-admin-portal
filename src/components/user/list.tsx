@@ -182,7 +182,7 @@ const Index = () => {
   }
   const getColumns = (): ColumnsType<IProfile> => [
     {
-      title: 'User Id',
+      title: 'User ID',
       dataIndex: 'id',
       key: 'id',
       render: (id) => (
@@ -209,7 +209,7 @@ const Index = () => {
       filteredValue: filters.planIds
     },
     {
-      title: 'Sub Id',
+      title: 'Sub ID',
       dataIndex: 'subscriptionId',
       key: 'subscriptionId',
       render: (subId, _) => (

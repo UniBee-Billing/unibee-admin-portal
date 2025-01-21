@@ -187,7 +187,7 @@ export const DiscountCodeList = () => {
         code.quantity === 0 ? 'Unlimited' : remainingQuantity
     },
     {
-      title: 'Usage count',
+      title: 'Usage Count',
       dataIndex: 'quantityUsed',
       key: 'quantityUsed'
     },
