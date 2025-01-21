@@ -70,6 +70,7 @@ export const CURRENCY: {
   CNY: { symbol: '¥', stripe_factor: 100, decimal_places: 2 },
   USD: { symbol: '$', stripe_factor: 100, decimal_places: 2 },
   JPY: { symbol: '¥', stripe_factor: 1, decimal_places: 0 },
+  RUB: { symbol: '₽', stripe_factor: 100, decimal_places: 2 },
   EUR: { symbol: '€', stripe_factor: 100, decimal_places: 2 },
   USDT: { symbol: '₮', stripe_factor: 100, decimal_places: null }
 }
