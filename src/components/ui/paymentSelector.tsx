@@ -14,7 +14,9 @@ enum PAYMENT_METHODS {
   stripe = 'stripe',
   paypal = 'paypal',
   changelly = 'changelly',
-  wire_transfer = 'wire_transfer'
+  unitpay = 'unitpay',
+  wire_transfer = 'wire_transfer',
+  payssion = 'payssion'
 }
 
 const PAYMENTS: {
@@ -61,6 +63,16 @@ const PAYMENTS: {
       </div>
     )),
     order: 4
+  },
+  [PAYMENT_METHODS.unitpay]: {
+    label: 'UniPay',
+    order: 5,
+    logo: undefined
+  },
+  [PAYMENT_METHODS.payssion]: {
+    label: 'Payssion',
+    order: 6,
+    logo: undefined
   }
 }
 
@@ -74,6 +86,7 @@ const Index = ({
   disabled?: boolean
 }) => {
   const appConfig = useAppConfigStore()
+
   const gateways = appConfig.gateway
     .map((g) => ({
       ...g,
