@@ -115,12 +115,12 @@ const Index = ({
 
   const columns: ColumnsType<PaymentItem> = [
     {
-      title: 'Transaction Id',
+      title: 'Transaction ID',
       dataIndex: 'transactionId',
       key: 'transactionId'
     },
     {
-      title: 'External Id',
+      title: 'External ID',
       dataIndex: 'externalTransactionId',
       key: 'externalTransactionId'
     },
@@ -208,7 +208,7 @@ const Index = ({
         appConfigStore.gateway.find((g) => g.gatewayId == gateway)?.displayName
     },
     {
-      title: 'Subscription Id',
+      title: 'Subscription ID',
       dataIndex: 'subscriptionId',
       key: 'subscriptionId',
       render: (subId) =>
@@ -224,7 +224,7 @@ const Index = ({
         )
     },
     {
-      title: 'Invoice Id',
+      title: 'Invoice ID',
       dataIndex: 'invoiceId',
       key: 'invoiceId',
       width: 184,
@@ -245,7 +245,7 @@ const Index = ({
         )
     },
     {
-      title: 'User Id',
+      title: 'User ID',
       dataIndex: 'userId',
       key: 'userId',
       render: (userId) =>

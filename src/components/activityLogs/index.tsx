@@ -72,7 +72,7 @@ const Index = () => {
       key: 'optContent'
     },
     {
-      title: 'User Id',
+      title: 'User ID',
       dataIndex: 'userId',
       key: 'userId',
       render: (userId) =>
@@ -96,7 +96,7 @@ const Index = () => {
       render: (d) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
     },
     {
-      title: 'Invoice Id',
+      title: 'Invoice ID',
       dataIndex: 'invoiceId',
       key: 'invoiceId',
       render: (invoiceId) =>
@@ -114,7 +114,7 @@ const Index = () => {
         )
     },
     {
-      title: 'Plan Id',
+      title: 'Plan ID',
       dataIndex: 'planId',
       key: 'planId',
       render: (planId) =>
@@ -132,7 +132,7 @@ const Index = () => {
         )
     },
     {
-      title: 'Subscription Id',
+      title: 'Subscription ID',
       dataIndex: 'subscriptionId',
       key: 'subscriptionId',
       width: 200,

@@ -315,7 +315,7 @@ const Index = ({
       render: (s, iv) => InvoiceStatus(s, iv.refund != null) // INVOICE_STATUS[s as keyof typeof INVOICE_STATUS]
     },
     {
-      title: 'Paid date',
+      title: 'Paid Date',
       dataIndex: 'payment',
       key: 'payment',
       width: 140,
