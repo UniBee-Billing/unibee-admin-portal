@@ -37,8 +37,9 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
     const body = {
       gatewayKey: pubKey,
       gatewaySecret: privateKey,
-      gatewayName: isNew ? gatewayDetail?.gatewayName : undefined,
-      gatewayId: isNew ? undefined : gatewayDetail?.gatewayId
+      gatewayName: gatewayDetail!.gatewayName
+      // gatewayName: isNew ? gatewayDetail!.gatewayName : undefined,
+      // gatewayId: isNew ? undefined : gatewayDetail.gatewayId
     }
 
     setLoading(true)

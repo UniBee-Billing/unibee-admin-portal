@@ -551,7 +551,7 @@ type TGateway = {
   gatewayId: number
   gatewayKey: string // public key(desensitized)
   gatewaySecret: string // private key(desensitized)
-  gatewayName: 'paypal' | 'changelly' | 'stripe' | 'wire_transfer'
+  gatewayName: string
   displayName: string
   gatewayLogo: string
   gatewayIcons: string[]
