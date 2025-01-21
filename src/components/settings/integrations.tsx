@@ -13,7 +13,7 @@ import SegmentModal from './appConfig/segmentModal'
 import SendGridModal from './appConfig/sendGridKeyModal'
 import VATModal from './appConfig/vatKeyModal'
 
-type TAPP_Integratoin = {
+type TAPP_Integration = {
   IsSetupFinished: boolean
   name: string
   description: string
@@ -35,7 +35,7 @@ const Index = () => {
     }
   }
 
-  const integration_items: TAPP_Integratoin[] = [
+  const integration_items: TAPP_Integration[] = [
     {
       IsSetupFinished: false,
       name: 'UniBee API Key',
@@ -148,7 +148,7 @@ const Index = () => {
   initializeKeys('segmentServerSideKey', segmentServerSideKey)
   initializeKeys('segmentUserPortalKey', segmentUserPortalKey)
 
-  const [integrationList] = useState<TAPP_Integratoin[]>(integration_items)
+  const [integrationList] = useState<TAPP_Integration[]>(integration_items)
 
   return (
     <div>

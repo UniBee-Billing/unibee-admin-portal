@@ -65,8 +65,6 @@ const App: React.FC = () => {
   }, [sessionStore.expired])
   */
 
-  // console.log('in app.js, sessioncbList: ', sessionStore.refreshCallbacks)
-
   return (
     <>
       {noSiderRoutes.find((r) => r === location.pathname) ? (

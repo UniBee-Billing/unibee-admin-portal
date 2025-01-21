@@ -68,6 +68,8 @@
     "linkify",
     "stroke-linecap",
     "stroke-linejoin",
-    "Clippy"
+    "Clippy",
+    "TAPP_Integration",
+    "Apicall"
   ]
 }
