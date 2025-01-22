@@ -281,14 +281,18 @@ export const generateApiKeyReq = async () => {
   }
 }
 
-type TGatewayKeyBody = {
-  gatewayId?: number
+export type TGatewayConfigBody = {
+  gatewayId?: number //
   gatewayName?: string
-  gatewayKey: string
-  gatewaySecret: string
+  gatewayKey?: string
+  gatewaySecret?: string
+  displayName?: string
+  gatewayLogo?: string[]
+  sort?: number
 }
+// to be depreciated
 export const saveGatewayKeyReq = async (
-  body: TGatewayKeyBody,
+  body: TGatewayConfigBody,
   isNew: boolean
 ) => {
   const url = isNew ? '/merchant/gateway/setup' : '/merchant/gateway/edit'
@@ -301,6 +305,21 @@ export const saveGatewayKeyReq = async (
       )
     }
     return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const saveGatewayConfigReq = async (
+  body: TGatewayConfigBody,
+  isNew: boolean
+) => {
+  const url = isNew ? '/merchant/gateway/setup' : '/merchant/gateway/edit'
+  try {
+    const res = await request.post(url, body)
+    handleStatusCode(res.data.code)
+    return [res.data.data.gateway, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]

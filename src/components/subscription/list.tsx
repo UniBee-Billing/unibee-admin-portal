@@ -541,6 +541,8 @@ const Search = ({
     onPageChange(1, PAGE_SIZE)
     clearFilters()
   }
+  // const appConfig = useAppConfigStore()
+  // const CURRENCIES = appConfig.supportCurrency
 
   const currencySymbol =
     CURRENCY[form.getFieldValue('currency') || DEFAULT_TERM.currency].symbol

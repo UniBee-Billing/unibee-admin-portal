@@ -2,7 +2,7 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
 import update from 'immutability-helper'
 import { useState } from 'react'
-import { CURRENCY } from '../../../constants'
+// import { CURRENCY } from '../../../constants'
 import { randomString, showAmount } from '../../../helpers'
 import {
   createInvoiceReq,
@@ -19,6 +19,7 @@ import {
   TInvoicePerm,
   UserInvoice
 } from '../../../shared.types'
+import { useAppConfigStore } from '../../../stores'
 import CouponPopover from '../../ui/couponPopover'
 
 const newPlaceholderItem = (): InvoiceItem => ({
@@ -54,6 +55,8 @@ const Index = ({
   closeModal,
   refresh
 }: Props) => {
+  const appConfig = useAppConfigStore()
+  const CURRENCIES = appConfig.supportCurrency
   const [loading, setLoading] = useState(false)
   if (detail != null) {
     detail.lines?.forEach((item) => {
@@ -149,10 +152,13 @@ const Index = ({
     if (!validateFields()) {
       return
     }
+    const CURRENCY = CURRENCIES.find((c) => c.Currency == currency)
+    if (CURRENCY == undefined) {
+      return
+    }
     const invoiceItems = invoiceList.map((v) => ({
       description: v.description,
-      unitAmountExcludingTax:
-        Number(v.unitAmountExcludingTax) * CURRENCY[currency].stripe_factor,
+      unitAmountExcludingTax: Number(v.unitAmountExcludingTax) * CURRENCY.Scale,
       quantity: Number(v.quantity)
     }))
     setLoading(true)
@@ -412,11 +418,10 @@ const Index = ({
               style={{ width: 100, margin: '8px 0' }}
               value={currency}
               onChange={onCurrencyChange}
-              options={[
-                { value: 'EUR', label: 'EUR' },
-                { value: 'USD', label: 'USD' },
-                { value: 'JPY', label: 'JPY' }
-              ]}
+              options={CURRENCIES.map((c) => ({
+                value: c.Currency,
+                label: c.Currency
+              }))}
             />
           )}
         </Col>
@@ -498,10 +503,11 @@ const Index = ({
                 </span>
               ) : (
                 <>
-                  {/* CURRENCY[currency].symbol */}
                   <Input
                     type="number"
-                    prefix={CURRENCY[currency].symbol}
+                    prefix={
+                      CURRENCIES.find((c) => c.Currency == currency)?.Symbol
+                    }
                     value={v.unitAmountExcludingTax}
                     onChange={onFieldChange(v.id!, 'unitAmountExcludingTax')}
                     style={{ width: '80%' }}
@@ -524,7 +530,6 @@ const Index = ({
                 />
               )}
             </Col>
-            {/* <Col span={2}>{`${CURRENCY[currency].symbol} ${v.tax}`}</Col> */}
             <Col span={3}>{getSubTotal([invoiceList[i]])}</Col>
             {permission.editable && (
               <Col span={1}>
@@ -600,7 +605,7 @@ const Index = ({
               <Input
                 style={{ width: '100px' }}
                 disabled={loading}
-                prefix={CURRENCY[currency].symbol}
+                prefix={CURRENCIES.find((c) => c.Currency == currency)?.Symbol}
                 placeholder={`≤ ${showAmount(detail?.totalAmount, detail?.currency, true)}`}
                 value={refundAmt}
                 onChange={onRefundAmtChange}

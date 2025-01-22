@@ -20,7 +20,7 @@ import {
 import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { CURRENCY } from '../../constants'
+// import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
   isValidMap,
@@ -36,10 +36,8 @@ import {
   togglePublishReq
 } from '../../requests'
 import { IBillableMetrics, IPlan, IProduct } from '../../shared.types'
+import { useAppConfigStore } from '../../stores'
 import { PlanStatus } from '../ui/statusTag'
-
-const getAmount = (amt: number, currency: string) =>
-  amt / CURRENCY[currency].stripe_factor
 
 interface Metric {
   metricId: number
@@ -117,6 +115,8 @@ const unitToSeconds = (value: number, unit: number) => {
 const { Option } = Select
 
 const Index = () => {
+  const appConfig = useAppConfigStore()
+  const CURRENCIES = appConfig.supportCurrency
   const params = useParams()
   const planId = params.planId // http://localhost:5174/plan/270?productId=0, planId is 270
   const isNew = planId == null
@@ -180,6 +180,17 @@ const Index = () => {
     </Select>
   )
 
+  const getCurrency = () =>
+    CURRENCIES.find((c) => c.Currency == form.getFieldValue('currency'))
+
+  const getAmount = (amt: number, currency: string) => {
+    const CURRENCY = CURRENCIES.find((c) => c.Currency == currency)
+    if (CURRENCY == undefined) {
+      return 0
+    }
+    return amt / CURRENCY.Scale
+  }
+
   useEffect(() => {
     if (!isNew && plan?.status != 1) {
       // status: 1 editing, 2 active, even we can edit active plan, but these 3 keys fields are not editable.
@@ -208,9 +219,13 @@ const Index = () => {
     if (productDetail === null) {
       return
     }
+    const CURRENCY = getCurrency()
+    if (CURRENCY == undefined) {
+      return
+    }
     const f = JSON.parse(JSON.stringify(values))
     f.amount = Number(f.amount)
-    f.amount *= CURRENCY[f.currency].stripe_factor
+    f.amount *= CURRENCY.Scale
     f.amount = toFixedNumber(f.amount, 2)
     f.intervalCount = Number(f.intervalCount)
 
@@ -228,7 +243,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       f.cancelAtTrialEnd = f.cancelAtTrialEnd ? 0 : 1
     } else {
       f.trialAmount = Number(f.trialAmount)
-      f.trialAmount *= CURRENCY[f.currency].stripe_factor
+      f.trialAmount *= CURRENCY.Scale
       f.trialAmount = toFixedNumber(f.trialAmount, 2)
       f.trialDurationTime = Number(f.trialDurationTime)
       f.trialDurationTime = unitToSeconds(
@@ -666,11 +681,10 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
             <Select
               disabled={disableAfterActive.current || formDisabled}
               style={{ width: 180 }}
-              options={[
-                { value: 'EUR', label: 'EUR' },
-                { value: 'USD', label: 'USD' },
-                { value: 'JPY', label: 'JPY' }
-              ]}
+              options={CURRENCIES.map((c) => ({
+                value: c.Currency,
+                label: c.Currency
+              }))}
             />
           </Form.Item>
 
@@ -703,9 +717,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
             <Input
               disabled={disableAfterActive.current || formDisabled}
               style={{ width: 180 }}
-              prefix={
-                CURRENCY[form.getFieldValue('currency') ?? plan.currency].symbol
-              }
+              prefix={getCurrency()?.Symbol}
             />
           </Form.Item>
 
@@ -895,8 +907,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 disabled={!enableTrialWatch || formDisabled}
                 style={{ width: 180 }}
                 prefix={
-                  CURRENCY[form.getFieldValue('currency') ?? plan.currency]
-                    .symbol
+                  getCurrency()?.Symbol
+                  // CURRENCY[form.getFieldValue('currency') ?? plan.currency]
+                  // .symbol
                 }
               />
             </Form.Item>
