@@ -259,7 +259,7 @@ const EssentialSetup = ({
   refresh: () => void
 }) => {
   const appConfig = useAppConfigStore()
-  const [loading, setLoading] = useState(false)
+  const [loading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [displayName, setDisplayName] = useState(gatewayConfig.displayName)
   const onNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
@@ -274,7 +274,6 @@ const EssentialSetup = ({
       uid: randomString(8)
     }))
   )
-  console.log('gatewayConfig: ', gatewayConfig)
 
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview) {
@@ -367,7 +366,6 @@ const EssentialSetup = ({
     message.success(`${gatewayConfig.name} config saved.`)
     refresh()
     const idx = appConfig.gateway.findIndex((g) => g.name == newGateway.name)
-    console.log('idx: ', idx)
     if (idx != -1) {
       const newGatewayList = update(appConfig.gateway, {
         [idx]: { $set: newGateway }
@@ -607,8 +605,10 @@ const WebHookSetup = ({
   refresh: () => void
 }) => {
   const [form] = useForm()
-  const [loading, setLoading] = useState(false)
-  const onSave = () => {}
+  const [loading] = useState(false)
+  const onSave = () => {
+    refresh()
+  }
   const copyContent = async () => {
     const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
     if (null != err) {

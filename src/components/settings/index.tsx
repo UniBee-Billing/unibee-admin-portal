@@ -19,6 +19,7 @@ const Index = () => {
     searchParams.get('tab') ?? 'appConfig'
   )
   const tabItems: TabsProps['items'] = [
+    /*
     {
       key: 'paymentGateways',
       label: (
@@ -31,7 +32,7 @@ const Index = () => {
       label: <span className="text-red-500">Integrations(NOT FINISHED)</span>,
       children: <AppIntegrationServices />
     },
-
+*/
     {
       key: 'appConfig',
       label: 'App Config',
