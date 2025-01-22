@@ -1,20 +1,18 @@
-import { Button, Col, Input, Modal, Row, message } from 'antd'
+import { Button, Col, Input, message, Modal, Row } from 'antd'
 import { useState } from 'react'
-import { saveGatewayKeyReq } from '../../../requests'
+import { saveGatewayKeyReq, TGatewayConfigBody } from '../../../requests'
 import { TGateway } from '../../../shared.types'
 const { TextArea } = Input
 
 interface IProps {
   closeModal: () => void
   refresh: () => void
-  gatewayDetail: TGateway | undefined
+  gatewayDetail: TGateway
 }
 const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
   const isNew = gatewayDetail?.gatewayId == 0
   const [loading, setLoading] = useState(false)
-  const [pubKey, setPubKey] = useState(
-    isNew ? '' : (gatewayDetail?.gatewayKey as string)
-  )
+  const [pubKey, setPubKey] = useState(isNew ? '' : gatewayDetail.gatewayKey)
   const [privateKey, setPrivateKey] = useState('')
   const onKeyChange =
     (which: 'public' | 'private') =>
@@ -34,12 +32,14 @@ const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
       message.error('Private Key is empty')
       return
     }
-    const body = {
+    const body: TGatewayConfigBody = {
       gatewayKey: pubKey,
       gatewaySecret: privateKey,
-      gatewayName: gatewayDetail!.gatewayName
-      // gatewayName: isNew ? gatewayDetail!.gatewayName : undefined,
-      // gatewayId: isNew ? undefined : gatewayDetail.gatewayId
+      gatewayName: gatewayDetail.gatewayName
+    }
+    if (!isNew) {
+      body.gatewayId = gatewayDetail.gatewayId
+      delete body.gatewayName
     }
 
     setLoading(true)

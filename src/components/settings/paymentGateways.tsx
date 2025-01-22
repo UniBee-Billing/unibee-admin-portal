@@ -357,12 +357,7 @@ const EssentialSetup = ({
       message.error(err.message)
       return
     }
-    console.log(
-      'save gateway config res: ',
-      newGateway,
-      '///',
-      appConfig.gateway
-    )
+
     message.success(`${gatewayConfig.name} config saved.`)
     refresh()
     const idx = appConfig.gateway.findIndex((g) => g.name == newGateway.name)
