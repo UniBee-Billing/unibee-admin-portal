@@ -10,10 +10,10 @@ interface IProps {
   gatewayDetail: TGateway | undefined
 }
 const Index = ({ closeModal, gatewayDetail, refresh }: IProps) => {
-  const isNew = gatewayDetail?.gatewayId == null
+  const isNew = gatewayDetail?.gatewayId == 0
   const [loading, setLoading] = useState(false)
   const [pubKey, setPubKey] = useState(
-    isNew ? '' : (gatewayDetail.gatewayKey as string)
+    isNew ? '' : (gatewayDetail?.gatewayKey as string)
   )
   const [privateKey, setPrivateKey] = useState('')
   const onKeyChange =

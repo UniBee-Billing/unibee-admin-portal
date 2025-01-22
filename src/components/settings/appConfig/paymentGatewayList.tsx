@@ -68,7 +68,29 @@ const Index = ({
       const g = gatewayList.find(
         (g) => g.gatewayName.toLowerCase() == gatewayName.toLowerCase()
       )
-      setGatewayEdit(g)
+      setGatewayEdit(
+        g ?? {
+          IsSetupFinished: false,
+          name: '',
+          description: '',
+          gatewayId: 0,
+          gatewayKey: '',
+          gatewaySecret: '',
+          gatewayName,
+          displayName: '',
+          gatewayLogo: '',
+          gatewayIcons: [],
+          gatewayType: 0,
+          gatewayWebsiteLink: '',
+          webhookEndpointUrl: '',
+          gatewayWebhookIntegrationLink: '',
+          webhookSecret: '',
+          createTime: 0,
+          minimumAmount: 0,
+          currency: '',
+          sort: 0
+        }
+      )
       toggleModal()
     }
 
@@ -79,7 +101,7 @@ const Index = ({
   gatewayId: number
   gatewayKey: string // public key(desensitized)
   gatewaySecret: string // private key(desensitized)
-  gatewayName: 'paypal' | 'changelly' | 'stripe' | 'wire_transfer'
+  gatewayName: string
   displayName: string
   gatewayLogo: string
   gatewayIcons: string[]
@@ -99,7 +121,6 @@ const Index = ({
     address: string
   }
   sort: number //
-
     */
 
   return (
@@ -141,67 +162,6 @@ const Index = ({
           </Col>
         </Row>
       ))}
-      {/* <Row gutter={[16, 32]} style={{ marginBottom: '16px' }}>
-        <Col span={4}>
-          <a href="http://www.stripe.com" target="_blank" rel="noreferrer">
-            Stripe
-          </a>
-        </Col>
-        <Col span={2}>
-          {loading ? (
-            <LoadingTag />
-          ) : gatewayDetail('stripe') != null ? (
-            <SetTag />
-          ) : (
-            <NotSetTag />
-          )}
-        </Col>
-        <Col span={10}>
-          <div className=" text-gray-500">
-            Use public and private keys to secure the bank card payment.
-          </div>
-        </Col>
-        <Col span={2}>
-          <Button
-            onClick={onGatewayClick('stripe')}
-            disabled={loading}
-            loading={loading}
-          >
-            {gatewayDetail('stripe') == null ? 'Setup' : 'Edit'}
-          </Button>
-        </Col>
-        </Row> */}
-
-      {/* <Row gutter={[16, 32]} style={{ marginBottom: '16px' }}>
-        <Col span={4}>
-          <a href="http://www.changelly.com" target="_blank" rel="noreferrer">
-            Changelly
-          </a>
-        </Col>
-        <Col span={2}>
-          {loading ? (
-            <LoadingTag />
-          ) : gatewayDetail('changelly') != null ? (
-            <SetTag />
-          ) : (
-            <NotSetTag />
-          )}
-        </Col>
-        <Col span={10}>
-          <div className=" text-gray-500">
-            Use public and private keys to secure the crypto payment.
-          </div>
-        </Col>
-        <Col span={2}>
-          <Button
-            onClick={onGatewayClick('changelly')}
-            disabled={loading}
-            loading={loading}
-          >
-            {gatewayDetail('changelly') == null ? 'Setup' : 'Edit'}
-          </Button>
-        </Col>
-        </Row> */}
     </div>
   )
 }
