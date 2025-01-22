@@ -47,6 +47,11 @@ type TFilters = {
   status: number[] | null // plan status filter
 }
 
+type TSort = {
+  sortField: 'planName' | 'createTime'
+  sortType: 'desc' | 'asc'
+}
+
 const Index = ({
   productId,
   isProductValid
@@ -64,10 +69,7 @@ const Index = ({
     type: null,
     status: null
   })
-  const [sortFilter, setSortFilter] = useState<{
-    sortField: 'planName'
-    sortType: 'desc' | 'asc' | undefined
-  } | null>(null)
+  const [sortFilter, setSortFilter] = useState<TSort | null>(null)
 
   const goToDetail = (planId: number) =>
     navigate(`/plan/${planId}?productId=${productId}`)
@@ -209,8 +211,8 @@ const Index = ({
     {
       title: 'Creation Time',
       dataIndex: 'createTime',
-      render: (t) => (t == 0 ? '' : formatDate(t))
-      // sorter: (a, b) => a.createTime - b.createTime,
+      render: (t) => (t == 0 ? '' : formatDate(t)),
+      sorter: (a, b) => a.createTime - b.createTime
     },
     {
       title: (
@@ -268,14 +270,15 @@ const Index = ({
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
     }
-    if (sorter.columnKey == undefined) {
-      setSortFilter(null)
-    } else if (sorter.columnKey === 'planName') {
-      setSortFilter({
-        sortField: 'planName',
-        sortType: sorter.order === 'descend' ? 'desc' : 'asc'
-      })
+    let sortFilter: TSort | null = null
+    if (sorter.field != undefined) {
+      sortFilter = {
+        sortField: sorter.field == 'planName' ? 'planName' : 'createTime',
+        sortType: sorter.order == 'descend' ? 'desc' : 'asc'
+      }
     }
+
+    setSortFilter(sortFilter)
   }
 
   useEffect(() => {

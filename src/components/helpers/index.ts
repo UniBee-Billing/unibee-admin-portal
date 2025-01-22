@@ -1,10 +1,14 @@
-import { CURRENCY } from '../../constants'
 import { UserInvoice } from '../../shared.types'
+import { useAppConfigStore } from '../../stores'
 
 export const normalizeAmt = (iv: UserInvoice[]) => {
+  const CURRENCIES = useAppConfigStore.getState().supportCurrency
   iv.forEach((v) => {
-    const c = v.currency
-    const f = CURRENCY[c].stripe_factor
+    const currency = CURRENCIES.find((cur) => cur.Currency == v.currency)
+    if (currency == undefined) {
+      return
+    }
+    const f = currency.Scale
     v.subscriptionAmount /= f
     v.subscriptionAmountExcludingTax /= f
     v.taxAmount /= f
