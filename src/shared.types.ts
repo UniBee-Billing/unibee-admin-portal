@@ -1,6 +1,7 @@
 // this is logged-in user' profile
 import { Dayjs } from 'dayjs'
 import { Currency } from 'dinero.js'
+import { DISCOUNT_CODE_UPGRADE_SCOPE } from './components/discountCode/helpers'
 
 export enum AccountType {
   NONE,
@@ -321,6 +322,10 @@ type DiscountCode = {
   userScope: 0 | 1 | 2 // 0: all users can use this code, 1: only new users can use, 2: only for subscription renewal
   userLimit: number | boolean // how many time the same user can use this code. 0: unlimited, 1: once.
   // Only 1, 0 are used in current release(need to convert to bool on FE, it's a switch). Number type is for future requirement change(100: same user can use 100 times).
+
+  upgradeScope?: DISCOUNT_CODE_UPGRADE_SCOPE // upgrade can be applied to longer plan upgrade only(monthly to annually) or plan amt upgrade only(same recurring cycle but more amount)
+  // or can be used in both the above cases. In this case, the below 2 options must be false.
+  // 'upgradeScope' doesn't exist in BE, in FE, a radio group is rendered to represent these 3 options.
   upgradeOnly: boolean // code use for subscription upgrade(with more payment amount regardless of from which plan upgrade to which plan)
   upgradeLongerOnly: boolean // code use for long plan subscription upgrade(from monthly to yearly)
 }
