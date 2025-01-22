@@ -550,14 +550,15 @@ type TWebhookLogs = {
 }
 
 type TGateway = {
-  IsSetupFinished: boolean
-  name: string // Stripe
+  IsSetupFinished: boolean // true: this gateway is ready for use
+  name: string // e.g., Stripe
   description: string
-  gatewayId: number
+  gatewayId: number // == 0: totally new gateway, admin hasn't configured anything yet.
+  // as long as admin has configured something, even just the displayName or icons, gatewayId will become non-zero, but this doesn't mean this gateway is ready for use.
   gatewayKey: string // public key(desensitized)
   gatewaySecret: string // private key(desensitized)
-  gatewayName: string
-  displayName: string
+  gatewayName: string // e.g., stripe.
+  displayName: string // e.g., Bank Cards
   gatewayLogo: string
   gatewayIcons: string[]
   gatewayType: number

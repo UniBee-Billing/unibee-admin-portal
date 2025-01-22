@@ -1,7 +1,6 @@
 import {
   CheckOutlined,
   ExclamationOutlined,
-  LoadingOutlined,
   PlusOutlined
 } from '@ant-design/icons'
 import type { GetProp, UploadFile, UploadProps } from 'antd'
@@ -27,7 +26,6 @@ import { useEffect, useState } from 'react'
 import { randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
-  getPaymentGatewayConfigListReq,
   saveGatewayConfigReq,
   TGatewayConfigBody,
   uploadLogoReq
@@ -35,14 +33,18 @@ import {
 import { TGateway } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
-import ModalWireTransfer, {
-  NEW_WIRE_TRANSFER
-} from './appConfig/wireTransferModal'
+import ModalWireTransfer from './appConfig/wireTransferModal'
 
 const Index = () => {
   const appConfig = useAppConfigStore()
-  const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
+  const gatewayConfigList = appConfig.gateway
+  console.log('gatewayConfigList in config page tab: ', gatewayConfigList)
+
+  /*
+  const [gatewayConfigList, setGatewayConfigList] =
+    useState<TGateway[]>(gateways)
   const [loading, setLoading] = useState(false)
+  */
   const [gatewayIndex, setGatewayIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (gatewayIdx?: number) => {
@@ -52,46 +54,41 @@ const Index = () => {
     }
   }
 
-  const getGatewayConfigList = async () => {
-    setLoading(true)
-    const [gateways, err] = await getPaymentGatewayConfigListReq({
-      refreshCb: getGatewayConfigList
-    })
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    const wiredTransfer = appConfig.gateway.find(
-      (g) => g.gatewayName == 'wire_transfer'
+  const saveConfigInStore = (newGateway: TGateway) => {
+    // if it's the first time admin configured this gateway, gatewayId is 0, so we cannot use id to find.
+    const idx = gatewayConfigList.findIndex(
+      (g) => g.gatewayName == newGateway.gatewayName
     )
-
-    setGatewayConfigList(gateways.concat(wiredTransfer ?? NEW_WIRE_TRANSFER))
+    console.log('updating gateway in local store, its idx: ', idx)
+    if (idx != -1) {
+      const newGatewayList = update(gatewayConfigList, {
+        [idx]: { $set: newGateway }
+      })
+      appConfig.setGateway(newGatewayList)
+    } else {
+      // should throw error
+      console.log('saved gateway not found?????????????')
+    }
   }
-
-  useEffect(() => {
-    getGatewayConfigList()
-  }, [])
 
   return (
     <div>
       {openSetupModal &&
         (gatewayConfigList[gatewayIndex].gatewayName != 'wire_transfer' ? (
           <PaymentGatewaySetupModal
-            closeModal={toggleSetupModal}
             gatewayConfig={gatewayConfigList[gatewayIndex]}
-            refresh={getGatewayConfigList}
+            saveConfigInStore={saveConfigInStore}
+            closeModal={toggleSetupModal}
           />
         ) : (
           <ModalWireTransfer
+            gatewayConfig={gatewayConfigList[gatewayIndex]}
+            saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
-            detail={gatewayConfigList[gatewayIndex]}
-            refresh={getGatewayConfigList}
           />
         ))}
       <List
         itemLayout="horizontal"
-        loading={{ indicator: <LoadingOutlined spin />, spinning: loading }}
         dataSource={gatewayConfigList}
         renderItem={(item, index) => (
           <List.Item>
@@ -101,7 +98,6 @@ const Index = () => {
                   <div
                     style={{
                       height: '36px',
-                      width: '140px',
                       display: 'flex',
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -119,7 +115,6 @@ const Index = () => {
                     <div
                       style={{
                         height: '36px',
-                        width: '140px',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -173,12 +168,12 @@ export default Index
 
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
-  refresh,
-  closeModal
+  closeModal,
+  saveConfigInStore
 }: {
   gatewayConfig: TGateway
-  refresh: () => void
   closeModal: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
   const tabItems: TabsProps['items'] = [
     {
@@ -187,7 +182,7 @@ const PaymentGatewaySetupModal = ({
       children: (
         <EssentialSetup
           gatewayConfig={gatewayConfig}
-          refresh={refresh}
+          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
         />
       )
@@ -198,7 +193,7 @@ const PaymentGatewaySetupModal = ({
       children: (
         <PubPriKeySetup
           gatewayConfig={gatewayConfig}
-          refresh={refresh}
+          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
         />
       )
@@ -209,7 +204,7 @@ const PaymentGatewaySetupModal = ({
       children: (
         <WebHookSetup
           gatewayConfig={gatewayConfig}
-          refresh={refresh}
+          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
         />
       )
@@ -228,12 +223,7 @@ const PaymentGatewaySetupModal = ({
       footer={null}
       closeIcon={null}
     >
-      <Tabs
-        // onChange={onTabChange}
-        defaultActiveKey={'Essentials'}
-        // onEdit={onTabEdit}
-        items={tabItems}
-      />
+      <Tabs defaultActiveKey={'Essentials'} items={tabItems} />
     </Modal>
   )
 }
@@ -252,13 +242,12 @@ const MAX_FILE_COUNT = 5
 const EssentialSetup = ({
   closeModal,
   gatewayConfig,
-  refresh
+  saveConfigInStore
 }: {
   closeModal: () => void
   gatewayConfig: TGateway
-  refresh: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
-  const appConfig = useAppConfigStore()
   const [loading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [displayName, setDisplayName] = useState(gatewayConfig.displayName)
@@ -349,16 +338,8 @@ const EssentialSetup = ({
       message.error(err.message)
       return
     }
-
+    saveConfigInStore(newGateway)
     message.success(`${gatewayConfig.name} config saved.`)
-    refresh()
-    const idx = appConfig.gateway.findIndex((g) => g.name == newGateway.name)
-    if (idx != -1) {
-      const newGatewayList = update(appConfig.gateway, {
-        [idx]: { $set: newGateway }
-      })
-      appConfig.setGateway(newGatewayList)
-    }
   }
 
   return (
@@ -380,7 +361,8 @@ const EssentialSetup = ({
         disabled={uploading}
         listType="picture-card"
         maxCount={MAX_FILE_COUNT}
-        accept=".png, .jpg, .jpeg, .svg"
+        accept=".png, .jpg, .jpeg"
+        // accept=".png, .jpg, .jpeg, .svg"
         // multiple
         customRequest={onUpload}
         fileList={fileList}
@@ -422,11 +404,11 @@ const EssentialSetup = ({
 const PubPriKeySetup = ({
   gatewayConfig,
   closeModal,
-  refresh
+  saveConfigInStore
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
-  refresh: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
@@ -446,23 +428,24 @@ const PubPriKeySetup = ({
     }
     const body: TGatewayConfigBody = {
       gatewayKey: pubKey,
-      gatewaySecret: privateKey,
-      gatewayName: gatewayConfig.gatewayName
+      gatewaySecret: privateKey
+    }
+    const isNew = gatewayConfig.gatewayId == 0
+    if (isNew) {
+      body.gatewayName = gatewayConfig.gatewayName
+    } else {
+      body.gatewayId = gatewayConfig.gatewayId
     }
 
     setLoading(true)
-    const [_, err] = await saveGatewayConfigReq(
-      body,
-      gatewayConfig.gatewayId == 0
-    )
+    const [newGateway, err] = await saveGatewayConfigReq(body, isNew)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
     message.success(`${gatewayConfig?.gatewayName} keys saved`)
-    refresh()
-    closeModal()
+    saveConfigInStore(newGateway)
   }
   const copyContent = async () => {
     const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
@@ -585,16 +568,16 @@ const PubPriKeySetup = ({
 const WebHookSetup = ({
   gatewayConfig,
   closeModal,
-  refresh
+  saveConfigInStore
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
-  refresh: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
   const [form] = useForm()
   const [loading] = useState(false)
   const onSave = () => {
-    refresh()
+    // saveConfigInStore()
   }
   const copyContent = async () => {
     const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)

@@ -47,7 +47,8 @@ export const initializeReq = async () => {
     [creditConfigs, errCreditConfigs]
   ] = await Promise.all([
     getAppConfigReq(),
-    getPaymentGatewayListReq(),
+    // getPaymentGatewayListReq(),
+    getPaymentGatewayConfigListReq({}),
     getMerchantInfoReq(),
     getProductListReq({}),
     getCreditConfigListReq({
@@ -2277,13 +2278,8 @@ export const createWireTransferAccountReq = async (
       '/merchant/gateway/wire_transfer_setup',
       body
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null]
+    handleStatusCode(res.data.code)
+    return [res.data.data.gateway, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2295,13 +2291,8 @@ export const updateWireTransferAccountReq = async (
 ) => {
   try {
     const res = await request.post('/merchant/gateway/wire_transfer_edit', body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data, null]
+    handleStatusCode(res.data.code)
+    return [res.data.data.gateway, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
