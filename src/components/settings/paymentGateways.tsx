@@ -1,7 +1,6 @@
 import {
   CheckOutlined,
   ExclamationOutlined,
-  LoadingOutlined,
   PlusOutlined
 } from '@ant-design/icons'
 import type { GetProp, UploadFile, UploadProps } from 'antd'
@@ -20,6 +19,20 @@ import {
 } from 'antd'
 
 // import update from 'immutability-helper'
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  useSensor
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  horizontalListSortingStrategy,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useForm } from 'antd/es/form/Form'
 import TextArea from 'antd/es/input/TextArea'
 import update from 'immutability-helper'
@@ -27,7 +40,6 @@ import { useEffect, useState } from 'react'
 import { randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
-  getPaymentGatewayConfigListReq,
   saveGatewayConfigReq,
   TGatewayConfigBody,
   uploadLogoReq
@@ -35,14 +47,11 @@ import {
 import { TGateway } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
-import ModalWireTransfer, {
-  NEW_WIRE_TRANSFER
-} from './appConfig/wireTransferModal'
+import ModalWireTransfer from './appConfig/wireTransferModal'
 
 const Index = () => {
   const appConfig = useAppConfigStore()
-  const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
-  const [loading, setLoading] = useState(false)
+  const gatewayConfigList = appConfig.gateway
   const [gatewayIndex, setGatewayIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (gatewayIdx?: number) => {
@@ -52,46 +61,39 @@ const Index = () => {
     }
   }
 
-  const getGatewayConfigList = async () => {
-    setLoading(true)
-    const [gateways, err] = await getPaymentGatewayConfigListReq({
-      refreshCb: getGatewayConfigList
-    })
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    const wiredTransfer = appConfig.gateway.find(
-      (g) => g.gatewayName == 'wire_transfer'
+  const saveConfigInStore = (newGateway: TGateway) => {
+    // if it's the first time admin configured this gateway, gatewayId is 0, so we cannot use id to find.
+    const idx = gatewayConfigList.findIndex(
+      (g) => g.gatewayName == newGateway.gatewayName
     )
-
-    setGatewayConfigList(gateways.concat(wiredTransfer ?? NEW_WIRE_TRANSFER))
+    if (idx != -1) {
+      const newGatewayList = update(gatewayConfigList, {
+        [idx]: { $set: newGateway }
+      })
+      appConfig.setGateway(newGatewayList)
+    } else {
+      message.error('Gateway not found')
+    }
   }
-
-  useEffect(() => {
-    getGatewayConfigList()
-  }, [])
 
   return (
     <div>
       {openSetupModal &&
         (gatewayConfigList[gatewayIndex].gatewayName != 'wire_transfer' ? (
           <PaymentGatewaySetupModal
-            closeModal={toggleSetupModal}
             gatewayConfig={gatewayConfigList[gatewayIndex]}
-            refresh={getGatewayConfigList}
+            saveConfigInStore={saveConfigInStore}
+            closeModal={toggleSetupModal}
           />
         ) : (
           <ModalWireTransfer
+            gatewayConfig={gatewayConfigList[gatewayIndex]}
+            saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
-            detail={gatewayConfigList[gatewayIndex]}
-            refresh={getGatewayConfigList}
           />
         ))}
       <List
         itemLayout="horizontal"
-        loading={{ indicator: <LoadingOutlined spin />, spinning: loading }}
         dataSource={gatewayConfigList}
         renderItem={(item, index) => (
           <List.Item>
@@ -101,7 +103,6 @@ const Index = () => {
                   <div
                     style={{
                       height: '36px',
-                      width: '140px',
                       display: 'flex',
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -119,7 +120,6 @@ const Index = () => {
                     <div
                       style={{
                         height: '36px',
-                        width: '140px',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -173,13 +173,14 @@ export default Index
 
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
-  refresh,
-  closeModal
+  closeModal,
+  saveConfigInStore
 }: {
   gatewayConfig: TGateway
-  refresh: () => void
   closeModal: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
+  const needWebHook = ['changelly', 'unitpay', 'payssion'] // these 3 gateways need webhook config
   const tabItems: TabsProps['items'] = [
     {
       key: 'Essentials',
@@ -187,29 +188,29 @@ const PaymentGatewaySetupModal = ({
       children: (
         <EssentialSetup
           gatewayConfig={gatewayConfig}
-          refresh={refresh}
+          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
         />
       )
     },
     {
-      key: 'Keys',
+      key: 'Public/Private Keys',
       label: 'Public/Private Keys',
       children: (
         <PubPriKeySetup
           gatewayConfig={gatewayConfig}
-          refresh={refresh}
+          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
         />
       )
     },
     {
-      key: 'Webhook',
+      key: 'Webhook Keys',
       label: 'Webhook Keys',
       children: (
         <WebHookSetup
           gatewayConfig={gatewayConfig}
-          refresh={refresh}
+          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
         />
       )
@@ -229,12 +230,59 @@ const PaymentGatewaySetupModal = ({
       closeIcon={null}
     >
       <Tabs
-        // onChange={onTabChange}
         defaultActiveKey={'Essentials'}
-        // onEdit={onTabEdit}
-        items={tabItems}
+        items={tabItems.filter(
+          (t) =>
+            t.key != 'Webhook Keys' ||
+            needWebHook.find((w) => w == gatewayConfig.gatewayName) != undefined
+        )}
       />
     </Modal>
+  )
+}
+
+interface DraggableUploadListItemProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  originNode: React.ReactElement<any, string | React.JSXElementConstructor<any>>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  file: UploadFile<any>
+}
+
+const DraggableUploadListItem = ({
+  originNode,
+  file
+}: DraggableUploadListItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({
+    id: file.uid
+  })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    cursor: 'move'
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      // prevent preview event when drag end
+      className={isDragging ? 'is-dragging' : ''}
+      {...attributes}
+      {...listeners}
+    >
+      {/* hide error tooltip when dragging */}
+      {file.status === 'error' && isDragging
+        ? originNode.props.children
+        : originNode}
+    </div>
   )
 }
 
@@ -252,13 +300,12 @@ const MAX_FILE_COUNT = 5
 const EssentialSetup = ({
   closeModal,
   gatewayConfig,
-  refresh
+  saveConfigInStore
 }: {
   closeModal: () => void
   gatewayConfig: TGateway
-  refresh: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
-  const appConfig = useAppConfigStore()
   const [loading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [displayName, setDisplayName] = useState(gatewayConfig.displayName)
@@ -349,15 +396,19 @@ const EssentialSetup = ({
       message.error(err.message)
       return
     }
-
+    saveConfigInStore(newGateway)
     message.success(`${gatewayConfig.name} config saved.`)
-    refresh()
-    const idx = appConfig.gateway.findIndex((g) => g.name == newGateway.name)
-    if (idx != -1) {
-      const newGatewayList = update(appConfig.gateway, {
-        [idx]: { $set: newGateway }
+  }
+  const sensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 10 }
+  })
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (active.id !== over?.id) {
+      setFileList((prev) => {
+        const activeIndex = prev.findIndex((i) => i.uid === active.id)
+        const overIndex = prev.findIndex((i) => i.uid === over?.id)
+        return arrayMove(prev, activeIndex, overIndex)
       })
-      appConfig.setGateway(newGatewayList)
     }
   }
 
@@ -371,24 +422,35 @@ const EssentialSetup = ({
       />
       <div className="h-6" />
       <div className="mb-2">
-        Gateway Logos{' '}
+        Gateway Icons{' '}
         <span className="text-xs text-gray-500">
-          ({`${MAX_FILE_COUNT} logos at most, each < 2M`})
+          ({`${MAX_FILE_COUNT} logos at most, each < 2M, drag to reorder them`})
         </span>
       </div>
-      <Upload
-        disabled={uploading}
-        listType="picture-card"
-        maxCount={MAX_FILE_COUNT}
-        accept=".png, .jpg, .jpeg, .svg"
-        // multiple
-        customRequest={onUpload}
-        fileList={fileList}
-        onPreview={handlePreview}
-        onChange={handleChange}
-      >
-        {fileList.length >= MAX_FILE_COUNT ? null : uploadButton}
-      </Upload>
+      <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
+        <SortableContext
+          items={fileList.map((i) => i.uid)}
+          strategy={horizontalListSortingStrategy}
+        >
+          <Upload
+            disabled={uploading}
+            listType="picture-card"
+            maxCount={MAX_FILE_COUNT}
+            accept=".png, .jpg, .jpeg"
+            // accept=".png, .jpg, .jpeg, .svg"
+            // multiple
+            itemRender={(originNode, file) => (
+              <DraggableUploadListItem originNode={originNode} file={file} />
+            )}
+            customRequest={onUpload}
+            fileList={fileList}
+            onPreview={handlePreview}
+            onChange={handleChange}
+          >
+            {fileList.length >= MAX_FILE_COUNT ? null : uploadButton}
+          </Upload>
+        </SortableContext>
+      </DndContext>
       {previewImage && (
         <Image
           width={'32px'}
@@ -422,17 +484,16 @@ const EssentialSetup = ({
 const PubPriKeySetup = ({
   gatewayConfig,
   closeModal,
-  refresh
+  saveConfigInStore
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
-  refresh: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
 
   const onSave = async () => {
-    // return
     const pubKey = form.getFieldValue('gatewayKey')
     if (pubKey.trim() == '') {
       message.error('Public Key is empty')
@@ -446,31 +507,24 @@ const PubPriKeySetup = ({
     }
     const body: TGatewayConfigBody = {
       gatewayKey: pubKey,
-      gatewaySecret: privateKey,
-      gatewayName: gatewayConfig.gatewayName
+      gatewaySecret: privateKey
+    }
+    const isNew = gatewayConfig.gatewayId == 0
+    if (isNew) {
+      body.gatewayName = gatewayConfig.gatewayName
+    } else {
+      body.gatewayId = gatewayConfig.gatewayId
     }
 
     setLoading(true)
-    const [_, err] = await saveGatewayConfigReq(
-      body,
-      gatewayConfig.gatewayId == 0
-    )
+    const [newGateway, err] = await saveGatewayConfigReq(body, isNew)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
     message.success(`${gatewayConfig?.gatewayName} keys saved`)
-    refresh()
-    closeModal()
-  }
-  const copyContent = async () => {
-    const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('Copied')
+    saveConfigInStore(newGateway)
   }
 
   return (
@@ -480,6 +534,7 @@ const PubPriKeySetup = ({
         layout="vertical"
         onFinish={onSave}
         colon={false}
+        disabled={loading}
         initialValues={gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
@@ -492,6 +547,15 @@ const PubPriKeySetup = ({
             gatewayConfig.gatewayName == 'paypal' ? 'Client Id' : 'Public Key'
           }
           name="gatewayKey"
+          help={
+            <div className="text-xs text-gray-400">
+              For security reason, your{' '}
+              {gatewayConfig.gatewayName == 'paypal'
+                ? 'Client Id'
+                : 'Public Key'}{' '}
+              will be desensitized after submit.
+            </div>
+          }
         >
           <TextArea rows={4} />
         </Form.Item>
@@ -506,57 +570,7 @@ const PubPriKeySetup = ({
             <div className="text-xs text-gray-400">
               For security reason, your{' '}
               {gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'}{' '}
-              won't show up here after submit.
-            </div>
-          }
-        >
-          <TextArea rows={4} />
-        </Form.Item>
-        <div className="h-2" />
-
-        <Form.Item
-          label="Callback URL"
-          name="webhookEndpointUrl"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
-        >
-          <Input
-            disabled
-            suffix={
-              <CopyToClipboard content={gatewayConfig.webhookEndpointUrl} />
-            }
-          />
-        </Form.Item>
-        <div className="h-2" />
-        <Form.Item
-          label="Callback Key"
-          name="webhookSecret"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
-          help={
-            <div className="mt-2 text-sm">
-              <Button
-                type="link"
-                onClick={copyContent}
-                style={{ padding: 0 }}
-                size="small"
-              >
-                Copy
-              </Button>
-              &nbsp;
-              <span className="text-xs text-gray-400">
-                the above URL, use this URL to generate your public key
-                on&nbsp;&nbsp;
-              </span>
-              <a
-                href="https://app.pay.changelly.com/integrations"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs"
-              >
-                https://app.pay.changelly.com/integrations
-              </a>
-              <span className="text-xs text-gray-400">
-                , then paste it here.
-              </span>
+              will be desensitized after submit.
             </div>
           }
         >
@@ -585,16 +599,20 @@ const PubPriKeySetup = ({
 const WebHookSetup = ({
   gatewayConfig,
   closeModal,
-  refresh
+  saveConfigInStore
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
-  refresh: () => void
+  saveConfigInStore: (g: TGateway) => void
 }) => {
   const [form] = useForm()
-  const [loading] = useState(false)
+  const [loading, setLoading] = useState(false)
+  // configure pub/private keys first, then configure webhook
+  const notSubmitable = gatewayConfig.gatewayKey == ''
   const onSave = () => {
-    refresh()
+    // saveConfigInStore()
+    setLoading(true)
+    setLoading(false)
   }
   const copyContent = async () => {
     const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
@@ -607,11 +625,18 @@ const WebHookSetup = ({
 
   return (
     <div>
+      {notSubmitable && (
+        <span className="text-xs text-red-500">
+          Please create your Public/Private keys first, then configure the
+          Webhook.
+        </span>
+      )}
       <Form
         form={form}
         layout="vertical"
         onFinish={onSave}
         colon={false}
+        disabled={gatewayConfig.gatewayKey == ''}
         initialValues={gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
@@ -627,7 +652,10 @@ const WebHookSetup = ({
           <Input
             disabled
             suffix={
-              <CopyToClipboard content={gatewayConfig.webhookEndpointUrl} />
+              <CopyToClipboard
+                content={gatewayConfig.webhookEndpointUrl}
+                disabled={notSubmitable}
+              />
             }
           />
         </Form.Item>
@@ -678,7 +706,7 @@ const WebHookSetup = ({
           type="primary"
           onClick={onSave}
           loading={loading}
-          disabled={loading}
+          disabled={loading || notSubmitable}
         >
           OK
         </Button>

@@ -103,6 +103,8 @@ const Index = () => {
       k.segmentUserPortalKey = segmentUserPortalKey
     }
     setKeys(k)
+
+    /*
     if (gateways != null) {
       // after some gateway setup, local store need to be updated.
       appConfigStore.setGateway(gateways)
@@ -115,6 +117,7 @@ const Index = () => {
       }
     }
     setGatewayList(gateways ?? [])
+    */
   }
 
   useEffect(() => {

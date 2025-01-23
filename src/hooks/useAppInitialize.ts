@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
+import { NEW_WIRE_TRANSFER } from '../components/settings/appConfig/wireTransferModal'
 import { normalizeCreditConfig } from '../components/settings/creditConfig'
 import { initializeReq } from '../requests'
-import { CreditType, TCreditConfig } from '../shared.types'
+import { CreditType, TCreditConfig, TGateway } from '../shared.types'
 import {
   useAppConfigStore,
   useCreditConfigStore,
@@ -46,7 +47,17 @@ export const useAppInitialize = (): (() => Promise<string>) => {
       initRes
 
     appConfigStore.setAppConfig(appConfig)
-    appConfigStore.setGateway(gateways)
+
+    // BE has all the payment gateway config object, even if merchants have never configured them.
+    // but wire-transfer is an exception, if not configured, it doesn't exist in BE, we need to manually added it for user to config.
+    const wiredTransferConfig = gateways.find(
+      (g: TGateway) => g.gatewayName == 'wire_transfer'
+    )
+    appConfigStore.setGateway(
+      wiredTransferConfig == undefined
+        ? gateways.concat(NEW_WIRE_TRANSFER)
+        : gateways
+    )
     const {
       openApiKey,
       sendGridKey,

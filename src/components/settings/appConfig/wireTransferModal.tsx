@@ -7,16 +7,25 @@ import {
   updateWireTransferAccountReq
 } from '../../../requests'
 import { TGateway } from '../../../shared.types'
+import { useAppConfigStore } from '../../../stores'
 
 export const NEW_WIRE_TRANSFER: TGateway = {
-  gatewayId: -1,
-  gatewayKey: '',
+  IsSetupFinished: false,
+  name: 'Wire Transfer',
+  gatewayId: 0,
+  displayName: 'Wire Transfer',
+  description: 'Use this method to receive payment from bank transfer',
+  gatewayWebsiteLink: '',
   gatewayName: 'wire_transfer',
-  webhookEndpointUrl: '',
-  webhookSecret: '',
   gatewayLogo: '',
+  gatewayIcons: [],
   gatewayType: 3,
-  createTime: 0,
+  gatewayKey: '',
+  gatewaySecret: '',
+  webhookSecret: '',
+  webhookEndpointUrl: '',
+  gatewayWebhookIntegrationLink: '',
+  // below are wire-transfer only
   minimumAmount: 0,
   currency: 'EUR',
   bank: {
@@ -25,28 +34,23 @@ export const NEW_WIRE_TRANSFER: TGateway = {
     iban: '',
     address: ''
   },
-  IsSetupFinished: false,
-  name: '',
-  description: '',
-  gatewaySecret: '',
-  displayName: '',
-  gatewayIcons: [],
-  gatewayWebsiteLink: '',
-  gatewayWebhookIntegrationLink: '',
+  createTime: 0,
   sort: 0
 }
 
 interface IProps {
   closeModal: () => void
-  detail: TGateway | undefined
-  refresh: () => void
+  gatewayConfig: TGateway
+  saveConfigInStore: (g: TGateway) => void
 }
-const Index = ({ closeModal, detail, refresh }: IProps) => {
-  const isNew = detail == null
+const Index = ({ closeModal, gatewayConfig, saveConfigInStore }: IProps) => {
+  // todo: scale down the amount value
+  const appConfig = useAppConfigStore()
+  console.log('gatewayConfig in wire t: ', gatewayConfig)
+  const isNew = gatewayConfig.gatewayId == 0
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [currency, setCurrency] = useState('EUR')
-  const gateway: TGateway = isNew ? NEW_WIRE_TRANSFER : detail
   const onCurrencyChange = (value: string) => setCurrency(value)
 
   const selectAfter = (
@@ -55,18 +59,13 @@ const Index = ({ closeModal, detail, refresh }: IProps) => {
       onChange={onCurrencyChange}
       disabled={true}
       style={{ width: 120 }}
-      options={[
-        { value: 'EUR', label: 'EUR' },
-        { value: 'USD', label: 'USD', disabled: true },
-        { value: 'JPY', label: 'JPY', disabled: true }
-      ]}
+      options={appConfig.supportCurrency.map((c) => ({
+        value: c.Currency,
+        label: c.Currency
+      }))}
     />
   )
-  /*
-      f.trialAmount = Number(f.trialAmount)
-      f.trialAmount *= CURRENCY[f.currency].stripe_factor
-      f.trialAmount = toFixedNumber(f.trialAmount, 2)
-*/
+
   const onSave = async () => {
     const accInfo = JSON.parse(JSON.stringify(form.getFieldsValue()))
     accInfo.currency = currency
@@ -78,14 +77,14 @@ const Index = ({ closeModal, detail, refresh }: IProps) => {
     const method = isNew
       ? createWireTransferAccountReq
       : updateWireTransferAccountReq
-    const [_, err] = await method(accInfo)
+    const [gateway, err] = await method(accInfo)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
     message.success(`Wire Transfer account saved.`)
-    refresh()
+    saveConfigInStore(gateway)
     closeModal()
   }
 
@@ -111,7 +110,7 @@ const Index = ({ closeModal, detail, refresh }: IProps) => {
           // layout="horizontal"
           // disabled={componentDisabled}
           style={{ marginTop: '28px' }}
-          initialValues={gateway}
+          initialValues={gatewayConfig}
         >
           {!isNew && (
             <Form.Item label="Account Holder" name={'gatewayId'} hidden>
