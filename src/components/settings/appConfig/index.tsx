@@ -4,6 +4,7 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { Button, Col, Row, Tag, message } from 'antd'
+import update from 'immutability-helper'
 import React, { useEffect, useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
 import { CURRENCY } from '../../../constants'
@@ -51,7 +52,8 @@ const Index = () => {
     segmentServerSideKey: '',
     segmentUserPortalKey: ''
   })
-  const [gatewayList, setGatewayList] = useState<TGateway[]>([])
+  // const [gatewayList, setGatewayList] = useState<TGateway[]>([])
+  const gatewayList = appConfigStore.gateway
 
   const toggleKeyModal = () => setApiKeyModalOpen(!apiKeyModalOpen)
   const toggleChangellyModal = () => setChangellyModalOpen(!changellyModalOpen)
@@ -120,6 +122,21 @@ const Index = () => {
     */
   }
 
+  const saveConfigInStore = (newGateway: TGateway) => {
+    // if it's the first time admin configured this gateway, gatewayId is 0, so we cannot use id to find.
+    const idx = gatewayList.findIndex(
+      (g) => g.gatewayName == newGateway.gatewayName
+    )
+    if (idx != -1) {
+      const newGatewayList = update(gatewayList, {
+        [idx]: { $set: newGateway }
+      })
+      appConfigStore.setGateway(newGatewayList)
+    } else {
+      message.error('Gateway not found')
+    }
+  }
+
   useEffect(() => {
     getAppKeys()
   }, [])
@@ -136,8 +153,11 @@ const Index = () => {
       {wireTransferModalOpen && (
         <ModalWireTransfer
           closeModal={toggleWireTransferModal}
-          detail={gatewayList.find((g) => g.gatewayName == 'wire_transfer')}
-          refresh={getAppKeys}
+          gatewayConfig={
+            gatewayList.find((g) => g.gatewayName == 'wire_transfer')!
+          }
+          // refresh={getAppKeys}
+          saveConfigInStore={saveConfigInStore}
         />
       )}
       {segmentModalOpen && (
