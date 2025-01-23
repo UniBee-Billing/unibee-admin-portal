@@ -327,6 +327,7 @@ export const saveGatewayConfigReq = async (
   }
 }
 
+// to be depreciated
 export const saveChangellyPubKeyReq = async (
   gatewayId: number,
   webhookSecret: string
@@ -343,6 +344,23 @@ export const saveChangellyPubKeyReq = async (
       )
     }
     return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const saveWebhookKeyReq = async (
+  gatewayId: number,
+  webhookSecret: string
+) => {
+  try {
+    const res = await request.post('/merchant/gateway/setup_webhook', {
+      gatewayId,
+      webhookSecret
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data.gatewayWebhookUrl, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
