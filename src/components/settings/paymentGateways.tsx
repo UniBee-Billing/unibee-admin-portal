@@ -52,13 +52,6 @@ import ModalWireTransfer from './appConfig/wireTransferModal'
 const Index = () => {
   const appConfig = useAppConfigStore()
   const gatewayConfigList = appConfig.gateway
-  console.log('gatewayConfigList in config page tab: ', gatewayConfigList)
-
-  /*
-  const [gatewayConfigList, setGatewayConfigList] =
-    useState<TGateway[]>(gateways)
-  const [loading, setLoading] = useState(false)
-  */
   const [gatewayIndex, setGatewayIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (gatewayIdx?: number) => {
@@ -73,15 +66,13 @@ const Index = () => {
     const idx = gatewayConfigList.findIndex(
       (g) => g.gatewayName == newGateway.gatewayName
     )
-    console.log('updating gateway in local store, its idx: ', idx)
     if (idx != -1) {
       const newGatewayList = update(gatewayConfigList, {
         [idx]: { $set: newGateway }
       })
       appConfig.setGateway(newGatewayList)
     } else {
-      // should throw error
-      console.log('saved gateway not found?????????????')
+      message.error('Gateway not found')
     }
   }
 
@@ -189,6 +180,7 @@ const PaymentGatewaySetupModal = ({
   closeModal: () => void
   saveConfigInStore: (g: TGateway) => void
 }) => {
+  const needWebHook = ['changelly', 'unitpay', 'payssion'] // these 3 gateways need webhook config
   const tabItems: TabsProps['items'] = [
     {
       key: 'Essentials',
@@ -202,7 +194,7 @@ const PaymentGatewaySetupModal = ({
       )
     },
     {
-      key: 'Keys',
+      key: 'Public/Private Keys',
       label: 'Public/Private Keys',
       children: (
         <PubPriKeySetup
@@ -213,7 +205,7 @@ const PaymentGatewaySetupModal = ({
       )
     },
     {
-      key: 'Webhook',
+      key: 'Webhook Keys',
       label: 'Webhook Keys',
       children: (
         <WebHookSetup
@@ -237,13 +229,22 @@ const PaymentGatewaySetupModal = ({
       footer={null}
       closeIcon={null}
     >
-      <Tabs defaultActiveKey={'Essentials'} items={tabItems} />
+      <Tabs
+        defaultActiveKey={'Essentials'}
+        items={tabItems.filter(
+          (t) =>
+            t.key != 'Webhook Keys' ||
+            needWebHook.find((w) => w == gatewayConfig.gatewayName) != undefined
+        )}
+      />
     </Modal>
   )
 }
 
 interface DraggableUploadListItemProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   originNode: React.ReactElement<any, string | React.JSXElementConstructor<any>>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   file: UploadFile<any>
 }
 
@@ -411,8 +412,6 @@ const EssentialSetup = ({
     }
   }
 
-  console.log('fileList: ', fileList)
-
   return (
     <div>
       <div className="mb-2">Display Name</div>
@@ -495,7 +494,6 @@ const PubPriKeySetup = ({
   const [loading, setLoading] = useState(false)
 
   const onSave = async () => {
-    // return
     const pubKey = form.getFieldValue('gatewayKey')
     if (pubKey.trim() == '') {
       message.error('Public Key is empty')
@@ -528,14 +526,6 @@ const PubPriKeySetup = ({
     message.success(`${gatewayConfig?.gatewayName} keys saved`)
     saveConfigInStore(newGateway)
   }
-  const copyContent = async () => {
-    const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('Copied')
-  }
 
   return (
     <div>
@@ -544,6 +534,7 @@ const PubPriKeySetup = ({
         layout="vertical"
         onFinish={onSave}
         colon={false}
+        disabled={loading}
         initialValues={gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
@@ -556,6 +547,15 @@ const PubPriKeySetup = ({
             gatewayConfig.gatewayName == 'paypal' ? 'Client Id' : 'Public Key'
           }
           name="gatewayKey"
+          help={
+            <div className="text-xs text-gray-400">
+              For security reason, your{' '}
+              {gatewayConfig.gatewayName == 'paypal'
+                ? 'Client Id'
+                : 'Public Key'}{' '}
+              will be desensitized after submit.
+            </div>
+          }
         >
           <TextArea rows={4} />
         </Form.Item>
@@ -570,57 +570,7 @@ const PubPriKeySetup = ({
             <div className="text-xs text-gray-400">
               For security reason, your{' '}
               {gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'}{' '}
-              won't show up here after submit.
-            </div>
-          }
-        >
-          <TextArea rows={4} />
-        </Form.Item>
-        <div className="h-2" />
-
-        <Form.Item
-          label="Callback URL"
-          name="webhookEndpointUrl"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
-        >
-          <Input
-            disabled
-            suffix={
-              <CopyToClipboard content={gatewayConfig.webhookEndpointUrl} />
-            }
-          />
-        </Form.Item>
-        <div className="h-2" />
-        <Form.Item
-          label="Callback Key"
-          name="webhookSecret"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
-          help={
-            <div className="mt-2 text-sm">
-              <Button
-                type="link"
-                onClick={copyContent}
-                style={{ padding: 0 }}
-                size="small"
-              >
-                Copy
-              </Button>
-              &nbsp;
-              <span className="text-xs text-gray-400">
-                the above URL, use this URL to generate your public key
-                on&nbsp;&nbsp;
-              </span>
-              <a
-                href="https://app.pay.changelly.com/integrations"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs"
-              >
-                https://app.pay.changelly.com/integrations
-              </a>
-              <span className="text-xs text-gray-400">
-                , then paste it here.
-              </span>
+              will be desensitized after submit.
             </div>
           }
         >
@@ -656,9 +606,13 @@ const WebHookSetup = ({
   saveConfigInStore: (g: TGateway) => void
 }) => {
   const [form] = useForm()
-  const [loading] = useState(false)
+  const [loading, setLoading] = useState(false)
+  // configure pub/private keys first, then configure webhook
+  const notSubmitable = gatewayConfig.gatewayKey == ''
   const onSave = () => {
     // saveConfigInStore()
+    setLoading(true)
+    setLoading(false)
   }
   const copyContent = async () => {
     const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
@@ -671,11 +625,18 @@ const WebHookSetup = ({
 
   return (
     <div>
+      {notSubmitable && (
+        <span className="text-xs text-red-500">
+          Please create your Public/Private keys first, then configure the
+          Webhook.
+        </span>
+      )}
       <Form
         form={form}
         layout="vertical"
         onFinish={onSave}
         colon={false}
+        disabled={gatewayConfig.gatewayKey == ''}
         initialValues={gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
@@ -691,7 +652,10 @@ const WebHookSetup = ({
           <Input
             disabled
             suffix={
-              <CopyToClipboard content={gatewayConfig.webhookEndpointUrl} />
+              <CopyToClipboard
+                content={gatewayConfig.webhookEndpointUrl}
+                disabled={notSubmitable}
+              />
             }
           />
         </Form.Item>
@@ -742,7 +706,7 @@ const WebHookSetup = ({
           type="primary"
           onClick={onSave}
           loading={loading}
-          disabled={loading}
+          disabled={loading || notSubmitable}
         >
           OK
         </Button>
