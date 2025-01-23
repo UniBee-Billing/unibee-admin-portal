@@ -20,15 +20,19 @@ import {
 
 // import update from 'immutability-helper'
 import {
+  closestCenter,
   DndContext,
   DragEndEvent,
+  KeyboardSensor,
   PointerSensor,
-  useSensor
+  useSensor,
+  useSensors
 } from '@dnd-kit/core'
 import {
   arrayMove,
   horizontalListSortingStrategy,
   SortableContext,
+  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
@@ -48,26 +52,82 @@ import { TGateway } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import ModalWireTransfer from './appConfig/wireTransferModal'
+import './paymentGateways.css'
 
+function SortableItem(props) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id: props.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {props.children}
+    </div>
+  )
+}
 const Index = () => {
   const appConfig = useAppConfigStore()
-  const gatewayConfigList = appConfig.gateway
-  const [gatewayIndex, setGatewayIndex] = useState(-1)
+  const [loading, setLoading] = useState(false)
+  // const gatewayConfigList = appConfig.gateway
+  const gateways = appConfig.gateway.map((g, idx) => ({
+    ...g,
+    id: randomString(8)
+  }))
+  // const [gatewayConfigList, setGatewayConfigList] = useState(gateways)
+  const [items, setItems] = useState(gateways)
+  const [gatewayName, setGatewayName] = useState('') // the gateway user want to config(open Modal to config this gateway)
   const [openSetupModal, setOpenSetupModal] = useState(false)
-  const toggleSetupModal = (gatewayIdx?: number) => {
+  const toggleSetupModal = (gatewayName?: string) => {
     setOpenSetupModal(!openSetupModal)
-    if (gatewayIdx != undefined) {
-      setGatewayIndex(gatewayIdx)
+    setGatewayName(gatewayName ?? '')
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
+  const handleDragEnd = (event: DragEndEvent) => {
+    const tgt = event.activatorEvent.target
+
+    if (
+      tgt != undefined &&
+      tgt instanceof Element &&
+      tgt.closest('.btn-gateway-config') != undefined
+    ) {
+      const gatewayClicked = tgt
+        ?.closest('.btn-gateway-config')
+        ?.getAttribute('data-gateway-name')
+      toggleSetupModal(gatewayClicked as string)
+      return
     }
+
+    const { active, over } = event
+
+    if (over != null && active.id !== over.id) {
+      setItems((items) => {
+        const oldIndex = items.findIndex((i) => i.id == active.id)
+        const newIndex = items.findIndex((i) => i.id == over.id)
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
+
+  const onReorder = () => {
+    setLoading(true)
+    setLoading(false)
   }
 
   const saveConfigInStore = (newGateway: TGateway) => {
     // if it's the first time admin configured this gateway, gatewayId is 0, so we cannot use id to find.
-    const idx = gatewayConfigList.findIndex(
-      (g) => g.gatewayName == newGateway.gatewayName
-    )
+    const idx = items.findIndex((g) => g.gatewayName == newGateway.gatewayName)
     if (idx != -1) {
-      const newGatewayList = update(gatewayConfigList, {
+      const newGatewayList = update(items, {
         [idx]: { $set: newGateway }
       })
       appConfig.setGateway(newGatewayList)
@@ -79,93 +139,99 @@ const Index = () => {
   return (
     <div>
       {openSetupModal &&
-        (gatewayConfigList[gatewayIndex].gatewayName != 'wire_transfer' ? (
+        (gatewayName != 'wire_transfer' ? (
           <PaymentGatewaySetupModal
-            gatewayConfig={gatewayConfigList[gatewayIndex]}
+            gatewayConfig={items.find((i) => i.gatewayName == gatewayName)!}
             saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
           />
         ) : (
           <ModalWireTransfer
-            gatewayConfig={gatewayConfigList[gatewayIndex]}
+            gatewayConfig={items.find((i) => i.gatewayName == gatewayName)!}
             saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
           />
         ))}
-      <List
-        itemLayout="horizontal"
-        dataSource={gatewayConfigList}
-        renderItem={(item, index) => (
-          <List.Item>
-            <List.Item.Meta
-              avatar={
-                item.gatewayWebsiteLink == '' ? (
-                  <div
-                    style={{
-                      height: '36px',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    <img
-                      style={{ flexShrink: 0 }}
-                      height={'100%'}
-                      src={item.gatewayLogo}
-                    />
-                  </div>
-                ) : (
-                  <a href={item.gatewayWebsiteLink} target="_blank">
-                    <div
-                      style={{
-                        height: '36px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        overflow: 'hidden'
-                      }}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <List
+          loading={loading}
+          itemLayout="horizontal"
+          dataSource={items}
+          renderItem={(item, index) => (
+            <SortableContext
+              items={items}
+              strategy={verticalListSortingStrategy}
+            >
+              <SortableItem key={item.id} id={item.id}>
+                <List.Item className="payment-gateway-config-item">
+                  <List.Item.Meta
+                    avatar={
+                      item.gatewayWebsiteLink == '' ? (
+                        <div className="flex h-8 items-center justify-center overflow-hidden">
+                          <img
+                            style={{ flexShrink: 0 }}
+                            height={'100%'}
+                            src={item.gatewayLogo}
+                          />
+                        </div>
+                      ) : (
+                        <a href={item.gatewayWebsiteLink} target="_blank">
+                          <div className="flex h-8 items-center justify-center overflow-hidden">
+                            <img
+                              style={{ flexShrink: 0 }}
+                              height={'100%'}
+                              src={item.gatewayLogo}
+                            />
+                          </div>
+                        </a>
+                      )
+                    }
+                    title={
+                      item.gatewayWebsiteLink == '' ? (
+                        <span>
+                          {item.name}
+                          <span className="text-xs text-gray-500">{` (${item.displayName})`}</span>
+                        </span>
+                      ) : (
+                        <a href={item.gatewayWebsiteLink} target="_blank">
+                          <span>
+                            {item.name}
+                            <span className="text-xs text-gray-500">{` (${item.displayName})`}</span>
+                          </span>
+                        </a>
+                      )
+                    }
+                    description={item.description}
+                  />
+                  <div className="flex w-[180px] items-center justify-between">
+                    {item.IsSetupFinished ? (
+                      <Tag icon={<CheckOutlined />} color="#34C759">
+                        Ready
+                      </Tag>
+                    ) : (
+                      <Tag icon={<ExclamationOutlined />} color="#AEAEB2">
+                        Not Set
+                      </Tag>
+                    )}
+                    <Button
+                      className="btn-gateway-config"
+                      data-gateway-name={item.gatewayName}
+                      // onClick event will be captured by handleDragEnd, never reached this button.
+                      type={item.IsSetupFinished ? 'default' : 'primary'}
                     >
-                      <img
-                        style={{ flexShrink: 0 }}
-                        height={'100%'}
-                        src={item.gatewayLogo}
-                      />
-                    </div>
-                  </a>
-                )
-              }
-              title={
-                item.gatewayWebsiteLink == '' ? (
-                  item.name
-                ) : (
-                  <a href={item.gatewayWebsiteLink} target="_blank">
-                    {item.name}
-                  </a>
-                )
-              }
-              description={item.description}
-            />
-            <div className="flex w-[180px] items-center justify-between">
-              {item.IsSetupFinished ? (
-                <Tag icon={<CheckOutlined />} color="#34C759">
-                  Ready
-                </Tag>
-              ) : (
-                <Tag icon={<ExclamationOutlined />} color="#AEAEB2">
-                  Not Set
-                </Tag>
-              )}
-              <Button
-                onClick={() => toggleSetupModal(index)}
-                type={item.IsSetupFinished ? 'default' : 'primary'}
-              >
-                {item.IsSetupFinished ? 'Edit' : 'Set up'}
-              </Button>
-            </div>
-          </List.Item>
-        )}
-      />
+                      {item.IsSetupFinished ? 'Edit' : 'Set up'}
+                    </Button>
+                  </div>
+                </List.Item>
+              </SortableItem>
+            </SortableContext>
+          )}
+        />
+      </DndContext>
     </div>
   )
 }

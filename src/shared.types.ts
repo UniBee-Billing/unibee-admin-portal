@@ -551,10 +551,11 @@ type TWebhookLogs = {
 
 type TGateway = {
   IsSetupFinished: boolean // true: this gateway is ready for use
-  name: string // e.g., Stripe
-  description: string
   gatewayId: number // == 0: totally new gateway, admin hasn't configured anything yet.
   // as long as admin has configured something, even just the displayName or icons, gatewayId will become non-zero, but this doesn't mean this gateway is ready for use.
+  id?: string // to make configItem sortable, SortableItem component needs an unique id field. gatewayConfig has gatewayId, but it's 0 if not configured,
+  name: string // e.g., Stripe
+  description: string
   gatewayKey: string // public key(desensitized)
   gatewaySecret: string // private key(desensitized)
   gatewayName: string // e.g., stripe.
