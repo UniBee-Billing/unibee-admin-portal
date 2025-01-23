@@ -18,7 +18,6 @@ import {
   Upload
 } from 'antd'
 
-// import update from 'immutability-helper'
 import {
   closestCenter,
   DndContext,
@@ -54,7 +53,12 @@ import CopyToClipboard from '../ui/copyToClipboard'
 import ModalWireTransfer from './appConfig/wireTransferModal'
 import './paymentGateways.css'
 
-function SortableItem(props) {
+interface SortableItemProps {
+  id: string
+  children: React.ReactNode
+}
+
+function SortableItem(props: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: props.id })
 
@@ -78,7 +82,7 @@ const Index = () => {
     id: randomString(8)
   }))
   // const [gatewayConfigList, setGatewayConfigList] = useState(gateways)
-  const [items, setItems] = useState(gateways)
+  const [items, setItems] = useState<TGateway[]>(gateways)
   const [gatewayName, setGatewayName] = useState('') // the gateway user want to config(open Modal to config this gateway)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (gatewayName?: string) => {
@@ -124,7 +128,7 @@ const Index = () => {
   }
 
   const saveConfigInStore = (newGateway: TGateway) => {
-    // if it's the first time admin configured this gateway, gatewayId is 0, so we cannot use id to find.
+    // if it's the first time admin configured this gateway, gatewayId is 0, we cannot use id to find.
     const idx = items.findIndex((g) => g.gatewayName == newGateway.gatewayName)
     if (idx != -1) {
       const newGatewayList = update(items, {
