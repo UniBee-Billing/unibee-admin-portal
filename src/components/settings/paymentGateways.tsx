@@ -19,6 +19,20 @@ import {
 } from 'antd'
 
 // import update from 'immutability-helper'
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  useSensor
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  horizontalListSortingStrategy,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useForm } from 'antd/es/form/Form'
 import TextArea from 'antd/es/input/TextArea'
 import update from 'immutability-helper'
@@ -228,6 +242,49 @@ const PaymentGatewaySetupModal = ({
   )
 }
 
+interface DraggableUploadListItemProps {
+  originNode: React.ReactElement<any, string | React.JSXElementConstructor<any>>
+  file: UploadFile<any>
+}
+
+const DraggableUploadListItem = ({
+  originNode,
+  file
+}: DraggableUploadListItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({
+    id: file.uid
+  })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    cursor: 'move'
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      // prevent preview event when drag end
+      className={isDragging ? 'is-dragging' : ''}
+      {...attributes}
+      {...listeners}
+    >
+      {/* hide error tooltip when dragging */}
+      {file.status === 'error' && isDragging
+        ? originNode.props.children
+        : originNode}
+    </div>
+  )
+}
+
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 
 const getBase64 = (file: FileType): Promise<string> =>
@@ -341,6 +398,20 @@ const EssentialSetup = ({
     saveConfigInStore(newGateway)
     message.success(`${gatewayConfig.name} config saved.`)
   }
+  const sensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 10 }
+  })
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (active.id !== over?.id) {
+      setFileList((prev) => {
+        const activeIndex = prev.findIndex((i) => i.uid === active.id)
+        const overIndex = prev.findIndex((i) => i.uid === over?.id)
+        return arrayMove(prev, activeIndex, overIndex)
+      })
+    }
+  }
+
+  console.log('fileList: ', fileList)
 
   return (
     <div>
@@ -352,25 +423,35 @@ const EssentialSetup = ({
       />
       <div className="h-6" />
       <div className="mb-2">
-        Gateway Logos{' '}
+        Gateway Icons{' '}
         <span className="text-xs text-gray-500">
-          ({`${MAX_FILE_COUNT} logos at most, each < 2M`})
+          ({`${MAX_FILE_COUNT} logos at most, each < 2M, drag to reorder them`})
         </span>
       </div>
-      <Upload
-        disabled={uploading}
-        listType="picture-card"
-        maxCount={MAX_FILE_COUNT}
-        accept=".png, .jpg, .jpeg"
-        // accept=".png, .jpg, .jpeg, .svg"
-        // multiple
-        customRequest={onUpload}
-        fileList={fileList}
-        onPreview={handlePreview}
-        onChange={handleChange}
-      >
-        {fileList.length >= MAX_FILE_COUNT ? null : uploadButton}
-      </Upload>
+      <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
+        <SortableContext
+          items={fileList.map((i) => i.uid)}
+          strategy={horizontalListSortingStrategy}
+        >
+          <Upload
+            disabled={uploading}
+            listType="picture-card"
+            maxCount={MAX_FILE_COUNT}
+            accept=".png, .jpg, .jpeg"
+            // accept=".png, .jpg, .jpeg, .svg"
+            // multiple
+            itemRender={(originNode, file) => (
+              <DraggableUploadListItem originNode={originNode} file={file} />
+            )}
+            customRequest={onUpload}
+            fileList={fileList}
+            onPreview={handlePreview}
+            onChange={handleChange}
+          >
+            {fileList.length >= MAX_FILE_COUNT ? null : uploadButton}
+          </Upload>
+        </SortableContext>
+      </DndContext>
       {previewImage && (
         <Image
           width={'32px'}

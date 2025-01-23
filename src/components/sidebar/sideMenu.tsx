@@ -28,6 +28,13 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     key: 'plan',
     icon: <Icon component={ProductPlanSvg} />
   },
+  /*
+  {
+    label: 'Analytics',
+    key: 'analytics',
+    icon: <Icon component={ProductPlanSvg} />
+  },
+  */
   {
     label: 'Billable Metric',
     key: 'billable-metric',
