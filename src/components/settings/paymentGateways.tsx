@@ -44,6 +44,7 @@ import { randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
   saveGatewayConfigReq,
+  saveWebhookKeyReq,
   TGatewayConfigBody,
   uploadLogoReq
 } from '../../requests'
@@ -165,12 +166,12 @@ const Index = () => {
           loading={loading}
           itemLayout="horizontal"
           dataSource={items}
-          renderItem={(item, index) => (
+          renderItem={(item, _index) => (
             <SortableContext
-              items={items}
+              items={items.map((item) => ({ id: item.id || '' }))}
               strategy={verticalListSortingStrategy}
             >
-              <SortableItem key={item.id} id={item.id}>
+              <SortableItem key={item.id || ''} id={item.id || ''}>
                 <List.Item className="payment-gateway-config-item">
                   <List.Item.Meta
                     avatar={
@@ -679,11 +680,36 @@ const WebHookSetup = ({
   const [loading, setLoading] = useState(false)
   // configure pub/private keys first, then configure webhook
   const notSubmitable = gatewayConfig.gatewayKey == ''
-  const onSave = () => {
-    // saveConfigInStore()
+
+  const onSave = async () => {
+    const webHookSecret = form.getFieldValue('webhookSecret')
+    if (webHookSecret.trim() == '') {
+      message.error('Webhook key is empty')
+      return
+    }
+
+    if (gatewayConfig.gatewayId == 0) {
+      message.error('Input your public/private keys first.')
+      return
+    }
+
     setLoading(true)
+    const [_, err] = await saveWebhookKeyReq(
+      gatewayConfig.gatewayId,
+      webHookSecret
+    )
     setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success(`${gatewayConfig.gatewayName} webhook key saved.`)
+    const newGateway = update(gatewayConfig, {
+      webhookSecret: { $set: webHookSecret }
+    })
+    saveConfigInStore(newGateway)
   }
+
   const copyContent = async () => {
     const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
     if (null != err) {
@@ -706,7 +732,7 @@ const WebHookSetup = ({
         layout="vertical"
         onFinish={onSave}
         colon={false}
-        disabled={gatewayConfig.gatewayKey == ''}
+        disabled={notSubmitable}
         initialValues={gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
@@ -714,11 +740,7 @@ const WebHookSetup = ({
         </Form.Item>
         <div className="h-2" />
 
-        <Form.Item
-          label="Callback URL"
-          name="webhookEndpointUrl"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
-        >
+        <Form.Item label="Callback URL" name="webhookEndpointUrl">
           <Input
             disabled
             suffix={
@@ -733,7 +755,6 @@ const WebHookSetup = ({
         <Form.Item
           label="Callback Key"
           name="webhookSecret"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
           help={
             <div className="mt-2 text-sm">
               <Button
@@ -746,16 +767,16 @@ const WebHookSetup = ({
               </Button>
               &nbsp;
               <span className="text-xs text-gray-400">
-                the above URL, use this URL to generate your public key
+                the above URL, use that URL to generate your public key
                 on&nbsp;&nbsp;
               </span>
               <a
-                href="https://app.pay.changelly.com/integrations"
+                href={gatewayConfig.gatewayWebhookIntegrationLink}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs"
               >
-                https://app.pay.changelly.com/integrations
+                {gatewayConfig.gatewayWebhookIntegrationLink}
               </a>
               <span className="text-xs text-gray-400">
                 , then paste it here.
