@@ -326,32 +326,6 @@ export const saveGatewayConfigReq = async (
   }
 }
 
-export const reorderGatewayReq = async ({
-  config1Body,
-  isConfig1New,
-  config2Body,
-  isConfig2New
-}: {
-  config1Body: TGatewayConfigBody
-  isConfig1New: boolean
-  config2Body: TGatewayConfigBody
-  isConfig2New: boolean
-}) => {
-  const [[config1Res, config1Err], [config2Res, config2Err]] =
-    await Promise.all([
-      saveGatewayConfigReq(config1Body, isConfig1New),
-      saveGatewayConfigReq(config2Body, isConfig2New)
-    ])
-  const err = config1Err || config2Err
-  if (null != err) {
-    if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: null })
-    }
-    return [null, err]
-  }
-  return [{ config1Res, config2Res }, null]
-}
-
 // to be depreciated
 export const saveChangellyPubKeyReq = async (
   gatewayId: number,
@@ -2272,7 +2246,7 @@ export const getMemberProfileReq = async (refreshCb?: () => void) => {
   }
 }
 
-const getPaymentGatewayListReq = async () => {
+export const getPaymentGatewayListReq = async () => {
   try {
     const res = await request.get(`/merchant/gateway/list`)
     handleStatusCode(res.data.code)

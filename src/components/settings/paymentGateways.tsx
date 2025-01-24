@@ -44,7 +44,7 @@ import { randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
   getPaymentGatewayConfigListReq,
-  reorderGatewayReq,
+  getPaymentGatewayListReq,
   saveGatewayConfigReq,
   saveWebhookKeyReq,
   sortGatewayReq,
@@ -127,56 +127,29 @@ const Index = () => {
     }
   }
 
+  const updateGatewayInStore = async () => {
+    const [gateways, getGatewayErr] = await getPaymentGatewayListReq()
+    if (getGatewayErr == null) {
+      return
+    }
+    // after gatewayConfig changes, it's better to re-fetch the gatewayList, and save it into local store.
+    appConfig.setGateway(gateways)
+  }
+
   const reorder = async (gatewayList: TGateway[]) => {
     const sortObj = gatewayList.map((g: TGateway, idx: number) => ({
       gatewayName: g.gatewayName,
       gatewayId: g.gatewayId,
-      sort: idx
+      sort: idx + 1 // 0 would caused error in BE
     }))
-    console.log('sortObj: ', sortObj)
-    const [newGatewayList, err] = await sortGatewayReq(sortObj)
+    setLoading(true)
+    const [_, err] = await sortGatewayReq(sortObj)
+    setLoading(false)
     if (null != err) {
       message.error(err.message)
       return
     }
-    console.log('new gateway list after sort: ', newGatewayList)
-
-    /*
-    const config1Body: TGatewayConfigBody = {
-      sort: gatewayConfigList[idx2].sort
-    }
-    const isConfig1New = gatewayConfigList[idx1].gatewayId == 0
-    if (isConfig1New) {
-      config1Body.gatewayName = gatewayConfigList[idx1].gatewayName
-    } else {
-      config1Body.gatewayId = gatewayConfigList[idx1].gatewayId
-    }
-
-    const config2Body: TGatewayConfigBody = {
-      sort: gatewayConfigList[idx1].sort
-    }
-    const isConfig2New = gatewayConfigList[idx2].gatewayId == 0
-    if (isConfig2New) {
-      config2Body.gatewayName = gatewayConfigList[idx2].gatewayName
-    } else {
-      config2Body.gatewayId = gatewayConfigList[idx2].gatewayId
-    }
-
-    const [_, err] = await reorderGatewayReq({
-      config1Body,
-      isConfig1New,
-      config2Body,
-      isConfig2New
-    })
-    if (err != null) {
-      message.error('Re-ordering failed: ' + err.message)
-      return
-    }
-
-    // TODO: update gateway store after re-ordering (just call saveConfigInStore).
-    setLoading(true)
-    setLoading(false)
-    */
+    updateGatewayInStore()
   }
 
   const getGatewayConfigList = async () => {
@@ -205,21 +178,6 @@ const Index = () => {
     setGatewayConfigList(gateways)
   }
 
-  const saveConfigInStore = (newGateway: TGateway) => {
-    // if it's the first time admin configured this gateway, gatewayId is 0, we cannot use id to find.
-    const idx = gatewayConfigList.findIndex(
-      (g) => g.gatewayName == newGateway.gatewayName
-    )
-    if (idx != -1) {
-      const newGatewayList = update(gatewayConfigList, {
-        [idx]: { $set: newGateway }
-      })
-      appConfig.setGateway(newGatewayList)
-    } else {
-      message.error('Gateway not found')
-    }
-  }
-
   useEffect(() => {
     getGatewayConfigList()
   }, [])
@@ -232,18 +190,18 @@ const Index = () => {
             gatewayConfig={
               gatewayConfigList.find((i) => i.gatewayName == gatewayName)!
             }
-            saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
             refresh={getGatewayConfigList}
+            updateGatewayInStore={updateGatewayInStore}
           />
         ) : (
           <ModalWireTransfer
             gatewayConfig={
               gatewayConfigList.find((i) => i.gatewayName == gatewayName)!
             }
-            saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
             refresh={getGatewayConfigList}
+            updateGatewayInStore={updateGatewayInStore}
           />
         ))}
       <DndContext
@@ -334,13 +292,13 @@ export default Index
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
   closeModal,
-  saveConfigInStore,
-  refresh
+  refresh,
+  updateGatewayInStore
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
-  saveConfigInStore: (g: TGateway) => void
   refresh: () => void
+  updateGatewayInStore: () => void
 }) => {
   const needWebHook = ['changelly', 'unitpay', 'payssion'] // these 3 gateways need webhook config
   const tabItems: TabsProps['items'] = [
@@ -350,9 +308,9 @@ const PaymentGatewaySetupModal = ({
       children: (
         <EssentialSetup
           gatewayConfig={gatewayConfig}
-          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
           refresh={refresh}
+          updateGatewayInStore={updateGatewayInStore}
         />
       )
     },
@@ -362,9 +320,9 @@ const PaymentGatewaySetupModal = ({
       children: (
         <PubPriKeySetup
           gatewayConfig={gatewayConfig}
-          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
           refresh={refresh}
+          updateGatewayInStore={updateGatewayInStore}
         />
       )
     },
@@ -374,9 +332,9 @@ const PaymentGatewaySetupModal = ({
       children: (
         <WebHookSetup
           gatewayConfig={gatewayConfig}
-          saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
           refresh={refresh}
+          updateGatewayInStore={updateGatewayInStore}
         />
       )
     }
@@ -465,13 +423,13 @@ const MAX_FILE_COUNT = 5
 const EssentialSetup = ({
   closeModal,
   gatewayConfig,
-  saveConfigInStore,
-  refresh
+  refresh,
+  updateGatewayInStore
 }: {
   closeModal: () => void
   gatewayConfig: TGateway
-  saveConfigInStore: (g: TGateway) => void
   refresh: () => void
+  updateGatewayInStore: () => void
 }) => {
   const [loading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -558,13 +516,13 @@ const EssentialSetup = ({
     if (!isNew) {
       body.gatewayId = gatewayConfig.gatewayId
     }
-    const [newGateway, err] = await saveGatewayConfigReq(body, isNew)
+    const [_, err] = await saveGatewayConfigReq(body, isNew)
     if (err != null) {
       message.error(err.message)
       return
     }
-    saveConfigInStore(newGateway)
     refresh()
+    updateGatewayInStore()
     message.success(`${gatewayConfig.name} config saved.`)
   }
 
@@ -653,13 +611,13 @@ const EssentialSetup = ({
 const PubPriKeySetup = ({
   gatewayConfig,
   closeModal,
-  saveConfigInStore,
-  refresh
+  refresh,
+  updateGatewayInStore
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
-  saveConfigInStore: (g: TGateway) => void
   refresh: () => void
+  updateGatewayInStore: () => void
 }) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
@@ -688,15 +646,15 @@ const PubPriKeySetup = ({
     }
 
     setLoading(true)
-    const [newGateway, err] = await saveGatewayConfigReq(body, isNew)
+    const [_, err] = await saveGatewayConfigReq(body, isNew)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
     message.success(`${gatewayConfig?.gatewayName} keys saved`)
-    saveConfigInStore(newGateway)
     refresh()
+    updateGatewayInStore()
   }
 
   return (
@@ -771,13 +729,13 @@ const PubPriKeySetup = ({
 const WebHookSetup = ({
   gatewayConfig,
   closeModal,
-  saveConfigInStore,
-  refresh
+  refresh,
+  updateGatewayInStore
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
-  saveConfigInStore: (g: TGateway) => void
   refresh: () => void
+  updateGatewayInStore: () => void
 }) => {
   const [form] = useForm()
   const [loading, setLoading] = useState(false)
@@ -810,7 +768,7 @@ const WebHookSetup = ({
     const newGateway = update(gatewayConfig, {
       webhookSecret: { $set: webHookSecret }
     })
-    saveConfigInStore(newGateway)
+    updateGatewayInStore()
     refresh()
   }
 

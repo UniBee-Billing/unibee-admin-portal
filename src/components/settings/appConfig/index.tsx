@@ -8,7 +8,7 @@ import update from 'immutability-helper'
 import React, { useEffect, useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
 // import { CURRENCY } from '../../../constants'
-import { getAppKeysWithMore } from '../../../requests'
+import { getAppKeysWithMore, getPaymentGatewayListReq } from '../../../requests'
 // import '../../shared.css'
 import { TGateway } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
@@ -105,36 +105,15 @@ const Index = () => {
       k.segmentUserPortalKey = segmentUserPortalKey
     }
     setKeys(k)
-
-    /*
-    if (gateways != null) {
-      // after some gateway setup, local store need to be updated.
-      appConfigStore.setGateway(gateways)
-      const wireTransfer = gateways.find(
-        (g: TGateway) => g.gatewayName == 'wire_transfer'
-      )
-      if (wireTransfer != null) {
-        wireTransfer.minimumAmount /=
-          CURRENCY[wireTransfer.currency].stripe_factor
-      }
-    }
-    setGatewayList(gateways ?? [])
-    */
   }
 
-  const saveConfigInStore = (newGateway: TGateway) => {
-    // if it's the first time admin configured this gateway, gatewayId is 0, so we cannot use id to find.
-    const idx = gatewayList.findIndex(
-      (g) => g.gatewayName == newGateway.gatewayName
-    )
-    if (idx != -1) {
-      const newGatewayList = update(gatewayList, {
-        [idx]: { $set: newGateway }
-      })
-      appConfigStore.setGateway(newGatewayList)
-    } else {
-      message.error('Gateway not found')
+  const updateGatewayInStore = async () => {
+    const [gateways, getGatewayErr] = await getPaymentGatewayListReq()
+    if (getGatewayErr == null) {
+      return
     }
+    // after gatewayConfig changes, it's better to re-fetch the gatewayList, and save it into local store.
+    appConfigStore.setGateway(gateways)
   }
 
   useEffect(() => {
@@ -157,7 +136,7 @@ const Index = () => {
             gatewayList.find((g) => g.gatewayName == 'wire_transfer')!
           }
           refresh={getAppKeys}
-          saveConfigInStore={saveConfigInStore}
+          updateGatewayInStore={updateGatewayInStore}
         />
       )}
       {segmentModalOpen && (
