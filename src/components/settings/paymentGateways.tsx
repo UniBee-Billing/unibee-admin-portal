@@ -47,6 +47,7 @@ import {
   reorderGatewayReq,
   saveGatewayConfigReq,
   saveWebhookKeyReq,
+  sortGatewayReq,
   TGatewayConfigBody,
   uploadLogoReq
 } from '../../requests'
@@ -112,19 +113,35 @@ const Index = () => {
 
     let oldIndex = -1,
       newIndex = -1
+    let newConfigList: TGateway[] = []
     if (over != null && active.id !== over.id) {
       setGatewayConfigList((gatewayConfigList) => {
         oldIndex = gatewayConfigList.findIndex((i) => i.id == active.id)
         newIndex = gatewayConfigList.findIndex((i) => i.id == over.id)
-        return arrayMove(gatewayConfigList, oldIndex, newIndex)
+        newConfigList = arrayMove(gatewayConfigList, oldIndex, newIndex)
+        return newConfigList
       })
     }
     if (oldIndex != newIndex && oldIndex != -1 && newIndex != -1) {
-      reorder(oldIndex, newIndex)
+      reorder(newConfigList)
     }
   }
 
-  const reorder = async (idx1: number, idx2: number) => {
+  const reorder = async (gatewayList: TGateway[]) => {
+    const sortObj = gatewayList.map((g: TGateway, idx: number) => ({
+      gatewayName: g.gatewayName,
+      gatewayId: g.gatewayId,
+      sort: idx
+    }))
+    console.log('sortObj: ', sortObj)
+    const [newGatewayList, err] = await sortGatewayReq(sortObj)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+    console.log('new gateway list after sort: ', newGatewayList)
+
+    /*
     const config1Body: TGatewayConfigBody = {
       sort: gatewayConfigList[idx2].sort
     }
@@ -159,6 +176,7 @@ const Index = () => {
     // TODO: update gateway store after re-ordering (just call saveConfigInStore).
     setLoading(true)
     setLoading(false)
+    */
   }
 
   const getGatewayConfigList = async () => {

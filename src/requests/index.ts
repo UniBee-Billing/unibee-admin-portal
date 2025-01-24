@@ -48,7 +48,6 @@ export const initializeReq = async () => {
   ] = await Promise.all([
     getAppConfigReq(),
     getPaymentGatewayListReq(),
-    // getPaymentGatewayConfigListReq({}),
     getMerchantInfoReq(),
     getProductListReq({}),
     getCreditConfigListReq({
@@ -422,18 +421,28 @@ export const saveSendGridKeyReq = async (vatKey: string) => {
   }
   try {
     const res = await request.post('/merchant/email/gateway_setup', body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
   }
 }
+
+export const saveExRateKeyReq = async (exchangeRateApiKey: string) => {
+  try {
+    const res = await request.post(
+      '/merchant/gateway/setup_exchange_rate_api',
+      { exchangeRateApiKey }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // ---------------
 export type TPlanListBody = {
   type?: number[] | null
@@ -2283,6 +2292,21 @@ export const getPaymentGatewayConfigListReq = async ({
   try {
     const res = await request.get(`/merchant/gateway/setup_list`)
     handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data.gateways, null, res.data.code]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e, -1]
+  }
+}
+
+export const sortGatewayReq = async (
+  sortObj: { gatewayName: string; gatewayId: number; sort: number }[]
+) => {
+  try {
+    const res = await request.post(`/merchant/gateway/edit_sort`, {
+      gatewaySorts: sortObj
+    })
+    handleStatusCode(res.data.code)
     return [res.data.data.gateways, null, res.data.code]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')

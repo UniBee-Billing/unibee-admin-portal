@@ -9,6 +9,7 @@ import UniBeeLogo from '../../assets/integrationsKeysIcon/UniBeeKeys.svg?react'
 import VATsenseLogo from '../../assets/integrationsKeysIcon/VATsense.svg?react'
 import { useAppConfigStore } from '../../stores'
 import UniBeeAPIKeyModal from './appConfig/apiKeyModal'
+import ExchangeRateModal from './appConfig/exchangeRateKeyModal'
 import SegmentModal from './appConfig/segmentModal'
 import SendGridModal from './appConfig/sendGridKeyModal'
 import VATModal from './appConfig/vatKeyModal'
@@ -22,13 +23,13 @@ type TAPP_Integration = {
   keyName: string | string[]
   keyValue: string | string[]
   compositeKey?: boolean
-  setupModal: ReactNode
 }
 
 const Index = () => {
   const [itemIndex, setItemIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (itemIndex?: number) => {
+    console.log('toggle modal idx: ', itemIndex)
     setOpenSetupModal(!openSetupModal)
     if (typeof itemIndex == 'number') {
       setItemIndex(itemIndex)
@@ -44,8 +45,7 @@ const Index = () => {
       logo: <UniBeeLogo />,
       gatewayWebsiteLink: '',
       keyName: 'openApiKey',
-      keyValue: '',
-      setupModal: <UniBeeAPIKeyModal closeModal={() => toggleSetupModal()} />
+      keyValue: ''
     },
     {
       IsSetupFinished: false,
@@ -54,8 +54,7 @@ const Index = () => {
       logo: <VATsenseLogo />,
       gatewayWebsiteLink: 'https://vatsense.com',
       keyName: 'vatSenseKey',
-      keyValue: '',
-      setupModal: <VATModal closeModal={() => toggleSetupModal()} />
+      keyValue: ''
     },
     {
       IsSetupFinished: false,
@@ -64,8 +63,7 @@ const Index = () => {
       logo: <SendGridLogo />,
       gatewayWebsiteLink: 'https://sendgrid.com/',
       keyName: 'sendGridKey',
-      keyValue: '',
-      setupModal: <SendGridModal closeModal={() => toggleSetupModal()} />
+      keyValue: ''
     },
     {
       IsSetupFinished: false,
@@ -75,14 +73,7 @@ const Index = () => {
       gatewayWebsiteLink: 'https://segment.com/',
       keyName: ['segmentServerSideKey', 'segmentUserPortalKey'],
       keyValue: ['', ''],
-      compositeKey: true,
-      setupModal: (
-        <SegmentModal
-          serverSideKey={''}
-          refresh={() => {}}
-          closeModal={() => toggleSetupModal()}
-        />
-      )
+      compositeKey: true
     },
     {
       IsSetupFinished: false,
@@ -92,8 +83,7 @@ const Index = () => {
       logo: <ExchangeRateLogo />,
       gatewayWebsiteLink: '',
       keyName: 'exchangeRateApiKey',
-      keyValue: '',
-      setupModal: null
+      keyValue: ''
     }
   ]
 
@@ -170,6 +160,11 @@ const Index = () => {
       {openSetupModal &&
         integrationList[itemIndex].keyName == 'sendGridKey' && (
           <SendGridModal closeModal={toggleSetupModal} />
+        )}
+
+      {openSetupModal &&
+        integrationList[itemIndex].keyName == 'exchangeRateApiKey' && (
+          <ExchangeRateModal closeModal={toggleSetupModal} />
         )}
 
       <List
