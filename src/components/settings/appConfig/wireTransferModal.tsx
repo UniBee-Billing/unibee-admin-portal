@@ -1,5 +1,5 @@
 import { Button, Form, Input, Modal, Select, message } from 'antd'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { CURRENCY } from '../../../constants'
 import { currencyDecimalValidate } from '../../../helpers'
 import {
@@ -42,11 +42,16 @@ interface IProps {
   closeModal: () => void
   gatewayConfig: TGateway
   saveConfigInStore: (g: TGateway) => void
+  refresh: () => void
 }
-const Index = ({ closeModal, gatewayConfig, saveConfigInStore }: IProps) => {
+const Index = ({
+  closeModal,
+  gatewayConfig,
+  saveConfigInStore,
+  refresh
+}: IProps) => {
   // todo: scale down the amount value
   const appConfig = useAppConfigStore()
-  console.log('gatewayConfig in wire t: ', gatewayConfig)
   const isNew = gatewayConfig.gatewayId == 0
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
@@ -86,9 +91,8 @@ const Index = ({ closeModal, gatewayConfig, saveConfigInStore }: IProps) => {
     message.success(`Wire Transfer account saved.`)
     saveConfigInStore(gateway)
     closeModal()
+    refresh()
   }
-
-  useEffect(() => {}, [])
 
   return (
     <>

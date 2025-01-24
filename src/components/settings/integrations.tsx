@@ -180,10 +180,10 @@ const Index = () => {
             <List.Item.Meta
               avatar={
                 item.gatewayWebsiteLink == '' ? (
-                  <Avatar shape="square" src={item.logo} />
+                  <Avatar shape="square" src={item.logo} className="ml-3" />
                 ) : (
                   <a href={item.gatewayWebsiteLink} target="_blank">
-                    <Avatar shape="square" src={item.logo} />
+                    <Avatar shape="square" src={item.logo} className="ml-3" />
                   </a>
                 )
               }
@@ -198,7 +198,7 @@ const Index = () => {
               }
               description={item.description}
             />
-            <div className="flex w-[180px] items-center justify-between">
+            <div className="mr-3 flex w-[180px] items-center justify-between">
               {item.IsSetupFinished ? (
                 <Tag icon={<CheckOutlined />} color="#34C759">
                   Ready

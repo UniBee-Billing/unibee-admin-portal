@@ -65,9 +65,11 @@ const App: React.FC = () => {
   }, [sessionStore.expired])
   */
 
+  /*
   useEffect(() => {
     console.log('gateway change captured in app.js: ', appConfigStore.gateway)
   }, [appConfigStore.gateway])
+  */
 
   return (
     <>

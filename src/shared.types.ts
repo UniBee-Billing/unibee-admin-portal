@@ -577,7 +577,7 @@ type TGateway = {
     iban: string
     address: string
   }
-  sort: number //
+  sort: number
 }
 
 /*

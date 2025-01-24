@@ -47,8 +47,8 @@ export const initializeReq = async () => {
     [creditConfigs, errCreditConfigs]
   ] = await Promise.all([
     getAppConfigReq(),
-    // getPaymentGatewayListReq(),
-    getPaymentGatewayConfigListReq({}),
+    getPaymentGatewayListReq(),
+    // getPaymentGatewayConfigListReq({}),
     getMerchantInfoReq(),
     getProductListReq({}),
     getCreditConfigListReq({
@@ -325,6 +325,32 @@ export const saveGatewayConfigReq = async (
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
   }
+}
+
+export const reorderGatewayReq = async ({
+  config1Body,
+  isConfig1New,
+  config2Body,
+  isConfig2New
+}: {
+  config1Body: TGatewayConfigBody
+  isConfig1New: boolean
+  config2Body: TGatewayConfigBody
+  isConfig2New: boolean
+}) => {
+  const [[config1Res, config1Err], [config2Res, config2Err]] =
+    await Promise.all([
+      saveGatewayConfigReq(config1Body, isConfig1New),
+      saveGatewayConfigReq(config2Body, isConfig2New)
+    ])
+  const err = config1Err || config2Err
+  if (null != err) {
+    if (err instanceof ExpiredError) {
+      session.setSession({ expired: true, refresh: null })
+    }
+    return [null, err]
+  }
+  return [{ config1Res, config2Res }, null]
 }
 
 // to be depreciated

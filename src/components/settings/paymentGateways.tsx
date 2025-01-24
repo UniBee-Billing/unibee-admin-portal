@@ -43,6 +43,8 @@ import { useEffect, useState } from 'react'
 import { randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
+  getPaymentGatewayConfigListReq,
+  reorderGatewayReq,
   saveGatewayConfigReq,
   saveWebhookKeyReq,
   TGatewayConfigBody,
@@ -77,13 +79,7 @@ function SortableItem(props: SortableItemProps) {
 const Index = () => {
   const appConfig = useAppConfigStore()
   const [loading, setLoading] = useState(false)
-  // const gatewayConfigList = appConfig.gateway
-  const gateways = appConfig.gateway.map((g, idx) => ({
-    ...g,
-    id: randomString(8)
-  }))
-  // const [gatewayConfigList, setGatewayConfigList] = useState(gateways)
-  const [items, setItems] = useState<TGateway[]>(gateways)
+  const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
   const [gatewayName, setGatewayName] = useState('') // the gateway user want to config(open Modal to config this gateway)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (gatewayName?: string) => {
@@ -114,25 +110,90 @@ const Index = () => {
 
     const { active, over } = event
 
+    let oldIndex = -1,
+      newIndex = -1
     if (over != null && active.id !== over.id) {
-      setItems((items) => {
-        const oldIndex = items.findIndex((i) => i.id == active.id)
-        const newIndex = items.findIndex((i) => i.id == over.id)
-        return arrayMove(items, oldIndex, newIndex)
+      setGatewayConfigList((gatewayConfigList) => {
+        oldIndex = gatewayConfigList.findIndex((i) => i.id == active.id)
+        newIndex = gatewayConfigList.findIndex((i) => i.id == over.id)
+        return arrayMove(gatewayConfigList, oldIndex, newIndex)
       })
+    }
+    if (oldIndex != newIndex && oldIndex != -1 && newIndex != -1) {
+      reorder(oldIndex, newIndex)
     }
   }
 
-  const onReorder = () => {
+  const reorder = async (idx1: number, idx2: number) => {
+    const config1Body: TGatewayConfigBody = {
+      sort: gatewayConfigList[idx2].sort
+    }
+    const isConfig1New = gatewayConfigList[idx1].gatewayId == 0
+    if (isConfig1New) {
+      config1Body.gatewayName = gatewayConfigList[idx1].gatewayName
+    } else {
+      config1Body.gatewayId = gatewayConfigList[idx1].gatewayId
+    }
+
+    const config2Body: TGatewayConfigBody = {
+      sort: gatewayConfigList[idx1].sort
+    }
+    const isConfig2New = gatewayConfigList[idx2].gatewayId == 0
+    if (isConfig2New) {
+      config2Body.gatewayName = gatewayConfigList[idx2].gatewayName
+    } else {
+      config2Body.gatewayId = gatewayConfigList[idx2].gatewayId
+    }
+
+    const [_, err] = await reorderGatewayReq({
+      config1Body,
+      isConfig1New,
+      config2Body,
+      isConfig2New
+    })
+    if (err != null) {
+      message.error('Re-ordering failed: ' + err.message)
+      return
+    }
+
+    // TODO: update gateway store after re-ordering (just call saveConfigInStore).
     setLoading(true)
     setLoading(false)
   }
 
+  const getGatewayConfigList = async () => {
+    const [gateways, err] = await getPaymentGatewayConfigListReq({
+      refreshCb: getGatewayConfigList
+    })
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+
+    gateways
+      .sort((a: TGateway, b: TGateway) => a.sort - b.sort)
+      .forEach((g: TGateway) => (g.id = randomString(8)))
+
+    const wireTransferIdx = gateways.findIndex(
+      (g: TGateway) => g.gatewayName == 'wire_transfer'
+    )
+    const CURRENCY = appConfig.supportCurrency.find(
+      (c) => c.Currency == gateways[wireTransferIdx].currency
+    )
+    if (wireTransferIdx != -1 && CURRENCY != undefined) {
+      gateways[wireTransferIdx].minimumAmount /= CURRENCY.Scale
+    }
+
+    setGatewayConfigList(gateways)
+  }
+
   const saveConfigInStore = (newGateway: TGateway) => {
     // if it's the first time admin configured this gateway, gatewayId is 0, we cannot use id to find.
-    const idx = items.findIndex((g) => g.gatewayName == newGateway.gatewayName)
+    const idx = gatewayConfigList.findIndex(
+      (g) => g.gatewayName == newGateway.gatewayName
+    )
     if (idx != -1) {
-      const newGatewayList = update(items, {
+      const newGatewayList = update(gatewayConfigList, {
         [idx]: { $set: newGateway }
       })
       appConfig.setGateway(newGatewayList)
@@ -141,20 +202,30 @@ const Index = () => {
     }
   }
 
+  useEffect(() => {
+    getGatewayConfigList()
+  }, [])
+
   return (
     <div>
       {openSetupModal &&
         (gatewayName != 'wire_transfer' ? (
           <PaymentGatewaySetupModal
-            gatewayConfig={items.find((i) => i.gatewayName == gatewayName)!}
+            gatewayConfig={
+              gatewayConfigList.find((i) => i.gatewayName == gatewayName)!
+            }
             saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
+            refresh={getGatewayConfigList}
           />
         ) : (
           <ModalWireTransfer
-            gatewayConfig={items.find((i) => i.gatewayName == gatewayName)!}
+            gatewayConfig={
+              gatewayConfigList.find((i) => i.gatewayName == gatewayName)!
+            }
             saveConfigInStore={saveConfigInStore}
             closeModal={toggleSetupModal}
+            refresh={getGatewayConfigList}
           />
         ))}
       <DndContext
@@ -165,10 +236,10 @@ const Index = () => {
         <List
           loading={loading}
           itemLayout="horizontal"
-          dataSource={items}
+          dataSource={gatewayConfigList}
           renderItem={(item, _index) => (
             <SortableContext
-              items={items.map((item) => ({ id: item.id || '' }))}
+              items={gatewayConfigList.map((item) => ({ id: item.id || '' }))}
               strategy={verticalListSortingStrategy}
             >
               <SortableItem key={item.id || ''} id={item.id || ''}>
@@ -176,7 +247,7 @@ const Index = () => {
                   <List.Item.Meta
                     avatar={
                       item.gatewayWebsiteLink == '' ? (
-                        <div className="flex h-8 items-center justify-center overflow-hidden">
+                        <div className="ml-3 flex h-8 items-center justify-center overflow-hidden">
                           <img
                             style={{ flexShrink: 0 }}
                             height={'100%'}
@@ -185,7 +256,7 @@ const Index = () => {
                         </div>
                       ) : (
                         <a href={item.gatewayWebsiteLink} target="_blank">
-                          <div className="flex h-8 items-center justify-center overflow-hidden">
+                          <div className="ml-3 flex h-8 items-center justify-center overflow-hidden">
                             <img
                               style={{ flexShrink: 0 }}
                               height={'100%'}
@@ -212,7 +283,7 @@ const Index = () => {
                     }
                     description={item.description}
                   />
-                  <div className="flex w-[180px] items-center justify-between">
+                  <div className="mr-3 flex w-[180px] items-center justify-between">
                     {item.IsSetupFinished ? (
                       <Tag icon={<CheckOutlined />} color="#34C759">
                         Ready
@@ -245,11 +316,13 @@ export default Index
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
   closeModal,
-  saveConfigInStore
+  saveConfigInStore,
+  refresh
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
   saveConfigInStore: (g: TGateway) => void
+  refresh: () => void
 }) => {
   const needWebHook = ['changelly', 'unitpay', 'payssion'] // these 3 gateways need webhook config
   const tabItems: TabsProps['items'] = [
@@ -261,6 +334,7 @@ const PaymentGatewaySetupModal = ({
           gatewayConfig={gatewayConfig}
           saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
+          refresh={refresh}
         />
       )
     },
@@ -272,6 +346,7 @@ const PaymentGatewaySetupModal = ({
           gatewayConfig={gatewayConfig}
           saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
+          refresh={refresh}
         />
       )
     },
@@ -283,6 +358,7 @@ const PaymentGatewaySetupModal = ({
           gatewayConfig={gatewayConfig}
           saveConfigInStore={saveConfigInStore}
           closeModal={closeModal}
+          refresh={refresh}
         />
       )
     }
@@ -371,11 +447,13 @@ const MAX_FILE_COUNT = 5
 const EssentialSetup = ({
   closeModal,
   gatewayConfig,
-  saveConfigInStore
+  saveConfigInStore,
+  refresh
 }: {
   closeModal: () => void
   gatewayConfig: TGateway
   saveConfigInStore: (g: TGateway) => void
+  refresh: () => void
 }) => {
   const [loading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -468,8 +546,10 @@ const EssentialSetup = ({
       return
     }
     saveConfigInStore(newGateway)
+    refresh()
     message.success(`${gatewayConfig.name} config saved.`)
   }
+
   const sensor = useSensor(PointerSensor, {
     activationConstraint: { distance: 10 }
   })
@@ -555,11 +635,13 @@ const EssentialSetup = ({
 const PubPriKeySetup = ({
   gatewayConfig,
   closeModal,
-  saveConfigInStore
+  saveConfigInStore,
+  refresh
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
   saveConfigInStore: (g: TGateway) => void
+  refresh: () => void
 }) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
@@ -596,6 +678,7 @@ const PubPriKeySetup = ({
     }
     message.success(`${gatewayConfig?.gatewayName} keys saved`)
     saveConfigInStore(newGateway)
+    refresh()
   }
 
   return (
@@ -670,11 +753,13 @@ const PubPriKeySetup = ({
 const WebHookSetup = ({
   gatewayConfig,
   closeModal,
-  saveConfigInStore
+  saveConfigInStore,
+  refresh
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
   saveConfigInStore: (g: TGateway) => void
+  refresh: () => void
 }) => {
   const [form] = useForm()
   const [loading, setLoading] = useState(false)
@@ -708,6 +793,7 @@ const WebHookSetup = ({
       webhookSecret: { $set: webHookSecret }
     })
     saveConfigInStore(newGateway)
+    refresh()
   }
 
   const copyContent = async () => {

@@ -7,7 +7,7 @@ import { Button, Col, Row, Tag, message } from 'antd'
 import update from 'immutability-helper'
 import React, { useEffect, useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
-import { CURRENCY } from '../../../constants'
+// import { CURRENCY } from '../../../constants'
 import { getAppKeysWithMore } from '../../../requests'
 // import '../../shared.css'
 import { TGateway } from '../../../shared.types'
@@ -156,7 +156,7 @@ const Index = () => {
           gatewayConfig={
             gatewayList.find((g) => g.gatewayName == 'wire_transfer')!
           }
-          // refresh={getAppKeys}
+          refresh={getAppKeys}
           saveConfigInStore={saveConfigInStore}
         />
       )}
