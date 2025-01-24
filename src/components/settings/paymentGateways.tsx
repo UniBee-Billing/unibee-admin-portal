@@ -189,7 +189,7 @@ const Index = () => {
   useEffect(() => {
     getGatewayConfigList()
   }, [])
-
+  console.log('loading: ', loading)
   return (
     <div>
       {openSetupModal &&
