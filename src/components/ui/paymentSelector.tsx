@@ -1,4 +1,5 @@
 import React, { ChangeEventHandler } from 'react'
+import { TGateway } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 
 const Index = ({
@@ -11,7 +12,9 @@ const Index = ({
   disabled?: boolean
 }) => {
   const appConfig = useAppConfigStore()
-  const gateways = appConfig.gateway
+  const gateways = appConfig.gateway.sort(
+    (a: TGateway, b: TGateway) => a.sort - b.sort
+  )
 
   const onLabelClick: React.MouseEventHandler<HTMLLabelElement> = (e) => {
     if (disabled) {

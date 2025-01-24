@@ -1,17 +1,22 @@
-import {
+import Icon, {
   CheckOutlined,
   ExclamationOutlined,
+  LoadingOutlined,
+  MinusOutlined,
   PlusOutlined
 } from '@ant-design/icons'
 import type { GetProp, UploadFile, UploadProps } from 'antd'
 import {
   Button,
+  Col,
   Form,
   Image,
   Input,
   List,
   message,
   Modal,
+  Row,
+  Select,
   Tabs,
   TabsProps,
   Tag,
@@ -40,6 +45,7 @@ import { useForm } from 'antd/es/form/Form'
 import TextArea from 'antd/es/input/TextArea'
 import update from 'immutability-helper'
 import { useEffect, useState } from 'react'
+import ExchangeIcon from '../../assets/exchange.svg?react'
 import { randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
@@ -153,9 +159,11 @@ const Index = () => {
   }
 
   const getGatewayConfigList = async () => {
+    setLoading(true)
     const [gateways, err] = await getPaymentGatewayConfigListReq({
       refreshCb: getGatewayConfigList
     })
+    setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
@@ -181,7 +189,7 @@ const Index = () => {
   useEffect(() => {
     getGatewayConfigList()
   }, [])
-
+  console.log('loading: ', loading)
   return (
     <div>
       {openSetupModal &&
@@ -210,7 +218,11 @@ const Index = () => {
         onDragEnd={handleDragEnd}
       >
         <List
-          loading={loading}
+          loading={{
+            indicator: <LoadingOutlined spin />,
+            spinning: loading,
+            size: 'large'
+          }}
           itemLayout="horizontal"
           dataSource={gatewayConfigList}
           renderItem={(item, _index) => (
@@ -431,6 +443,7 @@ const EssentialSetup = ({
   refresh: () => void
   updateGatewayInStore: () => void
 }) => {
+  const appConfig = useAppConfigStore()
   const [loading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [displayName, setDisplayName] = useState(gatewayConfig.displayName)
@@ -445,6 +458,26 @@ const EssentialSetup = ({
       url: i,
       uid: randomString(8)
     }))
+  )
+
+  const CurrencyFromSelect = (
+    <Select
+      style={{ width: 80 }}
+      options={appConfig.supportCurrency.map((c) => ({
+        label: c.Currency,
+        value: c.Currency
+      }))}
+    ></Select>
+  )
+
+  const CurrencyToSelect = (
+    <Select
+      style={{ width: 80 }}
+      options={appConfig.supportCurrency.map((c) => ({
+        label: c.Currency,
+        value: c.Currency
+      }))}
+    ></Select>
   )
 
   const handlePreview = async (file: UploadFile) => {
@@ -541,7 +574,7 @@ const EssentialSetup = ({
 
   return (
     <div>
-      <div className="mb-2">Display Name</div>
+      <div className="my-4 mb-2 text-lg">Display Name</div>
       <Input
         value={displayName}
         onChange={onNameChange}
@@ -591,6 +624,48 @@ const EssentialSetup = ({
           src={previewImage}
         />
       )}
+
+      {gatewayConfig.currencyExchangeEnabled && (
+        <div>
+          <div className="my-6 mb-2 text-lg">Add Exchange Rate</div>
+          <div className="flex flex-col gap-3">
+            {/* <Row>
+              <Col span={6}>From</Col>
+              <Col span={3}></Col>
+              <Col span={6}>To</Col>
+              <Col span={6} className="ml-3">
+                Currency
+              </Col>
+            </Row> */}
+            <Row>
+              <Col span={6}>
+                <Input
+                  disabled={true}
+                  defaultValue={1}
+                  style={{ width: '180px' }}
+                  addonAfter={CurrencyFromSelect}
+                />
+              </Col>
+              <Col span={3} className="flex items-center justify-center">
+                <div className="flex items-center justify-center">
+                  <Icon component={ExchangeIcon} />
+                </div>
+              </Col>
+              <Col span={6}>
+                <Input
+                  addonAfter={CurrencyToSelect}
+                  // status={exErr !== '' ? 'error' : ''}
+                  // value={creditConfig.exchangeRate}
+                  // onChange={onExChange}
+                  style={{ width: '100%' }}
+                  // disabled={!editingExchange || !creditConfig.payoutEnable}
+                />
+              </Col>
+            </Row>
+          </div>
+        </div>
+      )}
+
       <div className="mt-8 flex items-center justify-end gap-4">
         <Button onClick={closeModal} disabled={loading || uploading}>
           Close
