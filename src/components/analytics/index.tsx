@@ -1,4 +1,4 @@
-import { CaretUpOutlined, LoadingOutlined, UpOutlined } from '@ant-design/icons'
+import { CaretUpOutlined, LoadingOutlined } from '@ant-design/icons'
 import { Button, message, Modal, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
