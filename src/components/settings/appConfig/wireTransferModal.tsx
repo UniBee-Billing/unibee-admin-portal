@@ -41,14 +41,14 @@ export const NEW_WIRE_TRANSFER: TGateway = {
 interface IProps {
   closeModal: () => void
   gatewayConfig: TGateway
-  saveConfigInStore: (g: TGateway) => void
   refresh: () => void
+  updateGatewayInStore: () => void
 }
 const Index = ({
   closeModal,
   gatewayConfig,
-  saveConfigInStore,
-  refresh
+  refresh,
+  updateGatewayInStore
 }: IProps) => {
   // todo: scale down the amount value
   const appConfig = useAppConfigStore()
@@ -82,15 +82,15 @@ const Index = ({
     const method = isNew
       ? createWireTransferAccountReq
       : updateWireTransferAccountReq
-    const [gateway, err] = await method(accInfo)
+    const [_, err] = await method(accInfo)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
     message.success(`Wire Transfer account saved.`)
-    saveConfigInStore(gateway)
     closeModal()
+    updateGatewayInStore()
     refresh()
   }
 
