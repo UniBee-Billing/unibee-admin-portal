@@ -8,6 +8,8 @@ import {
   ExpiredError,
   IProfile,
   ISubscriptionType,
+  PlanStatus,
+  PlanType,
   TCreditConfig,
   TExportDataType,
   TImportDataType,
@@ -27,8 +29,13 @@ const session = useSessionStore.getState()
 const appConfig = useAppConfigStore.getState()
 
 const handleStatusCode = (code: number, refreshCb?: () => void) => {
-  // better to use | to limit the code range
+  // TODO: use Enum to define the code
   if (code == 61 || code == 62) {
+    /*
+        refreshCallbacks: update(session.refreshCallbacks, {
+          $push: [refreshCb]
+        })
+      */
     session.setSession({ expired: true, refresh: refreshCb ?? null })
     throw new ExpiredError(
       `${code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
@@ -160,18 +167,12 @@ export const resetPassReq = async (
   oldPassword: string,
   newPassword: string
 ) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post(`/merchant/member/passwordReset`, {
       oldPassword,
       newPassword
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -192,15 +193,9 @@ export const logoutReq = async () => {
 }
 
 export const getAppConfigReq = async () => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.get(`/system/information/get`, {})
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -209,15 +204,9 @@ export const getAppConfigReq = async () => {
 }
 
 export const getMerchantInfoReq = async (refreshCb?: () => void) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.get(`/merchant/get`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -226,15 +215,9 @@ export const getMerchantInfoReq = async (refreshCb?: () => void) => {
 }
 
 export const updateMerchantInfoReq = async (body: TMerchantInfo) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post(`/merchant/update`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.merchant, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -244,20 +227,14 @@ export const updateMerchantInfoReq = async (body: TMerchantInfo) => {
 
 export const uploadLogoReq = async (f: FormData) => {
   const token = localStorage.getItem('merchantToken')
-  const session = useSessionStore.getState()
   try {
     const res = await axios.post(`${API_URL}/merchant/oss/file `, f, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        Authorization: `${token}` // Bearer: ******
+        Authorization: `${token}`
       }
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.url, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -268,12 +245,7 @@ export const uploadLogoReq = async (f: FormData) => {
 export const generateApiKeyReq = async () => {
   try {
     const res = await request.post('/merchant/new_apikey', {})
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.apiKey, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -298,12 +270,7 @@ export const saveGatewayKeyReq = async (
   const url = isNew ? '/merchant/gateway/setup' : '/merchant/gateway/edit'
   try {
     const res = await request.post(url, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -336,12 +303,7 @@ export const saveChangellyPubKeyReq = async (
       gatewayId,
       webhookSecret
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -374,12 +336,7 @@ export const saveVatSenseKeyReq = async (vatKey: string) => {
   }
   try {
     const res = await request.post('/merchant/vat/setup_gateway', body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -430,26 +387,11 @@ export type TPlanListBody = {
 }
 export const getPlanList = async (
   body: TPlanListBody,
-  refreshCb: (() => void) | null
+  refreshCb?: () => void
 ) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post('/merchant/plan/list', body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({
-        expired: true,
-        refresh: refreshCb
-        /*
-        refreshCallbacks: update(session.refreshCallbacks, {
-          $push: [refreshCb]
-        })
-          */
-      })
-
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -460,17 +402,11 @@ export const getPlanList = async (
 // -----------------
 
 const getPlanDetail = async (planId: number) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post('/merchant/plan/detail', {
       planId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.plan, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -479,17 +415,11 @@ const getPlanDetail = async (planId: number) => {
 }
 
 export const copyPlanReq = async (planId: number) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post('/merchant/plan/copy', {
       planId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.plan, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -498,7 +428,7 @@ export const copyPlanReq = async (planId: number) => {
 }
 
 // 3 calls to get planDetail(with planId), addonList, and metricsList
-// "planId: null" means caller want to create a new plan, so I pass a resolved promise to meet the caller signature.
+// "planId: null" means caller want to create a new plan, so a resolved promise is passed
 export const getPlanDetailWithMore = async (
   planId: number | null,
   refreshCb: (() => void) | null
@@ -515,8 +445,13 @@ export const getPlanDetailWithMore = async (
     [productList, errProduct]
   ] = await Promise.all([
     planDetailRes,
-    getPlanList({ type: [2, 3], status: [2], page: 0, count: 150 }, null), // type: [2,3] -> [addon, one-time-pay], status: 2 -> active
-    getMetricsListReq(null),
+    getPlanList({
+      type: [PlanType.ADD_ON, PlanType.ONE_TIME_ADD_ON],
+      status: [PlanStatus.ACTIVE],
+      page: 0,
+      count: 150
+    }),
+    getMetricsListReq(),
     getProductListReq({})
   ])
   const err = errDetail || addonErr || errMetrics || errProduct
@@ -538,12 +473,7 @@ export const savePlan = async (
   const url = isNew ? '/merchant/plan/new' : `/merchant/plan/edit`
   try {
     const res = await request.post(url, planDetail)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.plan, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -556,13 +486,8 @@ export const activatePlan = async (planId: number) => {
     const res = await request.post(`/merchant/plan/activate`, {
       planId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful result returned.
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -574,13 +499,8 @@ export const deletePlanReq = async (planId: number) => {
     const res = await request.post(`/merchant/plan/delete`, {
       planId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful result returned.
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -599,29 +519,18 @@ export const togglePublishReq = async ({
   }`
   try {
     const res = await request.post(url, { planId })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful result returned.
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
   }
 }
 
-export const getMetricsListReq = async (refreshCb: null | (() => void)) => {
-  const session = useSessionStore.getState()
+export const getMetricsListReq = async (refreshCb?: () => void) => {
   try {
     const res = await request.get(`/merchant/metric/list`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -652,13 +561,8 @@ export const saveMetricsReq = async (
   const url = isNew ? `/merchant/metric/new` : `/merchant/metric/edit`
   try {
     const res = await request.post(url, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful result returned.
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -674,12 +578,7 @@ export const getMetricDetailReq = async (
     const res = await request.post(`/merchant/metric/detail`, {
       metricId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data.merchantMetric, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -702,12 +601,7 @@ type TSubListReq = {
 export const getSublist = async (body: TSubListReq, refreshCb: () => void) => {
   try {
     const res = await request.post(`/merchant/subscription/list`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -721,12 +615,7 @@ const getSubDetail = async (subscriptionId: string) => {
     const res = await request.post(`/merchant/subscription/detail`, {
       subscriptionId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -736,25 +625,22 @@ const getSubDetail = async (subscriptionId: string) => {
 
 export const getSubDetailWithMore = async (
   subscriptionId: string,
-  refreshCb: (() => void) | null
+  refreshCb?: () => void
 ) => {
   const [[subDetail, errSubDetail], [planList, errPlanList]] =
     await Promise.all([
       getSubDetail(subscriptionId),
-      getPlanList(
-        {
-          type: [1], // main plan
-          status: [2], // active
-          page: 0,
-          count: 150
-        },
-        null
-      )
+      getPlanList({
+        type: [PlanType.MAIN],
+        status: [PlanStatus.ACTIVE],
+        page: 0,
+        count: 150
+      })
     ])
   const err = errSubDetail || errPlanList
   if (null != err) {
     if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: refreshCb })
+      session.setSession({ expired: true, refresh: refreshCb ?? null })
     }
     return [null, err]
   }
@@ -776,13 +662,8 @@ export const getSubDetailInProductReq = async ({
         productId
       }
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -804,13 +685,8 @@ export const getSubscriptionHistoryReq = async ({
       page,
       count
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -830,20 +706,15 @@ export const getOneTimePaymentHistoryReq = async ({
     const res = await request.get(
       `/merchant/payment/item/list?userId=${userId}&page=${page}&count=${count}`
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
   }
 }
 
-// new user has choose a sub plan, but not paid yet, before the payment due date, user and admin can cancel it.
+// new user has choosen a sub plan, but hasn't paid yet, before the payment due date, user and admin can cancel it.
 // this fn is for this purpose only, this call only work for sub.status == created.
 // it's not the same as terminate an active sub,
 export const cancelSubReq = async (subscriptionId: string) => {
@@ -851,13 +722,8 @@ export const cancelSubReq = async (subscriptionId: string) => {
     const res = await request.post(`/merchant/subscription/cancel`, {
       subscriptionId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -877,13 +743,8 @@ export const markAsIncompleteReq = async (
         expireTime: until
       }
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -915,12 +776,7 @@ export const createPreviewReq = async ({
       applyPromoCredit,
       applyPromoCreditAmount
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -962,12 +818,7 @@ export const updateSubscription = async ({
       applyPromoCredit,
       applyPromoCreditAmount
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1039,12 +890,7 @@ export const createSubscriptionReq = async ({
       applyPromoCredit,
       applyPromoCreditAmount
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     if (res.data.code == 51) {
       // amt in preview data not matched amt in submit body
       throw new Error(res.data.message)
@@ -1076,13 +922,8 @@ export const terminateSubReq = async (
   }
   try {
     const res = await request.post(url, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1090,20 +931,15 @@ export const terminateSubReq = async (
 }
 
 // resume subscription is for case that it'll get terminated at the end of this billing cycle automatically.
-// if it's ended immediately, no resume allowed.
+// if it has already ended immediately, no resume allowed.
 export const resumeSubReq = async (subscriptionId: string) => {
   const url = `/merchant/subscription/cancel_last_cancel_at_period_end`
   try {
     const res = await request.post(url, {
       subscriptionId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1168,12 +1004,7 @@ export const getPaymentTimelineReq = async (
   }
   try {
     const res = await request.get(url)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1189,12 +1020,7 @@ export const getPaymentDetailReq = async (
     const res = await request.get(
       `/merchant/payment/detail?paymentId=${paymentId}`
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data.paymentDetail, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1205,17 +1031,11 @@ export const getPaymentDetailReq = async (
 // -----------
 export const getCountryListReq = async () => {
   const merchantStore = useMerchantInfoStore.getState()
-  const session = useSessionStore.getState()
   try {
     const res = await request.post(`/merchant/vat/country_list`, {
       merchantId: merchantStore.id
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.vatCountryList, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1235,12 +1055,7 @@ export const extendDueDateReq = async (
         appendTrialEndHour
       }
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1257,7 +1072,7 @@ export const getAdminNoteReq = async ({
   subscriptionId: string
   page: number
   count: number
-  refreshCb: (() => void) | null
+  refreshCb?: () => void
 }) => {
   try {
     const res = await request.post('/merchant/subscription/admin_note_list', {
@@ -1265,12 +1080,7 @@ export const getAdminNoteReq = async ({
       page,
       count
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data.noteLists, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1292,12 +1102,7 @@ export const createAdminNoteReq = async ({
       merchantMemberId: merchantStore.id,
       note
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1314,7 +1119,7 @@ export const getUserNoteReq = async ({
   userId: number
   page: number
   count: number
-  refreshCb: (() => void) | null
+  refreshCb?: () => void
 }) => {
   try {
     const res = await request.post('/merchant/user/admin_note_list', {
@@ -1322,12 +1127,7 @@ export const getUserNoteReq = async ({
       page,
       count
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data.noteLists, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1347,12 +1147,7 @@ export const createUserNoteReq = async ({
       userId,
       note
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1369,12 +1164,7 @@ export const setSimDateReq = async (
       subscriptionId,
       newTestClock
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1382,17 +1172,13 @@ export const setSimDateReq = async (
   }
 }
 
-// billing admin can also get user profile.
-export const getUserProfile = async (userId: number, refreshCb: () => void) => {
-  const session = useSessionStore.getState()
+export const getUserProfile = async (
+  userId: number,
+  refreshCb?: () => void
+) => {
   try {
     const res = await request.get(`/merchant/user/get?userId=${userId}`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data.user, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1412,32 +1198,20 @@ export const changeUserPaymentMethodReq = async (
       gatewayId,
       paymentMethodId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // no meaningful return
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
   }
 }
 
-// billing admin can also update user profile.
 export const saveUserProfileReq = async (newProfile: IProfile) => {
-  const session = useSessionStore.getState()
   const u = JSON.parse(JSON.stringify(newProfile))
   u.userId = newProfile.id
   try {
     const res = await request.post(`/merchant/user/update`, u)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1453,17 +1227,11 @@ export const getUserPaymentMethodListReq = async ({
   userId: number
   gatewayId: number
 }) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.get(
       `/merchant/payment/method_list?gatewayId=${gatewayId}&userId=${userId}`
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.methodList, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1481,16 +1249,10 @@ export const removeCardPaymentMethodReq = async ({
   gatewayId: number
   paymentMethodId: string
 }) => {
-  const session = useSessionStore.getState()
   const body = { userId, gatewayId, paymentMethodId }
   try {
     const res = await request.post(`/merchant/payment/method_delete`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1498,16 +1260,10 @@ export const removeCardPaymentMethodReq = async ({
   }
 }
 
-// billing admin can also update user profile.
 export const suspendUserReq = async (userId: number) => {
   try {
     const res = await request.post(`/merchant/user/suspend_user`, { userId })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1528,13 +1284,8 @@ type TNewUserInfo = {
 export const createNewUserReq = async (newUser: TNewUserInfo) => {
   try {
     const res = await request.post(`/merchant/user/new`, newUser)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // this call has no meaningful result to return
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1546,12 +1297,7 @@ export const appSearchReq = async (searchKey: string) => {
     const res = await request.post(`/merchant/search/key_search`, {
       searchKey
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1570,19 +1316,14 @@ type TDiscountCodeQry = {
 }
 export const getDiscountCodeListReq = async (
   params: TDiscountCodeQry,
-  refreshCb: () => void
+  refreshCb?: () => void
 ) => {
   try {
     const res = await request.get('/merchant/discount/list', {
       params,
       paramsSerializer: serializeSearchParams
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1593,12 +1334,7 @@ export const getDiscountCodeListReq = async (
 export const getDiscountCodeDetailReq = async (codeId: number) => {
   try {
     const res = await request.get(`/merchant/discount/detail?id=${codeId}`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.discount, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1623,12 +1359,7 @@ export const getDiscountCodeUsageDetailReq = async ({
       params,
       paramsSerializer: serializeSearchParams
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1642,15 +1373,12 @@ export const getDiscountCodeDetailWithMore = async (
 ) => {
   const [[discount, errDiscount], [planList, errPlanList]] = await Promise.all([
     getDiscountCodeDetailReq(codeId),
-    getPlanList(
-      {
-        type: [1], // main plan
-        status: [2], // active
-        page: 0,
-        count: 150
-      },
-      null
-    )
+    getPlanList({
+      type: [PlanType.MAIN],
+      status: [PlanStatus.ACTIVE],
+      page: 0,
+      count: 150
+    })
   ])
 
   const err = errDiscount || errPlanList
@@ -1660,33 +1388,13 @@ export const getDiscountCodeDetailWithMore = async (
     }
     return [null, err]
   }
-
   return [{ discount, planList }, null]
-
-  try {
-    const res = await request.get(`/merchant/discount/detail?id=${codeId}`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [res.data.data.discount, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
 }
 
 export const createDiscountCodeReq = async (body: DiscountCode) => {
   try {
     const res = await request.post(`/merchant/discount/new`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      // session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1697,12 +1405,7 @@ export const createDiscountCodeReq = async (body: DiscountCode) => {
 export const updateDiscountCodeReq = async (body: DiscountCode) => {
   try {
     const res = await request.post(`/merchant/discount/edit`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      // session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1713,12 +1416,7 @@ export const updateDiscountCodeReq = async (body: DiscountCode) => {
 export const deleteDiscountCodeReq = async (id: number) => {
   try {
     const res = await request.post(`/merchant/discount/delete`, { id })
-    if (res.data.code == 61 || res.data.code == 62) {
-      // session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1732,12 +1430,7 @@ export const toggleDiscountCodeActivateReq = async (
 ) => {
   try {
     const res = await request.post(`/merchant/discount/${action}`, { id })
-    if (res.data.code == 61 || res.data.code == 62) {
-      // session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1751,12 +1444,7 @@ export const applyDiscountPreviewReq = async (code: string, planId: number) => {
       code,
       planId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1778,16 +1466,11 @@ type TGetInvoicesReq = {
 }
 export const getInvoiceListReq = async (
   body: TGetInvoicesReq,
-  refreshCb: (() => void) | null
+  refreshCb?: () => void
 ) => {
   try {
     const res = await request.post(`/merchant/invoice/list`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1798,19 +1481,13 @@ export const getInvoiceListReq = async (
 
 export const getInvoiceDetailReq = async (
   invoiceId: string,
-  refreshCb: () => void
+  refreshCb?: () => void
 ) => {
   try {
     const res = await request.post(`/merchant/invoice/detail`, {
       invoiceId
     })
-
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1818,7 +1495,7 @@ export const getInvoiceDetailReq = async (
   }
 }
 
-// wire-transfer is totally offline, we can only rely on admin to do manual offline check payment status,
+// wire-transfer is totally offline, we can only rely on admin to do offline payment status check,
 // then mark invoice as Paid.
 export const markInvoiceAsPaidReq = async (
   invoiceId: string,
@@ -1834,13 +1511,7 @@ export const markInvoiceAsPaidReq = async (
         TransferNumber
       }
     )
-
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1860,13 +1531,7 @@ export const markRefundAsSucceedReq = async (
       invoiceId,
       reason
     })
-
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1894,13 +1559,8 @@ export const createInvoiceReq = async (body: TCreateInvoiceReq) => {
   body.lines = body.invoiceItems
   try {
     const res = await request.post(`/merchant/invoice/new`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // backend has no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1921,12 +1581,7 @@ export const saveInvoiceReq = async (body: TSaveInvoiceReq) => {
   body.lines = body.invoiceItems
   try {
     const res = await request.post(`/merchant/invoice/edit`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null] // no meaningful return value
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -1940,13 +1595,8 @@ export const deleteInvoiceReq = async (invoiceId: string) => {
     const res = await request.post(`/merchant/invoice/delete`, {
       invoiceId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1963,13 +1613,8 @@ type TPublishInvoiceReq = {
 export const publishInvoiceReq = async (body: TPublishInvoiceReq) => {
   try {
     const res = await request.post(`/merchant/invoice/finish`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1982,13 +1627,8 @@ export const revokeInvoiceReq = async (invoiceId: string) => {
     const res = await request.post(`/merchant/invoice/cancel`, {
       invoiceId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2013,13 +1653,8 @@ export const refundReq = async (
     body.refundAmount = Math.round(body.refundAmount)
 
     const res = await request.post(`/merchant/invoice/refund`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2031,13 +1666,8 @@ export const sendInvoiceInMailReq = async (invoiceId: string) => {
     const res = await request.post(`/merchant/invoice/send_email`, {
       invoiceId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // no meaningful return value
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2061,17 +1691,11 @@ type TUserList = {
 }
 export const getUserListReq = async (
   users: TUserList,
-  refreshCb: () => void
+  refreshCb?: () => void
 ) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post(`/merchant/user/list`, users)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2080,7 +1704,6 @@ export const getUserListReq = async (
 }
 
 export const importDataReq = async (file: File, task: TImportDataType) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post(
       `/merchant/task/new_import`,
@@ -2091,12 +1714,7 @@ export const importDataReq = async (file: File, task: TImportDataType) => {
         }
       }
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2109,12 +1727,7 @@ export const importDataReq = async (file: File, task: TImportDataType) => {
 const getMerchantUserListReq = async (refreshCb?: () => void) => {
   try {
     const res = await request.get('/merchant/member/list?page=0&count=10')
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2132,12 +1745,7 @@ export const getMerchantUserListReq2 = async (
       count,
       roleIds
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2161,7 +1769,7 @@ export const getMerchantUserListWithMoreReq = async (refreshCb: () => void) => {
   return [{ merchantUserListRes, roleListRes }, null]
 }
 
-// invite other admin (with different roles)
+// invite other admin (with specified roles)
 export const inviteMemberReq = async ({
   email,
   firstName,
@@ -2176,12 +1784,7 @@ export const inviteMemberReq = async ({
   const body = { email, firstName, lastName, roleIds }
   try {
     const res = await request.post('/merchant/member/new_member', body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2199,12 +1802,7 @@ export const updateMemberRolesReq = async ({
   const body = { memberId, roleIds }
   try {
     const res = await request.post('/merchant/member/update_member_role', body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2217,12 +1815,7 @@ export const suspendMemberReq = async (memberId: number) => {
     const res = await request.post('/merchant/member/suspend_member', {
       memberId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2233,12 +1826,7 @@ export const suspendMemberReq = async (memberId: number) => {
 export const getMemberProfileReq = async (refreshCb?: () => void) => {
   try {
     const res = await request.get('/merchant/member/profile')
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2274,14 +1862,15 @@ export const getPaymentGatewayConfigListReq = async ({
 }
 
 export const sortGatewayReq = async (
-  sortObj: { gatewayName: string; gatewayId: number; sort: number }[]
+  sortObj: { gatewayName: string; gatewayId: number; sort: number }[],
+  refreshCb?: () => void
 ) => {
   try {
     const res = await request.post(`/merchant/gateway/edit_sort`, {
       gatewaySorts: sortObj
     })
-    handleStatusCode(res.data.code)
-    return [res.data.data.gateways, null, res.data.code]
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data.gateways, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e, -1]
@@ -2350,12 +1939,7 @@ export const segmentSetupReq = async (
       serverSideSecret,
       userPortalSecret
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2364,15 +1948,9 @@ export const segmentSetupReq = async (
 }
 
 export const getEventListReq = async () => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.get(`/merchant/webhook/event_list`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.eventList, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2380,16 +1958,10 @@ export const getEventListReq = async () => {
   }
 }
 
-export const getWebhookListReq = async (refreshCb: () => void) => {
-  const session = useSessionStore.getState()
+export const getWebhookListReq = async (refreshCb?: () => void) => {
   try {
     const res = await request.get(`/merchant/webhook/endpoint_list`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data.endpointList, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2407,7 +1979,6 @@ export const saveWebhookReq = async ({
   events: string[]
   endpointId?: number
 }) => {
-  const session = useSessionStore.getState()
   try {
     const actionUrl =
       endpointId == null
@@ -2418,15 +1989,9 @@ export const saveWebhookReq = async ({
       events,
       endpointId: endpointId === null ? undefined : endpointId
     }
-
     const res = await request.post(actionUrl, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // this call has no meaningful result
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2434,18 +1999,12 @@ export const saveWebhookReq = async ({
 }
 
 export const deleteWebhookReq = async (endpointId: number) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post('/merchant/webhook/delete_endpoint', {
       endpointId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
-    return [null, null] // this call has no meaningful result
+    handleStatusCode(res.data.code)
+    return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2458,19 +2017,13 @@ export const getWebhookLogs = async (
     page,
     count
   }: { endpointId: number; page: number; count: number },
-  refreshCb: null | (() => void)
+  refreshCb?: () => void
 ) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.get(
       `/merchant/webhook/endpoint_log_list?endpointId=${endpointId}&page=${page}&count=${count}`
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2479,15 +2032,9 @@ export const getWebhookLogs = async (
 }
 
 export const resendWebhookEvt = async (logId: number) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post(`/merchant/webhook/resend`, { logId })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2496,15 +2043,9 @@ export const resendWebhookEvt = async (logId: number) => {
 }
 
 export const getRoleListReq = async (refreshCb?: () => void) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.get(`/merchant/role/list`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2518,12 +2059,7 @@ export const saveRoleReq = async (role: TRole, isNew: boolean) => {
       `/merchant/role/${isNew ? 'new' : 'edit'}`,
       role
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2534,12 +2070,7 @@ export const saveRoleReq = async (role: TRole, isNew: boolean) => {
 export const deleteRoleReq = async (id: number) => {
   try {
     const res = await request.post(`/merchant/role/delete`, { id })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2563,7 +2094,7 @@ type TActivityLogParams = {
 }
 export const getActivityLogsReq = async (
   searchTerm: TActivityLogParams,
-  refreshCb: () => void
+  refreshCb?: () => void
 ) => {
   let term = ''
   for (const [key, value] of Object.entries(searchTerm)) {
@@ -2572,12 +2103,7 @@ export const getActivityLogsReq = async (
   term = term.substring(0, term.length - 1)
   try {
     const res = await request.get(`/merchant/member/operation_log_list?${term}`)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2594,12 +2120,7 @@ export const getDownloadListReq = async (
     const res = await request.get(
       `/merchant/task/list?page=${page}&count=${count}`
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2625,12 +2146,7 @@ export const exportDataReq = async ({
       exportColumns,
       format
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2643,12 +2159,7 @@ const getExportFieldsReq = async ({ task }: { task: TExportDataType }) => {
     const res = await request.post(`/merchant/task/export_column_list`, {
       task
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2671,12 +2182,7 @@ export const getExportTmplReq = async ({
       page,
       count
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2704,7 +2210,7 @@ export const getExportFieldsWithMore = async (
   return [{ exportTmplRes, exportFieldsRes }, null]
 }
 
-// creating new and editing existing share almost the same parameter, use templateId == null to check
+// 'creating new' and 'editing existing' share almost the same parameter, use templateId == null to check
 export const saveExportTmplReq = async ({
   name,
   templateId,
@@ -2731,12 +2237,7 @@ export const saveExportTmplReq = async ({
       exportColumns,
       format
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2753,12 +2254,7 @@ export const removeExportTmplReq = async ({
     const res = await request.post(`/merchant/task/delete_export_template`, {
       templateId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2780,20 +2276,7 @@ export const getProductListReq = async ({
       count: count ?? 60,
       page: page ?? 0
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({
-        expired: true,
-        refresh: refreshCb ?? null
-        /*
-        refreshCallbacks: update(session.refreshCallbacks, {
-          $push: [refreshCb]
-        })
-          */
-      })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2819,12 +2302,7 @@ export const saveProductReq = async ({
   }
   try {
     const res = await request.post(url, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2837,12 +2315,7 @@ export const deleteProductReq = async (productId: number) => {
     const res = await request.post(`/merchant/product/delete`, {
       productId
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2858,12 +2331,7 @@ export const getProductDetailReq = async (productId: number) => {
         productId
       }
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2881,12 +2349,7 @@ export const getCreditConfigListReq = async (
 ) => {
   try {
     const res = await request.post(`/merchant/credit/config_list`, body)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data.creditConfigs, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2898,12 +2361,7 @@ export const getCreditConfigListReq = async (
 export const createCreditConfigReq = async (c: TCreditConfig) => {
   try {
     const res = await request.post(`/merchant/credit/new_config`, c)
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.creditConfig, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2932,12 +2390,7 @@ export const saveCreditConfigReq = async ({
       currency,
       [key]: value
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.creditConfig, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2949,12 +2402,7 @@ export const saveCreditConfigReq = async ({
 export const saveUserCreditConfigReq = async () => {
   try {
     const res = await request.post(`/merchant/credit/edit_credit_account`, {})
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.UserCreditAccount, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2981,12 +2429,7 @@ export const getCreditTxListReq = async (body: TCreditTxParams) => {
       `/merchant/credit/credit_transaction_list`,
       body
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -3000,12 +2443,7 @@ export const getCreditUsageStatReq = async (currency: string) => {
       `/merchant/credit/get_promo_config_statistics`,
       { currency }
     )
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.creditConfigStatistics, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -3019,12 +2457,7 @@ export const toggleUserCreditReq = async (id: number, payoutEnable: 1 | 0) => {
       id,
       payoutEnable
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.UserCreditAccount, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -3055,12 +2488,7 @@ export const updateCreditAmtReq = async ({
       amount,
       description
     })
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data.UserPromoCreditAccount, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -3071,12 +2499,7 @@ export const updateCreditAmtReq = async ({
 export const getRevenueReq = async () => {
   try {
     const res = await analyticsRequest.get('/revenue')
-    if (res.data.code == 61 || res.data.code == 62) {
-      session.setSession({ expired: true, refresh: null })
-      throw new ExpiredError(
-        `${res.data.code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
-      )
-    }
+    handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')

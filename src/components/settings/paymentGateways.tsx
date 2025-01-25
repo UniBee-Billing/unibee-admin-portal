@@ -189,7 +189,7 @@ const Index = () => {
   useEffect(() => {
     getGatewayConfigList()
   }, [])
-  console.log('loading: ', loading)
+
   return (
     <div>
       {openSetupModal &&
@@ -817,10 +817,15 @@ const WebHookSetup = ({
   // configure pub/private keys first, then configure webhook
   const notSubmitable = gatewayConfig.gatewayKey == ''
 
+  // there is a antd bug: in a form, if there exists a native <button />, not antd <Button/>.
+  // And if you have set:
+  // form.onFinish = onSave, OK button's onClick handler = form.submit
+  // your native button's onclick will trigger form submit, antd's own <Button> doesn't have this bug.
+  // I have to unset form's onFinish, move OK button to the outside of form.
   const onSave = async () => {
     const webHookSecret = form.getFieldValue('webhookSecret')
     if (webHookSecret.trim() == '') {
-      message.error('Webhook key is empty')
+      // message.error('Webhook key is empty')
       return
     }
 
@@ -867,7 +872,7 @@ const WebHookSetup = ({
       <Form
         form={form}
         layout="vertical"
-        onFinish={onSave}
+        // onFinish={onSave}
         colon={false}
         disabled={notSubmitable}
         initialValues={gatewayConfig}
@@ -876,7 +881,6 @@ const WebHookSetup = ({
           <Input disabled />
         </Form.Item>
         <div className="h-2" />
-
         <Form.Item label="Callback URL" name="webhookEndpointUrl">
           <Input
             disabled
@@ -892,6 +896,12 @@ const WebHookSetup = ({
         <Form.Item
           label="Callback Key"
           name="webhookSecret"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your key!'
+            }
+          ]}
           help={
             <div className="mt-2 text-sm">
               <Button
@@ -925,7 +935,6 @@ const WebHookSetup = ({
         </Form.Item>
         <div className="h-2" />
       </Form>
-
       <div className="mt-6 flex items-center justify-end gap-4">
         <Button onClick={closeModal} disabled={loading}>
           Close

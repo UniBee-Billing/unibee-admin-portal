@@ -12,6 +12,10 @@ export enum AccountType {
 export type WithStyle<T> = T & {
   className?: string
 }
+export type ListReqType = {
+  page?: number
+  count?: number
+}
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type BareStyleProps = WithStyle<{}>
@@ -150,19 +154,34 @@ interface IProduct {
   isDeleted: number
 }
 
+export enum PlanType {
+  MAIN = 1,
+  ADD_ON = 2, // must be used with MAIN, cannot be bought alone
+  ONE_TIME_ADD_ON = 3 // can be bought alone, has no dependencies on anything
+}
+export enum PlanStatus {
+  EDITING = 1,
+  ACTIVE = 2,
+  INACTIVE = 3,
+  EXPIRED = 4
+}
+export enum PlanPublishStatus {
+  UNPUBLISHED = 1, // not visible to users
+  PUBLISHED = 2
+}
 interface IPlan {
   id: number
   plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
   planName: string
   description: string
-  type: number // 1: main plan, 2: add-on, 3: one-time addon
+  type: PlanType // 1: main plan, 2: add-on, 3: one-time addon
   currency: Currency
   intervalCount: number
   intervalUnit: string
   amount: number
-  status: number // 1: editing，2: active, 3: inactive，4: expired
-  publishStatus: number // 1: unpublished(not visible to users), 2: published(users could see and choose this plan)
+  status: PlanStatus
+  publishStatus: PlanPublishStatus
   addons?: IAddon[]
   addonIds?: number[] // which addons have been attached to this plan.
   onetimeAddonIds?: number[] // which one-time payment addons have been attached to this plan (main plan only)

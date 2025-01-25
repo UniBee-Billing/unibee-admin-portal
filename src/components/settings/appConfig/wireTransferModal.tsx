@@ -35,7 +35,9 @@ export const NEW_WIRE_TRANSFER: TGateway = {
     address: ''
   },
   createTime: 0,
-  sort: 0
+  sort: 1,
+  currencyExchangeEnabled: false,
+  currencyExchange: []
 }
 
 interface IProps {

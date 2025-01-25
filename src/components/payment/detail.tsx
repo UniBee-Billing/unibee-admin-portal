@@ -3,8 +3,6 @@ import { Button, Spin, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getPaymentDetailReq } from '../../requests'
-// import MarkAsPaidModal from './markAsPaidModal'
-// import InvoiceItemsModal from '../subscription/modals/newInvoice' // obsolete
 
 const Index = () => {
   const navigate = useNavigate()
@@ -25,30 +23,6 @@ const Index = () => {
       message.error(err.message)
       return
     }
-
-    /*
-    const { invoice } = res
-    normalizeAmt([invoice])
-    setInvoiceDetail(invoice)
-    */
-    /*
-    const pathName = window.location.pathname.split('/')
-    const ivId = pathName.pop()
-    if (ivId == null) {
-      message.error('Invalid invoice')
-      return
-    }
-    setLoading(true)
-    const [res, err] = await getInvoiceDetailReq(ivId, fetchData)
-    setLoading(false)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    const { invoice } = res
-    normalizeAmt([invoice])
-    setInvoiceDetail(invoice)
-    */
   }
 
   useEffect(() => {
