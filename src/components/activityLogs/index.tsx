@@ -38,7 +38,6 @@ const Index = () => {
         delete searchTerms[k]
     )
 
-    // return
     const params = { page, count: PAGE_SIZE, ...searchTerms }
     setLoading(true)
     const [res, err] = await getActivityLogsReq(params, fetchLogs)

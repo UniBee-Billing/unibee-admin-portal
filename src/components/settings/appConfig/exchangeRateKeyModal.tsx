@@ -46,11 +46,11 @@ const Index = ({ closeModal }: IProps) => {
           <div>
             Apply your key on&nbsp;&nbsp;
             <a
-              href="https://***********************.com"
+              href="https://app.exchangerate-api.com/"
               target="_blank"
               rel="noreferrer"
             >
-              https://*********************** */.com
+              https://app.exchangerate-api.com/
             </a>
           </div>
         </div>

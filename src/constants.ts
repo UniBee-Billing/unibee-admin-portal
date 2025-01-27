@@ -1,23 +1,10 @@
-import { CreditTxType, InvoiceBizType } from './shared.types'
-
-export enum PlanType {
-  MainPlan = 1,
-  Addon = 2,
-  OnetimePayment = 3
-}
-
-enum PlanStatus {
-  Editing = 1,
-  Active = 2,
-  Inactive = 3,
-  Expired = 4
-}
+import { CreditTxType, InvoiceBizType, PlanStatus } from './shared.types'
 
 export const PLAN_STATUS: { [key: number]: string } = {
-  [PlanStatus.Editing]: 'editing',
-  [PlanStatus.Active]: 'active',
-  [PlanStatus.Inactive]: 'inactive',
-  [PlanStatus.Expired]: 'expired'
+  [PlanStatus.EDITING]: 'editing',
+  [PlanStatus.ACTIVE]: 'active',
+  [PlanStatus.INACTIVE]: 'inactive',
+  [PlanStatus.EXPIRED]: 'expired'
 }
 
 export const SUBSCRIPTION_STATUS: { [key: number]: string } = {

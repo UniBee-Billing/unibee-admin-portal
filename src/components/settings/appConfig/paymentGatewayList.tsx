@@ -88,7 +88,9 @@ const Index = ({
           createTime: 0,
           minimumAmount: 0,
           currency: '',
-          sort: 0
+          sort: 1,
+          currencyExchangeEnabled: false,
+          currencyExchange: []
         }
       )
       toggleModal()
