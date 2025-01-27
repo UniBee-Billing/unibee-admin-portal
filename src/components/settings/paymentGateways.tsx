@@ -620,8 +620,12 @@ const EssentialSetup = ({
       <div className="h-6" />
       <div className="mb-2">
         Gateway Icons{' '}
-        <span className="text-xs text-gray-500">
-          ({`${MAX_FILE_COUNT} logos at most, each < 2M, drag to reorder them`})
+        <span
+          className={`text-xs ${fileList.length == 0 ? 'text-red-500' : 'text-gray-500'}`}
+        >
+          (
+          {`at least 1 logo, at most ${MAX_FILE_COUNT} logos, each < 2M, drag to reorder them`}
+          )
         </span>
       </div>
       <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
@@ -713,12 +717,12 @@ const EssentialSetup = ({
                     min={0}
                     addonAfter={
                       <Select
-                        style={{ width: 80 }}
                         value={r.to_currency}
                         onChange={onExRateCurrencyChange(
                           'to_currency',
                           r.localId as string
                         )}
+                        style={{ width: 80 }}
                         options={appConfig.supportCurrency.map((c) => ({
                           label: c.Currency,
                           value: c.Currency
