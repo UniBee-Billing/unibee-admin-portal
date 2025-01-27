@@ -44,7 +44,7 @@ import {
   updateDiscountCodeReq
 } from '../../requests'
 import { DiscountCode, DiscountCodeStatus, IPlan } from '../../shared.types'
-import { useMerchantInfoStore } from '../../stores'
+import { useAppConfigStore, useMerchantInfoStore } from '../../stores'
 import { title } from '../../utils'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 import { DISCOUNT_CODE_UPGRADE_SCOPE, formatQuantity } from './helpers'
@@ -85,6 +85,7 @@ const canActiveItemEdit = (status?: DiscountCodeStatus) =>
   status ? CAN_EDIT_ITEM_STATUSES.includes(status) : true
 
 const Index = () => {
+  const appStore = useAppConfigStore()
   const params = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -549,11 +550,10 @@ const Index = () => {
                   <Select
                     disabled={watchDiscountType == 1 || !formEditable}
                     style={{ width: 180 }}
-                    options={[
-                      { value: 'EUR', label: 'EUR' },
-                      { value: 'USD', label: 'USD' },
-                      { value: 'JPY', label: 'JPY' }
-                    ]}
+                    options={appStore.supportCurrency.map((c) => ({
+                      label: c.Currency,
+                      value: c.Currency
+                    }))}
                   />
                 </Form.Item>
                 <Form.Item

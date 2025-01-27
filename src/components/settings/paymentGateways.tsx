@@ -12,6 +12,7 @@ import {
   Form,
   Image,
   Input,
+  InputNumber,
   List,
   message,
   Modal,
@@ -57,7 +58,7 @@ import {
   TGatewayConfigBody,
   uploadLogoReq
 } from '../../requests'
-import { TGateway } from '../../shared.types'
+import { TGateway, TGatewayExRate } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import ModalWireTransfer from './appConfig/wireTransferModal'
@@ -460,25 +461,54 @@ const EssentialSetup = ({
     }))
   )
 
-  const CurrencyFromSelect = (
-    <Select
-      style={{ width: 80 }}
-      options={appConfig.supportCurrency.map((c) => ({
-        label: c.Currency,
-        value: c.Currency
-      }))}
-    ></Select>
-  )
+  const exRate = gatewayConfig.currencyExchange.map((r: TGatewayExRate) => ({
+    ...r,
+    localId: randomString(8)
+  }))
+  const [exchangeRates, setExchangeRates] = useState<TGatewayExRate[]>(exRate)
 
-  const CurrencyToSelect = (
-    <Select
-      style={{ width: 80 }}
-      options={appConfig.supportCurrency.map((c) => ({
-        label: c.Currency,
-        value: c.Currency
-      }))}
-    ></Select>
-  )
+  const addExRate = () => {
+    setExchangeRates(
+      update(exchangeRates, {
+        $push: [
+          {
+            from_currency: '',
+            to_currency: '',
+            exchange_rate: 1,
+            localId: randomString(8)
+          }
+        ]
+      })
+    )
+  }
+  const removeExRate = (localId: string) => () => {
+    const idx = exchangeRates.findIndex((r) => r.localId == localId)
+    if (idx != -1) {
+      setExchangeRates(update(exchangeRates, { $splice: [[idx, 1]] }))
+    }
+  }
+
+  const onExRateChange = (localId: string) => (value: number | null) => {
+    if (value == null) {
+      return
+    }
+    const idx = exchangeRates.findIndex((r) => r.localId == localId)
+    if (idx != -1) {
+      setExchangeRates(
+        update(exchangeRates, { [idx]: { exchange_rate: { $set: value } } })
+      )
+    }
+  }
+
+  const onExRateCurrencyChange =
+    (currencyType: string, exRateId: string) => (value: string) => {
+      const idx = exchangeRates.findIndex((r) => r.localId == exRateId)
+      if (idx != -1) {
+        setExchangeRates(
+          update(exchangeRates, { [idx]: { [currencyType]: { $set: value } } })
+        )
+      }
+    }
 
   const handlePreview = async (file: UploadFile) => {
     if (!file.url && !file.preview) {
@@ -545,6 +575,13 @@ const EssentialSetup = ({
       displayName,
       gatewayLogo: fileList.filter((f) => f.url != undefined).map((f) => f.url!)
     }
+
+    if (exchangeRates.length > 0) {
+      // todo: validation check
+      exchangeRates.map((r) => r).forEach((r) => delete r.localId)
+      body.currencyExchange = exchangeRates
+    }
+
     const isNew = gatewayConfig.gatewayId == 0
     if (!isNew) {
       body.gatewayId = gatewayConfig.gatewayId
@@ -629,39 +666,83 @@ const EssentialSetup = ({
         <div>
           <div className="my-6 mb-2 text-lg">Add Exchange Rate</div>
           <div className="flex flex-col gap-3">
-            {/* <Row>
+            <Row>
               <Col span={6}>From</Col>
               <Col span={3}></Col>
               <Col span={6}>To</Col>
-              <Col span={6} className="ml-3">
-                Currency
-              </Col>
-            </Row> */}
-            <Row>
-              <Col span={6}>
-                <Input
-                  disabled={true}
-                  defaultValue={1}
-                  style={{ width: '180px' }}
-                  addonAfter={CurrencyFromSelect}
-                />
-              </Col>
-              <Col span={3} className="flex items-center justify-center">
-                <div className="flex items-center justify-center">
-                  <Icon component={ExchangeIcon} />
-                </div>
-              </Col>
-              <Col span={6}>
-                <Input
-                  addonAfter={CurrencyToSelect}
-                  // status={exErr !== '' ? 'error' : ''}
-                  // value={creditConfig.exchangeRate}
-                  // onChange={onExChange}
-                  style={{ width: '100%' }}
-                  // disabled={!editingExchange || !creditConfig.payoutEnable}
-                />
+              <Col span={3}></Col>
+              <Col span={3}>
+                <Button
+                  onClick={addExRate}
+                  icon={<PlusOutlined />}
+                  size="small"
+                  style={{ border: 'unset' }}
+                ></Button>
               </Col>
             </Row>
+            {exchangeRates.map((r) => (
+              <Row key={r.localId}>
+                <Col span={6}>
+                  <Input
+                    disabled={true}
+                    defaultValue={1}
+                    style={{ width: '180px' }}
+                    addonAfter={
+                      <Select
+                        value={r.from_currency}
+                        onChange={onExRateCurrencyChange(
+                          'from_currency',
+                          r.localId as string
+                        )}
+                        style={{ width: 80 }}
+                        options={appConfig.supportCurrency.map((c) => ({
+                          label: c.Currency,
+                          value: c.Currency
+                        }))}
+                      ></Select>
+                    }
+                  />
+                </Col>
+                <Col span={3} className="flex items-center justify-center">
+                  <div className="flex items-center justify-center">
+                    <Icon component={ExchangeIcon} />
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <InputNumber
+                    min={0}
+                    addonAfter={
+                      <Select
+                        style={{ width: 80 }}
+                        value={r.to_currency}
+                        onChange={onExRateCurrencyChange(
+                          'to_currency',
+                          r.localId as string
+                        )}
+                        options={appConfig.supportCurrency.map((c) => ({
+                          label: c.Currency,
+                          value: c.Currency
+                        }))}
+                      ></Select>
+                    }
+                    // status={exErr !== '' ? 'error' : ''}
+                    value={r.exchange_rate}
+                    onChange={onExRateChange(r.localId as string)}
+                    style={{ width: '100%' }}
+                  />
+                </Col>
+                <Col span={3}></Col>
+                <Col span={3}>
+                  <Button
+                    data-ex-rate-id={r.localId}
+                    onClick={removeExRate(r.localId as string)}
+                    icon={<MinusOutlined />}
+                    size="small"
+                    style={{ border: 'unset' }}
+                  ></Button>
+                </Col>
+              </Row>
+            ))}
           </div>
         </div>
       )}
