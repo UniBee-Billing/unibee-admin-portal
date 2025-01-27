@@ -476,37 +476,12 @@ const Search = ({
   onPageChange: (page: number, pageSize: number) => void
   clearFilters: () => void
 }) => {
+  const appStore = useAppConfigStore()
   const clear = () => {
     form.resetFields()
     onPageChange(1, PAGE_SIZE)
     clearFilters()
   }
-
-  /*
-  const exportData = async () => {
-    const payload = normalizeSearchTerms()
-    if (null == payload) {
-      return
-    }
-
-   
-    // return
-    setExporting(true)
-    const [res, err] = await exportDataReq({
-      task: 'TransactionExport',
-      payload
-    })
-    setExporting(false)
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    message.success(
-      'Transaction list is being exported, please check task list for progress.'
-    )
-    appConfig.setTaskListOpen(true)
-  }
-    */
 
   const currencySymbol =
     CURRENCY[form.getFieldValue('currency') || DEFAULT_TERM.currency].symbol
@@ -594,11 +569,10 @@ const Search = ({
               <Form.Item name="currency" noStyle={true}>
                 <Select
                   style={{ width: 80 }}
-                  options={[
-                    { value: 'EUR', label: 'EUR' },
-                    { value: 'USD', label: 'USD' },
-                    { value: 'JPY', label: 'JPY' }
-                  ]}
+                  options={appStore.supportCurrency.map((c) => ({
+                    label: c.Currency,
+                    value: c.Currency
+                  }))}
                 />
               </Form.Item>
             </div>

@@ -12,6 +12,7 @@ import {
   PlanType,
   TCreditConfig,
   TExportDataType,
+  TGatewayExRate,
   TImportDataType,
   TMerchantInfo,
   TRole
@@ -261,6 +262,7 @@ export type TGatewayConfigBody = {
   displayName?: string
   gatewayLogo?: string[]
   sort?: number
+  currencyExchange?: TGatewayExRate[]
 }
 // to be depreciated
 export const saveGatewayKeyReq = async (
@@ -714,7 +716,7 @@ export const getOneTimePaymentHistoryReq = async ({
   }
 }
 
-// new user has choosen a sub plan, but hasn't paid yet, before the payment due date, user and admin can cancel it.
+// new user has chosen a sub plan, but hasn't paid yet, before the payment due date, user and admin can cancel it.
 // this fn is for this purpose only, this call only work for sub.status == created.
 // it's not the same as terminate an active sub,
 export const cancelSubReq = async (subscriptionId: string) => {

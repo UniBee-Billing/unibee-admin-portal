@@ -4,7 +4,6 @@ import {
   SyncOutlined
 } from '@ant-design/icons'
 import { Button, Col, Row, Tag, message } from 'antd'
-import update from 'immutability-helper'
 import React, { useEffect, useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
 // import { CURRENCY } from '../../../constants'
