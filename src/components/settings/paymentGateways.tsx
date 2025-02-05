@@ -461,10 +461,13 @@ const EssentialSetup = ({
     }))
   )
 
-  const exRate = gatewayConfig.currencyExchange.map((r: TGatewayExRate) => ({
-    ...r,
-    localId: randomString(8)
-  }))
+  const exRate =
+    gatewayConfig.currencyExchange == null
+      ? []
+      : gatewayConfig.currencyExchange.map((r: TGatewayExRate) => ({
+          ...r,
+          localId: randomString(8)
+        }))
   const [exchangeRates, setExchangeRates] = useState<TGatewayExRate[]>(exRate)
 
   const addExRate = () => {
@@ -761,7 +764,7 @@ const EssentialSetup = ({
           loading={loading || uploading}
           disabled={loading || uploading}
         >
-          OK
+          Save
         </Button>
       </div>
     </div>
@@ -879,7 +882,7 @@ const PubPriKeySetup = ({
           loading={loading}
           disabled={loading}
         >
-          OK
+          Save
         </Button>
       </div>
     </div>
@@ -1030,7 +1033,7 @@ const WebHookSetup = ({
           loading={loading}
           disabled={loading || notSubmitable}
         >
-          OK
+          Save
         </Button>
       </div>
     </div>

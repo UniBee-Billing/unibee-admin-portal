@@ -72,7 +72,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { merchantInfo, gateways } = res
+    const { merchantInfo } = res
     // these keys have been desensitized, their purposes is to show which keys have been set, which haven't
     const {
       openApiKey,

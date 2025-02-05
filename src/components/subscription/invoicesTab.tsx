@@ -340,9 +340,8 @@ const Index = ({
       title: 'Gateway',
       dataIndex: 'gateway',
       key: 'gateway',
-      render: (g) => (g == null ? null : g.displayName)
+      render: (g) => (g == null ? null : g.name)
     },
-
     {
       title: 'Created by',
       dataIndex: 'createFrom',

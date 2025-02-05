@@ -29,7 +29,6 @@ const Index = () => {
   const [itemIndex, setItemIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
   const toggleSetupModal = (itemIndex?: number) => {
-    console.log('toggle modal idx: ', itemIndex)
     setOpenSetupModal(!openSetupModal)
     if (typeof itemIndex == 'number') {
       setItemIndex(itemIndex)
