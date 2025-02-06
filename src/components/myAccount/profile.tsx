@@ -1,4 +1,4 @@
-import { LoadingOutlined } from '@ant-design/icons'
+import { KeyOutlined, LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -156,7 +156,11 @@ const Index = () => {
         </Row>
 
         <div className="mx-8 my-8 flex justify-center">
-          <Button onClick={togglePasswordModal} disabled={submitting}>
+          <Button
+            onClick={togglePasswordModal}
+            disabled={submitting}
+            icon={<KeyOutlined />}
+          >
             Password Management
           </Button>
           &nbsp;&nbsp;&nbsp;&nbsp;
