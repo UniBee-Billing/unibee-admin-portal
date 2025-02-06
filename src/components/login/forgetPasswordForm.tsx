@@ -51,10 +51,12 @@ const Index = ({
         // style={{ maxWidth: 640, width: 360 }}
         className="my-6"
         initialValues={{
-          email,
+          email
+          /*
           verificationCode: '',
           newPassword: '',
           newPassword2: ''
+          */
         }}
       >
         <Form.Item

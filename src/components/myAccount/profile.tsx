@@ -60,12 +60,13 @@ const Index = () => {
 
   return (
     <div>
-      {resetPasswordModal && (
+      {
         <ResetPasswordModal
+          open={resetPasswordModal}
           closeModal={togglePasswordModal}
           email={merchantProfile.email}
         />
-      )}
+      }
       {loading && (
         <Spin
           spinning={loading}
@@ -176,10 +177,11 @@ const Index = () => {
 export default Index
 
 interface IResetPassProps {
+  open: boolean
   email: string
   closeModal: () => void
 }
-const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
+const ResetPasswordModal = ({ email, closeModal, open }: IResetPassProps) => {
   const navigate = useNavigate()
   const [countVal, counting, startCount, stopCounter] = useCountdown(60)
   const merchantInfoStore = useMerchantInfoStore()
@@ -258,7 +260,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
   ]
 
   return (
-    <Modal title="" open={true} width={'640px'} footer={null} closeIcon={null}>
+    <Modal title="" open={open} width={'640px'} footer={null} closeIcon={null}>
       <Tabs activeKey={activeTab} items={tabItems} onChange={onTabChange} />
     </Modal>
   )
@@ -304,10 +306,12 @@ const ResetPassWithOldPass = ({
         wrapperCol={{ span: 16 }}
         className="my-6"
         initialValues={{
-          email,
+          email
+          /*
           oldPassword: '',
           newPassword: '',
           newPassword2: ''
+          */
         }}
       >
         <Form.Item
