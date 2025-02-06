@@ -156,7 +156,7 @@ const Index = () => {
 
         <div className="mx-8 my-8 flex justify-center">
           <Button onClick={togglePasswordModal} disabled={submitting}>
-            Change Password
+            Password Management
           </Button>
           &nbsp;&nbsp;&nbsp;&nbsp;
           {/* <Button
@@ -232,7 +232,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
   const tabItems: TabsProps['items'] = [
     {
       key: 'withOldPassword',
-      label: 'With old password',
+      label: 'Change password',
       children: (
         <ResetPassWithOldPass
           email={email}
@@ -243,7 +243,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
     },
     {
       key: 'OTP',
-      label: 'OTP',
+      label: 'Reset password',
       children: (
         <ResetPasswordWithOTP
           email={email}
@@ -258,13 +258,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
   ]
 
   return (
-    <Modal
-      title="Change Password"
-      open={true}
-      width={'640px'}
-      footer={null}
-      closeIcon={null}
-    >
+    <Modal title="" open={true} width={'640px'} footer={null} closeIcon={null}>
       <Tabs activeKey={activeTab} items={tabItems} onChange={onTabChange} />
     </Modal>
   )
