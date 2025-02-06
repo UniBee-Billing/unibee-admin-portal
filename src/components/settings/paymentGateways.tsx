@@ -445,7 +445,7 @@ const EssentialSetup = ({
   updateGatewayInStore: () => void
 }) => {
   const appConfig = useAppConfigStore()
-  const [loading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [displayName, setDisplayName] = useState(gatewayConfig.displayName)
   const onNameChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
@@ -461,14 +461,17 @@ const EssentialSetup = ({
     }))
   )
 
-  const exRate =
-    gatewayConfig.currencyExchange == null
+  const addLocalId = (exRates: TGatewayExRate[] | null): TGatewayExRate[] =>
+    exRates == null
       ? []
-      : gatewayConfig.currencyExchange.map((r: TGatewayExRate) => ({
+      : exRates.map((r: TGatewayExRate) => ({
           ...r,
           localId: randomString(8)
         }))
-  const [exchangeRates, setExchangeRates] = useState<TGatewayExRate[]>(exRate)
+
+  const [exchangeRates, setExchangeRates] = useState<TGatewayExRate[]>(
+    addLocalId(gatewayConfig.currencyExchange)
+  )
 
   const addExRate = () => {
     setExchangeRates(
@@ -523,9 +526,9 @@ const EssentialSetup = ({
   }
 
   const handleChange: UploadProps['onChange'] = ({
-    fileList: newFileList,
-    file,
-    event
+    fileList: newFileList
+    // file,
+    // event
   }) => {
     setFileList(newFileList)
   }
@@ -589,7 +592,9 @@ const EssentialSetup = ({
     if (!isNew) {
       body.gatewayId = gatewayConfig.gatewayId
     }
+    setLoading(true)
     const [_, err] = await saveGatewayConfigReq(body, isNew)
+    setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
@@ -612,11 +617,18 @@ const EssentialSetup = ({
     }
   }
 
+  useEffect(() => {
+    // each exRate record must have a localId(which BE doesn't have), after save,
+    // new exRate[] is fetched from BE passed down to this component via this props , I need to re-add these localId
+    setExchangeRates(addLocalId(gatewayConfig.currencyExchange))
+  }, [gatewayConfig.currencyExchange])
+
   return (
     <div>
       <div className="my-4 mb-2 text-lg">Display Name</div>
       <Input
         value={displayName}
+        disabled={loading}
         onChange={onNameChange}
         status={displayName.trim() == '' ? 'error' : ''}
       />
@@ -681,6 +693,7 @@ const EssentialSetup = ({
               <Col span={3}>
                 <Button
                   onClick={addExRate}
+                  disabled={loading}
                   icon={<PlusOutlined />}
                   size="small"
                   style={{ border: 'unset' }}
@@ -696,6 +709,7 @@ const EssentialSetup = ({
                     style={{ width: '180px' }}
                     addonAfter={
                       <Select
+                        disabled={loading}
                         value={r.from_currency}
                         onChange={onExRateCurrencyChange(
                           'from_currency',
@@ -718,8 +732,10 @@ const EssentialSetup = ({
                 <Col span={6}>
                   <InputNumber
                     min={0}
+                    disabled={loading}
                     addonAfter={
                       <Select
+                        disabled={loading}
                         value={r.to_currency}
                         onChange={onExRateCurrencyChange(
                           'to_currency',
@@ -741,6 +757,7 @@ const EssentialSetup = ({
                 <Col span={3}></Col>
                 <Col span={3}>
                   <Button
+                    disabled={loading}
                     data-ex-rate-id={r.localId}
                     onClick={removeExRate(r.localId as string)}
                     icon={<MinusOutlined />}

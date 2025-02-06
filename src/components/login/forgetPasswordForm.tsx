@@ -48,8 +48,11 @@ const Index = ({
         name="forget-password-with-OTP"
         labelCol={{ span: 8 }}
         wrapperCol={{ span: 16 }}
-        // style={{ maxWidth: 640, width: 360 }}
         className="my-6"
+        // this component is used in My-Account -> password manager -> Reset password Modal
+        // and /login, forgot password Modal
+        // without position: 'relative', resend button will not align with 'Verificaton code' field in latter use case
+        style={{ position: 'relative' }}
         initialValues={{
           email
           /*
