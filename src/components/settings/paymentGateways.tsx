@@ -571,9 +571,11 @@ const EssentialSetup = ({
 
   const onSave = async () => {
     if (displayName.trim() == '') {
+      message.error('Please input the display name.')
       return
     }
     if (fileList.length == 0) {
+      message.error('Please add at least one icon.')
       return
     }
     const body: TGatewayConfigBody = {
@@ -837,6 +839,11 @@ const PubPriKeySetup = ({
     updateGatewayInStore()
   }
 
+  useEffect(() => {
+    // after save, refresh() call will fetch the latest config item list, passed down as gatewayConfig props,
+    form.setFieldsValue(gatewayConfig)
+  }, [gatewayConfig])
+
   return (
     <div>
       <Form
@@ -922,15 +929,15 @@ const WebHookSetup = ({
   // configure pub/private keys first, then configure webhook
   const notSubmitable = gatewayConfig.gatewayKey == ''
 
-  // there is a antd bug: in a form, if there exists a native <button />, not antd <Button/>.
+  // there is a antd form bug: in a form, if there existed a native <button />, not antd <Button/>.
   // And if you have set:
   // form.onFinish = onSave, OK button's onClick handler = form.submit
-  // your native button's onclick will trigger form submit, antd's own <Button> doesn't have this bug.
+  // your native button's onclick will trigger form submit, antd's own <Button> didn't trigger this call.
   // I have to unset form's onFinish, move OK button to the outside of form.
   const onSave = async () => {
     const webHookSecret = form.getFieldValue('webhookSecret')
     if (webHookSecret.trim() == '') {
-      // message.error('Webhook key is empty')
+      message.error('Webhook key is empty')
       return
     }
 
@@ -950,9 +957,6 @@ const WebHookSetup = ({
       return
     }
     message.success(`${gatewayConfig.gatewayName} webhook key saved.`)
-    const newGateway = update(gatewayConfig, {
-      webhookSecret: { $set: webHookSecret }
-    })
     updateGatewayInStore()
     refresh()
   }
@@ -965,6 +969,11 @@ const WebHookSetup = ({
     }
     message.success('Copied')
   }
+
+  useEffect(() => {
+    // after save, refresh() call will fetch the latest config item list, passed down as gatewayConfig props,
+    form.setFieldsValue(gatewayConfig)
+  }, [gatewayConfig])
 
   return (
     <div>
@@ -979,7 +988,7 @@ const WebHookSetup = ({
         layout="vertical"
         // onFinish={onSave}
         colon={false}
-        disabled={notSubmitable}
+        disabled={notSubmitable || loading}
         initialValues={gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
