@@ -890,7 +890,7 @@ const SubscriptionInfoSection = ({
           {subInfo &&
             appConfigStore.gateway.find(
               (g) => g.gatewayId == subInfo?.gatewayId
-            )?.gatewayName}
+            )?.name}
         </Col>
       </Row>
 

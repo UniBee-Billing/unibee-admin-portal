@@ -144,13 +144,16 @@ export const getInvoicePermission = (iv: UserInvoice | null): TInvoicePerm => {
         p.publishable = true
         break
       case 2: // processing mode, user has received the invoice mail with payment link, but hasn't paid yet.
-        // ??????????
         /*
         if (isWireTransfer || isCrypto) {
           p.asRefundedMarkable = isRefund
           p.asPaidMarkable = !isRefund
         }
           */
+        if (isWireTransfer) {
+          p.asRefundedMarkable = isRefund
+          p.asPaidMarkable = !isRefund
+        }
         p.revokable = true
         break
       case 3: // user has paid

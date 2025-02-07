@@ -16,7 +16,7 @@ import WebhookList from './webHooks/list'
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(
-    searchParams.get('tab') ?? 'appConfig'
+    searchParams.get('tab') ?? 'paymentGateways'
   )
   const tabItems: TabsProps['items'] = [
     {
@@ -34,7 +34,7 @@ const Index = () => {
 
     {
       key: 'appConfig',
-      label: 'App Config',
+      label: <span className="text-gray-400">App Config(depreciated)</span>,
       children: <AppConfig />
     },
     /*
