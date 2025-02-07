@@ -65,7 +65,7 @@ const Index = ({
   user,
   extraButton,
   embeddingMode,
-  embeddedIn, // undefined means it's used in /invoice/list,
+  embeddedIn,
   enableSearch
 }: {
   user?: IProfile | undefined
@@ -73,7 +73,7 @@ const Index = ({
   embeddingMode: boolean // invoiceList can be embedded as part of a page, or be the page itself.
   embeddedIn?: 'userInvoicePage' | 'subscriptionDetailPage' // invoiceList is used in /invoice/list, user detail (invoice tab), subscription detail (invoice tab)
   // click the ivId go directly to invoice detail, but there is a go-back button, click to go back to where it came from.
-  // invoiceList, subList, userList are opened in new page using <a href=*** />, not in-app navigate
+  // invoiceList, subList, userList are opened in new page using <a href=*** />, not in-app navigate,
   // so I have to pass embeddedIn to know which parent I'm in.
   enableSearch: boolean
 }) => {
@@ -228,7 +228,6 @@ const Index = ({
     }
     payload = { ...payload, ...filters }
 
-    // return
     setExporting(true)
     const [_, err] = await exportDataReq({ task: 'InvoiceExport', payload })
     setExporting(false)
@@ -465,7 +464,6 @@ const Index = ({
 
           <Tooltip title="Send invoice">
             <Button
-              // onClick={toggleNewInvoiceModal}
               onClick={toggleInvoiceDetailModal}
               icon={<MailOutlined />}
               style={{ border: 'unset' }}

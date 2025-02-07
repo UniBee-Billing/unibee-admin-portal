@@ -114,7 +114,6 @@ const Index = ({
           wrapperCol={{ flex: 1 }}
           colon={false}
           // layout="horizontal"
-          // disabled={componentDisabled}
           style={{ marginTop: '28px' }}
           initialValues={gatewayConfig}
         >

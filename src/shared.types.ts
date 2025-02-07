@@ -457,6 +457,27 @@ export enum InvoiceBizType {
   MANUALLY_CREATED = 2,
   SUBSCRIPTION = 3
 }
+/*
+export const INVOICE_STATUS: { [key: number]: string } = {
+  0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist
+  1: 'Draft', // admin manually create an invoice, for edit/delete, but users won't receive this invoice.
+  2: 'Awaiting payment', // admin has clicked the 'create' button in invoice editing modal, user will receive a mail with payment link. Admin can revoke the invoice if user hasn't made the payment.
+  3: 'Paid', // user paid the invoice
+  4: 'Failed', // user not pay the invoice before it get expired
+  5: 'Cancelled', // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
+  6: 'Reversed' // 取消后被通知支付成功的，这种情况一般是要排查的
+}
+
+*/
+export enum INVOICE_STATUS {
+  INITIATING = 0,
+  DRAFT = 1,
+  AWAITING_PAYMENT = 2,
+  PAID = 3,
+  FAILED = 4,
+  CANCELLED = 5,
+  REVERSED = 6
+}
 interface UserInvoice {
   id: number
   merchantId: number
