@@ -571,9 +571,11 @@ const EssentialSetup = ({
 
   const onSave = async () => {
     if (displayName.trim() == '') {
+      message.error('Please input the display name.')
       return
     }
     if (fileList.length == 0) {
+      message.error('Please add at least one icon.')
       return
     }
     const body: TGatewayConfigBody = {
