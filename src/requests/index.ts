@@ -29,6 +29,11 @@ const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
 const appConfig = useAppConfigStore.getState()
 
+type PagedReq = {
+  count?: number
+  page?: number
+}
+
 const handleStatusCode = (code: number, refreshCb?: () => void) => {
   // TODO: use Enum to define the code
   if (code == 61 || code == 62) {
@@ -385,9 +390,7 @@ export type TPlanListBody = {
   publishStatus?: number // 1-UnPublished，2-Published
   sortField?: 'plan_name' | 'gmt_create' | 'gmt_modify'
   sortType?: 'asc' | 'desc'
-  page: number
-  count: number
-}
+} & PagedReq
 export const getPlanList = async (
   body: TPlanListBody,
   refreshCb?: () => void
@@ -592,15 +595,13 @@ export const getMetricDetailReq = async (
 // ----------
 type TSubListReq = {
   status: number[]
-  page: number
-  count: number
   currency?: string
   amountStart?: number
   amountEnd?: number
   planIds?: number[]
   createTimeStart?: number
   createTimeEnd?: number
-}
+} & PagedReq
 export const getSublist = async (body: TSubListReq, refreshCb: () => void) => {
   try {
     const res = await request.post(`/merchant/subscription/list`, body)
@@ -677,11 +678,7 @@ export const getSubscriptionHistoryReq = async ({
   userId,
   page,
   count
-}: {
-  userId: number
-  page: number
-  count: number
-}) => {
+}: { userId: number } & PagedReq) => {
   try {
     const res = await request.post(`/merchant/subscription/timeline_list`, {
       userId,
@@ -702,9 +699,7 @@ export const getOneTimePaymentHistoryReq = async ({
   count
 }: {
   userId: number
-  page: number
-  count: number
-}) => {
+} & PagedReq) => {
   try {
     const res = await request.get(
       `/merchant/payment/item/list?userId=${userId}&page=${page}&count=${count}`
@@ -957,11 +952,9 @@ type TGetSubTimelineReq = {
   status?: number[]
   gatewayIds?: number[]
   timelineTypes?: number[]
-  page: number
-  count: number
   createTimeStart?: number // used in /merchant/payment/timeline/list only
   createTimeEnd?: number // ditto
-}
+} & PagedReq
 
 // query params are the same as getSubTimelineReq
 export const getPaymentTimelineReq = async (
@@ -1073,10 +1066,8 @@ export const getAdminNoteReq = async ({
   refreshCb
 }: {
   subscriptionId: string
-  page: number
-  count: number
   refreshCb?: () => void
-}) => {
+} & PagedReq) => {
   try {
     const res = await request.post('/merchant/subscription/admin_note_list', {
       subscriptionId,
@@ -1120,10 +1111,8 @@ export const getUserNoteReq = async ({
   refreshCb
 }: {
   userId: number
-  page: number
-  count: number
   refreshCb?: () => void
-}) => {
+} & PagedReq) => {
   try {
     const res = await request.post('/merchant/user/admin_note_list', {
       userId,
@@ -1309,14 +1298,12 @@ export const appSearchReq = async (searchKey: string) => {
 }
 
 type TDiscountCodeQry = {
-  page: number
-  count: number
   status?: number[]
   billingType?: number[]
   discountType?: number[]
   createTimeStart?: number
   createTimeEnd?: number
-}
+} & PagedReq
 export const getDiscountCodeListReq = async (
   params: TDiscountCodeQry,
   refreshCb?: () => void
@@ -1349,10 +1336,8 @@ type TDiscountUsageDetail = {
   id: number
   createTimeStart?: number
   createTimeEnd?: number
-  page: number
-  count: number
   refreshCb?: () => void
-}
+} & PagedReq
 export const getDiscountCodeUsageDetailReq = async ({
   refreshCb,
   ...params
@@ -1458,15 +1443,13 @@ export const applyDiscountPreviewReq = async (code: string, planId: number) => {
 // ----------
 type TGetInvoicesReq = {
   userId?: number
-  page: number
-  count: number
   firstName?: string
   lastName?: string
   currency?: string
   status?: number[]
   amountStart?: number
   amountEnd?: number
-}
+} & PagedReq
 export const getInvoiceListReq = async (
   body: TGetInvoicesReq,
   refreshCb?: () => void
@@ -1689,9 +1672,7 @@ type TUserList = {
   planId?: number[]
   createTimeStart?: number
   createTimeEnd?: number
-  page: number
-  count: number
-}
+} & PagedReq
 export const getUserListReq = async (
   users: TUserList,
   refreshCb?: () => void
@@ -1739,7 +1720,7 @@ const getMerchantUserListReq = async (refreshCb?: () => void) => {
 }
 
 export const getMerchantUserListReq2 = async (
-  { page, count, roleIds }: { page: number; count: number; roleIds?: number[] },
+  { page, count, roleIds }: { roleIds?: number[] } & PagedReq,
   refreshCb?: () => void
 ) => {
   try {
@@ -2015,11 +1996,7 @@ export const deleteWebhookReq = async (endpointId: number) => {
 }
 
 export const getWebhookLogs = async (
-  {
-    endpointId,
-    page,
-    count
-  }: { endpointId: number; page: number; count: number },
+  { endpointId, page, count }: { endpointId: number } & PagedReq,
   refreshCb?: () => void
 ) => {
   try {
@@ -2092,9 +2069,7 @@ type TActivityLogParams = {
   invoiceId?: string
   planId?: number
   discountCode?: number
-  page: number
-  count: number
-}
+} & PagedReq
 export const getActivityLogsReq = async (
   searchTerm: TActivityLogParams,
   refreshCb?: () => void
@@ -2176,9 +2151,7 @@ export const getExportTmplReq = async ({
   count
 }: {
   task: TExportDataType
-  page: number
-  count: number
-}) => {
+} & PagedReq) => {
   try {
     const res = await request.post(`/merchant/task/export_template_list`, {
       task,
@@ -2270,10 +2243,8 @@ export const getProductListReq = async ({
   page,
   refreshCb
 }: {
-  count?: number
-  page?: number
   refreshCb?: () => void
-}) => {
+} & PagedReq) => {
   try {
     const res = await request.post(`/merchant/product/list`, {
       count: count ?? 60,
@@ -2419,13 +2390,11 @@ export type TCreditTxParams = {
   email?: string
   currency?: string
   transactionTypes?: CreditTxType[]
-  page?: number
-  count?: number
   createTimeStart?: number
   createTimeEnd?: number
   sortType?: 'desc' | 'asc'
   sortField?: 'gmt_create' | 'gmt_modify' // Default is gmt_modify
-}
+} & PagedReq
 export const getCreditTxListReq = async (body: TCreditTxParams) => {
   try {
     const res = await request.post(
