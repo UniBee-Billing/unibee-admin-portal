@@ -604,8 +604,12 @@ type TGateway = {
   description: string
   gatewayKey: string // public key(desensitized)
   gatewaySecret: string // private key(desensitized)
+  subGateway: string
   gatewayName: string // e.g., stripe.
   displayName: string // e.g., Bank Cards
+  publicKeyName: string
+  privateSecretName: string
+  subGatewayName: string
   gatewayLogo: string
   gatewayIcons: string[]
   gatewayType: number

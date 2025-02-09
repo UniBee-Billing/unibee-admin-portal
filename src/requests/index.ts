@@ -259,6 +259,7 @@ export type TGatewayConfigBody = {
   gatewayName?: string
   gatewayKey?: string
   gatewaySecret?: string
+  subGateway?: string
   displayName?: string
   gatewayLogo?: string[]
   sort?: number

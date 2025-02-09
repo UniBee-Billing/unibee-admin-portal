@@ -816,9 +816,11 @@ const PubPriKeySetup = ({
       message.error('Private Key is empty')
       return
     }
+    const subGateway = form.getFieldValue('subGateway')
     const body: TGatewayConfigBody = {
       gatewayKey: pubKey,
-      gatewaySecret: privateKey
+      gatewaySecret: privateKey,
+      subGateway: subGateway
     }
     const isNew = gatewayConfig.gatewayId == 0
     if (isNew) {
@@ -859,17 +861,36 @@ const PubPriKeySetup = ({
         </Form.Item>
         <div className="h-2" />
 
+       {gatewayConfig.subGatewayName != '' && (
+          <div>
+              <Form.Item
+              label={
+                gatewayConfig.subGatewayName
+              }
+              name="subGateway"
+              help={
+                <div className="text-xs text-gray-400">
+                  For security reason, your{' '}
+                  {gatewayConfig.subGateway}{' '}
+                  will be desensitized after submit.
+                </div>
+              }
+            >
+              <TextArea rows={4} />
+              </Form.Item>
+              <div className="h-2" />
+          </div>
+       )}
+
         <Form.Item
           label={
-            gatewayConfig.gatewayName == 'paypal' ? 'Client Id' : 'Public Key'
+            gatewayConfig.publicKeyName
           }
           name="gatewayKey"
           help={
             <div className="text-xs text-gray-400">
               For security reason, your{' '}
-              {gatewayConfig.gatewayName == 'paypal'
-                ? 'Client Id'
-                : 'Public Key'}{' '}
+              {gatewayConfig.publicKeyName}{' '}
               will be desensitized after submit.
             </div>
           }
@@ -880,13 +901,13 @@ const PubPriKeySetup = ({
 
         <Form.Item
           label={
-            gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'
+            gatewayConfig.privateSecretName
           }
           name="gatewaySecret"
           help={
             <div className="text-xs text-gray-400">
               For security reason, your{' '}
-              {gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'}{' '}
+              {gatewayConfig.privateSecretName}{' '}
               will be desensitized after submit.
             </div>
           }
