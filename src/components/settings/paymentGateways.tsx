@@ -999,10 +999,6 @@ const WebHookSetup = ({
   // I have to unset form's onFinish, move OK button to the outside of form.
   const onSave = async () => {
     const webHookSecret = form.getFieldValue('webhookSecret')
-    if (webHookSecret.trim() == '') {
-      message.error('Webhook key is empty')
-      return
-    }
 
     if (gatewayConfig.gatewayId == 0) {
       message.error('Input your public/private keys first.')
@@ -1049,7 +1045,7 @@ const WebHookSetup = ({
       <Form
         form={form}
         layout="vertical"
-        // onFinish={onSave}
+        onFinish={onSave}
         colon={false}
         disabled={notSubmitable || loading}
         initialValues={gatewayConfig}
@@ -1071,13 +1067,21 @@ const WebHookSetup = ({
         </Form.Item>
         <div className="h-2" />
         <Form.Item
-          label="Callback Key"
+          label="Webhook Key"
           name="webhookSecret"
           rules={[
             {
               required: true,
-              message: 'Please input your key!'
-            }
+              message: `Please input your webhook key!`
+            },
+            () => ({
+              validator(_, value) {
+                if (value.trim() == '' || value.includes('**')) {
+                  return Promise.reject(`Invalid webhook key.`)
+                }
+                return Promise.resolve()
+              }
+            })
           ]}
           help={
             <div className="mt-2 text-sm">
@@ -1118,7 +1122,7 @@ const WebHookSetup = ({
         </Button>
         <Button
           type="primary"
-          onClick={onSave}
+          onClick={form.submit}
           loading={loading}
           disabled={loading || notSubmitable}
         >
