@@ -5,6 +5,7 @@ import passwordValidator from 'password-validator'
 import {
   IPlan,
   ISubscriptionType,
+  PlanType,
   TInvoicePerm,
   UserInvoice
 } from '../shared.types'
@@ -82,13 +83,28 @@ export const currencyDecimalValidate = (val: number, currency: string) => {
   return decimalPlaces >= decimalCnt
 }
 
+const curDecFormat: Record<number, string> = {
+  1: '',
+  10: '.0',
+  100: '.00',
+  1000: '.000',
+  10000: '.0000'
+}
 export const formatPlanPrice = (plan: IPlan) => {
-  const amount = Dinero({
+  const currency = useAppConfigStore
+    .getState()
+    .supportCurrency.find((c) => c.Currency == plan.currency)!
+  let amount = Dinero({
     amount: plan.amount,
-    currency: plan.currency
-  }).toFormat('$0,0.00')
-  if (plan.type == 1 || plan.type == 2) {
-    // 1: main plan, 2: add-on, 3: one-time addon
+    currency: plan.currency,
+    precision: Math.log10(currency.Scale) // Scale: 100 -> precision: 2,      10 -> 1,      1 -> 0
+  }).toFormat(`$0,0${curDecFormat[currency.Scale]}`)
+  // dinero has no symbol for RUB, no idea why.
+  if (plan.currency == 'RUB') {
+    amount = `${currency.Symbol}${plan.amount / currency.Scale}`
+  }
+  if (plan.type == PlanType.MAIN || plan.type == PlanType.ADD_ON) {
+    // main plan and add-on have intervalCount/Unit, one-time addon has no such props
     const itv = `/${plan.intervalCount == 1 ? '' : plan.intervalCount}${plan.intervalUnit}`
     return `${amount}${itv}`
   } else {
@@ -220,7 +236,7 @@ export const isValidMap = (str: string | null) => {
     if (Array.isArray(obj)) {
       return false
     }
-    return typeof obj == 'object'
+    return typeof obj == 'object' && Object.keys(obj).length > 0 // {} is also a valid object, but not a valid k-v paired obj
   } catch {
     return false
   }
@@ -337,7 +353,7 @@ export const linkify = (inputText: string) => {
   return replacedText
 }
 
-// some bool like values from backend are 1 to denote true, 0 to denote false, use this to do the conversion.
+// some bool-like values from backend are 1 to denote true, 0 to denote false, use this to do the conversion.
 export const numBoolConvert = (val: 0 | 1 | boolean) => {
   if (typeof val == 'number') {
     return val == 0 ? false : true
@@ -350,4 +366,14 @@ export const numBoolConvert = (val: 0 | 1 | boolean) => {
 
 export const numberWithComma = (num: number) => {
   return Intl.NumberFormat('en-US').format(num)
+}
+
+// const objA = {a: 1}, objB = {b: 1}
+// const objAB = addOptional(objA, isConditionMet ? objB : null)
+// objAB type: {a: 1, b: 1 | undefined}
+export function addOptional<T extends object, U extends object>(
+  a: T,
+  b: U | null
+): T & Partial<U> {
+  return { ...a, ...b }
 }

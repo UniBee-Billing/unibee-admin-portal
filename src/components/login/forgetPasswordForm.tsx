@@ -51,7 +51,7 @@ const Index = ({
         className="my-6"
         // this component is used in My-Account -> password manager -> Reset password Modal
         // and /login, forgot password Modal
-        // without position: 'relative', resend button will not align with 'Verificaton code' field in latter use case
+        // without position: 'relative', resend button will not align with 'Verification code' field in latter use case
         style={{ position: 'relative' }}
         initialValues={{
           email

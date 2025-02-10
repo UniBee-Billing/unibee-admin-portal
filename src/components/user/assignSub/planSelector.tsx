@@ -3,7 +3,12 @@ import { useEffect, useMemo, useState } from 'react'
 import HiddenIcon from '../../../assets/hidden.svg?react'
 import { formatPlanPrice } from '../../../helpers'
 import { getPlanList } from '../../../requests'
-import { IPlan, PlanStatus, PlanType } from '../../../shared.types'
+import {
+  IPlan,
+  PlanPublishStatus,
+  PlanStatus,
+  PlanType
+} from '../../../shared.types'
 
 interface PlanSelectorProps {
   productId: number
@@ -84,7 +89,7 @@ export const PlanSelector = ({
             <Tag color="orange">Current Plan</Tag>
           </div>
         )}
-        {p.publishStatus == 1 && (
+        {p.publishStatus == PlanPublishStatus.UNPUBLISHED && (
           <div className="absolute flex h-4 w-4" style={{ right: '14px' }}>
             <HiddenIcon />
           </div>

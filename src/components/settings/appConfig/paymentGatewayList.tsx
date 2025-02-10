@@ -71,6 +71,7 @@ const Index = ({
       setGatewayEdit(
         g ?? {
           IsSetupFinished: false,
+          archive: false,
           name: '',
           description: '',
           gatewayId: 0,
