@@ -997,14 +997,14 @@ const WebHookSetup = ({
   // form.onFinish = onSave, OK button's onClick handler = form.submit
   // your native button's onclick will trigger form submit, antd's own <Button> didn't trigger this call.
   const onSave = async () => {
-    const webHookSecret = form.getFieldValue('webhookSecret')
-    if (webHookSecret.trim() == '' || webHookSecret.includes('**')) {
-      message.error('Invalid webhook key')
+    if (gatewayConfig.gatewayId == 0) {
+      message.error('Input your public/private keys first.')
       return
     }
 
-    if (gatewayConfig.gatewayId == 0) {
-      message.error('Input your public/private keys first.')
+    const webHookSecret = form.getFieldValue('webhookSecret')
+    if (webHookSecret.trim() == '' || webHookSecret.includes('**')) {
+      message.error('Invalid webhook key')
       return
     }
 
@@ -1127,7 +1127,7 @@ const WebHookSetup = ({
         </Button>
         <Button
           type="primary"
-          onClick={form.submit}
+          onClick={onSave}
           loading={loading}
           disabled={loading || notSubmitable}
         >
