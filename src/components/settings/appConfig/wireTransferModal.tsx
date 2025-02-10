@@ -11,6 +11,7 @@ import { useAppConfigStore } from '../../../stores'
 
 export const NEW_WIRE_TRANSFER: TGateway = {
   IsSetupFinished: false,
+  archive: false,
   name: 'Wire Transfer',
   gatewayId: 0,
   displayName: 'Wire Transfer',

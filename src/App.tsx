@@ -8,7 +8,6 @@ import { LoginModal } from './components/login/LoginModal'
 import { Sidebar } from './components/sidebar/sidebar'
 import Signup from './components/signup'
 import TaskList from './components/taskList'
-// import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppRoutes } from './routes'
 import {

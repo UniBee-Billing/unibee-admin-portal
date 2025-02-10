@@ -41,7 +41,7 @@ export type TPromoAccount = {
 }
 
 // this is end user profile
-interface IProfile {
+type IProfile = {
   id: number | null
   externalUserId: string
   token: string
@@ -80,7 +80,7 @@ interface IProfile {
 }
 
 // this is admin profile
-interface IMerchantMemberProfile {
+type IMerchantMemberProfile = {
   id: number
   merchantId: number
   email: string
@@ -93,7 +93,7 @@ interface IMerchantMemberProfile {
   MemberRoles: TRole[]
 }
 
-interface IMerchantUserProfile {
+type IMerchantUserProfile = {
   email: string
   firstName: string
   lastName: string
@@ -129,7 +129,7 @@ export type TIntegrationKeys = {
   segmentUserPortalKey: string
 }
 
-interface IAppConfig {
+type IAppConfig = {
   env: string
   isProd: boolean
   supportTimeZone: string[]
@@ -144,7 +144,7 @@ interface IAddon extends IPlan {
   checked: boolean
 }
 
-interface IProduct {
+type IProduct = {
   id: number
   productName: string
   description: string
@@ -169,7 +169,7 @@ export enum PlanPublishStatus {
   UNPUBLISHED = 1, // not visible to users
   PUBLISHED = 2
 }
-interface IPlan {
+type IPlan = {
   id: number
   plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
@@ -207,7 +207,7 @@ export interface ISubAddon extends IPlan {
   addonPlan: ISubAddon
 }
 
-interface IBillableMetrics {
+type IBillableMetrics = {
   id: number
   merchantId: number
   code: string
@@ -224,7 +224,7 @@ export interface SubscriptionWrapper extends ISubscriptionType {
   subscription: ISubscriptionType
 }
 
-interface ISubscriptionType {
+type ISubscriptionType = {
   id: number
   subscriptionId: string
   planId: number
@@ -264,7 +264,7 @@ interface ISubscriptionType {
   latestInvoice?: UserInvoice
 }
 
-interface ISubHistoryItem {
+type ISubHistoryItem = {
   merchantId: number
   userId: number
   subscriptionId: string
@@ -281,7 +281,7 @@ interface ISubHistoryItem {
   createTime: number
 }
 
-interface IOneTimeHistoryItem {
+type IOneTimeHistoryItem = {
   id: number
   bizType: number
   merchantId: number
@@ -300,7 +300,7 @@ interface IOneTimeHistoryItem {
   name: string
 }
 
-interface IPreview {
+type IPreview = {
   totalAmount: number
   currency: string
   discount: DiscountCode
@@ -478,7 +478,7 @@ export enum INVOICE_STATUS {
   CANCELLED = 5,
   REVERSED = 6
 }
-interface UserInvoice {
+type UserInvoice = {
   id: number
   merchantId: number
   userId: number
@@ -597,6 +597,7 @@ export type TGatewayExRate = {
 }
 type TGateway = {
   IsSetupFinished: boolean // true: this gateway is ready for use
+  archive: boolean
   gatewayId: number // == 0: totally new gateway, admin hasn't configured anything yet.
   // as long as admin has configured something, even just the displayName or icons, gatewayId will become non-zero, but this doesn't mean this gateway is ready for use.
   id?: string // to make configItem sortable, SortableItem component needs an unique id field. gatewayConfig has gatewayId, but it's 0 if not configured,
@@ -632,31 +633,7 @@ type TGateway = {
   sort: number
 }
 
-/*
-export type TGatewayConfig = {
-  IsSetupFinished: boolean
-  gatewayId: number // 0: also means setup unfinished
-  gatewayName: string // stripe
-  gatewayType: number
-  displayName: string // Bank Cards
-  description: string
-  name: string // Stripe
-  gatewayIcons: string[]
-  gatewayLogo: string
-  gatewayWebsiteLink: string
-  gatewayKey: string // public key(desensitized)
-  gatewaySecret: string // private key(desensitized)
-  gatewayWebhookIntegrationLink: string
-  currency: string
-  sort: number //
-  webhookEndpointUrl: string
-  webhookSecret: string // desensitized
-  minimumAmount: number
-  createTime: number
-}
-  */
-
-export interface TRolePermission {
+export type TRolePermission = {
   group: string
   permissions: string[]
 }

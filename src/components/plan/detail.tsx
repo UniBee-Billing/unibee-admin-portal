@@ -9,6 +9,7 @@ import {
   Col,
   Form,
   Input,
+  InputNumber,
   Popconfirm,
   Row,
   Select,
@@ -20,7 +21,6 @@ import {
 import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-// import { CURRENCY } from '../../constants'
 import {
   currencyDecimalValidate,
   isValidMap,
@@ -35,9 +35,16 @@ import {
   savePlan,
   togglePublishReq
 } from '../../requests'
-import { IBillableMetrics, IPlan, IProduct } from '../../shared.types'
+import {
+  IBillableMetrics,
+  IPlan,
+  IProduct,
+  PlanPublishStatus,
+  PlanStatus,
+  PlanType
+} from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
-import { PlanStatus } from '../ui/statusTag'
+import { PlanStatus as PlanStatusTag } from '../ui/statusTag'
 
 interface Metric {
   metricId: number
@@ -49,47 +56,34 @@ type TMetricsItem = {
   metricId?: number
   metricLimit?: number | string
 }
-type TNewPlan = {
-  // why can't I use IPlan??????????
-  externalPlanId?: string
-  currency: string
-  // amount: number
-  intervalUnit: string
-  intervalCount: number
-  status: number
-  publishStatus: number
-  type: number // 1: main, 2: add-on
-  imageUrl: string
-  homeUrl: string
-  addonIds: number[]
-  onetimeAddonIds?: number[]
-  metricLimits: TMetricsItem[]
-  metadata?: string
-  enableTrial?: boolean
-  trialAmount?: number
-  trialDurationTime?: number
-  trialDemand?: 'paymentMethod' | '' | boolean // backend requires this field to be a fixed string of 'paymentMethod' or '', but to ease the UI, front-end use <Switch />
-  cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UI, front-end use <Switch />
-}
-const NEW_PLAN: TNewPlan = {
+type TNewPlan = Omit<
+  IPlan,
+  | 'id'
+  | 'amount'
+  | 'createTime'
+  | 'companyId'
+  | 'merchantId'
+  | 'productId'
+  | 'product'
+>
+
+const DEFAULT_NEW_PLAN: TNewPlan = {
   currency: 'EUR',
-  // amount: 0,
+  planName: '',
+  description: '',
   intervalUnit: 'month',
   intervalCount: 1,
-  status: 1, // 1: editing，2: active, 3: inactive，4: expired
-  publishStatus: 1, //  // 1: unpublished(not visible to users), 2: published(users could see and choose this plan)
-  type: 1, // 1: main, 2: add-on, 3: one-time payment addon
-  imageUrl: 'http://www.google.com',
-  homeUrl: 'http://www.google.com',
+  status: PlanStatus.EDITING,
+  publishStatus: PlanPublishStatus.UNPUBLISHED,
+  type: PlanType.MAIN,
   addonIds: [],
-  metricLimits: [],
   metadata: '',
   enableTrial: false,
   trialAmount: 0,
   trialDurationTime: 0,
-  trialDemand: false, // backend requires this field to be a fixed string of 'paymentMethod(represent true)' or ''(represent false), but to ease the UI/UX, front-end use <Switch />
-  cancelAtTrialEnd: true
-}
+  trialDemand: false, // 'paymentMethod' | '' | boolean, backend requires this field to be a fixed string of 'paymentMethod' to represent true or empty string '' to represent false, but to ease the UI/UX, front-end use <Switch />
+  cancelAtTrialEnd: true //  0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UI, front-end use <Switch />
+} as const // mark every props readonly
 
 const TIME_UNITS = [
   // in seconds
@@ -127,7 +121,7 @@ const Index = () => {
   const [activating, setActivating] = useState(false)
   const [publishing, setPublishing] = useState(false) // when toggling publish/unpublish
   const [plan, setPlan] = useState<IPlan | TNewPlan | null>(
-    isNew ? NEW_PLAN : null
+    isNew ? DEFAULT_NEW_PLAN : null
   ) // plan obj is used for Form's initialValue, any changes is handled by Form itself, not updated here.
   // it's better to use useRef to save plan obj.
   const [addons, setAddons] = useState<IPlan[]>([]) // all the active addons we have (addon has the same structure as Plan).
@@ -157,13 +151,19 @@ const Index = () => {
 
   // disable editing for 4 keys fields after activate(currency, price, intervalUnit/Count)
   const disableAfterActive = useRef(
-    plan?.status == 2 && plan.publishStatus == 1 // plan active && unpublished
+    plan?.status == PlanStatus.ACTIVE &&
+      plan.publishStatus == PlanPublishStatus.UNPUBLISHED
   )
   let savable =
-    isNew || plan?.status == 1 || (plan?.status == 2 && plan.publishStatus == 1) // isNew || plan editing || (active && unpublished)
+    isNew ||
+    plan?.status == PlanStatus.EDITING ||
+    (plan?.status == PlanStatus.ACTIVE &&
+      plan.publishStatus == PlanPublishStatus.UNPUBLISHED)
 
   let formDisabled =
-    (plan?.status == 2 && plan.publishStatus == 2) || productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
+    (plan?.status == PlanStatus.ACTIVE &&
+      plan.publishStatus == PlanPublishStatus.PUBLISHED) ||
+    productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
   const selectAfter = (
     <Select
@@ -192,13 +192,15 @@ const Index = () => {
   }
 
   useEffect(() => {
-    if (!isNew && plan?.status != 1) {
-      // status: 1 editing, 2 active, even we can edit active plan, but these 3 keys fields are not editable.
+    if (!isNew && plan?.status != PlanStatus.EDITING) {
+      // even we can edit active plan, but these 3 keys fields are not editable.
       // editing existing plan && not editing
       return
     }
-    if (!isNew && (plan?.type == 2 || plan?.type == 3)) {
-      // 1: main plan, 2: addon, 3: one-time payment
+    if (
+      !isNew &&
+      (plan?.type == PlanType.ADD_ON || plan?.type == PlanType.ONE_TIME_ADD_ON)
+    ) {
       return
     }
     // main plan's currency/intervalUnit-Count must match its addons currency/*** */
@@ -262,7 +264,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       delete f.publishStatus
       delete f.type // once plan created, you cannot change its type(main plan, addon)
     }
-    if (planTypeWatch == 3) {
+    if (planTypeWatch == PlanType.ONE_TIME_ADD_ON) {
       // one-time payment plans don't have these props
       delete f.intervalCount
       delete f.intervalUnit
@@ -279,7 +281,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       return
     }
 
-    if (plan?.status == 2) {
+    if (plan?.status == PlanStatus.ACTIVE) {
       // when in active, these fields are not editable. Although disabled, but backend will complain if included in body
       delete f.intervalCount
       delete f.intervalUnit
@@ -340,8 +342,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     if (isNew) {
       return
     }
-    if (plan?.status !== 1) {
-      // 1: editing，2: active, 3: inactive，4: expired
+    if (plan?.status !== PlanStatus.EDITING) {
       return
     }
     setLoading(true)
@@ -385,8 +386,10 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
         : addonList.plans
             .map(({ plan }: IPlan) => plan)
             .filter((plan: IPlan) => plan.productId === productId.current)
-    const regularAddons = addons.filter((p: IPlan) => p.type == 2)
-    const onetimeAddons = addons.filter((p: IPlan) => p.type == 3)
+    const regularAddons = addons.filter((p: IPlan) => p.type == PlanType.ADD_ON)
+    const onetimeAddons = addons.filter(
+      (p: IPlan) => p.type == PlanType.ONE_TIME_ADD_ON
+    )
     setAddons(regularAddons)
     setMetricsList(
       metricsList.merchantMetrics == null ? [] : metricsList.merchantMetrics
@@ -395,24 +398,28 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
       setSelectAddons(
         regularAddons.filter(
           (a: IPlan) =>
-            a.currency == NEW_PLAN.currency &&
-            a.intervalUnit == NEW_PLAN.intervalUnit &&
-            a.intervalCount == NEW_PLAN.intervalCount
+            a.currency == DEFAULT_NEW_PLAN.currency &&
+            a.intervalUnit == DEFAULT_NEW_PLAN.intervalUnit &&
+            a.intervalCount == DEFAULT_NEW_PLAN.intervalCount
         )
       )
       setSelectOnetime(
-        onetimeAddons.filter((a: IPlan) => a.currency == NEW_PLAN.currency)
+        onetimeAddons.filter(
+          (a: IPlan) => a.currency == DEFAULT_NEW_PLAN.currency
+        )
       )
       return
     }
     // for editing existing plan, we continue with planDetailRes
 
     disableAfterActive.current =
-      planDetail.plan.status == 2 && planDetail.plan.publishStatus == 1 // active and unpublished
+      planDetail.plan.status == PlanStatus.ACTIVE &&
+      planDetail.plan.publishStatus == PlanPublishStatus.UNPUBLISHED
 
     savable =
-      planDetail.plan.status == 1 ||
-      (planDetail.plan.status == 2 && planDetail.plan.publishStatus == 1) // plan editing || active
+      planDetail.plan.status == PlanStatus.EDITING ||
+      (planDetail.plan.status == PlanStatus.ACTIVE &&
+        planDetail.plan.publishStatus == PlanPublishStatus.UNPUBLISHED)
 
     formDisabled =
       planDetail.plan.status == 2 && planDetail.plan.publishStatus == 2 // plan active && published
@@ -494,12 +501,15 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
     )
   }
 
-  // used only when editing an existing plan
+  // used only when editing an active plan
   const togglePublish = async () => {
     setPublishing(true)
     const [_, err] = await togglePublishReq({
       planId: (plan as IPlan).id,
-      publishAction: plan!.publishStatus == 1 ? 'PUBLISH' : 'UNPUBLISH'
+      publishAction:
+        plan!.publishStatus == PlanPublishStatus.UNPUBLISHED
+          ? 'PUBLISH'
+          : 'UNPUBLISH'
     })
     if (null != err) {
       message.error(err.message)
@@ -634,13 +644,13 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
           </Form.Item>
 
           <Form.Item label="Status" name="status">
-            {PlanStatus(plan.status)}
+            {PlanStatusTag(plan.status)}
           </Form.Item>
 
           <Form.Item label="Is Published" name="publishStatus">
             <div>
               <span>
-                {plan.publishStatus == 2 ? (
+                {plan.publishStatus == PlanPublishStatus.PUBLISHED ? (
                   <CheckCircleOutlined
                     style={{ color: 'green', fontSize: '18px' }}
                   />
@@ -652,21 +662,26 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 style={{ marginLeft: '12px' }}
                 onClick={togglePublish}
                 loading={publishing}
-                disabled={plan.status != 2 || publishing || loading}
+                disabled={
+                  plan.status != PlanStatus.ACTIVE || publishing || loading
+                }
               >
-                {/* 2: active, you can only publish/unpublish an active plan */}
-                {plan.publishStatus == 2 ? 'Unpublish' : 'Publish'}
+                {/* you can only publish/unpublish an active plan */}
+                {plan.publishStatus == PlanPublishStatus.PUBLISHED
+                  ? 'Unpublish'
+                  : 'Publish'}
               </Button>
             </div>
           </Form.Item>
-          {plan.status == 2 && plan.publishStatus == 2 && (
-            <div
-              className="relative ml-2 text-xs text-gray-400"
-              style={{ top: '-45px', left: '336px', width: '340px' }}
-            >
-              Unpublish to enable plan editing after activation.
-            </div>
-          )}
+          {plan.status == PlanStatus.ACTIVE &&
+            plan.publishStatus == PlanPublishStatus.PUBLISHED && (
+              <div
+                className="relative ml-2 text-xs text-gray-400"
+                style={{ top: '-45px', left: '336px', width: '340px' }}
+              >
+                Unpublish to enable plan editing after activation.
+              </div>
+            )}
 
           <Form.Item
             label="Currency"
@@ -701,7 +716,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 validator(_, value) {
                   const num = Number(value)
 
-                  if (isNaN(num) || num < 0) {
+                  if (isNaN(num) || num <= 0) {
                     return Promise.reject(`Please input a valid price (> 0).`)
                   }
                   if (
@@ -714,7 +729,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               })
             ]}
           >
-            <Input
+            <InputNumber
               disabled={disableAfterActive.current || formDisabled}
               style={{ width: 180 }}
               prefix={getCurrency()?.Symbol}
@@ -727,7 +742,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               name="intervalUnit"
               rules={[
                 {
-                  required: planTypeWatch != 3, // == 1 (main plan), == 2(addon), == 3(one time payment)
+                  required: planTypeWatch != PlanType.ONE_TIME_ADD_ON,
                   message: 'Please select interval unit!'
                 }
               ]}
@@ -735,7 +750,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               <Select
                 style={{ width: 180 }}
                 disabled={
-                  planTypeWatch == 3 ||
+                  planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
                   disableAfterActive.current ||
                   formDisabled
                 } // one-time payment has no interval unit/count
@@ -761,7 +776,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
           >
             <Input
               disabled={
-                planTypeWatch == 3 || disableAfterActive.current || formDisabled
+                planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
+                disableAfterActive.current ||
+                formDisabled
               }
               style={{ width: 180 }}
             />
@@ -771,16 +788,16 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
           <Form.Item label="Plan Type" name="type">
             <Select
               style={{ width: 180 }}
-              disabled={!isNew || plan.status != 1}
+              disabled={!isNew || plan.status != PlanStatus.EDITING}
               options={[
-                { value: 1, label: 'Main plan' },
-                { value: 2, label: 'Addon' },
-                { value: 3, label: 'One time payment' }
+                { value: PlanType.MAIN, label: 'Main plan' },
+                { value: PlanType.ADD_ON, label: 'Addon' },
+                { value: PlanType.ONE_TIME_ADD_ON, label: 'One time payment' }
               ]}
             />
           </Form.Item>
 
-          {plan.type == 1 && (
+          {plan.type == PlanType.MAIN && (
             <Form.Item
               label="Add-ons"
               name="addonIds"
@@ -811,7 +828,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 mode="multiple"
                 allowClear
                 disabled={
-                  planTypeWatch == 2 || planTypeWatch == 3 || formDisabled
+                  planTypeWatch == PlanType.ADD_ON ||
+                  planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
+                  formDisabled
                 } // you cannot add addon to another addon (or another one time payment)
                 style={{ width: '100%' }}
                 options={selectAddons.map((a) => ({
@@ -822,7 +841,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
             </Form.Item>
           )}
 
-          {plan.type == 1 && (
+          {plan.type == PlanType.MAIN && (
             <Form.Item
               label="One-time-payment add-on"
               name="onetimeAddonIds"
@@ -853,7 +872,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 mode="multiple"
                 allowClear
                 disabled={
-                  planTypeWatch == 2 || planTypeWatch == 3 || formDisabled
+                  planTypeWatch == PlanType.ADD_ON ||
+                  planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
+                  formDisabled
                 } // you cannot add one-time payment addon to another addon (or another one time payment)
                 style={{ width: '100%' }}
                 options={selectOnetime.map((a) => ({
@@ -978,7 +999,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               <Col span={2}>
                 <div
                   onClick={addMetrics}
-                  className={`w-16 font-bold ${planTypeWatch == 3 || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-16 font-bold ${planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <PlusOutlined />
                 </div>
@@ -988,7 +1009,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               <Row key={m.localId} gutter={[8, 8]} className="my-4">
                 <Col span={5}>
                   <Select
-                    disabled={planTypeWatch == 3 || formDisabled}
+                    disabled={
+                      planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled
+                    }
                     value={m.metricId}
                     onChange={onMetricSelectChange(m.localId)}
                     style={{ width: 180 }}
@@ -1015,7 +1038,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 </Col>
                 <Col span={3}>
                   <Input
-                    disabled={planTypeWatch == 3 || formDisabled}
+                    disabled={
+                      planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled
+                    }
                     value={m.metricLimit}
                     onChange={updateMetrics(m.localId)}
                   />
@@ -1023,7 +1048,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 <Col span={2}>
                   <div
                     onClick={() => removeMetrics(m.localId)}
-                    className={`w-16 font-bold ${planTypeWatch == 3 || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`w-16 font-bold ${planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <MinusOutlined />
                   </div>
