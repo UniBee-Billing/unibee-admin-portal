@@ -1,4 +1,4 @@
-import { LoadingOutlined } from '@ant-design/icons'
+import { KeyOutlined, LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -60,12 +60,13 @@ const Index = () => {
 
   return (
     <div>
-      {resetPasswordModal && (
+      {
         <ResetPasswordModal
+          open={resetPasswordModal}
           closeModal={togglePasswordModal}
           email={merchantProfile.email}
         />
-      )}
+      }
       {loading && (
         <Spin
           spinning={loading}
@@ -155,8 +156,12 @@ const Index = () => {
         </Row>
 
         <div className="mx-8 my-8 flex justify-center">
-          <Button onClick={togglePasswordModal} disabled={submitting}>
-            Change Password
+          <Button
+            onClick={togglePasswordModal}
+            disabled={submitting}
+            icon={<KeyOutlined />}
+          >
+            Password Management
           </Button>
           &nbsp;&nbsp;&nbsp;&nbsp;
           {/* <Button
@@ -176,10 +181,11 @@ const Index = () => {
 export default Index
 
 interface IResetPassProps {
+  open: boolean
   email: string
   closeModal: () => void
 }
-const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
+const ResetPasswordModal = ({ email, closeModal, open }: IResetPassProps) => {
   const navigate = useNavigate()
   const [countVal, counting, startCount, stopCounter] = useCountdown(60)
   const merchantInfoStore = useMerchantInfoStore()
@@ -232,7 +238,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
   const tabItems: TabsProps['items'] = [
     {
       key: 'withOldPassword',
-      label: 'With old password',
+      label: 'Change password',
       children: (
         <ResetPassWithOldPass
           email={email}
@@ -243,7 +249,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
     },
     {
       key: 'OTP',
-      label: 'OTP',
+      label: 'Reset password',
       children: (
         <ResetPasswordWithOTP
           email={email}
@@ -258,13 +264,7 @@ const ResetPasswordModal = ({ email, closeModal }: IResetPassProps) => {
   ]
 
   return (
-    <Modal
-      title="Change Password"
-      open={true}
-      width={'640px'}
-      footer={null}
-      closeIcon={null}
-    >
+    <Modal title="" open={open} width={'640px'} footer={null} closeIcon={null}>
       <Tabs activeKey={activeTab} items={tabItems} onChange={onTabChange} />
     </Modal>
   )
@@ -310,10 +310,12 @@ const ResetPassWithOldPass = ({
         wrapperCol={{ span: 16 }}
         className="my-6"
         initialValues={{
-          email,
+          email
+          /*
           oldPassword: '',
           newPassword: '',
           newPassword2: ''
+          */
         }}
       >
         <Form.Item

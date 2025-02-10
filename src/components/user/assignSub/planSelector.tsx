@@ -2,9 +2,13 @@ import { Divider, message, Select, Tag } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import HiddenIcon from '../../../assets/hidden.svg?react'
 import { formatPlanPrice } from '../../../helpers'
-import { PlanStatus, PlanType } from '../../../hooks/usePlans'
 import { getPlanList } from '../../../requests'
-import { IPlan } from '../../../shared.types'
+import {
+  IPlan,
+  PlanPublishStatus,
+  PlanStatus,
+  PlanType
+} from '../../../shared.types'
 
 interface PlanSelectorProps {
   productId: number
@@ -21,19 +25,6 @@ export const PlanSelector = ({
   onPlanSelected,
   filterPredicate
 }: PlanSelectorProps) => {
-  /*
-  const { data, loading } = usePlans({
-    type: [PlanType.MAIN],
-    productIds: [productId],
-    status: [PlanStatus.ACTIVE],
-    page: 0,
-    count: 200,
-    onError: (err) => {
-      message.error(err.message)
-    }
-  })
-    */
-
   // todo: planList can be passed from parent, if null, run getPlanList.
   const [plans, setPlans] = useState<IPlan[]>([])
   const [loading, setLoading] = useState(false)
@@ -98,7 +89,7 @@ export const PlanSelector = ({
             <Tag color="orange">Current Plan</Tag>
           </div>
         )}
-        {p.publishStatus == 1 && (
+        {p.publishStatus == PlanPublishStatus.UNPUBLISHED && (
           <div className="absolute flex h-4 w-4" style={{ right: '14px' }}>
             <HiddenIcon />
           </div>

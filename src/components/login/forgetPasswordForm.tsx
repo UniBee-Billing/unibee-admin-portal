@@ -48,13 +48,18 @@ const Index = ({
         name="forget-password-with-OTP"
         labelCol={{ span: 8 }}
         wrapperCol={{ span: 16 }}
-        // style={{ maxWidth: 640, width: 360 }}
         className="my-6"
+        // this component is used in My-Account -> password manager -> Reset password Modal
+        // and /login, forgot password Modal
+        // without position: 'relative', resend button will not align with 'Verification code' field in latter use case
+        style={{ position: 'relative' }}
         initialValues={{
-          email,
+          email
+          /*
           verificationCode: '',
           newPassword: '',
           newPassword2: ''
+          */
         }}
       >
         <Form.Item
@@ -80,10 +85,15 @@ const Index = ({
             }
           ]}
         >
-          <Input />
+          <Input style={{ width: 200 }} />
         </Form.Item>
-
-        {/* <div className="mb-4 flex justify-center text-red-500">{errMsg}</div> */}
+        <Button
+          onClick={resend}
+          disabled={counting}
+          style={{ position: 'absolute', top: '56px', right: 0 }}
+        >
+          {counting ? `Resend in ${countVal} seconds` : 'Send code'}
+        </Button>
 
         <Form.Item
           label="New Password"
@@ -134,12 +144,14 @@ const Index = ({
 
       <div className="my-6 flex items-center justify-between">
         <div className="flex max-w-52 items-center justify-center">
+          {/*
           <Button onClick={resend} disabled={counting}>
             Send code
           </Button>
           {counting && (
             <span style={{ marginLeft: '6px' }}>in {countVal} seconds</span>
           )}
+          */}
         </div>
         <div>
           {closeModal != null && (

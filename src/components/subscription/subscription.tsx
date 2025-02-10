@@ -542,6 +542,7 @@ const Index = ({
           setSelectedPlan={setSelectedPlan}
           discountCode={discountCode}
           onCodeChange={onCodeChange}
+          setDiscountCode={setDiscountCode}
           creditAmt={creditAmt}
           setCreditAmt={setCreditAmt}
           onAddonChange={onAddonChange}
@@ -890,7 +891,7 @@ const SubscriptionInfoSection = ({
           {subInfo &&
             appConfigStore.gateway.find(
               (g) => g.gatewayId == subInfo?.gatewayId
-            )?.gatewayName}
+            )?.name}
         </Col>
       </Row>
 

@@ -1,6 +1,7 @@
 // this is logged-in user' profile
 import { Dayjs } from 'dayjs'
 import { Currency } from 'dinero.js'
+import { DISCOUNT_CODE_UPGRADE_SCOPE } from './components/discountCode/helpers'
 
 export enum AccountType {
   NONE,
@@ -10,6 +11,10 @@ export enum AccountType {
 
 export type WithStyle<T> = T & {
   className?: string
+}
+export type ListReqType = {
+  page?: number
+  count?: number
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -36,7 +41,7 @@ export type TPromoAccount = {
 }
 
 // this is end user profile
-interface IProfile {
+type IProfile = {
   id: number | null
   externalUserId: string
   token: string
@@ -75,7 +80,7 @@ interface IProfile {
 }
 
 // this is admin profile
-interface IMerchantMemberProfile {
+type IMerchantMemberProfile = {
   id: number
   merchantId: number
   email: string
@@ -88,7 +93,7 @@ interface IMerchantMemberProfile {
   MemberRoles: TRole[]
 }
 
-interface IMerchantUserProfile {
+type IMerchantUserProfile = {
   email: string
   firstName: string
   lastName: string
@@ -124,7 +129,7 @@ export type TIntegrationKeys = {
   segmentUserPortalKey: string
 }
 
-interface IAppConfig {
+type IAppConfig = {
   env: string
   isProd: boolean
   supportTimeZone: string[]
@@ -139,7 +144,7 @@ interface IAddon extends IPlan {
   checked: boolean
 }
 
-interface IProduct {
+type IProduct = {
   id: number
   productName: string
   description: string
@@ -149,19 +154,34 @@ interface IProduct {
   isDeleted: number
 }
 
-interface IPlan {
+export enum PlanType {
+  MAIN = 1,
+  ADD_ON = 2, // must be used with MAIN, cannot be bought alone
+  ONE_TIME_ADD_ON = 3 // can be bought alone, has no dependencies on anything
+}
+export enum PlanStatus {
+  EDITING = 1,
+  ACTIVE = 2,
+  INACTIVE = 3,
+  EXPIRED = 4
+}
+export enum PlanPublishStatus {
+  UNPUBLISHED = 1, // not visible to users
+  PUBLISHED = 2
+}
+type IPlan = {
   id: number
   plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
   planName: string
   description: string
-  type: number // 1: main plan, 2: add-on, 3: one-time addon
+  type: PlanType // 1: main plan, 2: add-on, 3: one-time addon
   currency: Currency
   intervalCount: number
   intervalUnit: string
   amount: number
-  status: number // 1: editing，2: active, 3: inactive，4: expired
-  publishStatus: number // 1: unpublished(not visible to users), 2: published(users could see and choose this plan)
+  status: PlanStatus
+  publishStatus: PlanPublishStatus
   addons?: IAddon[]
   addonIds?: number[] // which addons have been attached to this plan.
   onetimeAddonIds?: number[] // which one-time payment addons have been attached to this plan (main plan only)
@@ -187,7 +207,7 @@ export interface ISubAddon extends IPlan {
   addonPlan: ISubAddon
 }
 
-interface IBillableMetrics {
+type IBillableMetrics = {
   id: number
   merchantId: number
   code: string
@@ -204,7 +224,7 @@ export interface SubscriptionWrapper extends ISubscriptionType {
   subscription: ISubscriptionType
 }
 
-interface ISubscriptionType {
+type ISubscriptionType = {
   id: number
   subscriptionId: string
   planId: number
@@ -244,7 +264,7 @@ interface ISubscriptionType {
   latestInvoice?: UserInvoice
 }
 
-interface ISubHistoryItem {
+type ISubHistoryItem = {
   merchantId: number
   userId: number
   subscriptionId: string
@@ -261,7 +281,7 @@ interface ISubHistoryItem {
   createTime: number
 }
 
-interface IOneTimeHistoryItem {
+type IOneTimeHistoryItem = {
   id: number
   bizType: number
   merchantId: number
@@ -280,7 +300,7 @@ interface IOneTimeHistoryItem {
   name: string
 }
 
-interface IPreview {
+type IPreview = {
   totalAmount: number
   currency: string
   discount: DiscountCode
@@ -321,6 +341,10 @@ type DiscountCode = {
   userScope: 0 | 1 | 2 // 0: all users can use this code, 1: only new users can use, 2: only for subscription renewal
   userLimit: number | boolean // how many time the same user can use this code. 0: unlimited, 1: once.
   // Only 1, 0 are used in current release(need to convert to bool on FE, it's a switch). Number type is for future requirement change(100: same user can use 100 times).
+
+  upgradeScope?: DISCOUNT_CODE_UPGRADE_SCOPE // upgrade can be applied to longer plan upgrade only(monthly to annually) or plan amt upgrade only(same recurring cycle but more amount)
+  // or can be used in both the above cases. In this case, the below 2 options must be false.
+  // 'upgradeScope' doesn't exist in BE, in FE, a radio group is rendered to represent these 3 options.
   upgradeOnly: boolean // code use for subscription upgrade(with more payment amount regardless of from which plan upgrade to which plan)
   upgradeLongerOnly: boolean // code use for long plan subscription upgrade(from monthly to yearly)
 }
@@ -433,7 +457,28 @@ export enum InvoiceBizType {
   MANUALLY_CREATED = 2,
   SUBSCRIPTION = 3
 }
-interface UserInvoice {
+/*
+export const INVOICE_STATUS: { [key: number]: string } = {
+  0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist
+  1: 'Draft', // admin manually create an invoice, for edit/delete, but users won't receive this invoice.
+  2: 'Awaiting payment', // admin has clicked the 'create' button in invoice editing modal, user will receive a mail with payment link. Admin can revoke the invoice if user hasn't made the payment.
+  3: 'Paid', // user paid the invoice
+  4: 'Failed', // user not pay the invoice before it get expired
+  5: 'Cancelled', // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
+  6: 'Reversed' // 取消后被通知支付成功的，这种情况一般是要排查的
+}
+
+*/
+export enum INVOICE_STATUS {
+  INITIATING = 0,
+  DRAFT = 1,
+  AWAITING_PAYMENT = 2,
+  PAID = 3,
+  FAILED = 4,
+  CANCELLED = 5,
+  REVERSED = 6
+}
+type UserInvoice = {
   id: number
   merchantId: number
   userId: number
@@ -544,15 +589,28 @@ type TWebhookLogs = {
   createTime: 0
 }
 
+export type TGatewayExRate = {
+  localId?: string
+  from_currency: string
+  to_currency: string
+  exchange_rate: number
+}
 type TGateway = {
-  IsSetupFinished: boolean
-  name: string // Stripe
+  IsSetupFinished: boolean // true: this gateway is ready for use
+  archive: boolean
+  gatewayId: number // == 0: totally new gateway, admin hasn't configured anything yet.
+  // as long as admin has configured something, even just the displayName or icons, gatewayId will become non-zero, but this doesn't mean this gateway is ready for use.
+  id?: string // to make configItem sortable, SortableItem component needs an unique id field. gatewayConfig has gatewayId, but it's 0 if not configured,
+  name: string // e.g., Stripe
   description: string
-  gatewayId: number
   gatewayKey: string // public key(desensitized)
   gatewaySecret: string // private key(desensitized)
-  gatewayName: string
-  displayName: string
+  subGateway: string
+  subGatewayName: string
+  gatewayName: string // e.g., stripe.
+  displayName: string // e.g., Bank Cards
+  publicKeyName: string
+  privateSecretName: string
   gatewayLogo: string
   gatewayIcons: string[]
   gatewayType: number
@@ -561,6 +619,8 @@ type TGateway = {
   gatewayWebhookIntegrationLink: string
   webhookSecret: string // this is the public key(generated by Changelly), used to ensure the sender can be trusted
   createTime: number
+  currencyExchangeEnabled: boolean // some gateways like Unitpay required exchange rate setting, like 1 euro = 102 Russian Rubles, 1$ = 98.027243 Russian Rubles
+  currencyExchange: TGatewayExRate[] | null // exchange_rate == 0 means: BE'd go to https://app.exchangerate-api.com/ to get exchange rate.
   minimumAmount: number // wire transfer only
   currency: string // ditto
   bank?: {
@@ -570,34 +630,10 @@ type TGateway = {
     iban: string
     address: string
   }
-  sort: number //
+  sort: number
 }
 
-/*
-export type TGatewayConfig = {
-  IsSetupFinished: boolean
-  gatewayId: number // 0: also means setup unfinished
-  gatewayName: string // stripe
-  gatewayType: number
-  displayName: string // Bank Cards
-  description: string
-  name: string // Stripe
-  gatewayIcons: string[]
-  gatewayLogo: string
-  gatewayWebsiteLink: string
-  gatewayKey: string // public key(desensitized)
-  gatewaySecret: string // private key(desensitized)
-  gatewayWebhookIntegrationLink: string
-  currency: string
-  sort: number //
-  webhookEndpointUrl: string
-  webhookSecret: string // desensitized
-  minimumAmount: number
-  createTime: number
-}
-  */
-
-export interface TRolePermission {
+export type TRolePermission = {
   group: string
   permissions: string[]
 }

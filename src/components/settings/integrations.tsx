@@ -9,6 +9,7 @@ import UniBeeLogo from '../../assets/integrationsKeysIcon/UniBeeKeys.svg?react'
 import VATsenseLogo from '../../assets/integrationsKeysIcon/VATsense.svg?react'
 import { useAppConfigStore } from '../../stores'
 import UniBeeAPIKeyModal from './appConfig/apiKeyModal'
+import ExchangeRateModal from './appConfig/exchangeRateKeyModal'
 import SegmentModal from './appConfig/segmentModal'
 import SendGridModal from './appConfig/sendGridKeyModal'
 import VATModal from './appConfig/vatKeyModal'
@@ -22,7 +23,6 @@ type TAPP_Integration = {
   keyName: string | string[]
   keyValue: string | string[]
   compositeKey?: boolean
-  setupModal: ReactNode
 }
 
 const Index = () => {
@@ -44,8 +44,7 @@ const Index = () => {
       logo: <UniBeeLogo />,
       gatewayWebsiteLink: '',
       keyName: 'openApiKey',
-      keyValue: '',
-      setupModal: <UniBeeAPIKeyModal closeModal={() => toggleSetupModal()} />
+      keyValue: ''
     },
     {
       IsSetupFinished: false,
@@ -54,8 +53,7 @@ const Index = () => {
       logo: <VATsenseLogo />,
       gatewayWebsiteLink: 'https://vatsense.com',
       keyName: 'vatSenseKey',
-      keyValue: '',
-      setupModal: <VATModal closeModal={() => toggleSetupModal()} />
+      keyValue: ''
     },
     {
       IsSetupFinished: false,
@@ -64,8 +62,7 @@ const Index = () => {
       logo: <SendGridLogo />,
       gatewayWebsiteLink: 'https://sendgrid.com/',
       keyName: 'sendGridKey',
-      keyValue: '',
-      setupModal: <SendGridModal closeModal={() => toggleSetupModal()} />
+      keyValue: ''
     },
     {
       IsSetupFinished: false,
@@ -75,14 +72,7 @@ const Index = () => {
       gatewayWebsiteLink: 'https://segment.com/',
       keyName: ['segmentServerSideKey', 'segmentUserPortalKey'],
       keyValue: ['', ''],
-      compositeKey: true,
-      setupModal: (
-        <SegmentModal
-          serverSideKey={''}
-          refresh={() => {}}
-          closeModal={() => toggleSetupModal()}
-        />
-      )
+      compositeKey: true
     },
     {
       IsSetupFinished: false,
@@ -92,8 +82,7 @@ const Index = () => {
       logo: <ExchangeRateLogo />,
       gatewayWebsiteLink: '',
       keyName: 'exchangeRateApiKey',
-      keyValue: '',
-      setupModal: null
+      keyValue: ''
     }
   ]
 
@@ -172,6 +161,11 @@ const Index = () => {
           <SendGridModal closeModal={toggleSetupModal} />
         )}
 
+      {openSetupModal &&
+        integrationList[itemIndex].keyName == 'exchangeRateApiKey' && (
+          <ExchangeRateModal closeModal={toggleSetupModal} />
+        )}
+
       <List
         itemLayout="horizontal"
         dataSource={integrationList}
@@ -180,10 +174,10 @@ const Index = () => {
             <List.Item.Meta
               avatar={
                 item.gatewayWebsiteLink == '' ? (
-                  <Avatar shape="square" src={item.logo} />
+                  <Avatar shape="square" src={item.logo} className="ml-3" />
                 ) : (
                   <a href={item.gatewayWebsiteLink} target="_blank">
-                    <Avatar shape="square" src={item.logo} />
+                    <Avatar shape="square" src={item.logo} className="ml-3" />
                   </a>
                 )
               }
@@ -198,7 +192,7 @@ const Index = () => {
               }
               description={item.description}
             />
-            <div className="flex w-[180px] items-center justify-between">
+            <div className="mr-3 flex w-[180px] items-center justify-between">
               {item.IsSetupFinished ? (
                 <Tag icon={<CheckOutlined />} color="#34C759">
                   Ready

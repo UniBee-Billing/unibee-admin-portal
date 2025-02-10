@@ -4,11 +4,10 @@ import React, { useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
 import { useSearchParams } from 'react-router-dom'
 import '../../shared.css'
-import AppConfig from './appConfig'
 import CreditConfig from './creditConfig'
 // import EmailTemplates from './emailTemplates'
-// import AppIntegrationServices from './integrations'
-// import PaymentGatewayConfig from './paymentGateways'
+import AppIntegrationServices from './integrations'
+import PaymentGatewayConfig from './paymentGateways'
 import Permissions from './permissions'
 import { SubscriptionConfig } from './subscriptionConfig'
 import WebhookList from './webHooks/list'
@@ -16,28 +15,26 @@ import WebhookList from './webHooks/list'
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(
-    searchParams.get('tab') ?? 'appConfig'
+    searchParams.get('tab') ?? 'paymentGateways'
   )
   const tabItems: TabsProps['items'] = [
-    /*
     {
       key: 'paymentGateways',
-      label: (
-        <span className="text-red-500">Payment Gateways(NOT FINISHED)</span>
-      ),
+      label: 'Payment Gateways',
       children: <PaymentGatewayConfig />
     },
     {
       key: 'integrations',
-      label: <span className="text-red-500">Integrations(NOT FINISHED)</span>,
+      label: 'Integrations',
       children: <AppIntegrationServices />
     },
-*/
-    {
+
+    /* {
       key: 'appConfig',
-      label: 'App Config',
+      label: <span className="text-gray-400">App Config(depreciated)</span>,
       children: <AppConfig />
     },
+    */
     /*
     {
       key: 'emailTemplate',

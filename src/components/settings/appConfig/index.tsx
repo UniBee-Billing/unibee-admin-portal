@@ -6,8 +6,8 @@ import {
 import { Button, Col, Row, Tag, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import 'react-quill/dist/quill.snow.css'
-import { CURRENCY } from '../../../constants'
-import { getAppKeysWithMore } from '../../../requests'
+// import { CURRENCY } from '../../../constants'
+import { getAppKeysWithMore, getPaymentGatewayListReq } from '../../../requests'
 // import '../../shared.css'
 import { TGateway } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
@@ -51,7 +51,8 @@ const Index = () => {
     segmentServerSideKey: '',
     segmentUserPortalKey: ''
   })
-  const [gatewayList, setGatewayList] = useState<TGateway[]>([])
+  // const [gatewayList, setGatewayList] = useState<TGateway[]>([])
+  const gatewayList = appConfigStore.gateway
 
   const toggleKeyModal = () => setApiKeyModalOpen(!apiKeyModalOpen)
   const toggleChangellyModal = () => setChangellyModalOpen(!changellyModalOpen)
@@ -71,7 +72,7 @@ const Index = () => {
       message.error(err.message)
       return
     }
-    const { merchantInfo, gateways } = res
+    const { merchantInfo } = res
     // these keys have been desensitized, their purposes is to show which keys have been set, which haven't
     const {
       openApiKey,
@@ -103,18 +104,15 @@ const Index = () => {
       k.segmentUserPortalKey = segmentUserPortalKey
     }
     setKeys(k)
-    if (gateways != null) {
-      // after some gateway setup, local store need to be updated.
-      appConfigStore.setGateway(gateways)
-      const wireTransfer = gateways.find(
-        (g: TGateway) => g.gatewayName == 'wire_transfer'
-      )
-      if (wireTransfer != null) {
-        wireTransfer.minimumAmount /=
-          CURRENCY[wireTransfer.currency].stripe_factor
-      }
+  }
+
+  const updateGatewayInStore = async () => {
+    const [gateways, getGatewayErr] = await getPaymentGatewayListReq()
+    if (getGatewayErr == null) {
+      return
     }
-    setGatewayList(gateways ?? [])
+    // after gatewayConfig changes, it's better to re-fetch the gatewayList, and save it into local store.
+    appConfigStore.setGateway(gateways)
   }
 
   useEffect(() => {
@@ -133,8 +131,11 @@ const Index = () => {
       {wireTransferModalOpen && (
         <ModalWireTransfer
           closeModal={toggleWireTransferModal}
-          detail={gatewayList.find((g) => g.gatewayName == 'wire_transfer')}
+          gatewayConfig={
+            gatewayList.find((g) => g.gatewayName == 'wire_transfer')!
+          }
           refresh={getAppKeys}
+          updateGatewayInStore={updateGatewayInStore}
         />
       )}
       {segmentModalOpen && (

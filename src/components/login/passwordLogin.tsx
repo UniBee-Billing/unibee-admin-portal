@@ -112,6 +112,7 @@ const Index = ({
       <Form
         form={form}
         onFinish={onSubmit}
+        disabled={submitting}
         name="login-password"
         labelCol={{ span: 6 }}
         wrapperCol={{ span: 18 }}

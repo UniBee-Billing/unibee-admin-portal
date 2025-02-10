@@ -72,7 +72,7 @@ const Index = ({ user }: { user: IProfile | undefined }) => {
         </Col>
         <Col span={6}>{user?.address}</Col>
         <Col span={4}>
-          <span style={{ fontWeight: 'bold' }}>Payment Method</span>
+          <span style={{ fontWeight: 'bold' }}>Default Payment Method</span>
         </Col>
         <Col span={6}>
           {

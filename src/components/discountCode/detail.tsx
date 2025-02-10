@@ -44,10 +44,10 @@ import {
   updateDiscountCodeReq
 } from '../../requests'
 import { DiscountCode, DiscountCodeStatus, IPlan } from '../../shared.types'
-import { useMerchantInfoStore } from '../../stores'
+import { useAppConfigStore, useMerchantInfoStore } from '../../stores'
 import { title } from '../../utils'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
-import { formatQuantity } from './helpers'
+import { DISCOUNT_CODE_UPGRADE_SCOPE, formatQuantity } from './helpers'
 import { UpdateDiscountCodeQuantityModal } from './updateDiscountCodeQuantityModal'
 
 const { RangePicker } = DatePicker
@@ -70,7 +70,8 @@ const DEFAULT_CODE: DiscountCode = {
   advance: false,
   userScope: 0,
   userLimit: true,
-  upgradeOnly: true, // upgradeOnly and longerUpgradeOnly are exclusive to each other.
+  upgradeScope: DISCOUNT_CODE_UPGRADE_SCOPE.ALL,
+  upgradeOnly: false,
   upgradeLongerOnly: false
 }
 
@@ -84,6 +85,7 @@ const canActiveItemEdit = (status?: DiscountCodeStatus) =>
   status ? CAN_EDIT_ITEM_STATUSES.includes(status) : true
 
 const Index = () => {
+  const appStore = useAppConfigStore()
   const params = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -207,18 +209,15 @@ const Index = () => {
       discount.discountPercentage /= 100
     }
 
-    if (
-      (discount.upgradeOnly && discount.upgradeLongerOnly) ||
-      (!discount.upgradeOnly && !discount.upgradeLongerOnly)
-    ) {
-      // upgradeOnly and upgradeLongerOnly are exclusive to each other(one is true, the other must be false)
-      // but in the first release, they are not.
-      // To prevent inconsistencies in old data, force them to be exclusive.
-      discount.upgradeLongerOnly = !discount.upgradeOnly
+    if (discount.upgradeOnly) {
+      discount.upgradeScope = DISCOUNT_CODE_UPGRADE_SCOPE.UPGRADE_ONLY
+    } else if (discount.upgradeLongerOnly) {
+      discount.upgradeScope = DISCOUNT_CODE_UPGRADE_SCOPE.LONGER_ONLY
+    } else {
+      discount.upgradeScope = DISCOUNT_CODE_UPGRADE_SCOPE.ALL
     }
 
     discount.userLimit = numBoolConvert(discount.userLimit)
-
     setCode(discount)
   }
 
@@ -274,6 +273,18 @@ const Index = () => {
       code.discountAmount *= CURRENCY[code.currency].stripe_factor
       code.discountAmount = toFixedNumber(code.discountAmount, 2)
     }
+
+    if (code.upgradeScope == DISCOUNT_CODE_UPGRADE_SCOPE.ALL) {
+      code.upgradeOnly = false
+      code.upgradeLongerOnly = false
+    } else if (code.upgradeScope == DISCOUNT_CODE_UPGRADE_SCOPE.LONGER_ONLY) {
+      code.upgradeOnly = false
+      code.upgradeLongerOnly = true
+    } else {
+      code.upgradeOnly = true
+      code.upgradeLongerOnly = false
+    }
+    delete code.upgradeScope
 
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
 
@@ -539,11 +550,10 @@ const Index = () => {
                   <Select
                     disabled={watchDiscountType == 1 || !formEditable}
                     style={{ width: 180 }}
-                    options={[
-                      { value: 'EUR', label: 'EUR' },
-                      { value: 'USD', label: 'USD' },
-                      { value: 'JPY', label: 'JPY' }
-                    ]}
+                    options={appStore.supportCurrency.map((c) => ({
+                      label: c.Currency,
+                      value: c.Currency
+                    }))}
                   />
                 </Form.Item>
                 <Form.Item
@@ -764,17 +774,38 @@ const Index = () => {
                 </Radio.Group>
               </Form.Item>
               <Divider style={{ margin: '24px 0' }} />{' '}
-              <Row>
+              <div className="mb-2 mt-6">Applicable Subscription Limits</div>
+              <Form.Item name="upgradeScope">
+                <Radio.Group
+                  disabled={
+                    !watchAdvancedConfig || !canActiveItemEdit(code?.status)
+                  }
+                >
+                  <Space direction="vertical">
+                    <Radio value={DISCOUNT_CODE_UPGRADE_SCOPE.ALL}>
+                      Apply for all
+                    </Radio>
+                    <Radio value={DISCOUNT_CODE_UPGRADE_SCOPE.UPGRADE_ONLY}>
+                      Apply only for upgrades (same recurring cycle)
+                    </Radio>
+                    <Radio value={DISCOUNT_CODE_UPGRADE_SCOPE.LONGER_ONLY}>
+                      Apply only for switching to any long subscriptions
+                    </Radio>
+                  </Space>
+                </Radio.Group>
+              </Form.Item>
+              <Divider style={{ margin: '24px 0' }} />{' '}
+              {/* <Row>
                 <Col span={20} className="flex items-center">
                   Apply only for upgrades (same recurring cycle)&nbsp;{' '}
-                  {/* <Popover
+                  <Popover
                     overlayStyle={{ maxWidth: '250px' }}
                     content={
                       'A plan which costs more per month, switching from Silver yearly (500/year) to Gold monthly (300/month) is not an upgrade.'
                     }
                   >
                     <InfoCircleOutlined className="cursor-pointer" />
-                  </Popover> */}
+                  </Popover>
                 </Col>
                 <Col span={4} className="flex items-center justify-end">
                   <Form.Item name="upgradeOnly" noStyle={true}>
@@ -790,14 +821,14 @@ const Index = () => {
               <Row>
                 <Col span={20} className="flex items-center">
                   Apply only for switching to longer subscriptions&nbsp;{' '}
-                  {/* <Popover
+                  <Popover
                     overlayStyle={{ maxWidth: '250px' }}
                     content={
                       'Example: switching from a Team monthly plan to a Team yearly plan.'
                     }
                   >
                     <InfoCircleOutlined className="cursor-pointer" />
-                  </Popover> */}
+                  </Popover>
                 </Col>
                 <Col span={4} className="flex items-center justify-end">
                   <Form.Item name="upgradeLongerOnly" noStyle={true}>
@@ -810,6 +841,7 @@ const Index = () => {
                 </Col>
               </Row>
               <Divider style={{ margin: '24px 0' }} />{' '}
+               */}
               <Row>
                 <Col span={20} className="flex items-center">
                   Same user cannot use the same discount code again

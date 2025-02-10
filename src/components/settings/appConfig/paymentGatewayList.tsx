@@ -71,6 +71,7 @@ const Index = ({
       setGatewayEdit(
         g ?? {
           IsSetupFinished: false,
+          archive: false,
           name: '',
           description: '',
           gatewayId: 0,
@@ -81,6 +82,10 @@ const Index = ({
           gatewayLogo: '',
           gatewayIcons: [],
           gatewayType: 0,
+          subGateway: '',
+          subGatewayName: '',
+          publicKeyName: '',
+          privateSecretName: '',
           gatewayWebsiteLink: '',
           webhookEndpointUrl: '',
           gatewayWebhookIntegrationLink: '',
@@ -88,7 +93,9 @@ const Index = ({
           createTime: 0,
           minimumAmount: 0,
           currency: '',
-          sort: 0
+          sort: 1,
+          currencyExchangeEnabled: false,
+          currencyExchange: []
         }
       )
       toggleModal()

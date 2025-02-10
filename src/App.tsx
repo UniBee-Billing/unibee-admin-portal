@@ -8,7 +8,6 @@ import { LoginModal } from './components/login/LoginModal'
 import { Sidebar } from './components/sidebar/sidebar'
 import Signup from './components/signup'
 import TaskList from './components/taskList'
-// import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppRoutes } from './routes'
 import {
@@ -63,6 +62,12 @@ const App: React.FC = () => {
       sessionStore.resetCallback()
     }
   }, [sessionStore.expired])
+  */
+
+  /*
+  useEffect(() => {
+    console.log('gateway change captured in app.js: ', appConfigStore.gateway)
+  }, [appConfigStore.gateway])
   */
 
   return (

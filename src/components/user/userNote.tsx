@@ -120,7 +120,7 @@ const Index = ({
       >
         <TextArea
           rows={4}
-          maxLength={200}
+          maxLength={500}
           showCount
           value={note}
           onChange={onNoteChange}

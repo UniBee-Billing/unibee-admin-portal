@@ -309,7 +309,7 @@ const UserAccountTab = ({
                     height: '100%'
                   }}
                 >
-                  <div className="triangle-left" />
+                  {/* <div className="triangle-left" /> */}
                   <div
                     style={{
                       left: '6px',

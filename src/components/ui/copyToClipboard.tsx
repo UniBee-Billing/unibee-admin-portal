@@ -2,7 +2,7 @@ import { message } from 'antd'
 import React from 'react'
 import { useCopyContent } from '../../hooks'
 
-function Index({ content }: { content: string }) {
+function Index({ content, disabled }: { content: string; disabled?: boolean }) {
   const [copied, setCopied] = React.useState(false)
 
   const onCopy = () => {
@@ -21,13 +21,14 @@ function Index({ content }: { content: string }) {
   return (
     <button
       onClick={onCopy}
+      disabled={disabled}
       style={{
         background: 'transparent',
         appearance: 'none',
         padding: 8,
         border: 0,
         outline: 0,
-        cursor: 'pointer'
+        cursor: disabled ? 'not-allowed' : 'pointer'
       }}
     >
       <div

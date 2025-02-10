@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { normalizeSub, showAmount } from '../../helpers'
 import { getSubDetailInProductReq } from '../../requests'
 import { IProfile, ISubscriptionType } from '../../shared.types'
+import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
@@ -39,6 +40,7 @@ const Index = ({
   refreshUserProfile: () => void
   extraButton?: ReactElement
 }) => {
+  const appConfigStore = useAppConfigStore()
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const [subInfo, setSubInfo] = useState<ISubscriptionType | null>(null) // null: when page is loading, or no active sub.
@@ -290,6 +292,15 @@ const Index = ({
                 {subInfo != null && subInfo.plan != null
                   ? `${subInfo.plan.intervalCount} ${subInfo.plan.intervalUnit}`
                   : ''}
+              </Col>
+              <Col span={4} style={colStyle}>
+                Payment Gateway
+              </Col>
+              <Col span={6}>
+                {subInfo &&
+                  appConfigStore.gateway.find(
+                    (g) => g.gatewayId == subInfo?.gatewayId
+                  )?.name}
               </Col>
             </Row>
 
