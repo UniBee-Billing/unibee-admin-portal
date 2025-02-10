@@ -26,6 +26,7 @@ interface Props {
   creditAmt: null | number
   setCreditAmt: (v: number) => void
   onCodeChange: React.ChangeEventHandler<HTMLInputElement>
+  setDiscountCode: (val: string) => void
   setSelectedPlan: (planId: number) => void
   onAddonChange: (
     addonId: number,
@@ -53,6 +54,7 @@ const ChangePlan = ({
   creditAmt,
   setCreditAmt,
   onCodeChange,
+  setDiscountCode,
   setSelectedPlan,
   onAddonChange,
   onCancel,
@@ -179,6 +181,10 @@ const ChangePlan = ({
       failureReason,
       discountAmount
     })
+
+    if (res.discountCode != null) {
+      setDiscountCode(res.discountCode.code)
+    }
 
     if (valid) {
       const [previewRes, err] = await createPreview()

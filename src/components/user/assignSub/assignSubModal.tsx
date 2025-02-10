@@ -97,6 +97,7 @@ interface DiscountData {
   discountPercentage: number
   discountType: DiscountType
   currency: string
+  code: string
 }
 
 export interface PreviewData {
@@ -340,7 +341,9 @@ export const AssignSubscriptionModal = ({
     }
 
     const previewData = data?.data?.data
-
+    if (previewData.discount != null) {
+      setDiscountCode(previewData.discount.code)
+    }
     setPreviewData(previewData)
   }
   // }, [getSubmitData])

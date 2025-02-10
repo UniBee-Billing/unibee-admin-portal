@@ -542,6 +542,7 @@ const Index = ({
           setSelectedPlan={setSelectedPlan}
           discountCode={discountCode}
           onCodeChange={onCodeChange}
+          setDiscountCode={setDiscountCode}
           creditAmt={creditAmt}
           setCreditAmt={setCreditAmt}
           onAddonChange={onAddonChange}
