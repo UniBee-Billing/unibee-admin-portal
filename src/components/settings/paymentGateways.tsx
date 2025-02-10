@@ -7,6 +7,7 @@ import Icon, {
 } from '@ant-design/icons'
 import type { GetProp, UploadFile, UploadProps } from 'antd'
 import {
+  Badge,
   Button,
   Col,
   Form,
@@ -313,11 +314,21 @@ const PaymentGatewaySetupModal = ({
   refresh: () => void
   updateGatewayInStore: () => void
 }) => {
+  const [activeTab, setActiveTab] = useState('Essentials')
   const needWebHook = ['changelly', 'unitpay', 'payssion'] // these 3 gateways need webhook config
   const tabItems: TabsProps['items'] = [
     {
       key: 'Essentials',
-      label: 'Essentials',
+      label: (
+        <span>
+          {' '}
+          <Badge
+            count={1}
+            color={`#1890ff${activeTab == 'Essentials' ? '' : '99'}`}
+          />{' '}
+          Essentials
+        </span>
+      ),
       children: (
         <EssentialSetup
           gatewayConfig={gatewayConfig}
@@ -329,7 +340,15 @@ const PaymentGatewaySetupModal = ({
     },
     {
       key: 'Public/Private Keys',
-      label: 'Public/Private Keys',
+      label: (
+        <span>
+          <Badge
+            count={2}
+            color={`#1890ff${activeTab == 'Public/Private Keys' ? '' : '99'}`}
+          />{' '}
+          Public/Private Keys
+        </span>
+      ),
       children: (
         <PubPriKeySetup
           gatewayConfig={gatewayConfig}
@@ -341,7 +360,15 @@ const PaymentGatewaySetupModal = ({
     },
     {
       key: 'Webhook Keys',
-      label: 'Webhook Keys',
+      label: (
+        <span>
+          <Badge
+            count={3}
+            color={`#1890ff${activeTab == 'Webhook Keys' ? '' : '99'}`}
+          />
+          &nbsp; Webhook Keys{' '}
+        </span>
+      ),
       children: (
         <WebHookSetup
           gatewayConfig={gatewayConfig}
@@ -360,13 +387,14 @@ const PaymentGatewaySetupModal = ({
           ? `Editing keys for ${gatewayConfig.name}`
           : `New keys for ${gatewayConfig.name}`
       }
-      width={'720px'}
+      width={'680px'}
       open={true}
       footer={null}
       closeIcon={null}
     >
       <Tabs
-        defaultActiveKey={'Essentials'}
+        activeKey={activeTab}
+        onChange={setActiveTab}
         items={tabItems.filter(
           (t) =>
             t.key != 'Webhook Keys' ||
@@ -806,16 +834,7 @@ const PubPriKeySetup = ({
 
   const onSave = async () => {
     const pubKey = form.getFieldValue('gatewayKey')
-    if (pubKey.trim() == '') {
-      message.error('Public Key is empty')
-      return
-    }
-
     const privateKey = form.getFieldValue('gatewaySecret')
-    if (privateKey.trim() == '') {
-      message.error('Private Key is empty')
-      return
-    }
     const subGateway = form.getFieldValue('subGateway')
     const body: TGatewayConfigBody = {
       gatewayKey: pubKey,
@@ -861,37 +880,47 @@ const PubPriKeySetup = ({
         </Form.Item>
         <div className="h-2" />
 
-       {gatewayConfig.subGatewayName != '' && (
+        {gatewayConfig.subGatewayName != '' && (
           <div>
-              <Form.Item
-              label={
-                gatewayConfig.subGatewayName
-              }
+            <Form.Item
+              label={gatewayConfig.subGatewayName}
               name="subGateway"
               help={
                 <div className="text-xs text-gray-400">
-                  For security reason, your{' '}
-                  {gatewayConfig.subGateway}{' '}
-                  will be desensitized after submit.
+                  For security reason, your {gatewayConfig.subGateway} will be
+                  desensitized after submit.
                 </div>
               }
             >
               <TextArea rows={4} />
-              </Form.Item>
-              <div className="h-2" />
+            </Form.Item>
+            <div className="h-2" />
           </div>
-       )}
+        )}
 
         <Form.Item
-          label={
-            gatewayConfig.publicKeyName
-          }
+          label={gatewayConfig.publicKeyName}
           name="gatewayKey"
+          rules={[
+            {
+              required: true,
+              message: `Please input your ${gatewayConfig.publicKeyName}!`
+            },
+            () => ({
+              validator(_, value) {
+                if (value.trim() == '' || value.includes('**')) {
+                  return Promise.reject(
+                    `Invalid ${gatewayConfig.publicKeyName}.`
+                  )
+                }
+                return Promise.resolve()
+              }
+            })
+          ]}
           help={
             <div className="text-xs text-gray-400">
-              For security reason, your{' '}
-              {gatewayConfig.publicKeyName}{' '}
-              will be desensitized after submit.
+              For security reason, your {gatewayConfig.publicKeyName} will be
+              desensitized after submit.
             </div>
           }
         >
@@ -900,15 +929,28 @@ const PubPriKeySetup = ({
         <div className="h-2" />
 
         <Form.Item
-          label={
-            gatewayConfig.privateSecretName
-          }
+          label={gatewayConfig.privateSecretName}
           name="gatewaySecret"
+          rules={[
+            {
+              required: true,
+              message: `Please input your ${gatewayConfig.privateSecretName}!`
+            },
+            () => ({
+              validator(_, value) {
+                if (value.trim() == '' || value.includes('**')) {
+                  return Promise.reject(
+                    `Invalid ${gatewayConfig.privateSecretName}.`
+                  )
+                }
+                return Promise.resolve()
+              }
+            })
+          ]}
           help={
             <div className="text-xs text-gray-400">
-              For security reason, your{' '}
-              {gatewayConfig.privateSecretName}{' '}
-              will be desensitized after submit.
+              For security reason, your {gatewayConfig.privateSecretName} will
+              be desensitized after submit.
             </div>
           }
         >
@@ -923,7 +965,7 @@ const PubPriKeySetup = ({
         </Button>
         <Button
           type="primary"
-          onClick={onSave}
+          onClick={form.submit}
           loading={loading}
           disabled={loading}
         >
