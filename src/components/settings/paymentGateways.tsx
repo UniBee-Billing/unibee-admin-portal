@@ -1127,7 +1127,7 @@ const WebHookSetup = ({
         </Button>
         <Button
           type="primary"
-          onClick={onSave}
+          onClick={form.submit}
           loading={loading}
           disabled={loading || notSubmitable}
         >
