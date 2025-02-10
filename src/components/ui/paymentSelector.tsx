@@ -35,32 +35,41 @@ const Index = ({
 
   return (
     <div className="flex w-full flex-col gap-3">
-      {gateways.map(({ gatewayId, gatewayName, displayName, gatewayIcons }) => (
-        <label
-          onClick={onLabelClick}
-          key={gatewayId}
-          htmlFor={`payment-${gatewayName}`}
-          className={`flex h-12 w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between rounded border border-solid ${selected == gatewayId ? 'border-blue-500' : 'border-gray-200'} px-2`}
-        >
-          <div className="flex">
-            <input
-              type="radio"
-              name={`payment-${gatewayName}`}
-              id={`payment-${gatewayName}`}
-              value={gatewayId}
-              checked={gatewayId === selected}
-              onChange={onChange}
-              disabled={disabled}
-            />
-            <div className="ml-2 flex justify-between">{displayName}</div>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            {gatewayIcons.map((i) => (
-              <img key={i} height={24} src={i} />
-            ))}
-          </div>
-        </label>
-      ))}
+      {gateways.map(
+        ({ gatewayId, gatewayName, displayName, gatewayIcons, archive }) => (
+          <label
+            onClick={onLabelClick}
+            key={gatewayId}
+            htmlFor={`payment-${gatewayName}`}
+            className={`flex h-12 w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between rounded border border-solid ${selected == gatewayId ? 'border-blue-500' : 'border-gray-200'} px-2`}
+          >
+            <div className="flex">
+              <input
+                type="radio"
+                name={`payment-${gatewayName}`}
+                id={`payment-${gatewayName}`}
+                value={gatewayId}
+                checked={gatewayId === selected}
+                onChange={onChange}
+                disabled={disabled}
+              />
+              <div className="ml-2 flex items-center justify-between">
+                {displayName}
+                {archive && (
+                  <span className="text-xs font-bold text-gray-400">
+                    &nbsp; ARV
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              {gatewayIcons.map((i) => (
+                <img key={i} height={24} src={i} />
+              ))}
+            </div>
+          </label>
+        )
+      )}
     </div>
   )
 }
