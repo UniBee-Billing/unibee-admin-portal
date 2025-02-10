@@ -880,7 +880,7 @@ const PubPriKeySetup = ({
         </Form.Item>
         <div className="h-2" />
 
-        {gatewayConfig.subGatewayName != '' && (
+        {/* gatewayConfig.subGatewayName != '' && (
           <div>
             <Form.Item
               label={gatewayConfig.subGatewayName}
@@ -896,7 +896,7 @@ const PubPriKeySetup = ({
             </Form.Item>
             <div className="h-2" />
           </div>
-        )}
+        ) */}
 
         <Form.Item
           label={gatewayConfig.publicKeyName}
@@ -996,9 +996,12 @@ const WebHookSetup = ({
   // And if you have set:
   // form.onFinish = onSave, OK button's onClick handler = form.submit
   // your native button's onclick will trigger form submit, antd's own <Button> didn't trigger this call.
-  // I have to unset form's onFinish, move OK button to the outside of form.
   const onSave = async () => {
     const webHookSecret = form.getFieldValue('webhookSecret')
+    if (webHookSecret.trim() == '' || webHookSecret.includes('**')) {
+      message.error('Invalid webhook key')
+      return
+    }
 
     if (gatewayConfig.gatewayId == 0) {
       message.error('Input your public/private keys first.')
@@ -1045,7 +1048,7 @@ const WebHookSetup = ({
       <Form
         form={form}
         layout="vertical"
-        onFinish={onSave}
+        // onFinish={onSave}
         colon={false}
         disabled={notSubmitable || loading}
         initialValues={gatewayConfig}
@@ -1069,6 +1072,7 @@ const WebHookSetup = ({
         <Form.Item
           label="Webhook Key"
           name="webhookSecret"
+          /*
           rules={[
             {
               required: true,
@@ -1083,6 +1087,7 @@ const WebHookSetup = ({
               }
             })
           ]}
+            */
           help={
             <div className="mt-2 text-sm">
               <Button
@@ -1122,7 +1127,7 @@ const WebHookSetup = ({
         </Button>
         <Button
           type="primary"
-          onClick={form.submit}
+          onClick={onSave}
           loading={loading}
           disabled={loading || notSubmitable}
         >
