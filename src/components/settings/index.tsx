@@ -21,22 +21,21 @@ const Index = () => {
   const tabItems: TabsProps['items'] = [
     {
       key: 'paymentGateways',
-      label: (
-        <span className="text-red-500">Payment Gateways(NOT FINISHED)</span>
-      ),
+      label: 'Payment Gateways',
       children: <PaymentGatewayConfig />
     },
     {
       key: 'integrations',
-      label: <span className="text-red-500">Integrations(NOT FINISHED)</span>,
+      label: 'Integrations',
       children: <AppIntegrationServices />
     },
 
-    {
+    /* {
       key: 'appConfig',
       label: <span className="text-gray-400">App Config(depreciated)</span>,
       children: <AppConfig />
     },
+    */
     /*
     {
       key: 'emailTemplate',
