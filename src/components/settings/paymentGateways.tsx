@@ -880,23 +880,14 @@ const PubPriKeySetup = ({
         </Form.Item>
         <div className="h-2" />
 
-        {/* gatewayConfig.subGatewayName != '' && (
+        {gatewayConfig.subGatewayName != '' && (
           <div>
-            <Form.Item
-              label={gatewayConfig.subGatewayName}
-              name="subGateway"
-              help={
-                <div className="text-xs text-gray-400">
-                  For security reason, your {gatewayConfig.subGateway} will be
-                  desensitized after submit.
-                </div>
-              }
-            >
-              <TextArea rows={4} />
+            <Form.Item label={gatewayConfig.subGatewayName} name="subGateway">
+              <Input />
             </Form.Item>
             <div className="h-2" />
           </div>
-        ) */}
+        )}
 
         <Form.Item
           label={gatewayConfig.publicKeyName}
