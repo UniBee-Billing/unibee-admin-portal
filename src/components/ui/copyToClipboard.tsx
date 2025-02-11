@@ -6,6 +6,9 @@ function Index({ content, disabled }: { content: string; disabled?: boolean }) {
   const [copied, setCopied] = React.useState(false)
 
   const onCopy = () => {
+    if (disabled) {
+      return
+    }
     setCopied(true)
     useCopyContent(content).catch((err) => message.error(err.message))
   }
@@ -18,10 +21,15 @@ function Index({ content, disabled }: { content: string; disabled?: boolean }) {
     return () => clearTimeout(timeout)
   }, [copied])
 
+  // there is a antd form bug: in a form, if there existed a native <button />, not antd <Button/>.
+  // And if you have set:
+  // form.onFinish = onSave, OK button's onClick handler = form.submit
+  // your native button's onclick will trigger form submit, antd's own <Button> didn't trigger this call.
+  // I have to use <div> instead of <button /> to bypass this.
   return (
-    <button
+    <div
       onClick={onCopy}
-      disabled={disabled}
+      // disabled={disabled}
       style={{
         background: 'transparent',
         appearance: 'none',
@@ -44,7 +52,7 @@ function Index({ content, disabled }: { content: string; disabled?: boolean }) {
           // isVisible={copied}
         />
       </div>
-    </button>
+    </div>
   )
 }
 
