@@ -643,6 +643,7 @@ const SubscriptionInfoSection = ({
           {subInfo && subInfo?.plan?.planName && (
             <LongTextPopover
               text={subInfo.plan.planName}
+              showViewMoreButton={true}
               clickHandler={() => goToPlan(subInfo.planId)}
             />
           )}

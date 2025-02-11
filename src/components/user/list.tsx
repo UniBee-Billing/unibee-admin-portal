@@ -36,8 +36,8 @@ import '../../shared.css'
 import { IPlan, IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
+import LongTextPopover from '../ui/longTextPopover'
 import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
-import TableCellPopover from '../ui/tableCellPopover'
 import CreateUserModal from './createUserModal'
 import './list.css'
 
@@ -209,7 +209,7 @@ const Index = () => {
       width: 132,
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
-          <TableCellPopover text={planName} placement="topLeft" width="132px" />
+          <LongTextPopover text={planName} placement="topLeft" width="132px" />
         </div>
       ),
       filters: planFilterRef.current,

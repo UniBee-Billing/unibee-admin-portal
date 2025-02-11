@@ -40,8 +40,8 @@ import {
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
+import LongTextPopover from '../ui/longTextPopover'
 import { SubscriptionStatus } from '../ui/statusTag'
-import TableCellPopover from '../ui/tableCellPopover'
 
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
@@ -165,7 +165,7 @@ const Index = () => {
       render: (_, sub) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           {sub.plan?.planName != undefined && (
-            <TableCellPopover
+            <LongTextPopover
               text={sub.plan.planName}
               placement="topLeft"
               width="120px"
@@ -181,23 +181,24 @@ const Index = () => {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      width: 128,
+      width: 160,
       render: (_, sub) =>
         sub.plan?.description != undefined && (
-          <TableCellPopover
+          <LongTextPopover
             text={sub.plan.description}
             placement="topLeft"
-            width="128px"
+            width="160px"
           />
         )
     },
-    {
+    /* {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
       render: (amt, s) =>
         `${showAmount(amt, s.currency)}/${formatPlanInterval(s.plan)}`
     },
+    */
     /* {
       title: 'Amount',
       dataIndex: 'amount',

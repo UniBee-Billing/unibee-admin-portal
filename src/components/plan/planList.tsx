@@ -26,8 +26,8 @@ import { usePagination } from '../../hooks'
 import { copyPlanReq, getPlanList, TPlanListBody } from '../../requests'
 import '../../shared.css'
 import { IPlan } from '../../shared.types'
+import LongTextPopover from '../ui/longTextPopover'
 import { PlanStatus } from '../ui/statusTag'
-import TableCellPopover from '../ui/tableCellPopover'
 
 const PAGE_SIZE = 10
 const PLAN_STATUS_FILTER = Object.keys(PLAN_STATUS)
@@ -139,7 +139,7 @@ const Index = ({
       sorter: (a, b) => a.planName.localeCompare(b.planName),
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
-          <TableCellPopover text={planName} placement="topLeft" width="120px" />
+          <LongTextPopover text={planName} placement="topLeft" width="120px" />
         </div>
       )
     },
@@ -150,7 +150,7 @@ const Index = ({
       width: 128,
       render: (desc) => (
         <div className="w-36 overflow-hidden overflow-ellipsis whitespace-nowrap">
-          <TableCellPopover text={desc} placement="topLeft" width="128px" />
+          <LongTextPopover text={desc} placement="topLeft" width="128px" />
         </div>
       )
     },

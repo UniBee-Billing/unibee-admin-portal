@@ -16,8 +16,8 @@ import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { getProductListReq, getSubscriptionHistoryReq } from '../../requests'
 import { IProduct, ISubAddon, ISubHistoryItem } from '../../shared.types'
+import LongTextPopover from '../ui/longTextPopover'
 import { SubHistoryStatus } from '../ui/statusTag'
-import TableCellPopover from '../ui/tableCellPopover'
 
 const PAGE_SIZE = 10
 
@@ -85,7 +85,7 @@ const Index = ({ userId }: { userId: number }) => {
         record.plan == null ? (
           '―'
         ) : (
-          <TableCellPopover
+          <LongTextPopover
             text={record.plan.planName}
             placement="topLeft"
             width="120px"
