@@ -116,7 +116,10 @@ const Index = ({
               </Col>
               <Col span={6}>
                 {subInfo?.plan?.planName && (
-                  <LongTextPopover text={subInfo.plan.planName} />
+                  <LongTextPopover
+                    text={subInfo.plan.planName}
+                    showViewMoreButton={true}
+                  />
                 )}
               </Col>
               <Col span={4} style={colStyle}>
@@ -124,7 +127,10 @@ const Index = ({
               </Col>
               <Col span={10}>
                 {subInfo?.plan?.description && (
-                  <LongTextPopover text={subInfo.plan.description} />
+                  <LongTextPopover
+                    text={subInfo.plan.description}
+                    showViewMoreButton={true}
+                  />
                 )}
               </Col>
             </Row>
