@@ -14,6 +14,7 @@ import { IProfile, ISubscriptionType } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
+import LongTextPopover from '../ui/longTextPopover'
 import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
 import { AssignSubscriptionModal } from './assignSub/assignSubModal'
 
@@ -113,11 +114,19 @@ const Index = ({
               <Col span={4} style={colStyle}>
                 Plan
               </Col>
-              <Col span={6}>{subInfo?.plan?.planName}</Col>
+              <Col span={6}>
+                {subInfo?.plan?.planName && (
+                  <LongTextPopover text={subInfo.plan.planName} />
+                )}
+              </Col>
               <Col span={4} style={colStyle}>
                 Plan Description
               </Col>
-              <Col span={6}>{subInfo?.plan?.description}</Col>
+              <Col span={10}>
+                {subInfo?.plan?.description && (
+                  <LongTextPopover text={subInfo.plan.description} />
+                )}
+              </Col>
             </Row>
             <Row style={rowStyle}>
               <Col span={4} style={colStyle}>

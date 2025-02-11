@@ -41,6 +41,7 @@ import {
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import { SubscriptionStatus } from '../ui/statusTag'
+import TableCellPopover from '../ui/tableCellPopover'
 
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
@@ -160,22 +161,35 @@ const Index = () => {
       key: 'planIds',
       filters: planFilterRef.current,
       filteredValue: filters.planIds,
+      width: 120,
       render: (_, sub) => (
-        <span>
-          {`${sub.plan?.planName}`}{' '}
-          <span className="text-xs text-gray-400">
-            (
+        <div className="w-28 overflow-hidden whitespace-nowrap">
+          {sub.plan?.planName != undefined && (
+            <TableCellPopover
+              text={sub.plan.planName}
+              placement="topLeft"
+              width="120px"
+            />
+          )}
+          <div className="text-xs text-gray-400">
             {`${showAmount(sub.plan?.amount, sub.plan?.currency)}/${formatPlanInterval(sub.plan)}`}
-            )
-          </span>
-        </span>
+          </div>
+        </div>
       )
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      render: (_, sub) => <span>{sub.plan?.description}</span>
+      width: 128,
+      render: (_, sub) =>
+        sub.plan?.description != undefined && (
+          <TableCellPopover
+            text={sub.plan.description}
+            placement="topLeft"
+            width="128px"
+          />
+        )
     },
     {
       title: 'Amount',

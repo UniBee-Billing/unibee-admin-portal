@@ -27,6 +27,7 @@ import { copyPlanReq, getPlanList, TPlanListBody } from '../../requests'
 import '../../shared.css'
 import { IPlan } from '../../shared.types'
 import { PlanStatus } from '../ui/statusTag'
+import TableCellPopover from '../ui/tableCellPopover'
 
 const PAGE_SIZE = 10
 const PLAN_STATUS_FILTER = Object.keys(PLAN_STATUS)
@@ -134,13 +135,24 @@ const Index = ({
       title: 'Name',
       dataIndex: 'planName',
       key: 'planName',
-      sorter: (a, b) => a.planName.localeCompare(b.planName)
-      // render: (text) => <a>{text}</a>,
+      width: 120,
+      sorter: (a, b) => a.planName.localeCompare(b.planName),
+      render: (planName) => (
+        <div className="w-28 overflow-hidden whitespace-nowrap">
+          <TableCellPopover text={planName} placement="topLeft" width="120px" />
+        </div>
+      )
     },
     {
       title: 'Description',
       dataIndex: 'description',
-      key: 'description'
+      key: 'description',
+      width: 128,
+      render: (desc) => (
+        <div className="w-36 overflow-hidden overflow-ellipsis whitespace-nowrap">
+          <TableCellPopover text={desc} placement="topLeft" width="128px" />
+        </div>
+      )
     },
     {
       title: 'Price',

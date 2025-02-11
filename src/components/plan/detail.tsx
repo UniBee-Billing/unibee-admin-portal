@@ -623,7 +623,12 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               }
             ]}
           >
-            <Input />
+            <Input.TextArea
+              rows={2}
+              style={{ width: '640px' }}
+              maxLength={100}
+              showCount
+            />
           </Form.Item>
 
           <Form.Item
@@ -636,7 +641,12 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               }
             ]}
           >
-            <Input.TextArea rows={4} style={{ width: '640px' }} />
+            <Input.TextArea
+              rows={4}
+              style={{ width: '640px' }}
+              maxLength={500}
+              showCount
+            />
           </Form.Item>
 
           <Form.Item label="External Plan Id" name="externalPlanId">
