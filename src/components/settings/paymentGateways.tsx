@@ -324,7 +324,7 @@ const PaymentGatewaySetupModal = ({
           {' '}
           <Badge
             count={1}
-            color={`#1890ff${activeTab == 'Essentials' ? '' : '99'}`}
+            color={`#1890ff${activeTab == 'Essentials' ? '' : '90'}`}
           />{' '}
           Essentials
         </span>
@@ -344,7 +344,7 @@ const PaymentGatewaySetupModal = ({
         <span>
           <Badge
             count={2}
-            color={`#1890ff${activeTab == 'Public/Private Keys' ? '' : '99'}`}
+            color={`#1890ff${activeTab == 'Public/Private Keys' ? '' : '90'}`}
           />{' '}
           Public/Private Keys
         </span>
@@ -364,7 +364,7 @@ const PaymentGatewaySetupModal = ({
         <span>
           <Badge
             count={3}
-            color={`#1890ff${activeTab == 'Webhook Keys' ? '' : '99'}`}
+            color={`#1890ff${activeTab == 'Webhook Keys' ? '' : '90'}`}
           />
           &nbsp; Webhook Keys{' '}
         </span>
@@ -830,6 +830,7 @@ const PubPriKeySetup = ({
   updateGatewayInStore: () => void
 }) => {
   const [form] = Form.useForm()
+
   const [loading, setLoading] = useState(false)
 
   const onSave = async () => {
@@ -892,6 +893,12 @@ const PubPriKeySetup = ({
         <Form.Item
           label={gatewayConfig.publicKeyName}
           name="gatewayKey"
+          extra={
+            <div className="text-xs text-gray-400">
+              For security reason, your {gatewayConfig.publicKeyName} will be
+              desensitized after submit.
+            </div>
+          }
           rules={[
             {
               required: true,
@@ -908,12 +915,6 @@ const PubPriKeySetup = ({
               }
             })
           ]}
-          help={
-            <div className="text-xs text-gray-400">
-              For security reason, your {gatewayConfig.publicKeyName} will be
-              desensitized after submit.
-            </div>
-          }
         >
           <TextArea rows={4} />
         </Form.Item>
@@ -938,7 +939,7 @@ const PubPriKeySetup = ({
               }
             })
           ]}
-          help={
+          extra={
             <div className="text-xs text-gray-400">
               For security reason, your {gatewayConfig.privateSecretName} will
               be desensitized after submit.
@@ -983,10 +984,6 @@ const WebHookSetup = ({
   // configure pub/private keys first, then configure webhook
   const notSubmitable = gatewayConfig.gatewayKey == ''
 
-  // there is a antd form bug: in a form, if there existed a native <button />, not antd <Button/>.
-  // And if you have set:
-  // form.onFinish = onSave, OK button's onClick handler = form.submit
-  // your native button's onclick will trigger form submit, antd's own <Button> didn't trigger this call.
   const onSave = async () => {
     if (gatewayConfig.gatewayId == 0) {
       message.error('Input your public/private keys first.')
@@ -994,11 +991,6 @@ const WebHookSetup = ({
     }
 
     const webHookSecret = form.getFieldValue('webhookSecret')
-    if (webHookSecret.trim() == '' || webHookSecret.includes('**')) {
-      message.error('Invalid webhook key')
-      return
-    }
-
     setLoading(true)
     const [_, err] = await saveWebhookKeyReq(
       gatewayConfig.gatewayId,
@@ -1039,7 +1031,7 @@ const WebHookSetup = ({
       <Form
         form={form}
         layout="vertical"
-        // onFinish={onSave}
+        onFinish={onSave}
         colon={false}
         disabled={notSubmitable || loading}
         initialValues={gatewayConfig}
@@ -1063,7 +1055,6 @@ const WebHookSetup = ({
         <Form.Item
           label="Webhook Key"
           name="webhookSecret"
-          /*
           rules={[
             {
               required: true,
@@ -1078,8 +1069,7 @@ const WebHookSetup = ({
               }
             })
           ]}
-            */
-          help={
+          extra={
             <div className="mt-2 text-sm">
               <Button
                 type="link"
@@ -1118,7 +1108,7 @@ const WebHookSetup = ({
         </Button>
         <Button
           type="primary"
-          onClick={onSave}
+          onClick={form.submit}
           loading={loading}
           disabled={loading || notSubmitable}
         >
