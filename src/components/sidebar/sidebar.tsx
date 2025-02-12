@@ -1,10 +1,11 @@
 import { LogoutOutlined } from '@ant-design/icons'
-import { Layout } from 'antd'
+import { Divider, Layout } from 'antd'
 import { useMemo, useState } from 'react'
 import { useUser } from '../../services'
 import { useMerchantMemberProfileStore } from '../../stores'
 import { AboutUniBee } from './about/aboutUniBee'
 import { Logo } from './logo'
+import LogoWithAction from './logoWithAction'
 import { SideMenu } from './sideMenu'
 
 export const Sidebar = () => {
@@ -25,32 +26,52 @@ export const Sidebar = () => {
 
   return (
     <Layout.Sider
+      // trigger={null}
       theme="dark"
       collapsible
       collapsed={collapsed}
       onCollapse={(value) => setCollapsed(value)}
     >
-      <div className="flex h-full flex-col justify-between">
+      <div className="h-full overflow-y-auto overflow-x-hidden">
         <div>
-          <Logo />
+          <Logo collapsed={collapsed} />
           <SideMenu />
         </div>
-        <div className="flex flex-col items-center">
+
+        <div className="absolute bottom-20 w-full">
           <div className="flex flex-col items-center">
-            <div className="text-xs text-white">
-              {merchantMemberProfile.email}
+            <AboutUniBee collapsed={collapsed} />
+            <LogoWithAction
+              collapsed={collapsed}
+              clickHandler={() => logout('login')}
+              text="Logout"
+              logo={<LogoutOutlined className="mr-2" />}
+              logoColor="text-red-400"
+            />
+          </div>
+          <div className="flex w-full items-center justify-center">
+            <div className="flex w-[82%]">
+              <Divider style={{ borderColor: '#595959', margin: '16px 0' }} />
             </div>
-            <div className="text-white">{`${merchantMemberProfile.firstName} ${merchantMemberProfile.lastName}`}</div>
-            <div className="text-xs text-gray-400">{role}</div>
           </div>
-          <AboutUniBee />
-          <div
-            onClick={() => logout('login')}
-            className="my-4 cursor-pointer text-red-400"
-          >
-            <LogoutOutlined />
-            &nbsp;&nbsp;Logout
-          </div>
+
+          <LogoWithAction
+            collapsed={collapsed}
+            height="20px"
+            text={merchantMemberProfile.email}
+          />
+
+          <LogoWithAction
+            collapsed={collapsed}
+            height="20px"
+            text={`${merchantMemberProfile.firstName} ${merchantMemberProfile.lastName}`}
+          />
+
+          <LogoWithAction
+            collapsed={collapsed}
+            height="20px"
+            text={role as string}
+          />
         </div>
       </div>
     </Layout.Sider>
