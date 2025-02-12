@@ -654,7 +654,10 @@ const SubscriptionInfoSection = ({
         <Col span={10}>
           {' '}
           {subInfo?.plan?.description && (
-            <LongTextPopover text={subInfo.plan.description} />
+            <LongTextPopover
+              text={subInfo.plan.description}
+              showViewMoreButton={true}
+            />
           )}
         </Col>
       </Row>

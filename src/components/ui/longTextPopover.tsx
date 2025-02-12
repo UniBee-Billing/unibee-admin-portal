@@ -34,13 +34,13 @@ const Index = ({
           className="overflow-hidden text-ellipsis whitespace-nowrap"
           ref={textRef}
           style={{
-            maxWidth: width ?? 'calc(100% - 80px)' // 'view more' button was around 80px width(plus some padding/margin)
+            maxWidth: width ?? `calc(100% - ${showMore ? '80px' : '0px'})` // 'view more' button was around 80px width(plus some padding/margin)
           }}
         >
           {textContent}
         </div>
         {showMore && (
-          <PopoverWrapper placement="top" text={text}>
+          <PopoverWrapper placement={placement} text={text}>
             <Button
               type="link"
               style={{ border: 'none', padding: '0', marginRight: '8px' }}
@@ -59,7 +59,7 @@ const Index = ({
         }}
       >
         {showMore ? (
-          <PopoverWrapper text={text} placement={placement}>
+          <PopoverWrapper placement={placement} text={text}>
             {textContent}
           </PopoverWrapper>
         ) : (
