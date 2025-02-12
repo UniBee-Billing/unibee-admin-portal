@@ -161,6 +161,8 @@ const Index = () => {
       key: 'planIds',
       filters: planFilterRef.current,
       filteredValue: filters.planIds,
+      filterMode: 'tree',
+      filterSearch: true,
       width: 120,
       render: (_, sub) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
