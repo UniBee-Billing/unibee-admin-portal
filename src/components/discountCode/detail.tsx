@@ -705,7 +705,7 @@ const Index = () => {
                 />
               </Form.Item>
               <Form.Item label="Apply Discount Code To" name="planApplyType">
-                <Radio.Group>
+                <Radio.Group disabled={!canActiveItemEdit(code?.status)}>
                   <Space direction="vertical">
                     <Radio value={DiscountCodeApplyType.ALL}>All plans</Radio>
                     <Radio value={DiscountCodeApplyType.SELECTED}>
