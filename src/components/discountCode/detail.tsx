@@ -43,7 +43,12 @@ import {
   toggleDiscountCodeActivateReq,
   updateDiscountCodeReq
 } from '../../requests'
-import { DiscountCode, DiscountCodeStatus, IPlan } from '../../shared.types'
+import {
+  DiscountCode,
+  DiscountCodeApplyType,
+  DiscountCodeStatus,
+  IPlan
+} from '../../shared.types'
 import { useAppConfigStore, useMerchantInfoStore } from '../../stores'
 import { title } from '../../utils'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
@@ -65,6 +70,7 @@ const DEFAULT_CODE: DiscountCode = {
   startTime: 0,
   endTime: 0,
   validityRange: [null, null],
+  planApplyType: DiscountCodeApplyType.ALL,
   planIds: [],
   quantity: 0,
   advance: false,
@@ -107,10 +113,11 @@ const Index = () => {
   const watchDiscountType = Form.useWatch('discountType', form)
   const watchBillingType = Form.useWatch('billingType', form)
   const watchCurrency = Form.useWatch('currency', form)
-  const watchPlanIds = Form.useWatch('planIds', form)
+  // const watchPlanIds = Form.useWatch('planIds', form)
   const watchAdvancedConfig = Form.useWatch('advance', form)
   const watchUpgradeOnly = Form.useWatch('upgradeOnly', form)
   const watchLongerUpgradeOnly = Form.useWatch('upgradeLongerOnly', form)
+  const watchApplyType = Form.useWatch('planApplyType', form)
 
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
@@ -285,6 +292,10 @@ const Index = () => {
       code.upgradeLongerOnly = false
     }
     delete code.upgradeScope
+
+    if (code.planApplyType == DiscountCodeApplyType.ALL) {
+      code.planIds = []
+    }
 
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
 
@@ -693,17 +704,37 @@ const Index = () => {
                   disabled={!canActiveItemEdit(code?.status)}
                 />
               </Form.Item>
+              <Form.Item label="Apply Discount Code To" name="planApplyType">
+                <Radio.Group>
+                  <Space direction="vertical">
+                    <Radio value={DiscountCodeApplyType.ALL}>All plans</Radio>
+                    <Radio value={DiscountCodeApplyType.SELECTED}>
+                      Selected plans
+                    </Radio>
+                    <Radio value={DiscountCodeApplyType.NOT_SELECTED}>
+                      All plans except selected plans
+                    </Radio>
+                  </Space>
+                </Radio.Group>
+              </Form.Item>
               <Form.Item
-                label="Apply to which plans"
+                hidden={watchApplyType == DiscountCodeApplyType.ALL}
                 name="planIds"
                 rules={[
                   {
-                    required: watchPlanIds != null && watchPlanIds.length > 0
+                    // required: watchPlanIds != null && watchPlanIds.length > 0
+                    required: watchApplyType != DiscountCodeApplyType.ALL,
+                    message: 'Plan list should not be empty.'
                   },
                   () => ({
                     validator(_, plans) {
-                      if (plans == null || plans.length == 0) {
-                        return Promise.resolve()
+                      if (
+                        watchApplyType !== DiscountCodeApplyType.ALL &&
+                        (plans == null || plans.length == 0)
+                      ) {
+                        return Promise.reject(
+                          `Please select the plans you ${watchApplyType == DiscountCodeApplyType.SELECTED ? 'want to apply' : "don't want to apply"}.`
+                        )
                       }
                       for (let i = 0; i < plans.length; i++) {
                         if (planList.findIndex((p) => p.id == plans[i]) == -1) {
@@ -716,7 +747,11 @@ const Index = () => {
                     }
                   })
                 ]}
-                extra="If no plan is selected, the discount code will be applied to all plans."
+                extra={
+                  watchApplyType == DiscountCodeApplyType.SELECTED
+                    ? 'The discount code will be applied to selected plans'
+                    : 'The discount code will be applied to all plans except selected plans'
+                }
               >
                 <Select
                   mode="multiple"
