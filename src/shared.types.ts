@@ -315,7 +315,11 @@ export enum DiscountType {
   PERCENTAGE = 1,
   AMOUNT
 }
-
+export enum DiscountCodeApplyType {
+  ALL = 0,
+  SELECTED = 1,
+  NOT_SELECTED = 2
+}
 type DiscountCode = {
   id?: number
   merchantId: number
@@ -332,6 +336,7 @@ type DiscountCode = {
   endTime: number
   validityRange: [Dayjs | null, Dayjs | null]
   createTime?: number
+  planApplyType: DiscountCodeApplyType
   planIds?: number[] // this code applies to these plan only
   quantity: number
   metadata?: {
