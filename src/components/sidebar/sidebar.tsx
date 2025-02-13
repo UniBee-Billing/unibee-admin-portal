@@ -34,7 +34,7 @@ export const Sidebar = () => {
     >
       <div className="h-full overflow-y-auto overflow-x-hidden">
         <div>
-          <Logo collapsed={collapsed} />
+          <Logo />
           <SideMenu />
         </div>
 
