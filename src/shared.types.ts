@@ -313,7 +313,18 @@ type IPreview = {
 }
 export enum DiscountType {
   PERCENTAGE = 1,
-  AMOUNT
+  AMOUNT = 2
+}
+export enum DiscountCodeBillingType {
+  ONE_TIME = 1,
+  RECURRING = 2
+}
+export enum DiscountCodeStatus {
+  EDITING = 1,
+  ACTIVE = 2,
+  DEACTIVE = 3,
+  EXPIRED = 4,
+  ARCHIVED = 10
 }
 export enum DiscountCodeApplyType {
   ALL = 0,
@@ -325,8 +336,8 @@ type DiscountCode = {
   merchantId: number
   name: string
   code: string
-  status?: number // when creating a new obj, it has no status. 1: editing, 2-active, 3-deactivate, 4-expired
-  billingType: number
+  status?: DiscountCodeStatus // when creating a new obj, it has no status.
+  billingType: DiscountCodeBillingType
   discountType: DiscountType
   discountAmount: number
   discountPercentage: number
@@ -665,14 +676,6 @@ export type TActivityLogs = {
   planId: number
   discountCode: string
   member: IMerchantUserProfile[]
-}
-
-export enum DiscountCodeStatus {
-  EDITING = 1,
-  ACTIVE,
-  DEACTIVATE,
-  EXPIRED,
-  ARCHIVED = 10
 }
 
 export enum CreditType {
