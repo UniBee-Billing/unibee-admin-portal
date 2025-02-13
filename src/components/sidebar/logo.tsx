@@ -1,13 +1,18 @@
 import { useMerchantInfoStore } from '../../stores'
 import { withEnvBasePath } from '../../utils'
-export const Logo = ({ collapsed }: { collapsed: boolean }) => {
+
+const LOGO_CONTAINER_HEIGHT = 56
+
+export const Logo = () => {
   const merchantInfoStore = useMerchantInfoStore()
 
   return (
-    <div className="static my-4 flex h-14 items-center justify-center">
+    <div
+      style={{ height: LOGO_CONTAINER_HEIGHT + 'px', width: '100%' }}
+      className="relative my-5 flex max-h-full max-w-full items-center justify-center"
+    >
       <img
-        height={`${collapsed ? '70%' : '100%'}  `}
-        className={`p-2 transition-all duration-300`}
+        className={`h-full w-full object-contain p-2 transition-all duration-300`}
         src={
           merchantInfoStore.companyLogo ||
           withEnvBasePath('/logoPlaceholder.png')
