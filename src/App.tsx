@@ -36,6 +36,7 @@ const App: React.FC = () => {
     [appConfigStore]
   )
 
+  /*
   const initialize = () => {
     console.log('sesssionStore: ', sessionStore)
     // if session expired, a login modal will open, which will handle the initialize.
@@ -45,13 +46,20 @@ const App: React.FC = () => {
       appInitialize()
     }
   }
+    */
 
+  useEffect(() => {
+    appInitialize()
+  }, [])
+
+  /*
   useEffect(() => {
     window.addEventListener('load', initialize)
     return () => {
       window.removeEventListener('load', initialize)
     }
   }, [])
+  */
 
   /*
   useEffect(() => {
