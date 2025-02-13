@@ -190,7 +190,18 @@ const Index = () => {
               extra={`Max size: ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, allowed file types: ${FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}`}
             >
               <div style={{ height: '102px' }}>
-                <ImgCrop rotationSlider>
+                <ImgCrop
+                  rotationSlider
+                  quality={0.8}
+                  minAspect={0.5}
+                  maxAspect={3}
+                  showGrid={true}
+                  modalTitle="Crop Image"
+                  zoomSlider
+                  showReset
+                  aspectSlider
+                  resetText="Reset"
+                >
                   <Upload
                     maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
                     accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
