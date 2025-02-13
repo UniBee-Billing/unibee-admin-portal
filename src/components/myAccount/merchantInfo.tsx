@@ -16,7 +16,8 @@ import {
 
 import type { GetProp, UploadFile, UploadProps } from 'antd'
 import { Upload } from 'antd'
-//import ImgCrop from 'antd-img-crop'
+import ImgCrop from 'antd-img-crop'
+import type { UploadRequestOption } from 'rc-upload/lib/interface'
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 const FILE_CONSTRAINTS = {
@@ -25,8 +26,6 @@ const FILE_CONSTRAINTS = {
   ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg']
 }
 
-// const API_URL = import.meta.env.VITE_API_URL
-
 const Index = () => {
   const merchantInfoStore = useMerchantInfoStore()
   const merchantMemberProfile = useMerchantMemberProfileStore()
@@ -34,10 +33,10 @@ const Index = () => {
   const [loading, setLoading] = useState(false) // page loading
   const [uploading, setUploading] = useState(false) // logo upload
   const [submitting, setSubmitting] = useState(false)
-  // const [logoUrl, setLogoUrl] = useState('')
   const [merchantInfo, setMerchantInfo] = useState<TMerchantInfo | null>(null)
   const [fileList, setFileList] = useState<UploadFile[]>([])
 
+  // removing file also trigger this fn
   const onUploadFileChange: UploadProps['onChange'] = ({
     fileList: newFileList
   }) => {
@@ -79,7 +78,6 @@ const Index = () => {
     }
 
     setMerchantInfo(merchantInfo.merchant)
-    // setLogoUrl(merchantInfo.merchant.companyLogo)
     const { companyLogo } = merchantInfo.merchant
     if (companyLogo !== '' && companyLogo != null) {
       setFileList([
@@ -93,48 +91,19 @@ const Index = () => {
     }
   }
 
-  /* const onFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    let file
-    if (event.target.files && event.target.files.length > 0) {
-      file = event.target.files[0]
-    }
-    if (file == null) {
-      return
-    }
-
-    if (file.size > 4 * 1024 * 1024) {
-      message.error('Max logo file size: 4M.')
-      return
-    }
-
-    const formData = new FormData()
-    formData.append('file', file)
-    setUploading(true)
-    const [logoUrl, err] = await uploadLogoReq(formData)
-
-    setUploading(false)
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    form.setFieldValue('companyLogo', logoUrl)
-    setLogoUrl(logoUrl)
-  } */
-
-  const onFileUpload = async () => {
-    const formData = new FormData()
-    const file = fileList[fileList.length - 1].originFileObj
+  const onFileUpload = async (opt: UploadRequestOption<unknown>) => {
+    const { file } = opt
     if (file == undefined) {
       return
     }
-    if (file.size > FILE_CONSTRAINTS.MAX_FILE_SIZE) {
+    if ((file as File).size > FILE_CONSTRAINTS.MAX_FILE_SIZE) {
       message.error(
         'Max logo file size: ' + formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)
       )
+      return
     }
-    const buf = await file.arrayBuffer()
-    const blob = new Blob([buf])
-    formData.append('file', blob)
+    const formData = new FormData()
+    formData.append('file', file)
     setUploading(true)
     const [logoUrl, err] = await uploadLogoReq(formData)
     setUploading(false)
@@ -221,26 +190,19 @@ const Index = () => {
               extra={`Max size: ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, allowed file types: ${FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}`}
             >
               <div style={{ height: '102px' }}>
-                {/* <ImgCrop rotationSlider> */}
-                <Upload
-                  /*
-                    action={`${API_URL}/merchant/oss/file`}
-                    headers={{
-                      'Content-Type': 'multipart/form-data',
-                      Authorization: `${localStorage.getItem('merchantToken')}`
-                    }}
-                      */
-                  maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
-                  accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
-                  listType="picture-card"
-                  customRequest={onFileUpload}
-                  fileList={fileList}
-                  onChange={onUploadFileChange}
-                  onPreview={onPreview}
-                >
-                  {fileList.length == 0 && '+ Upload'}
-                </Upload>
-                {/* </ImgCrop> */}
+                <ImgCrop rotationSlider>
+                  <Upload
+                    maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
+                    accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
+                    listType="picture-card"
+                    customRequest={onFileUpload}
+                    fileList={fileList}
+                    onChange={onUploadFileChange}
+                    onPreview={onPreview}
+                  >
+                    {fileList.length == 0 && '+ Upload'}
+                  </Upload>
+                </ImgCrop>
               </div>
             </Form.Item>
 
