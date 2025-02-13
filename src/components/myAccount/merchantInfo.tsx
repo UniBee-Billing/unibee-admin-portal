@@ -25,7 +25,7 @@ type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 const FILE_CONSTRAINTS = {
   MAX_FILE_SIZE: 4 * 1024 * 1024,
   MAX_FILE_COUNT: 1,
-  ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg']
+  ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg', '.svg']
 }
 
 const getBase64 = (file: FileType): Promise<string> =>
@@ -172,7 +172,7 @@ const Index = () => {
               span: 16
             }}
             style={{
-              maxWidth: 600
+              maxWidth: 700
             }}
             initialValues={merchantInfo}
             autoComplete="off"
