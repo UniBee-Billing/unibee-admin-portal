@@ -15,8 +15,10 @@ import {
 } from '../../stores'
 
 import type { GetProp, UploadFile, UploadProps } from 'antd'
-import { Upload } from 'antd'
-import ImgCrop from 'antd-img-crop'
+import { Image, Upload } from 'antd'
+// import ImgCrop from 'antd-img-crop'
+// this tool has a bug, when cropping transparent bg png, the bg will become white after cropping
+
 import type { UploadRequestOption } from 'rc-upload/lib/interface'
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
@@ -26,10 +28,20 @@ const FILE_CONSTRAINTS = {
   ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg']
 }
 
+const getBase64 = (file: FileType): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = (error) => reject(error)
+  })
+
 const Index = () => {
   const merchantInfoStore = useMerchantInfoStore()
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const [form] = Form.useForm()
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewImage, setPreviewImage] = useState('')
   const [loading, setLoading] = useState(false) // page loading
   const [uploading, setUploading] = useState(false) // logo upload
   const [submitting, setSubmitting] = useState(false)
@@ -54,18 +66,12 @@ const Index = () => {
   }
 
   const onPreview = async (file: UploadFile) => {
-    let src = file.url as string
-    if (!src) {
-      src = await new Promise((resolve) => {
-        const reader = new FileReader()
-        reader.readAsDataURL(file.originFileObj as FileType)
-        reader.onload = () => resolve(reader.result as string)
-      })
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj as FileType)
     }
-    const image = new Image()
-    image.src = src
-    const imgWindow = window.open(src)
-    imgWindow?.document.write(image.outerHTML)
+
+    setPreviewImage(file.url || (file.preview as string))
+    setPreviewOpen(true)
   }
 
   const getInfo = async () => {
@@ -190,7 +196,7 @@ const Index = () => {
               extra={`Max size: ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, allowed file types: ${FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}`}
             >
               <div style={{ height: '102px' }}>
-                <ImgCrop
+                {/* <ImgCrop
                   rotationSlider
                   quality={0.8}
                   minAspect={0.5}
@@ -201,19 +207,31 @@ const Index = () => {
                   showReset
                   aspectSlider
                   resetText="Reset"
+                > */}
+                <Upload
+                  maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
+                  accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
+                  listType="picture-card"
+                  customRequest={onFileUpload}
+                  fileList={fileList}
+                  onChange={onUploadFileChange}
+                  onPreview={onPreview}
                 >
-                  <Upload
-                    maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
-                    accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
-                    listType="picture-card"
-                    customRequest={onFileUpload}
-                    fileList={fileList}
-                    onChange={onUploadFileChange}
-                    onPreview={onPreview}
-                  >
-                    {fileList.length == 0 && '+ Upload'}
-                  </Upload>
-                </ImgCrop>
+                  {fileList.length == 0 && '+ Upload'}
+                </Upload>{' '}
+                {previewImage && (
+                  <Image
+                    wrapperStyle={{ display: 'none' }}
+                    preview={{
+                      visible: previewOpen,
+                      onVisibleChange: (visible) => setPreviewOpen(visible),
+                      afterOpenChange: (visible) =>
+                        !visible && setPreviewImage('')
+                    }}
+                    src={previewImage}
+                  />
+                )}
+                {/* </ImgCrop> */}
               </div>
             </Form.Item>
 
