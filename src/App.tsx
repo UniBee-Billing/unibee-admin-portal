@@ -39,9 +39,9 @@ const App: React.FC = () => {
   const initialize = () => {
     // if session expired, a login modal will open, which will handle the initialize.
     // the following appInitialize() is to handle page refresh by pressing F5, or right-click opening the app in a new tab.
-    if (!sessionStore.expired) {
-      appInitialize()
-    }
+    // if (!sessionStore.expired) {
+    appInitialize()
+    // }
   }
 
   useEffect(() => {
