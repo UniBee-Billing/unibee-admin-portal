@@ -36,5 +36,3 @@ const LogoWithAction = ({
 )
 
 export default LogoWithAction
-
-//         className="mb-1 mt-4 w-full cursor-pointer text-white opacity-75 transition duration-300 hover:opacity-100"
