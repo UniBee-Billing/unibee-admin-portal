@@ -234,7 +234,7 @@ export const updateMerchantInfoReq = async (body: TMerchantInfo) => {
 export const uploadLogoReq = async (f: FormData) => {
   const token = localStorage.getItem('merchantToken')
   try {
-    const res = await axios.post(`${API_URL}/merchant/oss/file `, f, {
+    const res = await axios.post(`${API_URL}/merchant/oss/file`, f, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `${token}`
