@@ -679,7 +679,7 @@ const EssentialSetup = ({
           className={`text-xs ${fileList.length == 0 ? 'text-red-500' : 'text-gray-500'}`}
         >
           (
-          {`at least 1 logo, at most ${FILE_CONSTRAINTS.MAX_FILE_COUNT} logos, each < ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, drag to reorder them`}
+          {`At most ${FILE_CONSTRAINTS.MAX_FILE_COUNT} logos (${FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}), each < ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, drag to reorder them`}
           )
         </span>
       </div>

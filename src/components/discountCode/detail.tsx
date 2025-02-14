@@ -1099,38 +1099,40 @@ const SummaryTab = ({
           planIds == null || planIds.length == 0 ? (
             <NotSetPlaceholder />
           ) : (
-            <div
+            <p
               className="text-right"
               style={{
+                width: '100%',
                 display: '-webkit-box',
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'normal'
+                textOverflow: 'ellipsis'
+                // whiteSpace: 'normal'
               }}
             >
               {planIds?.map((id) => getPlanLabel(id)).join(', ')}
-            </div>
+            </p>
           )
         ) : planIds == null || planIds.length == 0 ? (
           <NotSetPlaceholder />
         ) : (
           <div className="flex flex-col items-end">
             <div className="text-right text-red-500">All plans except:</div>
-            <div
+            <p
               className="text-right"
               style={{
+                width: '100%',
                 display: '-webkit-box',
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'normal'
+                textOverflow: 'ellipsis'
+                //whiteSpace: 'normal'
               }}
             >
               {planIds?.map((id) => getPlanLabel(id)).join(', ')}
-            </div>
+            </p>
           </div>
         )
     }
