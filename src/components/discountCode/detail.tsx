@@ -5,7 +5,6 @@ import {
   DatePicker,
   Divider,
   Form,
-  FormInstance,
   Input,
   InputNumber,
   Popconfirm,
@@ -19,9 +18,12 @@ import {
   message
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
+import update from 'immutability-helper'
 import {
+  Dispatch,
   PropsWithChildren,
   ReactNode,
+  SetStateAction,
   useEffect,
   useMemo,
   useRef,
@@ -50,6 +52,7 @@ import {
   DiscountCodeApplyType,
   DiscountCodeBillingType,
   DiscountCodeStatus,
+  DiscountCodeUserScope,
   DiscountType,
   IPlan,
   PlanStatus,
@@ -115,14 +118,24 @@ const Index = () => {
     setIsOpenUpdateDiscountCodeQuantityModal
   ] = useState(false)
   const [form] = Form.useForm()
+  const watchDiscountName = Form.useWatch('name', form)
+  const watchDiscountCode = Form.useWatch('code', form)
+  const watchDiscountQuantity = Form.useWatch('quantity', form)
   const watchDiscountType = Form.useWatch('discountType', form)
   const watchBillingType = Form.useWatch('billingType', form)
   const watchCurrency = Form.useWatch('currency', form)
-  // const watchPlanIds = Form.useWatch('planIds', form)
+  const watchCycleLimit = Form.useWatch('cycleLimit', form)
+  const watchValidityRange = Form.useWatch('validityRange', form)
+  const watchPlanIds = Form.useWatch('planIds', form)
   const watchAdvancedConfig = Form.useWatch('advance', form)
   const watchUpgradeOnly = Form.useWatch('upgradeOnly', form)
   const watchLongerUpgradeOnly = Form.useWatch('upgradeLongerOnly', form)
   const watchApplyType = Form.useWatch('planApplyType', form)
+  const watchUserScope = Form.useWatch('userScope', form)
+  const watchUpgradeScope = Form.useWatch('upgradeScope', form)
+  const watchUserLimit = Form.useWatch('userLimit', form)
+  const watchDiscountAmount = Form.useWatch('discountAmount', form)
+  const watchDiscountPercentage = Form.useWatch('discountPercentage', form)
 
   const goBack = () => navigate(`/discount-code/list`)
   const goToUsageDetail = () =>
@@ -321,7 +334,14 @@ const Index = () => {
     if (null == p) {
       return ''
     }
-    return `${p.planName} (${showAmount(p.amount, p.currency)}/${p.intervalCount == 1 ? '' : p.intervalCount}${p.intervalUnit})`
+    return `${p.planName}(${showAmount(p.amount, p.currency)}/${p.intervalCount == 1 ? '' : p.intervalCount}${p.intervalUnit})`
+  }
+
+  const getDiscountedValue = () => {
+    if (watchDiscountType == DiscountType.AMOUNT) {
+      return showAmount(watchDiscountAmount, watchCurrency, true)
+    }
+    return `${watchDiscountPercentage}%`
   }
 
   useEffect(() => {
@@ -375,7 +395,11 @@ const Index = () => {
         <UpdateDiscountCodeQuantityModal
           discountId={code?.id}
           close={() => setIsOpenUpdateDiscountCodeQuantityModal(false)}
-          onSuccess={(delta) => (code.quantity += delta)}
+          onSuccess={(delta) => {
+            const newQuantity = form.getFieldValue('quantity') + delta
+            setCode(update(code, { quantity: { $set: newQuantity } }))
+            form.setFieldValue('quantity', newQuantity)
+          }}
           open={isOpenUpdateDiscountCodeQuantityModal}
         />
       )}
@@ -399,7 +423,6 @@ const Index = () => {
                   label: 'General Configuration',
                   children: (
                     <GeneralConfigTab
-                      form={form}
                       code={code}
                       planList={planList}
                       getPlanLabel={getPlanLabel}
@@ -420,10 +443,7 @@ const Index = () => {
                   label: 'Advanced Configuration',
                   children: (
                     <AdvancedConfigTab
-                      form={form}
                       code={code}
-                      formEditable={formEditable}
-                      isNew={isNew}
                       watchAdvancedConfig={watchAdvancedConfig}
                     />
                   )
@@ -431,12 +451,30 @@ const Index = () => {
               ]}
             />
             <div className="w-1/3">
-              <SummaryTab />
+              <SummaryTab
+                name={watchDiscountName}
+                code={watchDiscountCode}
+                status={code?.status}
+                quantity={watchDiscountQuantity}
+                discountType={watchDiscountType}
+                billingType={watchBillingType}
+                cycleLimit={watchCycleLimit}
+                validityRange={watchValidityRange}
+                applyType={watchApplyType}
+                planIds={watchPlanIds}
+                getPlanLabel={getPlanLabel}
+                userScope={watchUserScope}
+                upgradeScope={watchUpgradeScope}
+                userLimit={watchUserLimit}
+                getDiscountedValue={getDiscountedValue}
+              />
             </div>
           </div>
         </Form>
       )}
-      <div className={`flex ${isNew ? 'justify-end' : 'justify-between'}`}>
+      <div
+        className={`mt-10 flex ${isNew ? 'justify-end' : 'justify-between'}`}
+      >
         {!isNew && (
           <Popconfirm
             title="Archive Confirm"
@@ -479,7 +517,6 @@ const Index = () => {
 export default Index
 
 const GeneralConfigTab = ({
-  form,
   code,
   isNew,
   formEditable,
@@ -491,7 +528,6 @@ const GeneralConfigTab = ({
   getPlanLabel,
   setIsOpenUpdateDiscountCodeQuantityModal
 }: {
-  form: FormInstance<any>
   code: DiscountCode
   isNew: boolean
   formEditable: boolean
@@ -545,7 +581,7 @@ const GeneralConfigTab = ({
     [code?.status, code?.quantity]
   )
   return (
-    <div>
+    <div className="pt-4">
       {!isNew && (
         <Form.Item label="ID" name="id" hidden>
           <Input disabled />
@@ -858,20 +894,14 @@ const GeneralConfigTab = ({
 }
 
 const AdvancedConfigTab = ({
-  form,
   code,
-  isNew,
-  watchAdvancedConfig,
-  formEditable
+  watchAdvancedConfig
 }: {
-  form: FormInstance<any>
   code: DiscountCode
-  isNew: boolean
   watchAdvancedConfig: boolean
-  formEditable: boolean
 }) => {
   return (
-    <div>
+    <div className="w-2/3 pt-4">
       <Row
         className="border-1 mb-3 flex h-16 items-center rounded-lg border-solid border-[#D9D9D9] bg-[#FAFAFA]"
         gutter={[8, 8]}
@@ -894,9 +924,13 @@ const AdvancedConfigTab = ({
           disabled={!watchAdvancedConfig || !canActiveItemEdit(code?.status)}
         >
           <Space direction="vertical">
-            <Radio value={0}>Apply for all</Radio>
-            <Radio value={1}>Apply only for new users </Radio>
-            <Radio value={2}>Apply only for renewals</Radio>
+            <Radio value={DiscountCodeUserScope.ALL_USERS}>Apply for all</Radio>
+            <Radio value={DiscountCodeUserScope.NEW_USERS}>
+              Apply only for new users
+            </Radio>
+            <Radio value={DiscountCodeUserScope.RENEWAL_USERS}>
+              Apply only for renewals
+            </Radio>
           </Space>
         </Radio.Group>
       </Form.Item>
@@ -936,35 +970,209 @@ const AdvancedConfigTab = ({
   )
 }
 
-const SummaryTab = () => {
+const labelStyle = 'flex h-11 items-center text-gray-400'
+const contentStyle = 'flex h-11 items-center justify-end'
+const labelStyle2 = 'flex h-6 text-gray-400'
+const contentStyle2 = 'flex h-6'
+type SummaryItem = {
+  name: string
+  code: string
+  status?: DiscountCodeStatus // stutus could be null if code is copied.
+  quantity: string
+  discountType: DiscountType
+  billingType: DiscountCodeBillingType
+  cycleLimit: number
+  validityRange: null | [Dayjs | null, Dayjs | null]
+  applyType: DiscountCodeApplyType
+  planIds: null | number[]
+  getPlanLabel: (planId: number) => string
+  userScope: DiscountCodeUserScope
+  upgradeScope: DISCOUNT_CODE_UPGRADE_SCOPE
+  userLimit: boolean
+  getDiscountedValue: () => string
+}
+
+const NotSetPlaceholder = () => <span className="text-red-500">Not set</span>
+const SummaryTab = ({
+  name,
+  code,
+  status,
+  quantity,
+  discountType,
+  billingType,
+  cycleLimit,
+  validityRange,
+  applyType,
+  planIds,
+  getPlanLabel,
+  userScope,
+  upgradeScope,
+  userLimit,
+  getDiscountedValue
+}: SummaryItem) => {
+  const items = [
+    { label: 'Name', renderContent: name || <NotSetPlaceholder /> },
+    { label: 'Code', renderContent: code || <NotSetPlaceholder /> },
+    {
+      label: 'Status',
+      renderContent: getDiscountCodeStatusTagById(
+        status ?? DiscountCodeStatus.EDITING
+      )
+    },
+    { label: 'Quantity', renderContent: quantity },
+    {
+      label: 'Discount Type',
+      renderContent:
+        discountType == DiscountType.AMOUNT ? 'Fixed amount' : 'Percentage'
+    },
+    {
+      label: 'Discount',
+      renderContent: getDiscountedValue()
+    },
+    {
+      label: 'One time or recurring',
+      renderContent:
+        billingType == DiscountCodeBillingType.ONE_TIME
+          ? 'One time'
+          : 'Recurring'
+    },
+    {
+      label: 'Cycle Limit',
+      renderContent: cycleLimit == 0 ? 'No limit' : cycleLimit
+    },
+    {
+      label: 'Code Apply Date Range',
+      renderContent:
+        validityRange != null &&
+        `${dayjs(validityRange[0]).format('YYYY-MM-DD')} ~ ${dayjs(validityRange[1]).format('YYYY-MM-DD')}`
+    },
+    {
+      label: 'Apply Discount Code to',
+      renderContent:
+        applyType == DiscountCodeApplyType.ALL ? (
+          'All plans'
+        ) : applyType == DiscountCodeApplyType.SELECTED ? (
+          planIds == null || planIds.length == 0 ? (
+            <NotSetPlaceholder />
+          ) : (
+            <div
+              className="text-right"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'normal'
+              }}
+            >
+              {planIds?.map((id) => getPlanLabel(id)).join(', ')}
+            </div>
+          )
+        ) : planIds == null || planIds.length == 0 ? (
+          <NotSetPlaceholder />
+        ) : (
+          <div className="flex flex-col items-end">
+            <div className="text-right text-red-500">All plans except:</div>
+            <div
+              className="text-right"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'normal'
+              }}
+            >
+              {planIds?.map((id) => getPlanLabel(id)).join(', ')}
+            </div>
+          </div>
+        )
+    }
+  ]
+
+  const advancedItems = [
+    {
+      key: 'Discount Code Applicable Scope',
+      label: 'Discount Code Applicable Scope',
+      renderContent:
+        userScope == DiscountCodeUserScope.ALL_USERS
+          ? 'Apply for all'
+          : userScope == DiscountCodeUserScope.NEW_USERS
+            ? 'Apply only for new users'
+            : 'Apply only for renewal users'
+    },
+    {
+      key: 'Applicable Subscription Limits',
+      label: 'Applicable Subscription Limits',
+      renderContent:
+        upgradeScope == DISCOUNT_CODE_UPGRADE_SCOPE.ALL
+          ? 'Apply for all'
+          : upgradeScope == DISCOUNT_CODE_UPGRADE_SCOPE.UPGRADE_ONLY
+            ? 'Apply only for upgrades (same recurring cycle)'
+            : 'Apply only for switching to any long subscriptions'
+    },
+    {
+      key: 'Same user cannot use the same discount code again',
+      label: 'Same user cannot use the same discount code again',
+      renderContent: userLimit ? 'Yes' : 'No'
+    }
+  ]
   return (
     <div className="px-4">
-      <div className="flex h-12 items-center text-lg">Summary</div>
-      <Divider className="my-6" />
-      <div className="mb-6 flex items-center">
+      <div className="flex h-[46px] items-center text-lg">Summary</div>
+      <Divider className="my-4" />
+      <div className="mb-4 flex items-center">
         <Divider
           type="vertical"
           style={{
             backgroundColor: '#1677FF',
             width: '3px',
+            marginLeft: 0,
             height: '28px'
           }}
         />
         <div className="text-lg">General configuration</div>
       </div>
-      general content herer
-      <div className="mb-6 flex items-center">
+      {items.map((item) => (
+        <Row key={item.label} className="flex items-baseline">
+          <Col span={10} className={labelStyle}>
+            {item.label}
+          </Col>
+          <Col span={14} className={contentStyle}>
+            {item.renderContent}
+          </Col>
+        </Row>
+      ))}
+      <div className="h-8"></div>
+      <div className="my-4 flex items-center">
         <Divider
           type="vertical"
           style={{
             backgroundColor: '#1677FF',
             width: '3px',
+            marginLeft: 0,
             height: '28px'
           }}
         />
         <div className="text-lg">Advanced configuration</div>
       </div>
-      advanced content here
+      {advancedItems.map((item, idx: number) => (
+        <div key={item.label}>
+          <Row className="flex items-baseline">
+            <Col span={24} className={labelStyle2}>
+              {item.label}
+            </Col>
+          </Row>
+          <Row className="flex items-baseline">
+            <Col span={24} className={contentStyle2}>
+              {item.renderContent}
+            </Col>
+          </Row>
+          {idx != advancedItems.length - 1 && <Divider className="my-3" />}
+        </div>
+      ))}
     </div>
   )
 }
