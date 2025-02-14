@@ -313,20 +313,36 @@ type IPreview = {
 }
 export enum DiscountType {
   PERCENTAGE = 1,
-  AMOUNT
+  AMOUNT = 2
+}
+export enum DiscountCodeBillingType {
+  ONE_TIME = 1,
+  RECURRING = 2
+}
+export enum DiscountCodeStatus {
+  EDITING = 1,
+  ACTIVE = 2,
+  DEACTIVE = 3,
+  EXPIRED = 4,
+  ARCHIVED = 10
 }
 export enum DiscountCodeApplyType {
   ALL = 0,
   SELECTED = 1,
   NOT_SELECTED = 2
 }
+export enum DiscountCodeUserScope {
+  ALL_USERS = 0, // all users can use this code
+  NEW_USERS = 1, // only new users can use this code
+  RENEWAL_USERS = 2 // only for subscription renewal
+}
 type DiscountCode = {
   id?: number
   merchantId: number
   name: string
   code: string
-  status?: number // when creating a new obj, it has no status. 1: editing, 2-active, 3-deactivate, 4-expired
-  billingType: number
+  status?: DiscountCodeStatus // when creating a new obj, it has no status.
+  billingType: DiscountCodeBillingType
   discountType: DiscountType
   discountAmount: number
   discountPercentage: number
@@ -343,7 +359,7 @@ type DiscountCode = {
     [key: string]: string
   }
   advance: boolean // enable advanced configuration
-  userScope: 0 | 1 | 2 // 0: all users can use this code, 1: only new users can use, 2: only for subscription renewal
+  userScope: DiscountCodeUserScope
   userLimit: number | boolean // how many time the same user can use this code. 0: unlimited, 1: once.
   // Only 1, 0 are used in current release(need to convert to bool on FE, it's a switch). Number type is for future requirement change(100: same user can use 100 times).
 
@@ -665,14 +681,6 @@ export type TActivityLogs = {
   planId: number
   discountCode: string
   member: IMerchantUserProfile[]
-}
-
-export enum DiscountCodeStatus {
-  EDITING = 1,
-  ACTIVE,
-  DEACTIVATE,
-  EXPIRED,
-  ARCHIVED = 10
 }
 
 export enum CreditType {
