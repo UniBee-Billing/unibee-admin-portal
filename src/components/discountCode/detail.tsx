@@ -93,7 +93,7 @@ const DEFAULT_CODE: DiscountCode = {
 const CAN_EDIT_ITEM_STATUSES = [
   DiscountCodeStatus.EDITING,
   DiscountCodeStatus.ACTIVE,
-  DiscountCodeStatus.DEACTIVE
+  DiscountCodeStatus.INACTIVE
 ]
 
 const canActiveItemEdit = (status?: DiscountCodeStatus) =>
@@ -999,7 +999,7 @@ const contentStyle2 = 'flex h-6'
 type SummaryItem = {
   name: string
   code: string
-  status?: DiscountCodeStatus // stutus could be null if code is copied.
+  status?: DiscountCodeStatus // status could be null if code is copied.
   quantity: number
   discountType: DiscountType
   billingType: DiscountCodeBillingType

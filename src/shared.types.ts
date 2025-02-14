@@ -322,7 +322,7 @@ export enum DiscountCodeBillingType {
 export enum DiscountCodeStatus {
   EDITING = 1,
   ACTIVE = 2,
-  DEACTIVE = 3,
+  INACTIVE = 3,
   EXPIRED = 4,
   ARCHIVED = 10
 }
