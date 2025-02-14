@@ -46,9 +46,10 @@ import { CSS } from '@dnd-kit/utilities'
 import { useForm } from 'antd/es/form/Form'
 import TextArea from 'antd/es/input/TextArea'
 import update from 'immutability-helper'
+import type { UploadRequestOption } from 'rc-upload/lib/interface'
 import { useEffect, useState } from 'react'
 import ExchangeIcon from '../../assets/exchange.svg?react'
-import { randomString } from '../../helpers'
+import { formatBytes, randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
   getPaymentGatewayConfigListReq,
@@ -460,7 +461,11 @@ const getBase64 = (file: FileType): Promise<string> =>
     reader.onerror = (error) => reject(error)
   })
 
-const MAX_FILE_COUNT = 5
+const FILE_CONSTRAINTS = {
+  ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg', '.svg'],
+  MAX_FILE_SIZE: 2 * 1024 * 1024, // 2MB
+  MAX_FILE_COUNT: 5
+}
 const EssentialSetup = ({
   closeModal,
   gatewayConfig,
@@ -568,15 +573,20 @@ const EssentialSetup = ({
     </button>
   )
 
-  const onUpload = async () => {
-    const formData = new FormData()
-    const file = fileList[fileList.length - 1].originFileObj
+  const onUpload = async (opt: UploadRequestOption<unknown>) => {
+    const { file } = opt
     if (file == undefined) {
       return
     }
-    const buf = await file.arrayBuffer()
-    const blob = new Blob([buf])
-    formData.append('file', blob)
+    if ((file as File).size > FILE_CONSTRAINTS.MAX_FILE_SIZE) {
+      message.error(
+        'Max logo file size: ' + formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)
+      )
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
     setUploading(true)
     const [logoUrl, err] = await uploadLogoReq(formData)
     setUploading(false)
@@ -669,7 +679,7 @@ const EssentialSetup = ({
           className={`text-xs ${fileList.length == 0 ? 'text-red-500' : 'text-gray-500'}`}
         >
           (
-          {`at least 1 logo, at most ${MAX_FILE_COUNT} logos, each < 2M, drag to reorder them`}
+          {`at least 1 logo, at most ${FILE_CONSTRAINTS.MAX_FILE_COUNT} logos, each < ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, drag to reorder them`}
           )
         </span>
       </div>
@@ -681,9 +691,8 @@ const EssentialSetup = ({
           <Upload
             disabled={uploading}
             listType="picture-card"
-            maxCount={MAX_FILE_COUNT}
-            accept=".png, .jpg, .jpeg"
-            // accept=".png, .jpg, .jpeg, .svg"
+            maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
+            accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
             // multiple
             itemRender={(originNode, file) => (
               <DraggableUploadListItem originNode={originNode} file={file} />
@@ -693,7 +702,9 @@ const EssentialSetup = ({
             onPreview={handlePreview}
             onChange={handleChange}
           >
-            {fileList.length >= MAX_FILE_COUNT ? null : uploadButton}
+            {fileList.length >= FILE_CONSTRAINTS.MAX_FILE_COUNT
+              ? null
+              : uploadButton}
           </Upload>
         </SortableContext>
       </DndContext>
