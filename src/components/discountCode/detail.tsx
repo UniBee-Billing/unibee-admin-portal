@@ -337,11 +337,31 @@ const Index = () => {
     return `${p.planName}(${showAmount(p.amount, p.currency)}/${p.intervalCount == 1 ? '' : p.intervalCount}${p.intervalUnit})`
   }
 
+  // regardless of discount Type, just return the fixed amt or percentage
   const getDiscountedValue = () => {
     if (watchDiscountType == DiscountType.AMOUNT) {
-      return showAmount(watchDiscountAmount, watchCurrency, true)
+      if (
+        watchDiscountAmount == null ||
+        watchDiscountAmount == '' ||
+        isNaN(Number(watchDiscountAmount)) ||
+        watchCurrency == null ||
+        watchCurrency == ''
+      ) {
+        return <NotSetPlaceholder />
+      } else {
+        return showAmount(watchDiscountAmount, watchCurrency, true)
+      }
+    } else {
+      if (
+        watchDiscountPercentage == null ||
+        watchDiscountPercentage == '' ||
+        isNaN(Number(watchDiscountPercentage))
+      ) {
+        return <NotSetPlaceholder />
+      } else {
+        return `${watchDiscountPercentage}%`
+      }
     }
-    return `${watchDiscountPercentage}%`
   }
 
   useEffect(() => {
@@ -421,6 +441,7 @@ const Index = () => {
                 {
                   key: 'general',
                   label: 'General Configuration',
+                  forceRender: true,
                   children: (
                     <GeneralConfigTab
                       code={code}
@@ -441,6 +462,7 @@ const Index = () => {
                 {
                   key: 'advanced',
                   label: 'Advanced Configuration',
+                  forceRender: true,
                   children: (
                     <AdvancedConfigTab
                       code={code}
@@ -816,7 +838,7 @@ const GeneralConfigTab = ({
           },
           () => ({
             validator(_, value) {
-              if (value[0] == null || value[1] == null) {
+              if (value == null || value[0] == null || value[1] == null) {
                 return Promise.reject('Please select a valid date range.')
               }
               const d = new Date()
@@ -978,10 +1000,10 @@ type SummaryItem = {
   name: string
   code: string
   status?: DiscountCodeStatus // stutus could be null if code is copied.
-  quantity: string
+  quantity: number
   discountType: DiscountType
   billingType: DiscountCodeBillingType
-  cycleLimit: number
+  cycleLimit: number | string | null
   validityRange: null | [Dayjs | null, Dayjs | null]
   applyType: DiscountCodeApplyType
   planIds: null | number[]
@@ -989,7 +1011,7 @@ type SummaryItem = {
   userScope: DiscountCodeUserScope
   upgradeScope: DISCOUNT_CODE_UPGRADE_SCOPE
   userLimit: boolean
-  getDiscountedValue: () => string
+  getDiscountedValue: () => string | JSX.Element
 }
 
 const NotSetPlaceholder = () => <span className="text-red-500">Not set</span>
@@ -1019,7 +1041,17 @@ const SummaryTab = ({
         status ?? DiscountCodeStatus.EDITING
       )
     },
-    { label: 'Quantity', renderContent: quantity },
+    {
+      label: 'Quantity',
+      renderContent:
+        quantity === 0 ? (
+          'Unlimited'
+        ) : quantity == null ? (
+          <NotSetPlaceholder />
+        ) : (
+          quantity
+        )
+    },
     {
       label: 'Discount Type',
       renderContent:
@@ -1038,13 +1070,25 @@ const SummaryTab = ({
     },
     {
       label: 'Cycle Limit',
-      renderContent: cycleLimit == 0 ? 'No limit' : cycleLimit
+      renderContent:
+        cycleLimit === 0 ? (
+          'No limit'
+        ) : cycleLimit === '' || isNaN(Number(cycleLimit)) ? (
+          <NotSetPlaceholder />
+        ) : (
+          cycleLimit
+        )
     },
     {
       label: 'Code Apply Date Range',
       renderContent:
-        validityRange != null &&
-        `${dayjs(validityRange[0]).format('YYYY-MM-DD')} ~ ${dayjs(validityRange[1]).format('YYYY-MM-DD')}`
+        validityRange == null ||
+        validityRange[0] == null ||
+        validityRange[1] == null ? (
+          <NotSetPlaceholder />
+        ) : (
+          `${dayjs(validityRange[0]).format('YYYY-MM-DD')} ~ ${dayjs(validityRange[1]).format('YYYY-MM-DD')}`
+        )
     },
     {
       label: 'Apply Discount Code to',
@@ -1094,7 +1138,6 @@ const SummaryTab = ({
 
   const advancedItems = [
     {
-      key: 'Discount Code Applicable Scope',
       label: 'Discount Code Applicable Scope',
       renderContent:
         userScope == DiscountCodeUserScope.ALL_USERS
@@ -1104,7 +1147,6 @@ const SummaryTab = ({
             : 'Apply only for renewal users'
     },
     {
-      key: 'Applicable Subscription Limits',
       label: 'Applicable Subscription Limits',
       renderContent:
         upgradeScope == DISCOUNT_CODE_UPGRADE_SCOPE.ALL
@@ -1114,7 +1156,6 @@ const SummaryTab = ({
             : 'Apply only for switching to any long subscriptions'
     },
     {
-      key: 'Same user cannot use the same discount code again',
       label: 'Same user cannot use the same discount code again',
       renderContent: userLimit ? 'Yes' : 'No'
     }
