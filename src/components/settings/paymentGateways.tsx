@@ -46,9 +46,10 @@ import { CSS } from '@dnd-kit/utilities'
 import { useForm } from 'antd/es/form/Form'
 import TextArea from 'antd/es/input/TextArea'
 import update from 'immutability-helper'
+import type { UploadRequestOption } from 'rc-upload/lib/interface'
 import { useEffect, useState } from 'react'
 import ExchangeIcon from '../../assets/exchange.svg?react'
-import { randomString } from '../../helpers'
+import { formatBytes, randomString } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
   getPaymentGatewayConfigListReq,
@@ -324,7 +325,7 @@ const PaymentGatewaySetupModal = ({
           {' '}
           <Badge
             count={1}
-            color={`#1890ff${activeTab == 'Essentials' ? '' : '99'}`}
+            color={`#1890ff${activeTab == 'Essentials' ? '' : '90'}`}
           />{' '}
           Essentials
         </span>
@@ -344,7 +345,7 @@ const PaymentGatewaySetupModal = ({
         <span>
           <Badge
             count={2}
-            color={`#1890ff${activeTab == 'Public/Private Keys' ? '' : '99'}`}
+            color={`#1890ff${activeTab == 'Public/Private Keys' ? '' : '90'}`}
           />{' '}
           Public/Private Keys
         </span>
@@ -364,7 +365,7 @@ const PaymentGatewaySetupModal = ({
         <span>
           <Badge
             count={3}
-            color={`#1890ff${activeTab == 'Webhook Keys' ? '' : '99'}`}
+            color={`#1890ff${activeTab == 'Webhook Keys' ? '' : '90'}`}
           />
           &nbsp; Webhook Keys{' '}
         </span>
@@ -460,7 +461,11 @@ const getBase64 = (file: FileType): Promise<string> =>
     reader.onerror = (error) => reject(error)
   })
 
-const MAX_FILE_COUNT = 5
+const FILE_CONSTRAINTS = {
+  ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg', '.svg'],
+  MAX_FILE_SIZE: 2 * 1024 * 1024, // 2MB
+  MAX_FILE_COUNT: 5
+}
 const EssentialSetup = ({
   closeModal,
   gatewayConfig,
@@ -568,15 +573,20 @@ const EssentialSetup = ({
     </button>
   )
 
-  const onUpload = async () => {
-    const formData = new FormData()
-    const file = fileList[fileList.length - 1].originFileObj
+  const onUpload = async (opt: UploadRequestOption<unknown>) => {
+    const { file } = opt
     if (file == undefined) {
       return
     }
-    const buf = await file.arrayBuffer()
-    const blob = new Blob([buf])
-    formData.append('file', blob)
+    if ((file as File).size > FILE_CONSTRAINTS.MAX_FILE_SIZE) {
+      message.error(
+        'Max logo file size: ' + formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)
+      )
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
     setUploading(true)
     const [logoUrl, err] = await uploadLogoReq(formData)
     setUploading(false)
@@ -669,7 +679,7 @@ const EssentialSetup = ({
           className={`text-xs ${fileList.length == 0 ? 'text-red-500' : 'text-gray-500'}`}
         >
           (
-          {`at least 1 logo, at most ${MAX_FILE_COUNT} logos, each < 2M, drag to reorder them`}
+          {`At most ${FILE_CONSTRAINTS.MAX_FILE_COUNT} logos (${FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}), each < ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, drag to reorder them`}
           )
         </span>
       </div>
@@ -681,9 +691,8 @@ const EssentialSetup = ({
           <Upload
             disabled={uploading}
             listType="picture-card"
-            maxCount={MAX_FILE_COUNT}
-            accept=".png, .jpg, .jpeg"
-            // accept=".png, .jpg, .jpeg, .svg"
+            maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
+            accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
             // multiple
             itemRender={(originNode, file) => (
               <DraggableUploadListItem originNode={originNode} file={file} />
@@ -693,7 +702,9 @@ const EssentialSetup = ({
             onPreview={handlePreview}
             onChange={handleChange}
           >
-            {fileList.length >= MAX_FILE_COUNT ? null : uploadButton}
+            {fileList.length >= FILE_CONSTRAINTS.MAX_FILE_COUNT
+              ? null
+              : uploadButton}
           </Upload>
         </SortableContext>
       </DndContext>
@@ -830,6 +841,7 @@ const PubPriKeySetup = ({
   updateGatewayInStore: () => void
 }) => {
   const [form] = Form.useForm()
+
   const [loading, setLoading] = useState(false)
 
   const onSave = async () => {
@@ -892,6 +904,12 @@ const PubPriKeySetup = ({
         <Form.Item
           label={gatewayConfig.publicKeyName}
           name="gatewayKey"
+          extra={
+            <div className="text-xs text-gray-400">
+              For security reason, your {gatewayConfig.publicKeyName} will be
+              desensitized after submit.
+            </div>
+          }
           rules={[
             {
               required: true,
@@ -908,12 +926,6 @@ const PubPriKeySetup = ({
               }
             })
           ]}
-          help={
-            <div className="text-xs text-gray-400">
-              For security reason, your {gatewayConfig.publicKeyName} will be
-              desensitized after submit.
-            </div>
-          }
         >
           <TextArea rows={4} />
         </Form.Item>
@@ -938,7 +950,7 @@ const PubPriKeySetup = ({
               }
             })
           ]}
-          help={
+          extra={
             <div className="text-xs text-gray-400">
               For security reason, your {gatewayConfig.privateSecretName} will
               be desensitized after submit.
@@ -983,10 +995,6 @@ const WebHookSetup = ({
   // configure pub/private keys first, then configure webhook
   const notSubmitable = gatewayConfig.gatewayKey == ''
 
-  // there is a antd form bug: in a form, if there existed a native <button />, not antd <Button/>.
-  // And if you have set:
-  // form.onFinish = onSave, OK button's onClick handler = form.submit
-  // your native button's onclick will trigger form submit, antd's own <Button> didn't trigger this call.
   const onSave = async () => {
     if (gatewayConfig.gatewayId == 0) {
       message.error('Input your public/private keys first.')
@@ -994,11 +1002,6 @@ const WebHookSetup = ({
     }
 
     const webHookSecret = form.getFieldValue('webhookSecret')
-    if (webHookSecret.trim() == '' || webHookSecret.includes('**')) {
-      message.error('Invalid webhook key')
-      return
-    }
-
     setLoading(true)
     const [_, err] = await saveWebhookKeyReq(
       gatewayConfig.gatewayId,
@@ -1039,7 +1042,7 @@ const WebHookSetup = ({
       <Form
         form={form}
         layout="vertical"
-        // onFinish={onSave}
+        onFinish={onSave}
         colon={false}
         disabled={notSubmitable || loading}
         initialValues={gatewayConfig}
@@ -1063,7 +1066,6 @@ const WebHookSetup = ({
         <Form.Item
           label="Webhook Key"
           name="webhookSecret"
-          /*
           rules={[
             {
               required: true,
@@ -1078,8 +1080,7 @@ const WebHookSetup = ({
               }
             })
           ]}
-            */
-          help={
+          extra={
             <div className="mt-2 text-sm">
               <Button
                 type="link"
@@ -1118,7 +1119,7 @@ const WebHookSetup = ({
         </Button>
         <Button
           type="primary"
-          onClick={onSave}
+          onClick={form.submit}
           loading={loading}
           disabled={loading || notSubmitable}
         >

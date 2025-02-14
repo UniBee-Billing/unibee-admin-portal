@@ -1,8 +1,10 @@
 import { Alert, Button, ConfigProvider, Modal } from 'antd'
 import React, { useState } from 'react'
+import UniBeeLogo from '../../../assets/UniBeeLogoSymbol.svg?react'
 import { useLicense, useVersion } from '../../../hooks/useVersion'
 import { useMerchantMemberProfileStore } from '../../../stores'
 import { withWeakTextLoading, writeClipboardText } from '../../../utils'
+import LogoWithAction from '../logoWithAction'
 import { ContactCard } from './ContactCard'
 
 const modalStyle = {
@@ -13,7 +15,9 @@ const modalStyle = {
 
 const APP_PATH = import.meta.env.BASE_URL
 
-export const AboutUniBee: React.FC = () => {
+export const AboutUniBee: React.FC<{ collapsed: boolean }> = ({
+  collapsed
+}) => {
   const [open, setOpen] = useState(false)
   const {
     loading: loadingVersion,
@@ -30,12 +34,14 @@ export const AboutUniBee: React.FC = () => {
 
   return (
     <ConfigProvider modal={{ styles: modalStyle }}>
-      <div
-        onClick={() => setOpen(true)}
-        className="mb-1 mt-4 cursor-pointer text-white transition duration-300 hover:opacity-75"
-        color="default"
-      >
-        About UniBee
+      <div className="mb-1 mt-4 w-full">
+        <LogoWithAction
+          collapsed={collapsed}
+          clickHandler={() => setOpen(true)}
+          text="About UniBee"
+          logo={<UniBeeLogo />}
+          logoColor="text-gray-400"
+        />
       </div>
       <Modal open={open} onCancel={() => setOpen(false)} footer={[]}>
         {(fetchVersionError || fetchLicenseError) && (

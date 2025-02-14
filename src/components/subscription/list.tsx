@@ -40,6 +40,7 @@ import {
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
+import LongTextPopover from '../ui/longTextPopover'
 import { SubscriptionStatus } from '../ui/statusTag'
 
 const BASE_PATH = import.meta.env.BASE_URL
@@ -160,30 +161,46 @@ const Index = () => {
       key: 'planIds',
       filters: planFilterRef.current,
       filteredValue: filters.planIds,
+      filterMode: 'tree',
+      filterSearch: true,
+      width: 120,
       render: (_, sub) => (
-        <span>
-          {`${sub.plan?.planName}`}{' '}
-          <span className="text-xs text-gray-400">
-            (
+        <div className="w-28 overflow-hidden whitespace-nowrap">
+          {sub.plan?.planName != undefined && (
+            <LongTextPopover
+              text={sub.plan.planName}
+              placement="topLeft"
+              width="120px"
+            />
+          )}
+          <div className="text-xs text-gray-400">
             {`${showAmount(sub.plan?.amount, sub.plan?.currency)}/${formatPlanInterval(sub.plan)}`}
-            )
-          </span>
-        </span>
+          </div>
+        </div>
       )
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      render: (_, sub) => <span>{sub.plan?.description}</span>
+      width: 160,
+      render: (_, sub) =>
+        sub.plan?.description != undefined && (
+          <LongTextPopover
+            text={sub.plan.description}
+            placement="topLeft"
+            width="160px"
+          />
+        )
     },
-    {
+    /* {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
       render: (amt, s) =>
         `${showAmount(amt, s.currency)}/${formatPlanInterval(s.plan)}`
     },
+    */
     /* {
       title: 'Amount',
       dataIndex: 'amount',

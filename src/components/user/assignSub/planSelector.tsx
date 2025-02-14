@@ -9,6 +9,7 @@ import {
   PlanStatus,
   PlanType
 } from '../../../shared.types'
+import LongTextPopover from '../../ui/longTextPopover'
 
 interface PlanSelectorProps {
   productId: number
@@ -81,8 +82,10 @@ export const PlanSelector = ({
     label: (
       <div className="flex items-center" data-plan-name={p.planName}>
         <div>
-          <span id="selector-plan-name">{p.planName}</span>&nbsp;
-          <span className="text-xs text-gray-400">{`(${formatPlanPrice(p)})`}</span>
+          <div id="selector-plan-name">
+            <LongTextPopover text={p.planName} width="250px" />
+          </div>
+          <div className="text-xs text-gray-400">{`(${formatPlanPrice(p)})`}</div>
         </div>
         {currentPlanId == p.id && (
           <div className="ml-2">
@@ -124,6 +127,8 @@ export const PlanSelector = ({
 
   return (
     <Select
+      size="large"
+      style={{ height: '60px' }}
       showSearch
       loading={loading}
       disabled={loading}

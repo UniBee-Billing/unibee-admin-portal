@@ -141,7 +141,7 @@ export const SideMenu = (props: MenuProps) => {
       onClick={(e) => navigate(e.key)}
       defaultSelectedKeys={['/plan/list']}
       items={items}
-      style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}
+      style={{ maxHeight: 'calc(100vh - 340px)', overflowY: 'auto' }}
       {...props}
     />
   )

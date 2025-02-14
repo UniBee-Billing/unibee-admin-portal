@@ -1,7 +1,8 @@
 import { LoadingOutlined } from '@ant-design/icons'
-import { Button, Form, Input, Skeleton, Spin, message } from 'antd'
+import { Button, Form, Input, Spin, message } from 'antd'
+import update from 'immutability-helper'
 import React, { useEffect, useState } from 'react'
-import { emailValidate } from '../../helpers'
+import { emailValidate, formatBytes, randomString } from '../../helpers'
 import {
   getMerchantInfoReq,
   updateMerchantInfoReq,
@@ -13,15 +14,65 @@ import {
   useMerchantMemberProfileStore
 } from '../../stores'
 
+import type { GetProp, UploadFile, UploadProps } from 'antd'
+import { Image, Upload } from 'antd'
+// import ImgCrop from 'antd-img-crop'
+// this tool has a bug, when cropping transparent bg png, the bg will become white after cropping
+
+import type { UploadRequestOption } from 'rc-upload/lib/interface'
+
+type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
+const FILE_CONSTRAINTS = {
+  MAX_FILE_SIZE: 4 * 1024 * 1024,
+  MAX_FILE_COUNT: 1,
+  ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg', '.svg']
+}
+
+const getBase64 = (file: FileType): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = (error) => reject(error)
+  })
+
 const Index = () => {
   const merchantInfoStore = useMerchantInfoStore()
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const [form] = Form.useForm()
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewImage, setPreviewImage] = useState('')
   const [loading, setLoading] = useState(false) // page loading
   const [uploading, setUploading] = useState(false) // logo upload
   const [submitting, setSubmitting] = useState(false)
-  const [logoUrl, setLogoUrl] = useState('')
   const [merchantInfo, setMerchantInfo] = useState<TMerchantInfo | null>(null)
+  const [fileList, setFileList] = useState<UploadFile[]>([])
+
+  // removing file also trigger this fn
+  const onUploadFileChange: UploadProps['onChange'] = ({
+    fileList: newFileList
+  }) => {
+    if (
+      newFileList.length > 0 &&
+      newFileList[0].size != undefined &&
+      newFileList[0].size > FILE_CONSTRAINTS.MAX_FILE_SIZE
+    ) {
+      message.error(
+        'Max logo file size: ' + formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)
+      )
+      return
+    }
+    setFileList(newFileList)
+  }
+
+  const onPreview = async (file: UploadFile) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj as FileType)
+    }
+
+    setPreviewImage(file.url || (file.preview as string))
+    setPreviewOpen(true)
+  }
 
   const getInfo = async () => {
     setLoading(true)
@@ -33,35 +84,51 @@ const Index = () => {
     }
 
     setMerchantInfo(merchantInfo.merchant)
-    setLogoUrl(merchantInfo.merchant.companyLogo)
+    const { companyLogo } = merchantInfo.merchant
+    if (companyLogo !== '' && companyLogo != null) {
+      setFileList([
+        {
+          uid: '-1',
+          name: 'companyLogo.png',
+          status: 'done',
+          url: merchantInfo.merchant.companyLogo
+        }
+      ])
+    }
   }
 
-  const onFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    let file
-    if (event.target.files && event.target.files.length > 0) {
-      file = event.target.files[0]
-    }
-    if (file == null) {
+  const onFileUpload = async (opt: UploadRequestOption<unknown>) => {
+    const { file } = opt
+    if (file == undefined) {
       return
     }
-
-    if (file.size > 4 * 1024 * 1024) {
-      message.error('Max logo file size: 4M.')
+    if ((file as File).size > FILE_CONSTRAINTS.MAX_FILE_SIZE) {
+      message.error(
+        'Max logo file size: ' + formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)
+      )
       return
     }
-
     const formData = new FormData()
     formData.append('file', file)
     setUploading(true)
     const [logoUrl, err] = await uploadLogoReq(formData)
-
     setUploading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
-    form.setFieldValue('companyLogo', logoUrl)
-    setLogoUrl(logoUrl)
+
+    const newFile: UploadFile = {
+      uid: randomString(8),
+      url: logoUrl,
+      status: 'done',
+      name: 'companyLogo.png'
+    }
+    const newFileList = update(fileList, {
+      [0]: { $set: newFile }
+    })
+    setFileList(newFileList) // fileList need to show the uploaded img file preview
+    form.setFieldValue('companyLogo', logoUrl) // update the form field value, ready for submit
   }
 
   const onSubmit = async () => {
@@ -105,7 +172,7 @@ const Index = () => {
               span: 16
             }}
             style={{
-              maxWidth: 600
+              maxWidth: 700
             }}
             initialValues={merchantInfo}
             autoComplete="off"
@@ -124,44 +191,49 @@ const Index = () => {
             </Form.Item>
 
             <Form.Item
-              label="Company Logo (< 4M)"
+              label="Company Logo"
               name="companyLogo"
-              rules={[
-                {
-                  required: true,
-                  message: 'Please upload your company logo! (Max size: 4M)'
-                },
-                () => ({
-                  validator(_, value) {
-                    if (value != '') {
-                      return Promise.resolve()
-                    }
-                    return Promise.reject()
-                  }
-                })
-              ]}
+              extra={`Max size: ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, allowed file types: ${FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}`}
             >
-              <label htmlFor="companyLogoURL" style={{ cursor: 'pointer' }}>
-                {logoUrl == '' ? (
-                  <div style={{ width: '48px', height: '48px' }}>
-                    <Skeleton.Image
-                      active={uploading}
-                      style={{ width: '48px', height: '48px' }}
-                    />
-                  </div>
-                ) : (
-                  <img src={logoUrl} style={{ maxWidth: '64px' }} />
+              <div style={{ height: '102px' }}>
+                {/* <ImgCrop
+                  rotationSlider
+                  quality={0.8}
+                  minAspect={0.5}
+                  maxAspect={3}
+                  showGrid={true}
+                  modalTitle="Crop Image"
+                  zoomSlider
+                  showReset
+                  aspectSlider
+                  resetText="Reset"
+                > */}
+                <Upload
+                  maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
+                  accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
+                  listType="picture-card"
+                  customRequest={onFileUpload}
+                  fileList={fileList}
+                  onChange={onUploadFileChange}
+                  onPreview={onPreview}
+                >
+                  {fileList.length == 0 && '+ Upload'}
+                </Upload>{' '}
+                {previewImage && (
+                  <Image
+                    wrapperStyle={{ display: 'none' }}
+                    preview={{
+                      visible: previewOpen,
+                      onVisibleChange: (visible) => setPreviewOpen(visible),
+                      afterOpenChange: (visible) =>
+                        !visible && setPreviewImage('')
+                    }}
+                    src={previewImage}
+                  />
                 )}
-              </label>
+                {/* </ImgCrop> */}
+              </div>
             </Form.Item>
-            <input
-              type="file"
-              accept="image/png, image/gif, image/jpeg"
-              onChange={onFileUpload}
-              id="companyLogoURL"
-              name="companyLogoURL"
-              style={{ display: 'none' }}
-            />
 
             <Form.Item
               label="Physical Address"
@@ -215,7 +287,7 @@ const Index = () => {
                 <Button
                   type="primary"
                   onClick={form.submit}
-                  loading={submitting || uploading}
+                  loading={submitting}
                   disabled={submitting || uploading}
                 >
                   {uploading ? 'Uploading' : submitting ? 'Submitting' : 'Save'}

@@ -16,6 +16,7 @@ import {
 } from '../table/filters/dateFilter'
 import { parseSearchFilters, useTableSearchBox } from '../table/filters/search'
 import { parseAntDSorter2SpecData } from '../table/sort'
+import LongTextPopover from '../ui/longTextPopover'
 import {
   formatDiscountCodeStatus,
   formatRecurringStatus,
@@ -55,13 +56,13 @@ const Index = () => {
       title: 'Applied plan',
       dataIndex: 'plan',
       key: 'plan',
+      width: 160,
       render: (plan) => (
-        <div
-          onClick={() => navigate(`/plan/${plan.id}`)}
-          className="w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-        >
-          {plan.planName}
-        </div>
+        <LongTextPopover
+          text={plan.planName}
+          width="160px"
+          clickHandler={() => navigate(`/plan/${plan.id}`)}
+        />
       )
     },
     {

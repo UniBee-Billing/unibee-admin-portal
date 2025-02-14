@@ -3,6 +3,7 @@ import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import React, { useEffect, useState } from 'react'
 import { showAmount } from '../../helpers'
 import { IPlan } from '../../shared.types'
+import LongTextPopover from '../ui/longTextPopover'
 
 const TIME_UNITS = [
   // in seconds
@@ -120,7 +121,9 @@ const Index = ({
           background: selectedPlan == plan.id ? '#FFF' : '#FBFBFB'
         }}
       >
-        <div style={{ fontSize: '28px' }}>{plan.planName}</div>
+        <div style={{ fontSize: '28px' }}>
+          <LongTextPopover text={plan.planName} width="250px" />
+        </div>
         <div style={{ fontSize: '14px' }}>{`${showAmount(
           plan.amount,
           plan.currency

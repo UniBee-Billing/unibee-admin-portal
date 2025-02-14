@@ -145,7 +145,7 @@ interface ISession {
   refreshCallbacks?: (() => void)[]
 }
 const INITIAL_SESSION: ISession = {
-  expired: true,
+  expired: false,
   refresh: null,
   refreshCallbacks: []
 }
@@ -156,20 +156,15 @@ interface SessionStoreSlice extends ISession {
   resetCallback: () => void
 }
 
-export const useSessionStore = create<SessionStoreSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_SESSION,
-      getSession: () => get(),
-      setSession: (a) => set({ ...a }),
-      reset: () => set(INITIAL_SESSION),
-      resetCallback: () => {
-        set({ ...get(), refreshCallbacks: [] })
-      }
-    }),
-    { name: 'session' }
-  )
-)
+export const useSessionStore = create<SessionStoreSlice>()((set, get) => ({
+  ...INITIAL_SESSION,
+  getSession: () => get(),
+  setSession: (a) => set({ ...a }),
+  reset: () => set(INITIAL_SESSION),
+  resetCallback: () => {
+    set({ ...get(), refreshCallbacks: [] })
+  }
+}))
 
 // --------------------------------
 interface IPermission {

@@ -26,6 +26,7 @@ import { usePagination } from '../../hooks'
 import { copyPlanReq, getPlanList, TPlanListBody } from '../../requests'
 import '../../shared.css'
 import { IPlan } from '../../shared.types'
+import LongTextPopover from '../ui/longTextPopover'
 import { PlanStatus } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
@@ -134,13 +135,24 @@ const Index = ({
       title: 'Name',
       dataIndex: 'planName',
       key: 'planName',
-      sorter: (a, b) => a.planName.localeCompare(b.planName)
-      // render: (text) => <a>{text}</a>,
+      width: 120,
+      sorter: (a, b) => a.planName.localeCompare(b.planName),
+      render: (planName) => (
+        <div className="w-28 overflow-hidden whitespace-nowrap">
+          <LongTextPopover text={planName} placement="topLeft" width="120px" />
+        </div>
+      )
     },
     {
       title: 'Description',
       dataIndex: 'description',
-      key: 'description'
+      key: 'description',
+      width: 128,
+      render: (desc) => (
+        <div className="w-36 overflow-hidden overflow-ellipsis whitespace-nowrap">
+          <LongTextPopover text={desc} placement="topLeft" width="128px" />
+        </div>
+      )
     },
     {
       title: 'Price',

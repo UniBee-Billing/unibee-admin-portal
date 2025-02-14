@@ -2,6 +2,7 @@ import { Button, Col, Modal, Radio, RadioChangeEvent, Row, Space } from 'antd'
 import dayjs from 'dayjs'
 import { showAmount } from '../../../helpers'
 import { ISubscriptionType } from '../../../shared.types'
+import LongTextPopover from '../../ui/longTextPopover'
 
 interface Props {
   isOpen: boolean
@@ -29,7 +30,7 @@ const TerminateSub = ({
   return (
     <Modal
       title="Terminate Subscription"
-      width={'640px'}
+      width={'720px'}
       open={isOpen}
       footer={null}
       closeIcon={null}
@@ -55,11 +56,16 @@ const TerminateSub = ({
         </Col>
         <Col span={6}>{subInfo?.user?.lastName}</Col>
       </Row>
+      <div className="h-2" />
       <Row>
         <Col span={6}>
           <span style={{ fontWeight: 'bold' }}>Plan</span>
         </Col>
-        <Col span={7}>{subInfo?.plan?.planName}</Col>
+        <Col span={7}>
+          {subInfo?.plan?.planName && (
+            <LongTextPopover text={subInfo?.plan?.planName} />
+          )}
+        </Col>
         <Col span={5}>
           <span style={{ fontWeight: 'bold' }}>Amount</span>
         </Col>
@@ -68,6 +74,7 @@ const TerminateSub = ({
             showAmount(subInfo?.plan?.amount, subInfo?.plan?.currency)}
         </Col>
       </Row>
+      <div className="h-2" />
       <Row>
         <Col span={6}>
           <span style={{ fontWeight: 'bold' }}>Current due date</span>

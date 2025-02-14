@@ -23,6 +23,7 @@
     "@stripe/stripe-js": "^2.2.2",
     "@tanstack/react-query": "^5.36.0",
     "antd": "^5.22.1",
+    "antd-img-crop": "^4.24.0",
     "axios": "^1.6.3",
     "currency.js": "^2.0.4",
     "dinero.js": "^1.9.1",

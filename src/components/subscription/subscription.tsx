@@ -43,6 +43,7 @@ import {
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
+import LongTextPopover from '../ui/longTextPopover'
 import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'
 import ChangePlanModal from './modals/changePlan'
@@ -639,21 +640,26 @@ const SubscriptionInfoSection = ({
           Plan
         </Col>
         <Col span={6}>
-          {subInfo && (
-            <Button
-              type="link"
-              size="small"
-              style={{ padding: 0 }}
-              onClick={() => goToPlan(subInfo.planId)}
-            >
-              {subInfo?.plan?.planName}
-            </Button>
+          {subInfo && subInfo?.plan?.planName && (
+            <LongTextPopover
+              text={subInfo.plan.planName}
+              showViewMoreButton={true}
+              clickHandler={() => goToPlan(subInfo.planId)}
+            />
           )}
         </Col>
         <Col span={4} style={colStyle}>
           Plan Description
         </Col>
-        <Col span={6}>{subInfo?.plan?.description}</Col>
+        <Col span={10}>
+          {' '}
+          {subInfo?.plan?.description && (
+            <LongTextPopover
+              text={subInfo.plan.description}
+              showViewMoreButton={true}
+            />
+          )}
+        </Col>
       </Row>
       <Row style={rowStyle}>
         <Col span={4} style={colStyle}>
