@@ -62,9 +62,14 @@ const Index = ({
                 )}
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2">
+            <div className="ml-3 flex items-center justify-end gap-2">
               {gatewayIcons.map((i) => (
-                <img key={i} height={24} src={i} />
+                <div
+                  key={i}
+                  className="flex h-7 max-w-14 items-center justify-center"
+                >
+                  <img src={i} className="h-full w-full object-contain" />
+                </div>
               ))}
             </div>
           </label>

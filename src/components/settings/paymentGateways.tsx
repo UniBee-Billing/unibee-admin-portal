@@ -46,10 +46,9 @@ import { CSS } from '@dnd-kit/utilities'
 import { useForm } from 'antd/es/form/Form'
 import TextArea from 'antd/es/input/TextArea'
 import update from 'immutability-helper'
-import type { UploadRequestOption } from 'rc-upload/lib/interface'
 import { useEffect, useState } from 'react'
 import ExchangeIcon from '../../assets/exchange.svg?react'
-import { formatBytes, randomString } from '../../helpers'
+import { formatBytes, randomString, uploadFile } from '../../helpers'
 import { useCopyContent } from '../../hooks'
 import {
   getPaymentGatewayConfigListReq,
@@ -57,8 +56,7 @@ import {
   saveGatewayConfigReq,
   saveWebhookKeyReq,
   sortGatewayReq,
-  TGatewayConfigBody,
-  uploadLogoReq
+  TGatewayConfigBody
 } from '../../requests'
 import { TGateway, TGatewayExRate } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
@@ -573,39 +571,27 @@ const EssentialSetup = ({
     </button>
   )
 
-  const onUpload = async (opt: UploadRequestOption<unknown>) => {
-    const { file } = opt
-    if (file == undefined) {
-      return
-    }
-    if ((file as File).size > FILE_CONSTRAINTS.MAX_FILE_SIZE) {
-      message.error(
-        'Max logo file size: ' + formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)
-      )
-      return
-    }
-
-    const formData = new FormData()
-    formData.append('file', file)
-    setUploading(true)
-    const [logoUrl, err] = await uploadLogoReq(formData)
-    setUploading(false)
-    if (err != null) {
+  const onUpload = uploadFile(
+    FILE_CONSTRAINTS.MAX_FILE_SIZE,
+    (logoUrl) => {
+      const newFile: UploadFile = {
+        uid: randomString(8),
+        url: logoUrl,
+        status: 'done',
+        name: 'icon'
+      }
+      // after uploading a new file, length should be increased by 1, why I update the last item????????????
+      const newFileList = update(fileList, {
+        [fileList.length - 1]: { $set: newFile }
+        // $push: [newFile]
+      })
+      setFileList(newFileList)
+    },
+    (err) => {
       message.error(err.message)
-      return
-    }
-
-    const newFile: UploadFile = {
-      uid: randomString(8),
-      url: logoUrl,
-      status: 'done',
-      name: 'icon'
-    }
-    const newFileList = update(fileList, {
-      [fileList.length - 1]: { $set: newFile }
-    })
-    setFileList(newFileList)
-  }
+    },
+    setUploading
+  )
 
   const onSave = async () => {
     if (displayName.trim() == '') {
@@ -695,7 +681,14 @@ const EssentialSetup = ({
             accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
             // multiple
             itemRender={(originNode, file) => (
-              <DraggableUploadListItem originNode={originNode} file={file} />
+              <DraggableUploadListItem
+                originNode={
+                  <div className="h-[100px] w-[100px] object-contain">
+                    {originNode}
+                  </div>
+                }
+                file={file}
+              />
             )}
             customRequest={onUpload}
             fileList={fileList}

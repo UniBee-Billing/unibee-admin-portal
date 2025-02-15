@@ -2,12 +2,13 @@ import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Form, Input, Spin, message } from 'antd'
 import update from 'immutability-helper'
 import React, { useEffect, useState } from 'react'
-import { emailValidate, formatBytes, randomString } from '../../helpers'
 import {
-  getMerchantInfoReq,
-  updateMerchantInfoReq,
-  uploadLogoReq
-} from '../../requests'
+  emailValidate,
+  formatBytes,
+  randomString,
+  uploadFile
+} from '../../helpers'
+import { getMerchantInfoReq, updateMerchantInfoReq } from '../../requests'
 import { TMerchantInfo } from '../../shared.types'
 import {
   useMerchantInfoStore,
@@ -18,8 +19,18 @@ import type { GetProp, UploadFile, UploadProps } from 'antd'
 import { Image, Upload } from 'antd'
 // import ImgCrop from 'antd-img-crop'
 // this tool has a bug, when cropping transparent bg png, the bg will become white after cropping
-
-import type { UploadRequestOption } from 'rc-upload/lib/interface'
+/* <ImgCrop
+      rotationSlider
+      quality={0.8}
+      minAspect={0.5}
+      maxAspect={3}
+      showGrid={true}
+      modalTitle="Crop Image"
+      zoomSlider
+      showReset
+      aspectSlider
+      resetText="Reset"
+    > */
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 const FILE_CONSTRAINTS = {
@@ -97,39 +108,26 @@ const Index = () => {
     }
   }
 
-  const onFileUpload = async (opt: UploadRequestOption<unknown>) => {
-    const { file } = opt
-    if (file == undefined) {
-      return
-    }
-    if ((file as File).size > FILE_CONSTRAINTS.MAX_FILE_SIZE) {
-      message.error(
-        'Max logo file size: ' + formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)
-      )
-      return
-    }
-    const formData = new FormData()
-    formData.append('file', file)
-    setUploading(true)
-    const [logoUrl, err] = await uploadLogoReq(formData)
-    setUploading(false)
-    if (err != null) {
+  const onFileUpload = uploadFile(
+    FILE_CONSTRAINTS.MAX_FILE_SIZE,
+    (logoUrl) => {
+      const newFile: UploadFile = {
+        uid: randomString(8),
+        url: logoUrl,
+        status: 'done',
+        name: 'companyLogo.png'
+      }
+      const newFileList = update(fileList, {
+        [0]: { $set: newFile }
+      })
+      setFileList(newFileList) // fileList need to preview the uploaded img file
+      form.setFieldValue('companyLogo', logoUrl) // update the form field value, ready for submit
+    },
+    (err) => {
       message.error(err.message)
-      return
-    }
-
-    const newFile: UploadFile = {
-      uid: randomString(8),
-      url: logoUrl,
-      status: 'done',
-      name: 'companyLogo.png'
-    }
-    const newFileList = update(fileList, {
-      [0]: { $set: newFile }
-    })
-    setFileList(newFileList) // fileList need to show the uploaded img file preview
-    form.setFieldValue('companyLogo', logoUrl) // update the form field value, ready for submit
-  }
+    },
+    setUploading
+  )
 
   const onSubmit = async () => {
     const info = form.getFieldsValue()
@@ -196,18 +194,6 @@ const Index = () => {
               extra={`Max size: ${formatBytes(FILE_CONSTRAINTS.MAX_FILE_SIZE)}, allowed file types: ${FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}`}
             >
               <div style={{ height: '102px' }}>
-                {/* <ImgCrop
-                  rotationSlider
-                  quality={0.8}
-                  minAspect={0.5}
-                  maxAspect={3}
-                  showGrid={true}
-                  modalTitle="Crop Image"
-                  zoomSlider
-                  showReset
-                  aspectSlider
-                  resetText="Reset"
-                > */}
                 <Upload
                   maxCount={FILE_CONSTRAINTS.MAX_FILE_COUNT}
                   accept={FILE_CONSTRAINTS.ALLOWED_FILE_TYPES.join(', ')}
@@ -231,7 +217,6 @@ const Index = () => {
                     src={previewImage}
                   />
                 )}
-                {/* </ImgCrop> */}
               </div>
             </Form.Item>
 
