@@ -5,7 +5,7 @@ import { CURRENCY } from '../../constants'
 import { numBoolConvert, showAmount } from '../../helpers'
 import { toggleUserCreditReq } from '../../requests'
 import { IProfile, TPromoAccount } from '../../shared.types'
-import CreditSwitchConfirmModal from '../settings/creditSwitchConfirmModal'
+import CreditSwitchConfirmModal from '../settings/creditConfig/creditSwitchConfirmModal'
 import PromoCreditTxHistory from './promoCreditTxHist'
 import UpdatePromoCreditModal from './updatePromoCreditModal'
 

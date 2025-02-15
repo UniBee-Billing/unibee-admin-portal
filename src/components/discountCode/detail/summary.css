@@ -1,6 +1,7 @@
 .long-content {
   width: 100%;
   position: relative;
+  text-align: right;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -8,20 +9,15 @@
   float: left;
   padding: 0 5px;
   text-overflow: ellipsis;
+}
 
-  &:after {
-    content: '\02026';
-    position: absolute;
-    top: 3.15em;
-    right: 1px;
-    width: 4em;
-    background: linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0),
-      #fff 50%,
-      #fff
-    );
-    text-align: right;
-    vertical-align: bottom;
-  }
+.long-content:after {
+  content: '\02026';
+  position: absolute;
+  top: 3.15em;
+  right: 1px;
+  width: 4em;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), #fff 50%, #fff);
+  text-align: right;
+  vertical-align: bottom;
 }

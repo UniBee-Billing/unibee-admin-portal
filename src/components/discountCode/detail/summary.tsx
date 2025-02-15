@@ -10,6 +10,7 @@ import {
 import { getDiscountCodeStatusTagById } from '../../ui/statusTag'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 import './summary.css'
+
 export const NotSetPlaceholder = () => (
   <span className="text-red-500">Not set</span>
 )
@@ -120,7 +121,7 @@ const Summary = ({
           planIds == null || planIds.length == 0 ? (
             <NotSetPlaceholder />
           ) : (
-            <p className="long-content text-right">
+            <p className="long-content">
               {planIds?.map((id) => getPlanLabel(id)).join(', ')}
             </p>
           )
@@ -129,7 +130,7 @@ const Summary = ({
         ) : (
           <div className="flex flex-col items-end">
             <div className="text-right text-red-500">All plans except:</div>
-            <p className="long-content text-right">
+            <p className="long-content">
               {planIds?.map((id) => getPlanLabel(id)).join(', ')}
             </p>
           </div>

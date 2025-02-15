@@ -37,7 +37,7 @@ const FILE_CONSTRAINTS = {
   MAX_FILE_SIZE: 4 * 1024 * 1024,
   MAX_FILE_COUNT: 1,
   ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg', '.svg']
-}
+} as const
 
 const getBase64 = (file: FileType): Promise<string> =>
   new Promise((resolve, reject) => {

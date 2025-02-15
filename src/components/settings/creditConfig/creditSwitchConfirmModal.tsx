@@ -1,11 +1,11 @@
 import { Button, Modal } from 'antd'
 // import { useState } from 'react'
-import { TCreditConfig, TPromoAccount } from '../../shared.types'
+import { TCreditConfig, TPromoAccount } from '../../../shared.types'
 
 // used in 2 places:
 // 1: config -> credit config (global setting), TCreditConfig as props
 // 2: user list -> user detail -> promo credit tab (setting for specific user), TPromoAccount as props
-const Index = ({
+const CreditSwitchConfirmModal = ({
   items,
   title,
   content,
@@ -88,4 +88,4 @@ const Index = ({
   )
 }
 
-export default Index
+export default CreditSwitchConfirmModal
