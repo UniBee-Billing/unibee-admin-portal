@@ -202,7 +202,15 @@ const Index = () => {
               strategy={verticalListSortingStrategy}
             >
               <SortableItem key={item.id || ''} id={item.id || ''}>
-                <List.Item className="cursor-grab rounded-md hover:bg-gray-100">
+                <List.Item
+                  className="cursor-grab rounded-md hover:bg-gray-100"
+                  style={{
+                    borderBottom:
+                      _index != gatewayConfigList.length - 1
+                        ? '1px solid #0505050f'
+                        : 'unset'
+                  }}
+                >
                   <List.Item.Meta
                     avatar={
                       item.gatewayWebsiteLink == '' ? (

@@ -1,9 +1,9 @@
 import { Badge, Modal, Tabs, TabsProps } from 'antd'
 import { useState } from 'react'
 import { TGateway } from '../../../shared.types'
-import EssentialSetup from './EssentialSetup'
-import PubPriKeySetup from './PubPriKeySetup'
-import WebHookSetup from './WebHookSetup'
+import EssentialSetup from './essentialSetup'
+import PubPriKeySetup from './pubPriKeySetup'
+import WebHookSetup from './webHookSetup'
 
 const PaymentGatewaySetupModal = ({
   gatewayConfig,
@@ -17,7 +17,6 @@ const PaymentGatewaySetupModal = ({
   updateGatewayInStore: () => void
 }) => {
   const [activeTab, setActiveTab] = useState('Essentials')
-  const needWebHook = ['changelly', 'unitpay', 'payssion'] // these 3 gateways need webhook config
   const tabItems: TabsProps['items'] = [
     {
       key: 'Essentials',
@@ -100,7 +99,8 @@ const PaymentGatewaySetupModal = ({
         items={tabItems.filter(
           (t) =>
             t.key != 'Webhook Keys' ||
-            needWebHook.find((w) => w == gatewayConfig.gatewayName) != undefined
+            (gatewayConfig.gatewayWebhookIntegrationLink != '' &&
+              gatewayConfig.gatewayWebhookIntegrationLink != undefined)
         )}
       />
     </Modal>
