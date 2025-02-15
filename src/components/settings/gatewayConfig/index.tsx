@@ -31,8 +31,8 @@ import {
 } from '../../../requests'
 import { TGateway } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
-import ModalWireTransfer from '../appConfig/wireTransferModal'
 import PaymentGatewaySetupModal from './setupModal'
+import ModalWireTransfer from './wireTransferModal'
 
 interface SortableItemProps {
   id: string

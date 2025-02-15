@@ -167,15 +167,7 @@ const Summary = ({
       <div className="flex h-[46px] items-center text-lg">Summary</div>
       <Divider className="my-4" />
       <div className="mb-4 flex items-center">
-        <Divider
-          type="vertical"
-          style={{
-            backgroundColor: '#1677FF',
-            width: '3px',
-            marginLeft: 0,
-            height: '28px'
-          }}
-        />
+        <Divider type="vertical" className="ml-0 h-7 w-0.5 bg-[#1677FF]" />
         <div className="text-lg">General Configuration</div>
       </div>
       {items.map((item) => (
@@ -190,15 +182,7 @@ const Summary = ({
       ))}
       <div className="h-8"></div>
       <div className="my-4 flex items-center">
-        <Divider
-          type="vertical"
-          style={{
-            backgroundColor: '#1677FF',
-            width: '3px',
-            marginLeft: 0,
-            height: '28px'
-          }}
-        />
+        <Divider type="vertical" className="ml-0 h-7 w-0.5 bg-[#1677FF]" />
         <div className="text-lg">Advanced Configuration</div>
       </div>
       {advancedItems.map((item, idx: number) => (
