@@ -109,7 +109,9 @@ const Index = () => {
     if (getGatewayErr == null) {
       return
     }
-    // after gatewayConfig changes, it's better to re-fetch the gatewayList, and save it into local store.
+    // after gatewayConfig changed, re-fetch the gatewayList, and save it into local store.
+    // getPaymentGatewayListReq return all the gateways ready for payment(<PaymentSelector /> use this list)
+    // getPaymentGatewayConfigListReq returned all the gateways config items, they have the similar structures, but for different use cases.
     appConfig.setGateway(gateways)
   }
 

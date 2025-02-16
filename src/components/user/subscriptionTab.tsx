@@ -10,12 +10,12 @@ import { CSSProperties, ReactElement, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { normalizeSub, showAmount } from '../../helpers'
 import { getSubDetailInProductReq } from '../../requests'
-import { IProfile, ISubscriptionType } from '../../shared.types'
+import { IProfile, ISubscriptionType, UserStatus } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import LongTextPopover from '../ui/longTextPopover'
-import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
+import { InvoiceStatus, SubscriptionStatusTag } from '../ui/statusTag'
 import { AssignSubscriptionModal } from './assignSub/assignSubModal'
 
 const rowStyle: CSSProperties = {
@@ -24,7 +24,6 @@ const rowStyle: CSSProperties = {
   height: '32px'
 }
 const colStyle: CSSProperties = { fontWeight: 'bold' }
-//   extraButton?: ReactElement
 
 const Index = ({
   userId,
@@ -139,7 +138,7 @@ const Index = ({
                 Status
               </Col>
               <Col span={6}>
-                {SubscriptionStatus(subInfo.status)}
+                {SubscriptionStatusTag(subInfo.status)}
                 <Tooltip title="Refresh">
                   <span
                     style={{ cursor: 'pointer', marginLeft: '8px' }}
@@ -354,7 +353,7 @@ const Index = ({
           loading ||
           subInfo != null ||
           userProfile == null ||
-          userProfile?.status == 2
+          userProfile?.status == UserStatus.SUSPENDED
         } // user has active sub || user not exist || user is suspended
         className="my-4"
       >

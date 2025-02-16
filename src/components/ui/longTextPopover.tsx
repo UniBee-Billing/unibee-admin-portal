@@ -91,7 +91,7 @@ const PopoverWrapper = ({
 }: React.PropsWithChildren<{ text: string; placement?: TooltipPlacement }>) => (
   <Popover
     placement={placement ?? 'topLeft'}
-    overlayStyle={{ width: '360px' }}
+    overlayStyle={{ maxWidth: '360px' }}
     content={text}
   >
     {children}

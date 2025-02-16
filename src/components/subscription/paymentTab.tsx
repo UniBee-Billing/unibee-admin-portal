@@ -29,16 +29,16 @@ import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPaymentTimelineReq } from '../../requests'
 import '../../shared.css'
-import { IProfile, PaymentItem } from '../../shared.types'
+import { IProfile, PaymentItem, PaymentStatus } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import RefundInfoModal from '../payment/refundModal'
 import CopyToClipboard from '../ui/copyToClipboard'
-import { PaymentStatus } from '../ui/statusTag'
+import { PaymentStatusTag } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
 const STATUS_FILTER = Object.entries(PAYMENT_STATUS).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text }
+  const [value, { label }] = s
+  return { value: Number(value), text: label }
 })
 const PAYMENT_TYPE_FILTER = Object.entries(PAYMENT_TYPE).map((s) => {
   const [value, text] = s
@@ -136,8 +136,8 @@ const Index = ({
       key: 'status',
       render: (status, pay) => (
         <>
-          {PaymentStatus(status)}
-          {status == 2 && (
+          {PaymentStatusTag(status)}
+          {status == PaymentStatus.FAILED && (
             <Popover
               placement="right"
               content={

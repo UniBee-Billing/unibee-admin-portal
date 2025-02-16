@@ -22,7 +22,7 @@ const contentStyle2 = 'flex h-6'
 type SummaryItem = {
   name: string
   code: string
-  status?: DiscountCodeStatus // status could be null if code is copied.
+  status?: DiscountCodeStatus // status could be null if code is first copied, then being edited.
   quantity: number
   discountType: DiscountType
   billingType: DiscountCodeBillingType

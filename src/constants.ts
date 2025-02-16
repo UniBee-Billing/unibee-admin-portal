@@ -1,51 +1,85 @@
-import { CreditTxType, InvoiceBizType, PlanStatus } from './shared.types'
+import {
+  AppTaskStatus,
+  CreditTxType,
+  DiscountCodeBillingType,
+  DiscountCodeStatus,
+  DiscountType,
+  InvoiceBizType,
+  MerchantUserStatus,
+  PaymentStatus,
+  PlanStatus,
+  PlanType,
+  RefundStatus,
+  SubscriptionHistoryStatus,
+  SubscriptionStatus,
+  UserStatus
+} from './shared.types'
 
-export const PLAN_STATUS: { [key: number]: string } = {
-  [PlanStatus.EDITING]: 'editing',
-  [PlanStatus.ACTIVE]: 'active',
-  [PlanStatus.INACTIVE]: 'inactive',
-  [PlanStatus.EXPIRED]: 'expired'
+export const PLAN_TYPE: Record<PlanType, { label: string }> = {
+  [PlanType.MAIN]: { label: 'Main plan' },
+  [PlanType.ADD_ON]: { label: 'Add-on' },
+  [PlanType.ONE_TIME_ADD_ON]: { label: 'One-time payment' }
 }
 
-export const SUBSCRIPTION_STATUS: { [key: number]: string } = {
-  // 0: 'Initiating', // used when creating the sub, it only exist for a very short time, user might not realize it exists
-  1: 'Pending', // when sub is created, but user hasn't paid yet. this is for bank card payment
-  2: 'Active', // 2: active: user paid the sub fee
-  // 3: "Suspended", // suspend: not used yet. For future implementation: users might want to suspend the sub for a period of time, during which, they don't need to pay
-  // 3: 'Pending', // when status is transitioning from 1 to 2, or 2 to 4, there is a pending status, it's not synchronous
-  // so we have to wait, in status 3: no action can be taken on UI.
-  4: 'Cancelled', // users(or admin) cancelled the sub(immediately or automatically at the end of billing cycle). It's triggered by human.
-  5: 'Expired', // sub ended.
-  // 6: 'Suspended', // suspend for a while, might want to resume later
-  7: 'Incomplete', // user claimed they have wired the transfer, admin mark the invoice as Incomplete until a DATE, so user can use it before that DATE
-  8: 'Processing', // user claimed they have wired the transfer(this status if for wire only), but we're checking
-  9: 'Failed' //
+export const PLAN_STATUS: Record<PlanStatus, { label: string; color: string }> =
+  {
+    [PlanStatus.EDITING]: { label: 'editing', color: 'blue' },
+    [PlanStatus.ACTIVE]: { label: 'active', color: '#87d068' },
+    [PlanStatus.INACTIVE]: { label: 'inactive', color: 'purple' },
+    [PlanStatus.EXPIRED]: { label: 'expired', color: 'red' }
+  }
+
+export const SUBSCRIPTION_STATUS: Record<
+  SubscriptionStatus,
+  { label: string; color: string }
+> = {
+  [SubscriptionStatus.INITIATING]: {
+    label: '', // 'Initiating'
+    color: 'lightgray'
+  },
+  [SubscriptionStatus.PENDING]: { label: 'Pending', color: 'magenta' },
+  [SubscriptionStatus.ACTIVE]: { label: 'Active', color: '#87d068' },
+  [SubscriptionStatus.CANCELLED]: { label: 'Cancelled', color: 'purple' },
+  [SubscriptionStatus.EXPIRED]: { label: 'Expired', color: 'red' },
+  [SubscriptionStatus.INCOMPLETE]: { label: 'Incomplete', color: 'cyan' },
+  [SubscriptionStatus.PROCESSING]: { label: 'Processing', color: 'blue' },
+  [SubscriptionStatus.FAILED]: { label: 'Failed', color: '#b71c1c' }
 }
 
-export const SUBSCRIPTION_HISTORY_STATUS: { [key: number]: string } = {
-  1: 'Active',
-  2: 'Finished',
-  3: 'Cancelled',
-  4: 'Expired'
+export const SUBSCRIPTION_HISTORY_STATUS: Record<
+  SubscriptionHistoryStatus,
+  { label: string; color: string }
+> = {
+  [SubscriptionHistoryStatus.Active]: { label: 'Active', color: '#87d068' },
+  [SubscriptionHistoryStatus.Finished]: { label: 'Finished', color: 'blue' },
+  [SubscriptionHistoryStatus.Cancelled]: {
+    label: 'Cancelled',
+    color: 'purple'
+  },
+  [SubscriptionHistoryStatus.Expired]: { label: 'Expired', color: 'red' }
 }
 
-export const USER_STATUS: { [key: number]: string } = {
-  0: 'Active',
-  2: 'Suspended'
+export const USER_STATUS: Record<UserStatus, string> = {
+  [UserStatus.ACTIVE]: 'Active',
+  [UserStatus.SUSPENDED]: 'Suspended'
 }
 
-export const MERCHANT_USER_STATUS: { [key: number]: string } = {
-  0: 'Active',
-  2: 'Suspended'
+export const MERCHANT_USER_STATUS: Record<MerchantUserStatus, string> = {
+  [MerchantUserStatus.ACTIVE]: 'Active',
+  [MerchantUserStatus.SUSPENDED]: 'Suspended'
 }
 
-export const TASK_STATUS: { [key: number]: string } = {
-  0: 'Queued',
-  1: 'Running',
-  2: 'Succeeded',
-  3: 'Failed'
+export const APP_TASK_STATUS: Record<
+  AppTaskStatus,
+  { label: string; color: string }
+> = {
+  [AppTaskStatus.QUEUED]: { label: 'Queued', color: 'orange' },
+  [AppTaskStatus.RUNNING]: { label: 'Running', color: 'geekblue' },
+  [AppTaskStatus.SUCCEEDED]: { label: 'Succeeded', color: '#87d068' },
+  [AppTaskStatus.FAILED]: { label: 'Failed', color: 'red' }
 }
 
+// to be deprecated, use currency from BE
 export const CURRENCY: {
   [key: string]: {
     symbol: string
@@ -91,29 +125,38 @@ export const METRICS_AGGREGATE_TYPE: { [key: number]: string } = {
   5: 'sum'
 }
 
-export const DISCOUNT_CODE_STATUS: { [key: number]: string } = {
-  1: 'Editing',
-  2: 'Active',
-  3: 'Inactive',
-  4: 'Expired',
-  10: 'Archived'
+export const DISCOUNT_CODE_STATUS: Record<
+  DiscountCodeStatus,
+  { label: string; color: string }
+> = {
+  [DiscountCodeStatus.EDITING]: { label: 'Editing', color: 'blue' },
+  [DiscountCodeStatus.ACTIVE]: { label: 'Active', color: '#87d068' },
+  [DiscountCodeStatus.INACTIVE]: { label: 'Inactive', color: 'purple' },
+  [DiscountCodeStatus.EXPIRED]: { label: 'Expired', color: 'red' },
+  [DiscountCodeStatus.ARCHIVED]: { label: 'Archived', color: 'gray' }
 }
 
-export const DISCOUNT_CODE_BILLING_TYPE: { [key: number]: string } = {
-  1: 'one-time',
-  2: 'recurring'
+export const DISCOUNT_CODE_BILLING_TYPE: Record<
+  DiscountCodeBillingType,
+  string
+> = {
+  [DiscountCodeBillingType.ONE_TIME]: 'one-time',
+  [DiscountCodeBillingType.RECURRING]: 'recurring'
 }
 
-export const DISCOUNT_CODE_TYPE: { [key: number]: string } = {
-  1: 'percentage',
-  2: 'fixed-amount'
+export const DISCOUNT_CODE_TYPE: Record<DiscountType, string> = {
+  [DiscountType.PERCENTAGE]: 'percentage',
+  [DiscountType.AMOUNT]: 'fixed-amount'
 }
 
-export const PAYMENT_STATUS: { [key: number]: string } = {
-  0: 'Pending',
-  1: 'Succeeded',
-  2: 'Failed',
-  3: 'Cancelled'
+export const PAYMENT_STATUS: Record<
+  PaymentStatus,
+  { label: string; color: string }
+> = {
+  [PaymentStatus.PENDING]: { label: 'Pending', color: 'blue' },
+  [PaymentStatus.SUCCEEDED]: { label: 'Succeeded', color: '#87d068' },
+  [PaymentStatus.FAILED]: { label: 'Failed', color: 'red' },
+  [PaymentStatus.CANCELLED]: { label: 'Cancelled', color: 'purple' }
 }
 
 export const PAYMENT_TYPE: { [key: number]: string } = {
@@ -121,24 +164,24 @@ export const PAYMENT_TYPE: { [key: number]: string } = {
   1: 'Refund'
 }
 
-export const REFUND_STATUS: { [key: number]: string } = {
-  10: 'Awaiting refund',
-  20: 'Refunded',
-  30: 'Failed',
-  40: 'Cancelled'
+export const REFUND_STATUS: Record<RefundStatus, { label: string }> = {
+  [RefundStatus.AWAITING_REFUND]: { label: 'Awaiting refund' },
+  [RefundStatus.REFUNDED]: { label: 'Refunded' },
+  [RefundStatus.FAILED]: { label: 'Failed' },
+  [RefundStatus.CANCELLED]: { label: 'Cancelled' }
 }
 
 // when credit amount has changed, we need the following types to track what caused the change.
-export const CREDIT_TX_TYPE: Record<CreditTxType, string> = {
-  [CreditTxType.TOP_UP]: 'Deposit', // this is for deposit credit(e.g. user saved 100 eur as 100 credits), not for promo credit. Added here for future use.
-  [CreditTxType.CONSUMPTION]: 'Applied to an invoice', // credit used for invoice payment
-  [CreditTxType.FROM_REFUND]: 'From Refund', // user used few credit for invoice payment, but later apply for a refund, this type track this event.
+export const CREDIT_TX_TYPE: Record<CreditTxType, { label: string }> = {
+  [CreditTxType.TOP_UP]: { label: 'Deposit' }, // this is for deposit credit(e.g. user saved 100 eur as 100 credits), not for promo credit. Added here for future use.
+  [CreditTxType.CONSUMPTION]: { label: 'Applied to an invoice' }, // credit used for invoice payment
+  [CreditTxType.FROM_REFUND]: { label: 'From Refund' }, // user used few credit for invoice payment, but later apply for a refund, this type track this event.
   // But only when it's full refund, partial invoice refund has no credit returned.
   // because credit amount is always an integer number, partial refund might involve decimal credit amount.
-  [CreditTxType.WITHDRAWN]: 'Withdrawn', // this is for deposit credit only. Added for future use.
-  [CreditTxType.WITHDRAWN_FAILED]: 'Withdrawn Failed', // Withdraw failed, the credit returned to user. This is for deposit credit only. Added for future use.
-  [CreditTxType.ADMIN_CHANGE]: 'Admin Change', // admin manually change the credit amount
-  [CreditTxType.DEPOSIT_REFUND]: 'Deposit refund' // similar to Withdraw. It's the opposite of Deposit.
+  [CreditTxType.WITHDRAWN]: { label: 'Withdrawn' }, // this is for deposit credit only. Added for future use.
+  [CreditTxType.WITHDRAWN_FAILED]: { label: 'Withdrawn Failed' }, // Withdraw failed, the credit returned to user. This is for deposit credit only. Added for future use.
+  [CreditTxType.ADMIN_CHANGE]: { label: 'Admin Change' }, // admin manually change the credit amount
+  [CreditTxType.DEPOSIT_REFUND]: { label: 'Deposit refund' } // similar to Withdraw. It's the opposite of Deposit.
 }
 
 const PERMISSIONS = {

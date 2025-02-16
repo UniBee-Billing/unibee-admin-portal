@@ -106,7 +106,7 @@ const Index = ({ detail, closeModal }: Props) => {
             <Col span={8}>
               {dayjs(detail.refund.createTime * 1000).format('YYYY-MMM-DD')}
             </Col>
-            <Col span={4}>{REFUND_STATUS[detail.refund.status]}</Col>
+            <Col span={4}>{REFUND_STATUS[detail.refund.status].label}</Col>
           </Row>
         </div>
       )}

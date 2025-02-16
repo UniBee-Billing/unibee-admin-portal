@@ -211,7 +211,7 @@ const EssentialSetup = ({
         status: 'done',
         name: 'icon'
       }
-      // after uploading a new file, length should be increased by 1, why I update the last item????????????
+      // after uploading a new file, length should be increased by 1, why $push didn't work?
       const newFileList = update(fileList, {
         [fileList.length - 1]: { $set: newFile }
         // $push: [newFile]

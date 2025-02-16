@@ -17,6 +17,7 @@ import {
 
 import type { GetProp, UploadFile, UploadProps } from 'antd'
 import { Image, Upload } from 'antd'
+import TextArea from 'antd/es/input/TextArea'
 // import ImgCrop from 'antd-img-crop'
 // this tool has a bug, when cropping transparent bg png, the bg will become white after cropping
 /* <ImgCrop
@@ -230,7 +231,7 @@ const Index = () => {
                 }
               ]}
             >
-              <Input />
+              <TextArea rows={4} />
             </Form.Item>
 
             <Form.Item

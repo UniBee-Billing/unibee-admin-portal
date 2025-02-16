@@ -25,10 +25,9 @@ import json from 'react-syntax-highlighter/dist/esm/languages/prism/json'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
 import { useInterval } from 'usehooks-ts'
 import { downloadStaticFile, formatDate } from '../helpers'
-import { usePagination } from '../hooks'
 import { getDownloadListReq } from '../requests'
-import { TExportDataType } from '../shared.types'
-import { TaskStatus } from './ui/statusTag'
+import { AppTask, AppTaskStatus } from '../shared.types'
+import { AppTaskStatusTag } from './ui/statusTag'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 
@@ -37,8 +36,14 @@ SyntaxHighlighter.registerLanguage('json', json)
 const PAGE_SIZE = 10
 
 const Index = ({ onClose }: { onClose: () => void }) => {
-  const { page, onPageChangeNoParams } = usePagination()
-  const [taskList, setTaskList] = useState<TTaskItem[]>([])
+  // cannot use usePagination hook here, if user is on list page which also has pagination,
+  // taskList's page will read that list page's page number.
+  const [page, setPage] = useState(0)
+  const onPageChange = (page: number) => {
+    setPage(page - 1)
+  }
+
+  const [taskList, setTaskList] = useState<AppTask[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
 
@@ -107,11 +112,11 @@ const Index = ({ onClose }: { onClose: () => void }) => {
 
         <div className="mx-0 my-4 flex items-center justify-end">
           <Pagination
-            current={page + 1} // back-end starts with 0, front-end starts with 1
+            current={page + 1}
             pageSize={PAGE_SIZE}
             total={total}
             size="small"
-            onChange={onPageChangeNoParams}
+            onChange={onPageChange}
             disabled={loading}
             showSizeChanger={false}
             showTotal={(total, range) =>
@@ -163,22 +168,7 @@ const rowStyle: CSSProperties = {
   color: '#757575'
 }
 
-type TTaskItem = {
-  id: number
-  merchantId: number
-  memberId: number
-  taskName: TExportDataType
-  payload: string
-  downloadUrl: string
-  uploadFileUrl: string
-  status: number
-  startTime: number
-  finishTime: number
-  failureReason: string
-  taskCost: number
-  format: 'xlsx' | 'csv'
-}
-const TaskItem = ({ t }: { t: TTaskItem }) => {
+const TaskItem = ({ t }: { t: AppTask }) => {
   const onDownload = (url: string) => () => {
     downloadStaticFile(url, `${t.taskName}_${t.id}.${t.format}`)
   }
@@ -195,8 +185,8 @@ const TaskItem = ({ t }: { t: TTaskItem }) => {
           </div>
         </Col>
         <Col span={6}>
-          {TaskStatus(t.status)}
-          {t.status == 3 && (
+          {AppTaskStatusTag(t.status)}
+          {t.status == AppTaskStatus.FAILED && (
             <Popover
               placement="right"
               content={
@@ -208,7 +198,7 @@ const TaskItem = ({ t }: { t: TTaskItem }) => {
           )}
         </Col>
         <Col span={2}>
-          {t.status == 2 && (
+          {t.status == AppTaskStatus.SUCCEEDED && (
             <Button
               onClick={onDownload(t.downloadUrl)}
               size="small"
@@ -230,11 +220,6 @@ const TaskItem = ({ t }: { t: TTaskItem }) => {
         <Col span={6}>
           {t.finishTime == 0 ? '―' : formatDate(t.finishTime, true)}
         </Col>
-        {/* <Col span={2} className=" text-xs">
-          {t.status == 2
-            ? `${dayjs.duration(t.taskCost, 'seconds').humanize()}`
-            : '―'}
-        </Col> */}
       </Row>
     </div>
   )

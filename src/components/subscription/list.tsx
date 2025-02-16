@@ -41,14 +41,14 @@ import {
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import LongTextPopover from '../ui/longTextPopover'
-import { SubscriptionStatus } from '../ui/statusTag'
+import { SubscriptionStatusTag } from '../ui/statusTag'
 
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
-const SUB_STATUS_FILTER = Object.keys(SUBSCRIPTION_STATUS)
-  .map((s) => ({
-    text: SUBSCRIPTION_STATUS[Number(s)],
-    value: Number(s)
+const SUB_STATUS_FILTER = Object.entries(SUBSCRIPTION_STATUS)
+  .map(([statusNumber, { label }]) => ({
+    text: label,
+    value: Number(statusNumber)
   }))
   .sort((a, b) => (a.value < b.value ? -1 : 1))
 
@@ -229,7 +229,7 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (_, sub) => SubscriptionStatus(sub.status),
+      render: (_, sub) => SubscriptionStatusTag(sub.status),
       filters: SUB_STATUS_FILTER,
       filteredValue: filters.status
     },

@@ -381,10 +381,10 @@ export function addOptional<T extends object, U extends object>(
 }
 
 /**
- * this fn assume you're using antd's <Upload> component, and using the default upload request option.
- * nd set customRequest={uploadFile(maxFileSize, onSuccess, onError)}
+ * this fn assume you're using antd's \<Upload \/> component, and using the default upload request option.
+ * and set customRequest={uploadFile(maxFileSize, onSuccess, onError)}
  * @param maxFileSize - max file size in bytes
- * @param onSuccess - callback when file upload succeeded
+ * @param onSuccess - callback when file upload succeeded, parameter is the url of the uploaded file
  * @param onError - callback when file upload failed
  */
 export const uploadFile =
