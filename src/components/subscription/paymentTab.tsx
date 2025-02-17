@@ -1,4 +1,10 @@
 import {
+  InfoCircleOutlined,
+  LoadingOutlined,
+  MinusOutlined,
+  SyncOutlined
+} from '@ant-design/icons'
+import {
   Button,
   Col,
   DatePicker,
@@ -16,20 +22,22 @@ import {
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { ReactElement, useEffect, useState } from 'react'
-// import { ISubscriptionType } from "../../shared.types";
-import {
-  InfoCircleOutlined,
-  LoadingOutlined,
-  MinusOutlined,
-  SyncOutlined
-} from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import { CURRENCY, PAYMENT_STATUS, PAYMENT_TYPE } from '../../constants'
+import {
+  CURRENCY,
+  PAYMENT_STATUS,
+  PAYMENT_TIME_LINE_TYPE
+} from '../../constants'
 import { formatDate, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPaymentTimelineReq } from '../../requests'
 import '../../shared.css'
-import { IProfile, PaymentItem, PaymentStatus } from '../../shared.types'
+import {
+  IProfile,
+  PaymentItem,
+  PaymentStatus,
+  PaymentTimelineType
+} from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import RefundInfoModal from '../payment/refundModal'
 import CopyToClipboard from '../ui/copyToClipboard'
@@ -40,9 +48,9 @@ const STATUS_FILTER = Object.entries(PAYMENT_STATUS).map((s) => {
   const [value, { label }] = s
   return { value: Number(value), text: label }
 })
-const PAYMENT_TYPE_FILTER = Object.entries(PAYMENT_TYPE).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text }
+const PAYMENT_TYPE_FILTER = Object.entries(PAYMENT_TIME_LINE_TYPE).map((s) => {
+  const [value, { label }] = s
+  return { value: Number(value), text: label }
 })
 
 type TFilters = {
@@ -179,10 +187,9 @@ const Index = ({
       key: 'timelineTypes',
       filters: PAYMENT_TYPE_FILTER,
       filteredValue: filters.timelineTypes,
-      render: (s) => {
-        const title = PAYMENT_TYPE[s as keyof typeof PAYMENT_TYPE]
-        if (s == 1) {
-          // refund
+      render: (s: PaymentTimelineType) => {
+        const title = PAYMENT_TIME_LINE_TYPE[s].label
+        if (s == PaymentTimelineType.REFUND) {
           return (
             <Button
               type="link"
@@ -192,8 +199,7 @@ const Index = ({
               {title}
             </Button>
           )
-        } else if (s == 0) {
-          // regular payment
+        } else if (s == PaymentTimelineType.PAYMENT) {
           return title
         }
       }

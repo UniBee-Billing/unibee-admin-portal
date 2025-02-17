@@ -15,10 +15,12 @@ import {
 import {
   AppTaskStatus,
   DiscountCodeStatus,
+  MerchantUserStatus,
   PaymentStatus,
   PlanStatus,
   SubscriptionHistoryStatus,
-  SubscriptionStatus
+  SubscriptionStatus,
+  UserStatus
 } from '../../shared.types'
 
 const SubscriptionStatusTag = (status: SubscriptionStatus) => {
@@ -29,9 +31,10 @@ const SubscriptionStatusTag = (status: SubscriptionStatus) => {
   )
 }
 
+// sometimes, BE would return some new status value not defined in FE.
 const SubHistoryStatus = (statusId: SubscriptionHistoryStatus) => (
-  <Tag color={SUBSCRIPTION_HISTORY_STATUS[statusId].color}>
-    {SUBSCRIPTION_HISTORY_STATUS[statusId].label}
+  <Tag color={SUBSCRIPTION_HISTORY_STATUS[statusId]?.color ?? ''}>
+    {SUBSCRIPTION_HISTORY_STATUS[statusId]?.label ?? ''}
   </Tag>
 )
 
@@ -87,23 +90,20 @@ const getDiscountCodeStatusTagById = (statusId: DiscountCodeStatus) => (
 )
 
 const PaymentStatusTag = (statusId: PaymentStatus) => (
-  <Tag color={PAYMENT_STATUS[statusId].color}>
-    {PAYMENT_STATUS[statusId].label}
+  <Tag color={PAYMENT_STATUS[statusId]?.color ?? ''}>
+    {PAYMENT_STATUS[statusId]?.label ?? ''}
   </Tag>
 )
 
-const USER_STATUS_TAG: { [key: number]: ReactElement } = {
-  0: <Tag color="#87d068">{USER_STATUS[0]}</Tag>, // active
-  2: <Tag color="red">{USER_STATUS[2]}</Tag> // suspended
-}
-const UserStatusTag = (statusId: number) => USER_STATUS_TAG[statusId]
+const UserStatusTag = (statusId: UserStatus) => (
+  <Tag color={USER_STATUS[statusId].color}>{USER_STATUS[statusId].label}</Tag>
+)
 
-const MERCHANT_USER_STATUS_TAG: { [key: number]: ReactElement } = {
-  0: <Tag color="#87d068">{MERCHANT_USER_STATUS[0]}</Tag>, // active
-  2: <Tag color="red">{MERCHANT_USER_STATUS[2]}</Tag> // suspended
-}
-const MerchantUserStatus = (statusId: number) =>
-  MERCHANT_USER_STATUS_TAG[statusId]
+const MerchantUserStatusTag = (statusId: MerchantUserStatus) => (
+  <Tag color={MERCHANT_USER_STATUS[statusId].color}>
+    {MERCHANT_USER_STATUS[statusId].label}
+  </Tag>
+)
 
 const AppTaskStatusTag = (statusId: AppTaskStatus) => (
   <Tag color={APP_TASK_STATUS[statusId].color}>
@@ -115,7 +115,7 @@ export {
   AppTaskStatusTag,
   getDiscountCodeStatusTagById,
   InvoiceStatus,
-  MerchantUserStatus,
+  MerchantUserStatusTag,
   PaymentStatusTag,
   PlanStatusTag,
   SubHistoryStatus,

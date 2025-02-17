@@ -44,8 +44,8 @@ import './list.css'
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const USER_STATUS_FILTER = Object.entries(USER_STATUS).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text }
+  const [value, { label }] = s
+  return { value: Number(value), text: label }
 })
 const SUB_STATUS_FILTER = Object.entries(SUBSCRIPTION_STATUS).map((s) => {
   const [value, { label }] = s

@@ -35,7 +35,7 @@ import {
 import '../../shared.css'
 import { IMerchantMemberProfile, TRole } from '../../shared.types'
 import { useMerchantMemberProfileStore } from '../../stores'
-import { MerchantUserStatus } from '../ui/statusTag'
+import { MerchantUserStatusTag } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
 
@@ -152,7 +152,7 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s) => MerchantUserStatus(s)
+      render: (s) => MerchantUserStatusTag(s)
     },
     {
       title: 'Email',

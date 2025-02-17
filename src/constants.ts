@@ -7,6 +7,7 @@ import {
   InvoiceBizType,
   MerchantUserStatus,
   PaymentStatus,
+  PaymentTimelineType,
   PlanStatus,
   PlanType,
   RefundStatus,
@@ -50,6 +51,11 @@ export const SUBSCRIPTION_HISTORY_STATUS: Record<
   SubscriptionHistoryStatus,
   { label: string; color: string }
 > = {
+  /*
+  [SubscriptionHistoryStatus.UNKNOWN_ZERO]: {
+    label: 'unknown 0',
+    color: 'lightgray'
+  }, */
   [SubscriptionHistoryStatus.Active]: { label: 'Active', color: '#87d068' },
   [SubscriptionHistoryStatus.Finished]: { label: 'Finished', color: 'blue' },
   [SubscriptionHistoryStatus.Cancelled]: {
@@ -57,16 +63,26 @@ export const SUBSCRIPTION_HISTORY_STATUS: Record<
     color: 'purple'
   },
   [SubscriptionHistoryStatus.Expired]: { label: 'Expired', color: 'red' }
+  /*
+  [SubscriptionHistoryStatus.UNKNOWN_FIVE]: {
+    label: 'unknown 5',
+    color: 'lightgray'
+  }
+    */
 }
 
-export const USER_STATUS: Record<UserStatus, string> = {
-  [UserStatus.ACTIVE]: 'Active',
-  [UserStatus.SUSPENDED]: 'Suspended'
-}
+export const USER_STATUS: Record<UserStatus, { label: string; color: string }> =
+  {
+    [UserStatus.ACTIVE]: { label: 'Active', color: '#87d068' },
+    [UserStatus.SUSPENDED]: { label: 'Suspended', color: 'red' }
+  }
 
-export const MERCHANT_USER_STATUS: Record<MerchantUserStatus, string> = {
-  [MerchantUserStatus.ACTIVE]: 'Active',
-  [MerchantUserStatus.SUSPENDED]: 'Suspended'
+export const MERCHANT_USER_STATUS: Record<
+  MerchantUserStatus,
+  { label: string; color: string }
+> = {
+  [MerchantUserStatus.ACTIVE]: { label: 'Active', color: '#87d068' },
+  [MerchantUserStatus.SUSPENDED]: { label: 'Suspended', color: 'red' }
 }
 
 export const APP_TASK_STATUS: Record<
@@ -159,9 +175,12 @@ export const PAYMENT_STATUS: Record<
   [PaymentStatus.CANCELLED]: { label: 'Cancelled', color: 'purple' }
 }
 
-export const PAYMENT_TYPE: { [key: number]: string } = {
-  0: 'Payment',
-  1: 'Refund'
+export const PAYMENT_TIME_LINE_TYPE: Record<
+  PaymentTimelineType,
+  { label: string }
+> = {
+  [PaymentTimelineType.PAYMENT]: { label: 'Payment' },
+  [PaymentTimelineType.REFUND]: { label: 'Refund' }
 }
 
 export const REFUND_STATUS: Record<RefundStatus, { label: string }> = {

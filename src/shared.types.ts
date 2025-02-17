@@ -277,10 +277,12 @@ type ISubscriptionType = {
 }
 
 export enum SubscriptionHistoryStatus {
+  // UNKNOWN_ZERO = 0,
   Active = 1, // current active subscription also show up in history list
   Finished = 2, // when user upgrade from planA to planB, the old subscriptio with plan A will be marked as finished.
   Cancelled = 3,
   Expired = 4
+  //UNKNOWN_FIVE = 5
 }
 
 type ISubHistoryItem = {
@@ -424,6 +426,12 @@ export enum PaymentStatus {
   CANCELLED = 3
 }
 
+// payment can go bi-directional, user -> merchant: payment, merchant -> user: refund
+export enum PaymentTimelineType {
+  PAYMENT = 0,
+  REFUND = 1
+}
+
 // used in transaction list (/merchant/payment/timeline/list)
 // this list was originally called 'payment list' on UI, no need to rename it here.
 type PaymentItem = {
@@ -447,7 +455,7 @@ type PaymentItem = {
   }
   refund?: TRefund
   status: PaymentStatus
-  timelineType: number
+  timelineType: PaymentTimelineType
   createTime: number
 }
 
