@@ -95,7 +95,7 @@ const DraggableUploadListItem = ({
   )
 }
 
-const EssentialSetup = ({
+const Index = ({
   closeModal,
   gatewayConfig,
   refresh,
@@ -451,4 +451,4 @@ const EssentialSetup = ({
   )
 }
 
-export default EssentialSetup
+export default Index
