@@ -455,7 +455,7 @@ export const AssignSubscriptionModal = ({
     <Modal
       title="Choose a Subscription Plan"
       open={true}
-      width={'720px'}
+      width={'760px'}
       footer={[
         <Button key="cancel" onClick={closeModal} disabled={loading}>
           Cancel
