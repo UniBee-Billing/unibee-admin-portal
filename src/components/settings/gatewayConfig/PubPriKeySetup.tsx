@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { saveGatewayConfigReq, TGatewayConfigBody } from '../../../requests'
 import { TGateway } from '../../../shared.types'
 
-const PubPriKeySetup = ({
+const Index = ({
   gatewayConfig,
   closeModal,
   refresh,
@@ -155,4 +155,4 @@ const PubPriKeySetup = ({
     </div>
   )
 }
-export default PubPriKeySetup
+export default Index

@@ -11,7 +11,7 @@ import { saveWebhookKeyReq } from '../../../requests'
 import { TGateway } from '../../../shared.types'
 import CopyToClipboard from '../../ui/copyToClipboard'
 
-const WebHookSetup = ({
+const Index = ({
   gatewayConfig,
   closeModal,
   refresh,
@@ -162,4 +162,4 @@ const WebHookSetup = ({
   )
 }
 
-export default WebHookSetup
+export default Index
