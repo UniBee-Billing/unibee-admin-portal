@@ -1,3 +1,4 @@
+import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Table, message } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { SorterResult } from 'antd/es/table/interface'
@@ -246,7 +247,10 @@ const Index = () => {
           total,
           showSizeChanger: false
         }}
-        loading={isLoading}
+        loading={{
+          spinning: isLoading,
+          indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+        }}
       />
       <div className="absolute bottom-[14px]">
         <Button onClick={goBack}>Go back</Button>

@@ -51,7 +51,7 @@ const Index = ({
         <Col span={10} style={{ fontWeight: 'bold' }} className="text-gray-600">
           Refund status
         </Col>
-        <Col span={14}>{REFUND_STATUS[detail.status]}</Col>
+        <Col span={14}>{REFUND_STATUS[detail.status].label}</Col>
       </Row>
 
       <Row style={{ margin: '8px 0' }}>

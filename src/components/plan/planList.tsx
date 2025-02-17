@@ -20,28 +20,34 @@ import type { ColumnsType, TableProps } from 'antd/es/table'
 // import currency from 'currency.js'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PLAN_STATUS } from '../../constants'
+import { PLAN_STATUS, PLAN_TYPE } from '../../constants'
 import { formatDate, formatPlanPrice } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { copyPlanReq, getPlanList, TPlanListBody } from '../../requests'
 import '../../shared.css'
-import { IPlan } from '../../shared.types'
+import {
+  IPlan,
+  PlanPublishStatus,
+  PlanStatus,
+  PlanType
+} from '../../shared.types'
 import LongTextPopover from '../ui/longTextPopover'
-import { PlanStatus } from '../ui/statusTag'
+import { PlanStatusTag } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
-const PLAN_STATUS_FILTER = Object.keys(PLAN_STATUS)
-  .map((s) => ({
-    text: PLAN_STATUS[Number(s)],
-    value: Number(s)
+const PLAN_STATUS_FILTER = Object.entries(PLAN_STATUS)
+  .map(([statusNumber, { label }]) => ({
+    value: Number(statusNumber),
+    text: label
   }))
   .sort((a, b) => (a.value < b.value ? -1 : 1))
 
-const PLAN_TYPE_FILTER = [
-  { text: 'Main plan', value: 1 },
-  { text: 'Add-on', value: 2 },
-  { text: 'One-time payment', value: 3 }
-] // main plan or addon
+const PLAN_TYPE_FILTER = Object.entries(PLAN_TYPE)
+  .map(([typeNumber, { label }]) => ({
+    value: Number(typeNumber),
+    text: label
+  }))
+  .sort((a, b) => (a.value < b.value ? -1 : 1))
 
 type TFilters = {
   type: number[] | null // plan type filter
@@ -166,32 +172,22 @@ const Index = ({
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
-      render: (_, plan) => {
-        return plan.type == 1 ? (
-          <span>Main plan</span>
-        ) : plan.type == 2 ? (
-          <span>Add-on</span>
-        ) : (
-          <span>One-time payment</span>
-        )
-      },
+      render: (type) => PLAN_TYPE[type as PlanType].label,
       filters: PLAN_TYPE_FILTER
-      // onFilter: (value, record) => record.status == value,
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s) => PlanStatus(s), // (_, plan) => STATUS[plan.status],
+      render: (s) => PlanStatusTag(s as PlanStatus),
       filters: PLAN_STATUS_FILTER
-      // onFilter: (value, record) => record.status == value,
     },
     {
       title: 'Published',
       dataIndex: 'publishStatus',
       key: 'publishStatus',
       render: (publishStatus) =>
-        publishStatus == 2 ? (
+        publishStatus == PlanPublishStatus.PUBLISHED ? (
           <CheckCircleOutlined style={{ color: 'green' }} />
         ) : (
           <MinusOutlined style={{ color: 'red' }} />
@@ -278,6 +274,7 @@ const Index = ({
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
     // onPageChange(1, PAGE_SIZE)
+    // console.log('filters', filters)
     setFilters(filters as TFilters)
     if (Array.isArray(sorter)) {
       return // Handle array case if needed

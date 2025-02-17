@@ -17,6 +17,7 @@ import {
 
 import type { GetProp, UploadFile, UploadProps } from 'antd'
 import { Image, Upload } from 'antd'
+import TextArea from 'antd/es/input/TextArea'
 // import ImgCrop from 'antd-img-crop'
 // this tool has a bug, when cropping transparent bg png, the bg will become white after cropping
 /* <ImgCrop
@@ -37,7 +38,7 @@ const FILE_CONSTRAINTS = {
   MAX_FILE_SIZE: 4 * 1024 * 1024,
   MAX_FILE_COUNT: 1,
   ALLOWED_FILE_TYPES: ['.png', '.jpg', '.jpeg', '.svg']
-}
+} as const
 
 const getBase64 = (file: FileType): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -230,7 +231,7 @@ const Index = () => {
                 }
               ]}
             >
-              <Input />
+              <TextArea rows={4} />
             </Form.Item>
 
             <Form.Item

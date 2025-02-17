@@ -3,7 +3,7 @@ import { CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
-import { UserStatus } from '../ui/statusTag'
+import { UserStatusTag } from '../ui/statusTag'
 
 const rowStyle: CSSProperties = {
   display: 'flex',
@@ -37,7 +37,7 @@ const Index = ({ user }: { user: IProfile | undefined }) => {
               >
                 {`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}
               </Button>{' '}
-              {UserStatus(user.status)}
+              {UserStatusTag(user.status)}
             </>
           )}
         </Col>

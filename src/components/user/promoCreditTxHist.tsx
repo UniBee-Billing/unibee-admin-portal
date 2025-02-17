@@ -277,7 +277,7 @@ const Index = ({
         if (type == CreditTxType.ADMIN_CHANGE) {
           return tx.deltaAmount > 0 ? 'Added by admin' : 'Reduced by admin'
         }
-        return CREDIT_TX_TYPE[type]
+        return CREDIT_TX_TYPE[type].label
       }
     },
     {

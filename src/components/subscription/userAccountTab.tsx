@@ -13,10 +13,10 @@ import {
 } from 'antd'
 import { ReactElement, useEffect, useState } from 'react'
 import { getCountryListReq, saveUserProfileReq } from '../../requests'
-import { Country, IProfile } from '../../shared.types'
+import { AccountType, Country, IProfile, UserStatus } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import PaymentSelector from '../ui/paymentSelector'
-import { UserStatus } from '../ui/statusTag'
+import { UserStatusTag } from '../ui/statusTag'
 import PaymentCardList from '../user/paymentCards'
 import SuspendModal from '../user/suspendModal'
 import './userAccountTab.css'
@@ -127,7 +127,7 @@ const UserAccountTab = ({
             labelCol={{ span: 7 }}
             onFinish={onSave}
             initialValues={user}
-            disabled={loading || user.status == 2} // suspended
+            disabled={loading || user.status == UserStatus.SUSPENDED}
           >
             <Form.Item label="id" name="id" hidden>
               <Input disabled />
@@ -141,7 +141,7 @@ const UserAccountTab = ({
                   <div>
                     <span className="text-gray-500">{`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}</span>
                     &nbsp;&nbsp;
-                    {UserStatus(user.status)}
+                    {UserStatusTag(user.status)}
                   </div>
                 </Form.Item>
               </Col>
@@ -204,7 +204,7 @@ const UserAccountTab = ({
                   name="city"
                   rules={[
                     {
-                      required: userType === 2, // biz user
+                      required: userType === AccountType.BUSINESS,
                       message: 'Please input your city!'
                     }
                   ]}
@@ -218,7 +218,7 @@ const UserAccountTab = ({
                   name="zipCode"
                   rules={[
                     {
-                      required: userType === 2, // biz user
+                      required: userType === AccountType.BUSINESS,
                       message: 'Please input your ZIP code!'
                     }
                   ]}
@@ -234,7 +234,7 @@ const UserAccountTab = ({
                   name="address"
                   rules={[
                     {
-                      required: userType === 2, // biz user,
+                      required: userType === AccountType.BUSINESS,
                       message: 'Please input your billing address!'
                     }
                   ]}
@@ -248,7 +248,7 @@ const UserAccountTab = ({
                   name="companyName"
                   rules={[
                     {
-                      required: userType === 2, // biz user
+                      required: userType === AccountType.BUSINESS,
                       message: 'Please input your company name!'
                     }
                   ]}
@@ -266,16 +266,7 @@ const UserAccountTab = ({
             </Row>
             <Row>
               <Col span={12}>
-                <Form.Item
-                  label="VAT number"
-                  name="vATNumber"
-                  /* rules={[
-                  {
-                    required: user.type == 2, // biz user
-                    message: 'Please input your VAT number!'
-                  }
-                ]} */
-                >
+                <Form.Item label="VAT number" name="vATNumber">
                   <Input style={{ width: '300px' }} />
                 </Form.Item>
               </Col>
@@ -286,16 +277,13 @@ const UserAccountTab = ({
               </Col>
             </Row>
 
-            {/* <Divider orientation="left" style={{ margin: '16px 0' }}>
-            Payment method
-              </Divider> */}
             <Row>
               <Col span={12}>
                 <Form.Item label="Payment method">
                   <PaymentSelector
                     selected={gatewayId}
                     onSelect={onGatewayChange}
-                    disabled={loading || user.status == 2}
+                    disabled={loading || user.status == UserStatus.SUSPENDED}
                   />
                 </Form.Item>
               </Col>
@@ -399,7 +387,9 @@ const UserAccountTab = ({
             <Button
               danger
               onClick={toggleSuspend}
-              disabled={loading || null == user || user.status == 2}
+              disabled={
+                loading || null == user || user.status == UserStatus.SUSPENDED
+              }
             >
               Suspend
             </Button>
@@ -408,7 +398,9 @@ const UserAccountTab = ({
               <Button
                 type="primary"
                 onClick={form.submit}
-                disabled={loading || null == user || user.status == 2}
+                disabled={
+                  loading || null == user || user.status == UserStatus.SUSPENDED
+                }
                 loading={loading}
               >
                 Save

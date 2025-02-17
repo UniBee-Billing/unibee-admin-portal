@@ -13,15 +13,19 @@ import {
 } from 'antd'
 // import update from 'immutability-helper'
 import { useEffect, useState } from 'react'
-import ExchangeIcon from '../../assets/exchange.svg?react'
-import { numBoolConvert } from '../../helpers'
+import ExchangeIcon from '../../../assets/exchange.svg?react'
+import { numBoolConvert } from '../../../helpers'
 import {
   createCreditConfigReq,
   getCreditConfigListReq,
   saveCreditConfigReq
-} from '../../requests'
-import { CreditType, TCreditConfig } from '../../shared.types'
-import { useCreditConfigStore, useMerchantInfoStore } from '../../stores'
+} from '../../../requests'
+import { CreditType, TCreditConfig } from '../../../shared.types'
+import {
+  useAppConfigStore,
+  useCreditConfigStore,
+  useMerchantInfoStore
+} from '../../../stores'
 
 export const normalizeCreditConfig = (c: TCreditConfig): TCreditConfig => {
   if (typeof c.payoutEnable == 'number') {
@@ -131,6 +135,7 @@ export default Index
 
 const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
   const creditConfigStore = useCreditConfigStore()
+  const appConfigStore = useAppConfigStore()
   const [creditConfig, setCreditConfig] = useState<TCreditConfig>(items)
   const [modalOpen, setModalOpen] = useState(false)
   const toggleModal = () => setModalOpen(!modalOpen)
@@ -143,11 +148,10 @@ const CreditConfigItems = ({ items }: { items: TCreditConfig }) => {
       disabled={!!disabled || loading || items.id != -1}
       value={creditConfig.currency}
       style={{ width: '100px' }}
-      options={[
-        { label: 'EUR(€)', value: 'EUR' },
-        { label: 'USD($)', value: 'USD' },
-        { label: 'JPY(¥)', value: 'JPY' }
-      ]}
+      options={appConfigStore.supportCurrency.map((c) => ({
+        label: `${c.Currency}(${c.Symbol})`,
+        value: c.Currency
+      }))}
     />
   )
 

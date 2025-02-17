@@ -7,7 +7,7 @@ import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { getOneTimePaymentHistoryReq } from '../../requests'
 import { IOneTimeHistoryItem } from '../../shared.types'
-import { PaymentStatus } from '../ui/statusTag'
+import { PaymentStatusTag } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
 
@@ -59,7 +59,7 @@ const Index = ({ userId }: { userId: number }) => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => PaymentStatus(status)
+      render: (status) => PaymentStatusTag(status)
     },
 
     {

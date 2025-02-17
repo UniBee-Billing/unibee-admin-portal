@@ -10,6 +10,7 @@ import {
 import { getDiscountCodeStatusTagById } from '../../ui/statusTag'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 import './summary.css'
+
 export const NotSetPlaceholder = () => (
   <span className="text-red-500">Not set</span>
 )
@@ -21,7 +22,7 @@ const contentStyle2 = 'flex h-6'
 type SummaryItem = {
   name: string
   code: string
-  status?: DiscountCodeStatus // status could be null if code is copied.
+  status?: DiscountCodeStatus // status could be null if code is first copied, then being edited.
   quantity: number
   discountType: DiscountType
   billingType: DiscountCodeBillingType
@@ -120,7 +121,7 @@ const Summary = ({
           planIds == null || planIds.length == 0 ? (
             <NotSetPlaceholder />
           ) : (
-            <p className="long-content text-right">
+            <p className="long-content">
               {planIds?.map((id) => getPlanLabel(id)).join(', ')}
             </p>
           )
@@ -129,7 +130,7 @@ const Summary = ({
         ) : (
           <div className="flex flex-col items-end">
             <div className="text-right text-red-500">All plans except:</div>
-            <p className="long-content text-right">
+            <p className="long-content">
               {planIds?.map((id) => getPlanLabel(id)).join(', ')}
             </p>
           </div>
@@ -166,15 +167,7 @@ const Summary = ({
       <div className="flex h-[46px] items-center text-lg">Summary</div>
       <Divider className="my-4" />
       <div className="mb-4 flex items-center">
-        <Divider
-          type="vertical"
-          style={{
-            backgroundColor: '#1677FF',
-            width: '3px',
-            marginLeft: 0,
-            height: '28px'
-          }}
-        />
+        <Divider type="vertical" className="ml-0 h-7 w-0.5 bg-[#1677FF]" />
         <div className="text-lg">General Configuration</div>
       </div>
       {items.map((item) => (
@@ -189,15 +182,7 @@ const Summary = ({
       ))}
       <div className="h-8"></div>
       <div className="my-4 flex items-center">
-        <Divider
-          type="vertical"
-          style={{
-            backgroundColor: '#1677FF',
-            width: '3px',
-            marginLeft: 0,
-            height: '28px'
-          }}
-        />
+        <Divider type="vertical" className="ml-0 h-7 w-0.5 bg-[#1677FF]" />
         <div className="text-lg">Advanced Configuration</div>
       </div>
       {advancedItems.map((item, idx: number) => (

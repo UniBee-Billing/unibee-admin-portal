@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
-import { NEW_WIRE_TRANSFER } from '../components/settings/appConfig/wireTransferModal'
 import { normalizeCreditConfig } from '../components/settings/creditConfig'
+import { NEW_WIRE_TRANSFER } from '../components/settings/gatewayConfig/wireTransferModal'
 import { initializeReq } from '../requests'
 import { CreditType, TCreditConfig, TGateway } from '../shared.types'
 import {
