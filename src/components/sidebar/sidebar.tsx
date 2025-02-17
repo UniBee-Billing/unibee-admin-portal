@@ -44,7 +44,7 @@ export const Sidebar = () => {
             <LogoWithAction
               collapsed={collapsed}
               clickHandler={() => logout('login')}
-              text="Logout"
+              text="Log out"
               logo={<LogoutOutlined className="mr-2" />}
               logoColor="text-red-400"
             />

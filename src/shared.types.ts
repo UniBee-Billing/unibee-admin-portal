@@ -4,9 +4,9 @@ import { Currency } from 'dinero.js'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from './components/discountCode/helpers'
 
 export enum AccountType {
-  NONE,
-  PERSONAL,
-  BUSINESS
+  NONE = 0,
+  PERSONAL = 1,
+  BUSINESS = 2
 }
 
 export type WithStyle<T> = T & {
@@ -40,6 +40,10 @@ export type TPromoAccount = {
   createTime: number
 }
 
+export enum UserStatus {
+  ACTIVE = 0,
+  SUSPENDED = 2
+}
 // this is end user profile
 type IProfile = {
   id: number | null
@@ -49,9 +53,8 @@ type IProfile = {
   lastName: string
   email: string
   type: AccountType
-  status: number // 0-Active, 2-Frozen
+  status: UserStatus
   taxPercentage: number
-  // MemberRoles: TRole[]
   isOwner: boolean
   merchantId: number
   promoCreditAccounts?: TPromoAccount[]
@@ -79,7 +82,11 @@ type IProfile = {
   createTime: number
 }
 
-// this is admin profile
+export enum MerchantUserStatus {
+  ACTIVE = 0,
+  SUSPENDED = 2
+}
+// this is the admin user profile
 type IMerchantMemberProfile = {
   id: number
   merchantId: number
@@ -89,19 +96,8 @@ type IMerchantMemberProfile = {
   createTime: number
   mobile: string
   isOwner: boolean
-  status: number
+  status: MerchantUserStatus
   MemberRoles: TRole[]
-}
-
-type IMerchantUserProfile = {
-  email: string
-  firstName: string
-  lastName: string
-  id: number
-  MemberRoles: TRole[]
-  merchantId: number
-  isOwner: boolean
-  status: number // 0-Active, 2-Suspended
 }
 
 type TMerchantInfo = {
@@ -135,7 +131,7 @@ type IAppConfig = {
   supportTimeZone: string[]
   supportCurrency: { Currency: string; Symbol: string; Scale: number }[]
   gateway: TGateway[]
-  taskListOpen: boolean // task list is in app.tsx, which is accessible to all pages.
+  taskListOpen: boolean // task list is in app.tsx, but this value is accessible to all pages.
   integrationKeys: TIntegrationKeys
 }
 
@@ -159,6 +155,7 @@ export enum PlanType {
   ADD_ON = 2, // must be used with MAIN, cannot be bought alone
   ONE_TIME_ADD_ON = 3 // can be bought alone, has no dependencies on anything
 }
+
 export enum PlanStatus {
   EDITING = 1,
   ACTIVE = 2,
@@ -166,7 +163,7 @@ export enum PlanStatus {
   EXPIRED = 4
 }
 export enum PlanPublishStatus {
-  UNPUBLISHED = 1, // not visible to users
+  UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans
   PUBLISHED = 2
 }
 type IPlan = {
@@ -224,13 +221,28 @@ export interface SubscriptionWrapper extends ISubscriptionType {
   subscription: ISubscriptionType
 }
 
+export enum SubscriptionStatus {
+  INITIATING = 0, // used when creating the sub, it only exist for a very short time, user might not realize it existed
+  PENDING = 1, // when sub is created, but user hasn't paid yet.
+  ACTIVE = 2, // 2: active: user paid the sub fee
+  // PendingInActive = 3, // when status is transitioning from 1 to 2, or 2 to 4, there is a pending status, it's not synchronous
+  // so we have to wait, in status 3: no action can be taken on UI.
+  CANCELLED = 4, // users(or admin) cancelled the sub(immediately or automatically at the end of billing cycle). It's triggered by human.
+  EXPIRED = 5,
+  // SUSPENDED = 6, // suspend for a while, might want to resume later. NOT USED YET.
+  INCOMPLETE = 7, // user claimed they have wired the transfer, admin mark the subscriptoin as Incomplete until a DATE, so user can use it before that DATE.
+  // if admin had confirmed the transfer, admin has to mark the corresponding invoice as PAID, then this sub will become ACTIVE.
+  PROCESSING = 8, // user claimed they have wired the transfer, but we're checking. This status is for wire-transfer only.
+  FAILED = 9 // we have't received the payment.
+}
+
 type ISubscriptionType = {
   id: number
   subscriptionId: string
   planId: number
   productId: number
   userId: number
-  status: number
+  status: SubscriptionStatus
   firstPaidTime: number
   currentPeriodStart: number
   currentPeriodEnd: number
@@ -240,7 +252,7 @@ type ISubscriptionType = {
   cancelAtPeriodEnd: number // whether this sub will end at the end of billing cycle, 0: false, 1: true
   amount: number
   currency: string
-  taxPercentage: number // 2000 means 20%
+  taxPercentage: number // BE returns 2000, FE need to show 20%.
   plan: IPlan | undefined // ?????????? why it can be undefined.
   addons: ISubAddon[]
   user: IProfile | null
@@ -264,10 +276,20 @@ type ISubscriptionType = {
   latestInvoice?: UserInvoice
 }
 
+export enum SubscriptionHistoryStatus {
+  // UNKNOWN_ZERO = 0,
+  Active = 1, // current active subscription also show up in history list
+  Finished = 2, // when user upgrade from planA to planB, the old subscriptio with plan A will be marked as finished.
+  Cancelled = 3,
+  Expired = 4
+  //UNKNOWN_FIVE = 5
+}
+
 type ISubHistoryItem = {
   merchantId: number
   userId: number
   subscriptionId: string
+  status: SubscriptionHistoryStatus
   periodStart: number
   periodEnd: number
   invoiceId: string
@@ -397,6 +419,21 @@ type TransactionItem = {
   user: IProfile
 }
 
+export enum PaymentStatus {
+  PENDING = 0,
+  SUCCEEDED = 1,
+  FAILED = 2,
+  CANCELLED = 3
+}
+
+// payment can go bi-directional, user -> merchant: payment, merchant -> user: refund
+export enum PaymentTimelineType {
+  PAYMENT = 0,
+  REFUND = 1
+}
+
+// used in transaction list (/merchant/payment/timeline/list)
+// this list was originally called 'payment list' on UI, no need to rename it here.
 type PaymentItem = {
   id: number
   transactionId: string
@@ -417,8 +454,8 @@ type PaymentItem = {
     invoiceId: string // if this is a refund payment, this invoiceId is the original invoice based on which this refund is created
   }
   refund?: TRefund
-  status: number
-  timelineType: number
+  status: PaymentStatus
+  timelineType: PaymentTimelineType
   createTime: number
 }
 
@@ -461,13 +498,20 @@ type Invoice = {
   lines: InvoiceItem[]
 }
 
+export enum RefundStatus {
+  AWAITING_REFUND = 10,
+  REFUNDED = 20,
+  FAILED = 30,
+  CANCELLED = 40
+}
+
 type TRefund = {
   currency: string
   refundAmount: number
   refundComment: string
   refundTime: number
   createTime: number
-  status: number // 10-pending，20-success，30-failure, 40-cancel
+  status: RefundStatus
   gatewayId: number
   paymentId: string
   invoiceId: string
@@ -680,7 +724,7 @@ export type TActivityLogs = {
   invoiceId: string
   planId: number
   discountCode: string
-  member: IMerchantUserProfile[]
+  member: IMerchantMemberProfile[]
 }
 
 export enum CreditType {
@@ -736,6 +780,28 @@ export enum CreditTxType {
   DEPOSIT_REFUND = 7
 }
 
+export type AppTask = {
+  id: number
+  merchantId: number
+  memberId: number
+  taskName: TExportDataType
+  payload: string
+  downloadUrl: string
+  uploadFileUrl: string
+  status: AppTaskStatus
+  startTime: number
+  finishTime: number
+  failureReason: string
+  taskCost: number
+  format: 'xlsx' | 'csv'
+}
+export enum AppTaskStatus {
+  QUEUED = 0,
+  RUNNING = 1,
+  SUCCEEDED = 2,
+  FAILED = 3
+}
+
 export type TExportDataType =
   | 'InvoiceExport'
   | 'UserExport'
@@ -766,7 +832,6 @@ export type {
   IAppConfig,
   IBillableMetrics,
   IMerchantMemberProfile,
-  IMerchantUserProfile,
   Invoice,
   InvoiceItem,
   IOneTimeHistoryItem,

@@ -23,7 +23,7 @@ const ConfigItem = ({
   description,
   children
 }: PropsWithChildren<ConfigItemProps>) => (
-  <div className="flex w-full items-center justify-between">
+  <div className="mx-3 flex w-full items-center justify-between">
     <div>
       <div className="text-sm">{title}</div>
       {description && (
@@ -152,7 +152,7 @@ export const SubscriptionConfig = () => {
   return (
     <List>
       {configs.map(({ component, title, description }, idx: number) => (
-        <List.Item key={idx}>
+        <List.Item key={idx} className="rounded-md hover:bg-gray-100">
           <ConfigItem key={title} title={title} description={description}>
             {component}
           </ConfigItem>

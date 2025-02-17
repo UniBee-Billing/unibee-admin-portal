@@ -24,7 +24,12 @@ import {
   getDiscountCodeListReq
 } from '../../requests'
 import '../../shared.css'
-import { DiscountCode, DiscountCodeStatus } from '../../shared.types'
+import {
+  DiscountCode,
+  DiscountCodeBillingType,
+  DiscountCodeStatus,
+  DiscountType
+} from '../../shared.types'
 import { title } from '../../utils'
 import {
   formatDateRange,
@@ -42,8 +47,8 @@ import {
 const PAGE_SIZE = 10
 
 const CODE_STATUS_FILTER = Object.entries(DISCOUNT_CODE_STATUS).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text }
+  const [value, { label }] = s
+  return { value: Number(value), text: label }
 })
 const BILLING_TYPE_FILTER = Object.entries(DISCOUNT_CODE_BILLING_TYPE).map(
   (s) => {
@@ -125,21 +130,21 @@ export const DiscountCodeList = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (statusId) => getDiscountCodeStatusTagById(statusId), // STATUS[s]
+      render: (statusId) => getDiscountCodeStatusTagById(statusId),
       filters: CODE_STATUS_FILTER
     },
     {
       title: 'Type',
       dataIndex: 'billingType',
       key: 'billingType',
-      render: (s) => DISCOUNT_CODE_BILLING_TYPE[s],
+      render: (s) => DISCOUNT_CODE_BILLING_TYPE[s as DiscountCodeBillingType],
       filters: BILLING_TYPE_FILTER
     },
     {
       title: 'Discount Type',
       dataIndex: 'discountType',
       key: 'discountType',
-      render: (s) => DISCOUNT_CODE_TYPE[s],
+      render: (s) => DISCOUNT_CODE_TYPE[s as DiscountType],
       filters: DISCOUNT_TYPE_FILTER
     },
     {
@@ -147,25 +152,25 @@ export const DiscountCodeList = () => {
       dataIndex: 'discountAmount',
       key: 'discountAmount',
       render: (amt, code) =>
-        code.discountType == 1 ? '' : showAmount(amt, code.currency)
+        code.discountType == DiscountType.PERCENTAGE
+          ? ''
+          : showAmount(amt, code.currency)
     },
     {
       title: 'Percentage',
       dataIndex: 'discountPercentage',
       key: 'discountPercentage',
       render: (percent, code) =>
-        code.discountType == 1 ? `${percent / 100} %` : ''
+        code.discountType == DiscountType.PERCENTAGE ? `${percent / 100} %` : ''
     },
     {
       title: 'Cycle Limit',
       dataIndex: 'cycleLimit',
       key: 'cycleLimit',
       render: (lim, code) => {
-        if (code.billingType == 1) {
-          // one-time use
+        if (code.billingType == DiscountCodeBillingType.ONE_TIME) {
           return '1'
-        } else if (code.billingType == 2) {
-          // recurring
+        } else if (code.billingType == DiscountCodeBillingType.RECURRING) {
           return formatNumberByZeroUnLimitedRule(lim)
         } else {
           return lim

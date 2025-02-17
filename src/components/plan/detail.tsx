@@ -44,7 +44,7 @@ import {
   PlanType
 } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
-import { PlanStatus as PlanStatusTag } from '../ui/statusTag'
+import { PlanStatusTag } from '../ui/statusTag'
 
 interface Metric {
   metricId: number
@@ -422,7 +422,8 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
         planDetail.plan.publishStatus == PlanPublishStatus.UNPUBLISHED)
 
     formDisabled =
-      planDetail.plan.status == 2 && planDetail.plan.publishStatus == 2 // plan active && published
+      planDetail.plan.status == PlanStatus.ACTIVE &&
+      planDetail.plan.publishStatus == PlanPublishStatus.PUBLISHED
 
     // plan obj and addon obj are at the same level in planDetailRes.data.data obj
     // but I want to put addonIds obj as a props of the local plan obj.
@@ -1123,7 +1124,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
 
           <div className="my-6 flex justify-center gap-5">
             <div className="flex w-full justify-evenly">
-              {!isNew && plan.status == 1 && (
+              {!isNew && plan.status == PlanStatus.EDITING && (
                 <Popconfirm
                   title="Deletion Confirm"
                   description="Are you sure to delete this plan?"

@@ -12,7 +12,7 @@ export const Logo = () => {
       className="relative my-5 flex max-h-full max-w-full items-center justify-center"
     >
       <img
-        className={`h-full w-full object-contain p-2 transition-all duration-300`}
+        className={`h-full w-full object-contain px-2 transition-all duration-300`}
         src={
           merchantInfoStore.companyLogo ||
           withEnvBasePath('/logoPlaceholder.png')

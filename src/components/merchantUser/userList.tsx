@@ -33,9 +33,9 @@ import {
   updateMemberRolesReq
 } from '../../requests'
 import '../../shared.css'
-import { IMerchantUserProfile, TRole } from '../../shared.types'
+import { IMerchantMemberProfile, TRole } from '../../shared.types'
 import { useMerchantMemberProfileStore } from '../../stores'
-import { MerchantUserStatus } from '../ui/statusTag'
+import { MerchantUserStatusTag } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
 
@@ -54,9 +54,9 @@ const Index = () => {
   const [roleFilters, setRoleFilters] = useState<TFilters>({
     MemberRoles: null
   })
-  const [users, setUsers] = useState<IMerchantUserProfile[]>([])
+  const [users, setUsers] = useState<IMerchantMemberProfile[]>([])
   const [activeUser, setActiveUser] = useState<
-    IMerchantUserProfile | undefined
+    IMerchantMemberProfile | undefined
   >(undefined) // user to be edited in Modal
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
   const toggleInviteModal = () => {
@@ -114,7 +114,7 @@ const Index = () => {
     setTotal(total)
   }
 
-  const columns: ColumnsType<IMerchantUserProfile> = [
+  const columns: ColumnsType<IMerchantMemberProfile> = [
     {
       title: 'First Name',
       dataIndex: 'firstName',
@@ -152,7 +152,7 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s) => MerchantUserStatus(s)
+      render: (s) => MerchantUserStatusTag(s)
     },
     {
       title: 'Email',
@@ -217,7 +217,7 @@ const Index = () => {
     }
   ]
 
-  const onTableChange: TableProps<IMerchantUserProfile>['onChange'] = (
+  const onTableChange: TableProps<IMerchantMemberProfile>['onChange'] = (
     _,
     filters
   ) => {
@@ -332,7 +332,7 @@ const InviteModal = ({
 }: {
   closeModal: () => void
   refresh: () => void
-  userData: IMerchantUserProfile | undefined
+  userData: IMerchantMemberProfile | undefined
   roles: TRole[]
 }) => {
   const [form] = Form.useForm()
@@ -501,7 +501,7 @@ const SuspendModal = ({
 }: {
   closeModal: () => void
   refresh: () => void
-  userData: IMerchantUserProfile | undefined
+  userData: IMerchantMemberProfile | undefined
 }) => {
   const [loading, setLoading] = useState(false)
 

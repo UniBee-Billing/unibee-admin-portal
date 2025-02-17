@@ -33,23 +33,23 @@ import { formatDate } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getUserListReq } from '../../requests'
 import '../../shared.css'
-import { IPlan, IProfile } from '../../shared.types'
+import { IPlan, IProfile, PlanStatus, PlanType } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import LongTextPopover from '../ui/longTextPopover'
-import { SubscriptionStatus, UserStatus } from '../ui/statusTag'
+import { SubscriptionStatusTag, UserStatusTag } from '../ui/statusTag'
 import CreateUserModal from './createUserModal'
 import './list.css'
 
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
-const STATUS_FILTER = Object.entries(USER_STATUS).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text }
+const USER_STATUS_FILTER = Object.entries(USER_STATUS).map((s) => {
+  const [value, { label }] = s
+  return { value: Number(value), text: label }
 })
 const SUB_STATUS_FILTER = Object.entries(SUBSCRIPTION_STATUS).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text }
+  const [value, { label }] = s
+  return { value: Number(value), text: label }
 })
 
 type TFilters = {
@@ -124,8 +124,8 @@ const Index = () => {
     setLoadingPlans(true)
     const [planList, err] = await getPlanList(
       {
-        type: [1], // 'main plan' only
-        status: [2], // 'active' only
+        type: [PlanType.MAIN],
+        status: [PlanStatus.ACTIVE],
         page: page,
         count: 100
       },
@@ -234,7 +234,7 @@ const Index = () => {
       title: 'Sub Status',
       dataIndex: 'subscriptionStatus',
       key: 'subStatus',
-      render: (subStatus, _) => SubscriptionStatus(subStatus),
+      render: (subStatus, _) => SubscriptionStatusTag(subStatus),
       filters: SUB_STATUS_FILTER,
       filteredValue: filters.subStatus
     },
@@ -248,8 +248,8 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status, _) => UserStatus(status),
-      filters: STATUS_FILTER,
+      render: (status, _) => UserStatusTag(status),
+      filters: USER_STATUS_FILTER,
       filteredValue: filters.status
     },
     {

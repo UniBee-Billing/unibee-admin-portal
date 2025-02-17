@@ -2,17 +2,17 @@ import { CheckOutlined, ExclamationOutlined } from '@ant-design/icons'
 import { Avatar, Button, List, Tag } from 'antd'
 // import update from 'immutability-helper'
 import { ReactNode, useState } from 'react'
-import ExchangeRateLogo from '../../assets/integrationsKeysIcon/ExchangeRateService.svg?react'
-import SegmentLogo from '../../assets/integrationsKeysIcon/Segment.svg?react'
-import SendGridLogo from '../../assets/integrationsKeysIcon/SendGrid.svg?react'
-import UniBeeLogo from '../../assets/integrationsKeysIcon/UniBeeKeys.svg?react'
-import VATsenseLogo from '../../assets/integrationsKeysIcon/VATsense.svg?react'
-import { useAppConfigStore } from '../../stores'
-import UniBeeAPIKeyModal from './appConfig/apiKeyModal'
-import ExchangeRateModal from './appConfig/exchangeRateKeyModal'
-import SegmentModal from './appConfig/segmentModal'
-import SendGridModal from './appConfig/sendGridKeyModal'
-import VATModal from './appConfig/vatKeyModal'
+import ExchangeRateLogo from '../../../assets/integrationsKeysIcon/ExchangeRateService.svg?react'
+import SegmentLogo from '../../../assets/integrationsKeysIcon/Segment.svg?react'
+import SendGridLogo from '../../../assets/integrationsKeysIcon/SendGrid.svg?react'
+import UniBeeLogo from '../../../assets/integrationsKeysIcon/UniBeeKeys.svg?react'
+import VATsenseLogo from '../../../assets/integrationsKeysIcon/VATsense.svg?react'
+import { useAppConfigStore } from '../../../stores'
+import UniBeeAPIKeyModal from './UniBeeAPIKeyModal'
+import ExchangeRateModal from './exchangeRateKeyModal'
+import SegmentModal from './segmentModal'
+import SendGridModal from './sendGridKeyModal'
+import VATModal from './vatKeyModal'
 
 type TAPP_Integration = {
   IsSetupFinished: boolean
@@ -170,7 +170,7 @@ const Index = () => {
         itemLayout="horizontal"
         dataSource={integrationList}
         renderItem={(item, index) => (
-          <List.Item>
+          <List.Item className="rounded-md hover:bg-gray-100">
             <List.Item.Meta
               avatar={
                 item.gatewayWebsiteLink == '' ? (
@@ -216,143 +216,3 @@ const Index = () => {
   )
 }
 export default Index
-
-/*
-const PaymentGatewaySetupModal = ({
-  gatewayConfig,
-  closeModal
-}: {
-  gatewayConfig: TGatewayConfig
-  closeModal: () => void
-}) => {
-  const [form] = Form.useForm()
-  const [loading, _] = useState(false)
-  const onSave = () => {}
-  const copyContent = async () => {
-    const err = await useCopyContent(gatewayConfig.webhookEndpointUrl)
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    message.success('Copied')
-  }
-  return (
-    <Modal
-      title={
-        gatewayConfig.IsSetupFinished
-          ? `Editing keys for ${gatewayConfig.name}`
-          : `New keys for ${gatewayConfig.name}`
-      }
-      width={'720px'}
-      open={true}
-      footer={null}
-      closeIcon={null}
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onSave}
-        colon={false}
-        initialValues={gatewayConfig}
-      >
-        <Form.Item label="Gateway ID" name="gatewayId" hidden>
-          <Input disabled />
-        </Form.Item>
-        <div className="h-2" />
-
-        <Form.Item
-          label={
-            gatewayConfig.gatewayName == 'paypal' ? 'Client Id' : 'Public Key'
-          }
-          name="gatewayKey"
-        >
-          <TextArea rows={4} />
-        </Form.Item>
-        <div className="h-2" />
-
-        <Form.Item
-          label={
-            gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'
-          }
-          name="gatewaySecret"
-          help={
-            <div className="text-xs text-gray-400">
-              For security reason, your{' '}
-              {gatewayConfig.gatewayName == 'paypal' ? 'Secret' : 'Private Key'}{' '}
-              won't show up here after submit.
-            </div>
-          }
-        >
-          <TextArea rows={4} />
-        </Form.Item>
-        <div className="h-2" />
-
-        <Form.Item
-          label="Callback URL"
-          name="webhookEndpointUrl"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
-        >
-          <Input
-            disabled
-            suffix={
-              <CopyToClipboard content={gatewayConfig.webhookEndpointUrl} />
-            }
-          />
-        </Form.Item>
-        <div className="h-2" />
-        <Form.Item
-          label="Callback Key"
-          name="webhookSecret"
-          hidden={gatewayConfig.gatewayName !== 'changelly'}
-          help={
-            <div className="mt-2 text-sm">
-              <Button
-                type="link"
-                onClick={copyContent}
-                style={{ padding: 0 }}
-                size="small"
-              >
-                Copy
-              </Button>
-              &nbsp;
-              <span className="text-xs text-gray-400">
-                the above URL, use this URL to generate your public key
-                on&nbsp;&nbsp;
-              </span>
-              <a
-                href="https://app.pay.changelly.com/integrations"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs"
-              >
-                https://app.pay.changelly.com/integrations
-              </a>
-              <span className="text-xs text-gray-400">
-                , then paste it here.
-              </span>
-            </div>
-          }
-        >
-          <TextArea rows={4} />
-        </Form.Item>
-        <div className="h-2" />
-      </Form>
-
-      <div className="mt-6 flex items-center justify-end gap-4">
-        <Button onClick={closeModal} disabled={loading}>
-          Cancel
-        </Button>
-        <Button
-          type="primary"
-          onClick={onSave}
-          loading={loading}
-          disabled={loading}
-        >
-          OK
-        </Button>
-      </div>
-    </Modal>
-  )
-}
-
-*/

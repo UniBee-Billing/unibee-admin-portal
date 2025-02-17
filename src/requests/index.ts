@@ -271,6 +271,7 @@ export type TGatewayConfigBody = {
   currencyExchange?: TGatewayExRate[]
 }
 // to be depreciated
+/*
 export const saveGatewayKeyReq = async (
   body: TGatewayConfigBody,
   isNew: boolean
@@ -285,6 +286,7 @@ export const saveGatewayKeyReq = async (
     return [null, e]
   }
 }
+*/
 
 export const saveGatewayConfigReq = async (
   body: TGatewayConfigBody,
@@ -302,6 +304,7 @@ export const saveGatewayConfigReq = async (
 }
 
 // to be depreciated
+/*
 export const saveChangellyPubKeyReq = async (
   gatewayId: number,
   webhookSecret: string
@@ -318,6 +321,7 @@ export const saveChangellyPubKeyReq = async (
     return [null, e]
   }
 }
+*/
 
 export const saveWebhookKeyReq = async (
   gatewayId: number,
@@ -1818,6 +1822,7 @@ export const getMemberProfileReq = async (refreshCb?: () => void) => {
   }
 }
 
+// these are the gateways ready for payment(<PaymentSelector /> use this list)
 export const getPaymentGatewayListReq = async () => {
   try {
     const res = await request.get(`/merchant/gateway/list`)
@@ -1829,7 +1834,7 @@ export const getPaymentGatewayListReq = async () => {
   }
 }
 
-// how many gateway we have, their config items, etc
+// all the gateways we have in BE, not everyone is ready for payment
 export const getPaymentGatewayConfigListReq = async ({
   refreshCb
 }: {

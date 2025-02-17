@@ -44,7 +44,7 @@ import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import LongTextPopover from '../ui/longTextPopover'
-import { InvoiceStatus, SubscriptionStatus } from '../ui/statusTag'
+import { InvoiceStatus, SubscriptionStatusTag } from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'
 import ChangePlanModal from './modals/changePlan'
 import ChangeSubStatusModal from './modals/changeSubStatus'
@@ -666,7 +666,7 @@ const SubscriptionInfoSection = ({
           Status
         </Col>
         <Col span={6}>
-          {subInfo && SubscriptionStatus(subInfo.status)}
+          {subInfo && SubscriptionStatusTag(subInfo.status)}
           {subInfo && (
             <Tooltip title="Refresh">
               <span

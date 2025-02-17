@@ -4,11 +4,12 @@ import dayjs from 'dayjs'
 import { CSSProperties, ChangeEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
-import { INVOICE_STATUS, SUBSCRIPTION_STATUS } from '../constants'
+import { INVOICE_STATUS } from '../constants'
 import { showAmount } from '../helpers'
 import { appSearchReq } from '../requests'
 import { IProfile, UserInvoice } from '../shared.types'
 import './appSearch.css'
+import { SubscriptionStatusTag } from './ui/statusTag'
 
 const { Search } = Input
 
@@ -421,7 +422,7 @@ const AccountMatch = ({
                   alignItems: 'center'
                 }}
               >
-                <span>{SUBSCRIPTION_STATUS[u.subscriptionStatus]}</span>
+                <span>{SubscriptionStatusTag(u.subscriptionStatus)}</span>
               </Col>
             </Row>
           ))}

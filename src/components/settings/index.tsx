@@ -6,8 +6,8 @@ import { useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 import CreditConfig from './creditConfig'
 // import EmailTemplates from './emailTemplates'
+import PaymentGatewayConfig from './gatewayConfig'
 import AppIntegrationServices from './integrations'
-import PaymentGatewayConfig from './paymentGateways'
 import Permissions from './permissions'
 import { SubscriptionConfig } from './subscriptionConfig'
 import WebhookList from './webHooks/list'
@@ -28,25 +28,6 @@ const Index = () => {
       label: 'Integrations',
       children: <AppIntegrationServices />
     },
-
-    /* {
-      key: 'appConfig',
-      label: <span className="text-gray-400">App Config(depreciated)</span>,
-      children: <AppConfig />
-    },
-    */
-    /*
-    {
-      key: 'emailTemplate',
-      label: 'Email Templates',
-      children: <EmailTemplates />
-    },
-    */
-    /* {
-      key: 'invoiceTemplate',
-      label: 'Invoice Templates',
-      children: 'invoice template'
-    }, */
     {
       key: 'permission',
       label: 'Admin Permission',

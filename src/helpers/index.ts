@@ -2,6 +2,8 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import Dinero from 'dinero.js'
 import passwordValidator from 'password-validator'
+import type { UploadRequestOption } from 'rc-upload/lib/interface'
+import { uploadLogoReq } from '../requests'
 import {
   IPlan,
   ISubscriptionType,
@@ -377,3 +379,40 @@ export function addOptional<T extends object, U extends object>(
 ): T & Partial<U> {
   return { ...a, ...b }
 }
+
+/**
+ * this fn assume you're using antd's \<Upload \/> component, and using the default upload request option.
+ * and set customRequest={uploadFile(maxFileSize, onSuccess, onError)}
+ * @param maxFileSize - max file size in bytes
+ * @param onSuccess - callback when file upload succeeded, parameter is the url of the uploaded file
+ * @param onError - callback when file upload failed
+ */
+export const uploadFile =
+  (
+    maxFileSize: number,
+    onSuccess: (url: string) => void,
+    onError: (err: Error) => void,
+    setUploading?: (uploading: boolean) => void
+  ) =>
+  async (opt: UploadRequestOption<unknown>) => {
+    const { file } = opt
+    if (file == undefined) {
+      onError(new Error('No file selected'))
+      return
+    }
+    if ((file as File).size > maxFileSize) {
+      onError(new Error('Max file size: ' + formatBytes(maxFileSize)))
+      return
+    }
+    const formData = new FormData()
+    formData.append('file', file)
+    setUploading?.(true)
+    const [logoUrl, err] = await uploadLogoReq(formData)
+    setUploading?.(false)
+    if (err != null) {
+      onError(err)
+      return
+    }
+
+    onSuccess(logoUrl)
+  }

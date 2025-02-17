@@ -2,6 +2,7 @@ import { InfoCircleOutlined } from '@ant-design/icons'
 import { Tag, Tooltip } from 'antd'
 import React, { ReactElement } from 'react'
 import {
+  APP_TASK_STATUS,
   DISCOUNT_CODE_STATUS,
   INVOICE_STATUS,
   MERCHANT_USER_STATUS,
@@ -9,28 +10,35 @@ import {
   PLAN_STATUS,
   SUBSCRIPTION_HISTORY_STATUS,
   SUBSCRIPTION_STATUS,
-  TASK_STATUS,
   USER_STATUS
 } from '../../constants'
+import {
+  AppTaskStatus,
+  DiscountCodeStatus,
+  MerchantUserStatus,
+  PaymentStatus,
+  PlanStatus,
+  SubscriptionHistoryStatus,
+  SubscriptionStatus,
+  UserStatus
+} from '../../shared.types'
 
-const SUB_STATUS: { [key: number]: ReactElement } = {
-  1: <Tag color="magenta">{SUBSCRIPTION_STATUS[1]}</Tag>, // 1: pending
-  2: <Tag color="#87d068">{SUBSCRIPTION_STATUS[2]}</Tag>, // 2: active
-  4: <Tag color="purple">{SUBSCRIPTION_STATUS[4]}</Tag>, // 4: cancelled
-  5: <Tag color="red">{SUBSCRIPTION_STATUS[5]}</Tag>, // 5: expired
-  7: <Tag color="cyan">{SUBSCRIPTION_STATUS[7]}</Tag>, // 7: Incomplete
-  8: <Tag color="blue">{SUBSCRIPTION_STATUS[8]}</Tag>, // 8: processing
-  9: <Tag color="#b71c1c">{SUBSCRIPTION_STATUS[9]}</Tag> // 9: failed
+const SubscriptionStatusTag = (status: SubscriptionStatus) => {
+  return (
+    <Tag color={SUBSCRIPTION_STATUS[status].color}>
+      {SUBSCRIPTION_STATUS[status].label}
+    </Tag>
+  )
 }
-const SubscriptionStatus = (statusId: number) => SUB_STATUS[statusId]
 
-const SUB_HISTORY_STATUS: { [key: number]: ReactElement } = {
-  1: <Tag color="#87d068">{SUBSCRIPTION_HISTORY_STATUS[1]}</Tag>, // 1: active
-  2: <Tag color="blue">{SUBSCRIPTION_HISTORY_STATUS[2]}</Tag>, // 2: finished
-  3: <Tag color="purple">{SUBSCRIPTION_HISTORY_STATUS[3]}</Tag>, // 3: cancelled
-  4: <Tag color="red">{SUBSCRIPTION_HISTORY_STATUS[4]}</Tag> // 4: expired
-}
-const SubHistoryStatus = (statusId: number) => SUB_HISTORY_STATUS[statusId]
+// sometimes, BE would return some new status value not defined in FE.
+// or use: Object.values(STATUS_TYPE).includes(type as STATUS_TYPE) to check
+// https://stackoverflow.com/questions/43804805/check-if-value-exists-in-enum-in-typescript
+const SubHistoryStatus = (statusId: SubscriptionHistoryStatus) => (
+  <Tag color={SUBSCRIPTION_HISTORY_STATUS[statusId]?.color ?? ''}>
+    {SUBSCRIPTION_HISTORY_STATUS[statusId]?.label ?? ''}
+  </Tag>
+)
 
 const IV_STATUS: { [key: number]: ReactElement } = {
   0: <span>Initiating</span>, // this status only exist for a very short period, users/admin won't even know it exist
@@ -73,61 +81,46 @@ const InvoiceStatus = (statusId: number, isRefund?: boolean) => {
   }
 }
 
-const PLAN_STATUS_TAG: { [key: number]: ReactElement } = {
-  1: <Tag color="blue">{PLAN_STATUS[1]}</Tag>,
-  2: <Tag color="#87d068">{PLAN_STATUS[2]}</Tag>,
-  3: <Tag color="purple">{PLAN_STATUS[3]}</Tag>,
-  4: <Tag color="red">{PLAN_STATUS[4]}</Tag>
-}
-const PlanStatus = (statusId: number) => PLAN_STATUS_TAG[statusId]
+const PlanStatusTag = (status: PlanStatus) => (
+  <Tag color={PLAN_STATUS[status].color}>{PLAN_STATUS[status].label}</Tag>
+)
 
-const DISCOUNT_CODE_STATUS_TAG: { [key: number]: ReactElement } = {
-  1: <Tag color="blue">{DISCOUNT_CODE_STATUS[1]}</Tag>,
-  2: <Tag color="#87d068">{DISCOUNT_CODE_STATUS[2]}</Tag>,
-  3: <Tag color="purple">{DISCOUNT_CODE_STATUS[3]}</Tag>,
-  4: <Tag color="red">{DISCOUNT_CODE_STATUS[4]}</Tag>,
-  10: <Tag color="gray">{DISCOUNT_CODE_STATUS[10]}</Tag>
-}
-const getDiscountCodeStatusTagById = (statusId: number) =>
-  DISCOUNT_CODE_STATUS_TAG[statusId]
+const getDiscountCodeStatusTagById = (statusId: DiscountCodeStatus) => (
+  <Tag color={DISCOUNT_CODE_STATUS[statusId].color}>
+    {DISCOUNT_CODE_STATUS[statusId].label}
+  </Tag>
+)
 
-const PAYMENT_STATUS_TAG: { [key: number]: ReactElement } = {
-  0: <Tag color="blue">{PAYMENT_STATUS[0]}</Tag>, // pending
-  1: <Tag color="#87d068">{PAYMENT_STATUS[1]}</Tag>, // succeeded
-  2: <Tag color="purple">{PAYMENT_STATUS[2]}</Tag>, // failed
-  3: <Tag color="red">{PAYMENT_STATUS[3]}</Tag> // cancelled
-}
-const PaymentStatus = (statusId: number) => PAYMENT_STATUS_TAG[statusId]
+const PaymentStatusTag = (statusId: PaymentStatus) => (
+  <Tag color={PAYMENT_STATUS[statusId]?.color ?? ''}>
+    {PAYMENT_STATUS[statusId]?.label ?? ''}
+  </Tag>
+)
 
-const USER_STATUS_TAG: { [key: number]: ReactElement } = {
-  0: <Tag color="#87d068">{USER_STATUS[0]}</Tag>, // active
-  2: <Tag color="red">{USER_STATUS[2]}</Tag> // suspended
-}
-const UserStatus = (statusId: number) => USER_STATUS_TAG[statusId]
+const UserStatusTag = (statusId: UserStatus) => (
+  <Tag color={USER_STATUS[statusId].color}>{USER_STATUS[statusId].label}</Tag>
+)
 
-const MERCHANT_USER_STATUS_TAG: { [key: number]: ReactElement } = {
-  0: <Tag color="#87d068">{MERCHANT_USER_STATUS[0]}</Tag>, // active
-  2: <Tag color="red">{MERCHANT_USER_STATUS[2]}</Tag> // suspended
-}
-const MerchantUserStatus = (statusId: number) =>
-  MERCHANT_USER_STATUS_TAG[statusId]
+const MerchantUserStatusTag = (statusId: MerchantUserStatus) => (
+  <Tag color={MERCHANT_USER_STATUS[statusId].color}>
+    {MERCHANT_USER_STATUS[statusId].label}
+  </Tag>
+)
 
-const TASK_STATUS_TAG: { [key: number]: ReactElement } = {
-  0: <Tag color="orange">{TASK_STATUS[0]}</Tag>, // queued
-  1: <Tag color="geekblue">{TASK_STATUS[1]}</Tag>, // running
-  2: <Tag color="#87d068">{TASK_STATUS[2]}</Tag>, // succeeded
-  3: <Tag color="red">{TASK_STATUS[3]}</Tag> // failed
-}
-const TaskStatus = (statusId: number) => TASK_STATUS_TAG[statusId]
+const AppTaskStatusTag = (statusId: AppTaskStatus) => (
+  <Tag color={APP_TASK_STATUS[statusId].color}>
+    {APP_TASK_STATUS[statusId].label}
+  </Tag>
+)
 
 export {
+  AppTaskStatusTag,
   getDiscountCodeStatusTagById,
   InvoiceStatus,
-  MerchantUserStatus,
-  PaymentStatus,
-  PlanStatus,
+  MerchantUserStatusTag,
+  PaymentStatusTag,
+  PlanStatusTag,
   SubHistoryStatus,
-  SubscriptionStatus,
-  TaskStatus,
-  UserStatus
+  SubscriptionStatusTag,
+  UserStatusTag
 }
