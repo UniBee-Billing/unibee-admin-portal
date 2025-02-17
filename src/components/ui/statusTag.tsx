@@ -32,6 +32,8 @@ const SubscriptionStatusTag = (status: SubscriptionStatus) => {
 }
 
 // sometimes, BE would return some new status value not defined in FE.
+// or use: Object.values(STATUS_TYPE).includes(type as STATUS_TYPE) to check
+// https://stackoverflow.com/questions/43804805/check-if-value-exists-in-enum-in-typescript
 const SubHistoryStatus = (statusId: SubscriptionHistoryStatus) => (
   <Tag color={SUBSCRIPTION_HISTORY_STATUS[statusId]?.color ?? ''}>
     {SUBSCRIPTION_HISTORY_STATUS[statusId]?.label ?? ''}
