@@ -2,7 +2,6 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
 import update from 'immutability-helper'
 import { useState } from 'react'
-// import { CURRENCY } from '../../../constants'
 import { randomString, showAmount } from '../../../helpers'
 import {
   createInvoiceReq,
@@ -21,6 +20,7 @@ import {
 } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
 import CouponPopover from '../../ui/couponPopover'
+import LongTextPopover from '../../ui/longTextPopover'
 
 const newPlaceholderItem = (): InvoiceItem => ({
   id: randomString(8),
@@ -73,7 +73,7 @@ const Index = ({
       : detail.lines[0].currency // assume all invoice items have the same currencies.
   const [currency, setCurrency] = useState(defaultCurrency)
   const [taxPercentage, setTaxScale] = useState<string>(
-    detail == null // detail == null: creating invoice from scratch,
+    detail == null // detail == null: creating invoice from scratch, non-null: editing existing invoice.
       ? user.taxPercentage / 100 + '' // read default taxRate from profile
       : detail.taxPercentage / 100 + '' // non-null: editing existing invoice.
   )
@@ -193,9 +193,6 @@ const Index = ({
     refresh()
   }
 
-  // ----------------
-  // what if user made some changes, then click 'create' to publish, backend still uses the old data before the local change.
-  // click the "Create" button
   const onCreate = async () => {
     if (detail == null) {
       await onSave(true)()
@@ -390,12 +387,19 @@ const Index = ({
 
   return (
     <Modal
-      title={refundMode ? 'Refund invoice detail' : 'New invoice Detail'}
+      title={
+        <span>
+          {refundMode ? 'Refund invoice detail' : 'New invoice Detail'}
+          {''}
+          <span className="text-sm font-normal text-gray-400">{` (${user.email}, ${user.firstName} ${user.lastName})`}</span>
+        </span>
+      }
       open={isOpen}
       width={'820px'}
       footer={null}
       closeIcon={null}
     >
+      <div className="h-1"></div>
       <Row style={{ marginTop: '16px' }}>
         <Col span={4} style={{ fontWeight: 'bold' }}>
           Currency
@@ -446,21 +450,18 @@ const Index = ({
           )}
         </Col>
       </Row>
+      <div className="h-4"></div>
       <Row style={{ display: 'flex', alignItems: 'center' }}>
         <Col span={10}>
           <span style={{ fontWeight: 'bold' }}>Item description</span>
         </Col>
         <Col span={4}>
           <div style={{ fontWeight: 'bold' }}>Amount</div>
-          {/* <div style={{ fontWeight: 'bold' }}>(exclude Tax)</div> */}
         </Col>
         <Col span={1}></Col>
         <Col span={5}>
           <span style={{ fontWeight: 'bold' }}>Quantity</span>
         </Col>
-        {/* <Col span={2}>
-          <span style={{ fontWeight: 'bold' }}>Tax</span>
-        </Col> */}
         <Col span={3}>
           <span style={{ fontWeight: 'bold' }}>Subtotal</span>
         </Col>
@@ -483,7 +484,9 @@ const Index = ({
           >
             <Col span={10}>
               {!permission.editable ? (
-                <span>{v.description}</span>
+                <span>
+                  <LongTextPopover text={v.description} width="312px" />
+                </span>
               ) : (
                 <Input
                   value={v.description}

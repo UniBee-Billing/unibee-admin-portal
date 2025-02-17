@@ -34,16 +34,16 @@ const Index = ({
   }
 
   return (
-    <div className="flex w-full flex-col gap-3">
+    <div className="flex max-h-64 w-full flex-col gap-3 overflow-y-auto pr-4">
       {gateways.map(
         ({ gatewayId, gatewayName, displayName, gatewayIcons, archive }) => (
           <label
             onClick={onLabelClick}
             key={gatewayId}
             htmlFor={`payment-${gatewayName}`}
-            className={`flex h-12 w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between rounded border border-solid ${selected == gatewayId ? 'border-blue-500' : 'border-gray-200'} px-2`}
+            className={`flex h-12 w-full shrink-0 grow-0 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between rounded border border-solid ${selected == gatewayId ? 'border-blue-500' : 'border-gray-200'} px-2`}
           >
-            <div className="flex">
+            <div className="flex items-center">
               <input
                 type="radio"
                 name={`payment-${gatewayName}`}

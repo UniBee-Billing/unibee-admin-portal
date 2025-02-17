@@ -1,4 +1,15 @@
 import {
+  CheckCircleOutlined,
+  DollarOutlined,
+  DownloadOutlined,
+  EditOutlined,
+  ExportOutlined,
+  LoadingOutlined,
+  MailOutlined,
+  PlusOutlined,
+  SyncOutlined
+} from '@ant-design/icons'
+import {
   Button,
   Col,
   DatePicker,
@@ -15,19 +26,6 @@ import {
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { ReactElement, useEffect, useState } from 'react'
-// import { ISubscriptionType } from "../../shared.types";
-import {
-  CheckCircleOutlined,
-  DollarOutlined,
-  DownloadOutlined,
-  EditOutlined,
-  ExportOutlined,
-  LoadingOutlined,
-  MailOutlined,
-  PlusOutlined,
-  SyncOutlined
-} from '@ant-design/icons'
-//import { useNavigate } from 'react-router-dom'
 import RefundIcon from '../../assets/refund.svg?react'
 import { CURRENCY, INVOICE_STATUS } from '../../constants'
 import {
@@ -523,19 +521,20 @@ const Index = ({
           invoiceId={invoiceList[invoiceIdx].invoiceId}
         />
       )}
-      {newInvoiceModalOpen && user != null && (
-        <NewInvoiceModal
-          isOpen={true}
-          refundMode={refundMode}
-          detail={invoiceIdx == -1 ? null : invoiceList[invoiceIdx]}
-          permission={getInvoicePermission(
-            invoiceIdx == -1 ? null : invoiceList[invoiceIdx]
-          )}
-          user={user}
-          closeModal={toggleNewInvoiceModal}
-          refresh={fetchData}
-        />
-      )}
+      {newInvoiceModalOpen &&
+        (user != null || invoiceList[invoiceIdx].userAccount != null) && (
+          <NewInvoiceModal
+            isOpen={true}
+            refundMode={refundMode}
+            detail={invoiceIdx == -1 ? null : invoiceList[invoiceIdx]}
+            permission={getInvoicePermission(
+              invoiceIdx == -1 ? null : invoiceList[invoiceIdx]
+            )}
+            user={user ?? invoiceList[invoiceIdx]?.userAccount}
+            closeModal={toggleNewInvoiceModal}
+            refresh={fetchData}
+          />
+        )}
       {invoiceDetailModalOpen && (
         <InvoiceDetailModal
           detail={invoiceList[invoiceIdx]}
