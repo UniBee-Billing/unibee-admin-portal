@@ -117,7 +117,7 @@ export const PlanSelector = ({
       disabled: true
     }
     const unpublished = innerPlans
-      .filter((p) => p.publishStatus == 1)
+      .filter((p) => p.publishStatus == PlanPublishStatus.UNPUBLISHED)
       .map(optionMapper)
 
     return unpublished.length == 0

@@ -2,6 +2,7 @@ import { Button, Col, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import { showAmount } from '../../../helpers'
 import { ISubscriptionType } from '../../../shared.types'
+import LongTextPopover from '../../ui/longTextPopover'
 
 interface Props {
   isOpen: boolean
@@ -20,7 +21,7 @@ const ResumeSub = ({
   return (
     <Modal
       title="Resume Subscription"
-      width={'640px'}
+      width={'720px'}
       open={isOpen}
       footer={null}
       closeIcon={null}
@@ -32,8 +33,8 @@ const ResumeSub = ({
         <Col span={6}>
           <span style={{ fontWeight: 'bold' }}>First name</span>
         </Col>
-        <Col span={6}>{subInfo?.user?.firstName}</Col>
-        <Col span={5}>
+        <Col span={8}>{subInfo?.user?.firstName}</Col>
+        <Col span={4}>
           <span style={{ fontWeight: 'bold' }}> Lastname</span>
         </Col>
         <Col span={6}>{subInfo?.user?.lastName}</Col>
@@ -42,8 +43,10 @@ const ResumeSub = ({
         <Col span={6}>
           <span style={{ fontWeight: 'bold' }}>Plan</span>
         </Col>
-        <Col span={6}>{subInfo?.plan?.planName}</Col>
-        <Col span={5}>
+        <Col span={8}>
+          <LongTextPopover text={subInfo?.plan?.planName ?? ''} />
+        </Col>
+        <Col span={4}>
           <span style={{ fontWeight: 'bold' }}>Amount</span>
         </Col>
         <Col span={6}>
@@ -55,7 +58,7 @@ const ResumeSub = ({
         <Col span={6}>
           <span style={{ fontWeight: 'bold' }}>Current due date</span>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           {dayjs((subInfo?.currentPeriodEnd as number) * 1000).format(
             'YYYY-MMM-DD'
           )}

@@ -3,7 +3,7 @@ import { Button, Col, DatePicker, Modal, Row, message } from 'antd'
 import { Dayjs } from 'dayjs'
 import { useState } from 'react'
 import { markAsIncompleteReq } from '../../../requests'
-import { ISubscriptionType } from '../../../shared.types'
+import { ISubscriptionType, SubscriptionStatus } from '../../../shared.types'
 import { SubscriptionStatusTag } from '../../ui/statusTag'
 
 interface Props {
@@ -58,7 +58,9 @@ const Index = ({ subInfo, closeModal, refresh }: Props) => {
       <Row>
         <Col span={8}>
           <div className="flex h-full items-center justify-center">
-            Mark as &nbsp; {SubscriptionStatusTag(7)} until
+            Mark as &nbsp;{' '}
+            {SubscriptionStatusTag(SubscriptionStatus.INCOMPLETE)}
+            until
           </div>
         </Col>
         <Col span={16}>
