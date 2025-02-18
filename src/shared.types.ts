@@ -235,7 +235,7 @@ export enum SubscriptionStatus {
   CANCELLED = 4, // users(or admin) cancelled the sub(immediately or automatically at the end of billing cycle). It's triggered by human.
   EXPIRED = 5,
   // SUSPENDED = 6, // suspend for a while, might want to resume later. NOT USED YET.
-  INCOMPLETE = 7, // user claimed they have wired the transfer, admin mark the subscriptoin as Incomplete until a DATE, so user can use it before that DATE.
+  INCOMPLETE = 7, // user claimed they have wired the transfer, admin mark the subscription as Incomplete until a DATE, so user can use it before that DATE.
   // if admin had confirmed the transfer, admin has to mark the corresponding invoice as PAID, then this sub will become ACTIVE.
   PROCESSING = 8, // user claimed they have wired the transfer, but we're checking. This status is for wire-transfer only.
   FAILED = 9 // we have't received the payment.
@@ -257,7 +257,7 @@ interface ISubscriptionType {
   cancelAtPeriodEnd: number // whether this sub will end at the end of billing cycle, 0: false, 1: true
   amount: number
   currency: string
-  taxPercentage: number // BE returns 2000, FE need to show 20%.
+  taxPercentage: number // BE returns 2000, UI need to show 20%.
   plan: IPlan | undefined // ?????????? why it can be undefined.
   addons: ISubAddon[]
   user: IProfile | null
@@ -284,7 +284,7 @@ interface ISubscriptionType {
 export enum SubscriptionHistoryStatus {
   // UNKNOWN_ZERO = 0,
   Active = 1, // current active subscription also show up in history list
-  Finished = 2, // when user upgrade from planA to planB, the old subscriptio with plan A will be marked as finished.
+  Finished = 2, // when user upgrade from planA to planB, the old subscription with plan A will be marked as finished.
   Cancelled = 3,
   Expired = 4
   //UNKNOWN_FIVE = 5
