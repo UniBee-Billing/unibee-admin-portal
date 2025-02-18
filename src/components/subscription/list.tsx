@@ -25,9 +25,10 @@ import {
   message
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import { useEffect, useRef, useState } from 'react'
+import { Currency } from 'dinero.js'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CURRENCY, SUBSCRIPTION_STATUS } from '../../constants'
+import { SUBSCRIPTION_STATUS } from '../../constants'
 import { formatDate, formatPlanInterval, showAmount } from '../../helpers'
 import { usePagination } from '../../hooks'
 import { exportDataReq, getPlanList, getSublist } from '../../requests'
@@ -84,7 +85,6 @@ const Index = () => {
     }
     payload = { ...payload, ...filters }
 
-    // return
     setExporting(true)
     const [_, err] = await exportDataReq({
       task: 'SubscriptionExport',
@@ -237,17 +237,13 @@ const Index = () => {
       title: 'Start',
       dataIndex: 'currentPeriodStart',
       key: 'currentPeriodStart',
-      render: (_, sub) =>
-        // (sub.currentPeriodStart * 1000).format('YYYY-MMM-DD HH:MM')
-        formatDate(sub.currentPeriodStart, true)
+      render: (_, sub) => formatDate(sub.currentPeriodStart, true)
     },
     {
       title: 'End',
       dataIndex: 'currentPeriodEnd',
       key: 'currentPeriodEnd',
-      render: (_, sub) =>
-        // dayjs(sub.currentPeriodEnd * 1000).format('YYYY-MMM-DD HH:MM')
-        formatDate(sub.currentPeriodEnd, true)
+      render: (_, sub) => formatDate(sub.currentPeriodEnd, true)
     },
     {
       title: 'User',
@@ -403,17 +399,19 @@ const Index = () => {
       searchTerm.createTimeEnd = end.hour(23).minute(59).second(59).unix()
     }
 
+    const curObj = appConfigStore.currency[searchTerm.currency as Currency]
+
     let amtFrom = searchTerm.amountStart,
       amtTo = searchTerm.amountEnd
     if (amtFrom != '' && amtFrom != null) {
-      amtFrom = Number(amtFrom) * CURRENCY[searchTerm.currency].stripe_factor
+      amtFrom = Number(amtFrom) * curObj!.Scale
       if (isNaN(amtFrom) || amtFrom < 0) {
         message.error('Invalid amount-from value.')
         return null
       }
     }
     if (amtTo != '' && amtTo != null) {
-      amtTo = Number(amtTo) * CURRENCY[searchTerm.currency].stripe_factor
+      amtTo = Number(amtTo) * curObj!.Scale
       if (isNaN(amtTo) || amtTo < 0) {
         message.error('Invalid amount-to value')
         return null
@@ -533,7 +531,6 @@ export default Index
 
 const DEFAULT_TERM = {
   currency: 'EUR'
-  // status: [],
   // amountStart: '',
   // amountEnd: ''
   // refunded: false,
@@ -553,17 +550,18 @@ const Search = ({
   onPageChange: (page: number, pageSize: number) => void
   clearFilters: () => void
 }) => {
-  const appStore = useAppConfigStore()
+  const appConfigStore = useAppConfigStore()
+  const watchCurrency = Form.useWatch('currency', form)
   const clear = () => {
     form.resetFields()
     onPageChange(1, PAGE_SIZE)
     clearFilters()
   }
-  // const appConfig = useAppConfigStore()
-  // const CURRENCIES = appConfig.supportCurrency
 
-  const currencySymbol =
-    CURRENCY[form.getFieldValue('currency') || DEFAULT_TERM.currency].symbol
+  const currencySymbol = useMemo(
+    () => appConfigStore.currency[watchCurrency as Currency]?.Symbol,
+    [watchCurrency]
+  )
 
   return (
     <div>
@@ -647,7 +645,7 @@ const Search = ({
               <Form.Item name="currency" noStyle={true}>
                 <Select
                   style={{ width: 80 }}
-                  options={appStore.supportCurrency.map((c) => ({
+                  options={appConfigStore.supportCurrency.map((c) => ({
                     label: c.Currency,
                     value: c.Currency
                   }))}

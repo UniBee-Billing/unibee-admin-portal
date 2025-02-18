@@ -9,6 +9,7 @@ import {
 } from 'antd'
 
 import { Form } from 'antd'
+import { Currency } from 'dinero.js'
 import {
   Dispatch,
   PropsWithChildren,
@@ -156,8 +157,8 @@ const Index = ({
         <Select
           style={{ width: 180 }}
           options={[
-            { value: 1, label: 'Percentage' },
-            { value: 2, label: 'Fixed amount' }
+            { value: DiscountType.PERCENTAGE, label: 'Percentage' },
+            { value: DiscountType.AMOUNT, label: 'Fixed amount' }
           ]}
         />
       </Form.Item>
@@ -248,9 +249,7 @@ const Index = ({
             prefix={
               watchCurrency == null || watchCurrency == ''
                 ? ''
-                : appStore.supportCurrency.find(
-                    (c) => c.Currency == watchCurrency
-                  )?.Symbol
+                : appStore.currency[watchCurrency as Currency]?.Symbol
             }
             disabled={
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable

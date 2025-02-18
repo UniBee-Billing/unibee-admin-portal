@@ -45,7 +45,7 @@ export enum UserStatus {
   SUSPENDED = 2
 }
 // this is end user profile
-type IProfile = {
+interface IProfile {
   id: number | null
   externalUserId: string
   token: string
@@ -87,7 +87,7 @@ export enum MerchantUserStatus {
   SUSPENDED = 2
 }
 // this is the admin user profile
-type IMerchantMemberProfile = {
+interface IMerchantMemberProfile {
   id: number
   merchantId: number
   email: string
@@ -125,11 +125,16 @@ export type TIntegrationKeys = {
   segmentUserPortalKey: string
 }
 
-type IAppConfig = {
+export type CURRENCY = { Currency: Currency; Symbol: string; Scale: number }
+// { Currency: 'CNY', Symbol: '¥', Scale: 100 }, or
+// { Currency: 'USD', Symbol: '$', Scale: 100 }, ...
+interface IAppConfig {
   env: string
   isProd: boolean
   supportTimeZone: string[]
-  supportCurrency: { Currency: string; Symbol: string; Scale: number }[]
+  supportCurrency: CURRENCY[]
+  currency: Partial<Record<Currency, CURRENCY>> // this is just the record version of supportCurrency for easier lookup, key is currency code, like 'CNY', 'USD', ...
+  // its initial value is empty, hence Partial here. Maybe it's better to provide a default value, like: EUR: { Currency: 'EUR', Symbol: '€', Scale: 100 },
   gateway: TGateway[]
   taskListOpen: boolean // task list is in app.tsx, but this value is accessible to all pages.
   integrationKeys: TIntegrationKeys
@@ -140,7 +145,7 @@ interface IAddon extends IPlan {
   checked: boolean
 }
 
-type IProduct = {
+interface IProduct {
   id: number
   productName: string
   description: string
@@ -166,7 +171,7 @@ export enum PlanPublishStatus {
   UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans
   PUBLISHED = 2
 }
-type IPlan = {
+interface IPlan {
   id: number
   plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
@@ -204,7 +209,7 @@ export interface ISubAddon extends IPlan {
   addonPlan: ISubAddon
 }
 
-type IBillableMetrics = {
+interface IBillableMetrics {
   id: number
   merchantId: number
   code: string
@@ -236,7 +241,7 @@ export enum SubscriptionStatus {
   FAILED = 9 // we have't received the payment.
 }
 
-type ISubscriptionType = {
+interface ISubscriptionType {
   id: number
   subscriptionId: string
   planId: number
@@ -285,7 +290,7 @@ export enum SubscriptionHistoryStatus {
   //UNKNOWN_FIVE = 5
 }
 
-type ISubHistoryItem = {
+interface ISubHistoryItem {
   merchantId: number
   userId: number
   subscriptionId: string
@@ -368,7 +373,7 @@ type DiscountCode = {
   discountType: DiscountType
   discountAmount: number
   discountPercentage: number
-  currency: string
+  currency: Currency
   cycleLimit: number
   startTime: number
   endTime: number

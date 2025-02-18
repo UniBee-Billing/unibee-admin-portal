@@ -40,7 +40,7 @@ export const AboutUniBee: React.FC<{ collapsed: boolean }> = ({
           clickHandler={() => setOpen(true)}
           text="About UniBee"
           logo={<UniBeeLogo />}
-          logoColor="text-gray-400"
+          // logoColor="text-gray-400"
         />
       </div>
       <Modal open={open} onCancel={() => setOpen(false)} footer={[]}>
