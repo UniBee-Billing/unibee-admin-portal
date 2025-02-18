@@ -79,7 +79,7 @@ const Index = ({ coupon }: { coupon?: DiscountCode }) => {
               Discount amt
             </Col>
             <Col span={14}>
-              {coupon.discountType === 1
+              {coupon.discountType === DiscountType.PERCENTAGE
                 ? `${coupon.discountPercentage / 100}%`
                 : showAmount(coupon.discountAmount, coupon.currency)}
             </Col>

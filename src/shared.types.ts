@@ -280,6 +280,10 @@ interface ISubscriptionType {
   gatewayId: number
   latestInvoice?: UserInvoice
 }
+export enum SubscriptionEndMode {
+  END_NOW = 1,
+  END_AT_END_OF_BILLING_CYCLE = 2
+}
 
 export enum SubscriptionHistoryStatus {
   // UNKNOWN_ZERO = 0,
