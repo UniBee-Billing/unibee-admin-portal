@@ -7,6 +7,7 @@ import {
   Modal,
   Switch
 } from 'antd'
+import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import {
   ChangeEvent,
@@ -16,7 +17,6 @@ import {
   useRef,
   useState
 } from 'react'
-import { CURRENCY } from '../../../constants'
 import { showAmount } from '../../../helpers'
 import { useLoading } from '../../../hooks'
 import {
@@ -379,7 +379,7 @@ export const AssignSubscriptionModal = ({
     }
     if (creditAmt) {
       return (
-        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
+        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${appConfig.currency[credit.credit.currency as Currency]?.Symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
       )
     }
   }

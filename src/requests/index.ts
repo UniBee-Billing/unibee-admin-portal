@@ -1,5 +1,6 @@
 import axios from 'axios'
 // import update from 'immutability-helper'
+import { Currency } from 'dinero.js'
 import {
   AccountType,
   CreditTxType,
@@ -1632,10 +1633,10 @@ export const refundReq = async (
     refundAmount: number
     reason: string
   },
-  currency: string
+  currency: Currency
 ) => {
   try {
-    const c = appConfig.supportCurrency.find((c) => c.Currency == currency)
+    const c = appConfig.currency[currency]
     if (c == undefined) {
       throw new Error(`Currency ${currency} not found`)
     }

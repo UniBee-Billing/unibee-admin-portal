@@ -2,7 +2,7 @@ import { Button, Divider, Input, InputNumber, message, Modal } from 'antd'
 import { useEffect, useState } from 'react'
 // import HiddenIcon from '../../../assets/hidden.svg?react'
 // import { formatPlanPrice } from '../../../helpers'
-import { CURRENCY } from '../../../constants'
+import { Currency } from 'dinero.js'
 import { showAmount } from '../../../helpers'
 import { applyDiscountPreviewReq } from '../../../requests'
 import {
@@ -14,6 +14,7 @@ import {
   ISubscriptionType,
   TPromoAccount
 } from '../../../shared.types'
+import { useAppConfigStore } from '../../../stores'
 import { PlanSelector } from '../../user/assignSub/planSelector'
 import Plan from '../plan'
 
@@ -61,6 +62,7 @@ const ChangePlan = ({
   onConfirm,
   createPreview
 }: Props) => {
+  const appConfig = useAppConfigStore()
   const [codePreview, setCodePreview] = useState<DiscountCodePreview | null>(
     null
   ) // null: no code provided
@@ -118,7 +120,7 @@ const ChangePlan = ({
       return <div className="text-xs text-gray-500">No promo credit used</div>
     }
     return (
-      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
+      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${appConfig.currency[credit.credit.currency as Currency]?.Symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
     )
   }
 

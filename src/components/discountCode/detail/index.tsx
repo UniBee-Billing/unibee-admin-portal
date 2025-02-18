@@ -1,11 +1,10 @@
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Form, Popconfirm, Spin, Tabs, message } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
+import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-
-import { CURRENCY } from '../../../constants'
 import { numBoolConvert, showAmount, toFixedNumber } from '../../../helpers'
 import { useSkipFirstRender } from '../../../hooks'
 import {
@@ -26,14 +25,13 @@ import {
   PlanStatus,
   PlanType
 } from '../../../shared.types'
-import { useMerchantInfoStore } from '../../../stores'
+import { useAppConfigStore, useMerchantInfoStore } from '../../../stores'
 import { title } from '../../../utils'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 import { UpdateDiscountCodeQuantityModal } from '../updateDiscountCodeQuantityModal'
 import AdvancedConfig from './advancedConfig'
 import GeneralConfig from './generalConfig'
 import Summary, { NotSetPlaceholder } from './summary'
-
 const DEFAULT_CODE: DiscountCode = {
   merchantId: useMerchantInfoStore.getState().id,
   name: '',
@@ -69,6 +67,7 @@ const canActiveItemEdit = (status?: DiscountCodeStatus) =>
 
 const Index = () => {
   const params = useParams()
+  const appConfig = useAppConfigStore()
   const navigate = useNavigate()
   const location = useLocation()
   const discountCopyData = location.state?.copyDiscountCode
@@ -152,7 +151,8 @@ const Index = () => {
       dayjs(discount.endTime * 1000)
     ]
     if (discount.discountType == DiscountType.AMOUNT) {
-      discount.discountAmount /= CURRENCY[discount.currency].stripe_factor
+      discount.discountAmount /=
+        appConfig.currency[discount.currency as Currency]!.Scale
     } else if (discount.discountType == DiscountType.PERCENTAGE) {
       discount.discountPercentage /= 100
     }
@@ -216,7 +216,8 @@ const Index = () => {
       delete code.discountAmount
     } else {
       delete code.discountPercentage
-      code.discountAmount *= CURRENCY[code.currency].stripe_factor
+      code.discountAmount *=
+        appConfig.currency[code.currency as Currency]!.Scale
       code.discountAmount = toFixedNumber(code.discountAmount, 2)
     }
 

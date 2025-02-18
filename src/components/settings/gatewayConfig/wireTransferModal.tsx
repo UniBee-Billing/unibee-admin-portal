@@ -1,6 +1,6 @@
-import { Button, Form, Input, Modal, Select, message } from 'antd'
+import { Button, Form, Input, InputNumber, Modal, Select, message } from 'antd'
+import { Currency } from 'dinero.js'
 import { useState } from 'react'
-import { CURRENCY } from '../../../constants'
 import { currencyDecimalValidate } from '../../../helpers'
 import {
   createWireTransferAccountReq,
@@ -57,13 +57,12 @@ const Index = ({
   refresh,
   updateGatewayInStore
 }: IProps) => {
-  // todo: scale down the amount value
   const appConfig = useAppConfigStore()
   const isNew = gatewayConfig.gatewayId == 0
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [currency, setCurrency] = useState('EUR')
-  const onCurrencyChange = (value: string) => setCurrency(value)
+  const [currency, setCurrency] = useState<Currency>('EUR')
+  const onCurrencyChange = (value: Currency) => setCurrency(value)
 
   const selectAfter = (
     <Select
@@ -82,9 +81,8 @@ const Index = ({
     const accInfo = JSON.parse(JSON.stringify(form.getFieldsValue()))
     accInfo.currency = currency
     accInfo.minimumAmount = Number(accInfo.minimumAmount)
-    accInfo.minimumAmount *= CURRENCY[currency].stripe_factor
+    accInfo.minimumAmount *= appConfig.currency[currency]!.Scale
 
-    // return
     setLoading(true)
     const method = isNew
       ? createWireTransferAccountReq
@@ -113,14 +111,12 @@ const Index = ({
         <Form
           form={form}
           onFinish={onSave}
-          // labelCol={{ span: 4 }}
           labelCol={{ flex: '160px' }}
-          // wrapperCol={{ span: 20 }}
           wrapperCol={{ flex: 1 }}
           colon={false}
-          // layout="horizontal"
           style={{ marginTop: '28px' }}
           initialValues={gatewayConfig}
+          disabled={loading}
         >
           {!isNew && (
             <Form.Item label="Account Holder" name={'gatewayId'} hidden>
@@ -149,9 +145,10 @@ const Index = ({
               })
             ]}
           >
-            <Input
+            <InputNumber
+              min={0}
               addonAfter={selectAfter}
-              prefix={CURRENCY[currency].symbol}
+              prefix={appConfig.currency[currency]?.Symbol}
             />
           </Form.Item>
           <Form.Item

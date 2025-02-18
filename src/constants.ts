@@ -35,7 +35,7 @@ export const SUBSCRIPTION_STATUS: Record<
   { label: string; color: string }
 > = {
   [SubscriptionStatus.INITIATING]: {
-    label: '', // 'Initiating'
+    label: 'Initiating', // 'Initiating'
     color: 'lightgray'
   },
   [SubscriptionStatus.PENDING]: { label: 'Pending', color: 'magenta' },

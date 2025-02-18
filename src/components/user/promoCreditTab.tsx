@@ -1,10 +1,11 @@
 import { InfoCircleOutlined, MinusOutlined } from '@ant-design/icons'
 import { Button, Col, Row, Switch, Tooltip, message } from 'antd'
+import { Currency } from 'dinero.js'
 import { useEffect, useState } from 'react'
-import { CURRENCY } from '../../constants'
 import { numBoolConvert, showAmount } from '../../helpers'
 import { toggleUserCreditReq } from '../../requests'
 import { IProfile, TPromoAccount } from '../../shared.types'
+import { useAppConfigStore } from '../../stores'
 import CreditSwitchConfirmModal from '../settings/creditConfig/creditSwitchConfirmModal'
 import PromoCreditTxHistory from './promoCreditTxHist'
 import UpdatePromoCreditModal from './updatePromoCreditModal'
@@ -16,6 +17,7 @@ const Index = ({
   userDetail: IProfile | undefined
   refreshUser: () => void
 }) => {
+  const appConfig = useAppConfigStore()
   const normalizePromoAcc = () => {
     let promoAcc: TPromoAccount | undefined = undefined
     if (
@@ -146,7 +148,7 @@ const Index = ({
                 ) &nbsp;
                 {promoAccount != undefined && (
                   <Tooltip
-                    title={`1 credit = ${CURRENCY[promoAccount.currency].symbol}${promoAccount?.exchangeRate / 100}`}
+                    title={`1 credit = ${appConfig.currency[promoAccount.currency as Currency]?.Symbol}${promoAccount?.exchangeRate / 100}`}
                   >
                     <InfoCircleOutlined />
                   </Tooltip>

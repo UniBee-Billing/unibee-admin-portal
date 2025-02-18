@@ -1,5 +1,6 @@
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
+import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import { useState } from 'react'
 import { randomString, showAmount } from '../../../helpers'
@@ -258,10 +259,10 @@ const Index = ({
     const [_, err] = await refundReq(
       {
         invoiceId: detail?.invoiceId,
-        refundAmount: Number(refundAmt),
+        refundAmount: amt,
         reason: refundReason
       },
-      currency
+      currency as Currency
     )
     setLoading(false)
     if (null != err) {

@@ -1,4 +1,4 @@
-import Icon, { TransactionOutlined } from '@ant-design/icons'
+import Icon, { DollarOutlined } from '@ant-design/icons'
 import { Menu, MenuProps } from 'antd'
 import { ItemType, MenuItemType } from 'antd/es/menu/interface'
 import { useLayoutEffect, useMemo, useState } from 'react'
@@ -62,7 +62,7 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
   {
     label: 'Transaction',
     key: 'transaction',
-    icon: <TransactionOutlined />
+    icon: <DollarOutlined />
   },
   {
     label: 'Promo Credit',

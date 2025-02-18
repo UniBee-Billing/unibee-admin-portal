@@ -16,6 +16,7 @@ import {
   Form,
   FormInstance,
   Input,
+  InputNumber,
   Pagination,
   Row,
   Select,
@@ -25,9 +26,10 @@ import {
   message
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import React, { ReactElement, useEffect, useState } from 'react'
+import { Currency } from 'dinero.js'
+import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import RefundIcon from '../../assets/refund.svg?react'
-import { CURRENCY, INVOICE_STATUS } from '../../constants'
+import { INVOICE_STATUS } from '../../constants'
 import {
   downloadStaticFile,
   formatDate,
@@ -142,7 +144,6 @@ const Index = ({
         delete searchTerm[k]
     )
     if (enableSearch) {
-      // searchTerm = form.getFieldsValue()
       const start = form.getFieldValue('createTimeStart')
       const end = form.getFieldValue('createTimeEnd')
       if (start != null) {
@@ -152,18 +153,21 @@ const Index = ({
         searchTerm.createTimeEnd = end.hour(23).minute(59).second(59).unix()
       }
 
-      // return
       let amtFrom = searchTerm.amountStart,
         amtTo = searchTerm.amountEnd
       if (amtFrom != '' && amtFrom != null) {
-        amtFrom = Number(amtFrom) * CURRENCY[searchTerm.currency].stripe_factor
+        amtFrom =
+          Number(amtFrom) *
+          appConfig.currency[searchTerm.currency as Currency]!.Scale
         if (isNaN(amtFrom) || amtFrom < 0) {
           message.error('Invalid amount-from value.')
           return null
         }
       }
       if (amtTo != '' && amtTo != null) {
-        amtTo = Number(amtTo) * CURRENCY[searchTerm.currency].stripe_factor
+        amtTo =
+          Number(amtTo) *
+          appConfig.currency[searchTerm.currency as Currency]!.Scale
         if (isNaN(amtTo) || amtTo < 0) {
           message.error('Invalid amount-to value')
           return null
@@ -643,20 +647,19 @@ const Search = ({
   onPageChange: (page: number, pageSize: number) => void
   clearFilters: () => void
 }) => {
-  const appStore = useAppConfigStore()
+  const appConfigStore = useAppConfigStore()
+  const watchCurrency = Form.useWatch('currency', form)
+
   const clear = () => {
     form.resetFields()
     onPageChange(1, PAGE_SIZE)
     clearFilters()
   }
 
-  const watchCurrency = Form.useWatch('currency', form)
-  useEffect(() => {
-    // just to trigger rerender when currency changed
-  }, [watchCurrency])
-
-  const currencySymbol =
-    CURRENCY[form.getFieldValue('currency') || DEFAULT_TERM.currency].symbol
+  const currencySymbol = useMemo(
+    () => appConfigStore.currency[watchCurrency as Currency]?.Symbol,
+    [watchCurrency]
+  )
 
   return (
     <div>
@@ -687,7 +690,7 @@ const Search = ({
               <Form.Item name="currency" noStyle={true}>
                 <Select
                   style={{ width: 80 }}
-                  options={appStore.supportCurrency.map((c) => ({
+                  options={appConfigStore.supportCurrency.map((c) => ({
                     label: c.Currency,
                     value: c.Currency
                   }))}
@@ -697,7 +700,9 @@ const Search = ({
           </Col>
           <Col span={3}>
             <Form.Item name="amountStart" noStyle={true}>
-              <Input
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
                 prefix={`from ${currencySymbol}`}
                 onPressEnter={form.submit}
               />
@@ -706,7 +711,9 @@ const Search = ({
 
           <Col span={3}>
             <Form.Item name="amountEnd" noStyle={true}>
-              <Input
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
                 prefix={`to ${currencySymbol}`}
                 onPressEnter={form.submit}
               />

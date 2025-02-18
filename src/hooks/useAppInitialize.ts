@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { normalizeCreditConfig } from '../components/settings/creditConfig'
 import { NEW_WIRE_TRANSFER } from '../components/settings/gatewayConfig/wireTransferModal'
 import { initializeReq } from '../requests'
-import { CreditType, TCreditConfig, TGateway } from '../shared.types'
+import { CreditType, CURRENCY, TCreditConfig, TGateway } from '../shared.types'
 import {
   useAppConfigStore,
   useCreditConfigStore,
@@ -45,7 +45,11 @@ export const useAppInitialize = (): (() => Promise<string>) => {
 
     const { appConfig, gateways, merchantInfo, products, creditConfigs } =
       initRes
-
+    const currency: Record<string, CURRENCY> = {}
+    appConfig.supportCurrency.forEach((c: CURRENCY) => {
+      currency[c.Currency] = c
+    })
+    appConfig.currency = currency
     appConfigStore.setAppConfig(appConfig)
 
     // BE has all the payment gateway config object, even if merchants have never configured them.
