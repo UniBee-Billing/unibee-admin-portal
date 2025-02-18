@@ -96,6 +96,7 @@ export const APP_TASK_STATUS: Record<
 }
 
 // to be deprecated, use currency from BE
+/*
 export const CURRENCY: {
   [key: string]: {
     symbol: string
@@ -110,6 +111,7 @@ export const CURRENCY: {
   EUR: { symbol: '€', stripe_factor: 100, decimal_places: 2 },
   USDT: { symbol: '₮', stripe_factor: 100, decimal_places: null }
 }
+  */
 
 export const INVOICE_STATUS: { [key: number]: string } = {
   0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist
