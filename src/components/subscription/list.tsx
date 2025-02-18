@@ -36,6 +36,7 @@ import '../../shared.css'
 import {
   IPlan,
   ISubscriptionType,
+  SubscriptionStatus,
   SubscriptionWrapper,
   TImportDataType
 } from '../../shared.types'
@@ -51,6 +52,7 @@ const SUB_STATUS_FILTER = Object.entries(SUBSCRIPTION_STATUS)
     text: label,
     value: Number(statusNumber)
   }))
+  .filter(({ value }) => value != SubscriptionStatus.INITIATING) // INITIATING status is used as a placeholder in this component when user has no active subscription, no need to show it in filter.
   .sort((a, b) => (a.value < b.value ? -1 : 1))
 
 type TFilters = {

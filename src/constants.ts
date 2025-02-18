@@ -35,7 +35,7 @@ export const SUBSCRIPTION_STATUS: Record<
   { label: string; color: string }
 > = {
   [SubscriptionStatus.INITIATING]: {
-    label: 'Initiating', // 'Initiating'
+    label: '', // BE might use this statusCode to represent no active subscription in SubscriptionList page.
     color: 'lightgray'
   },
   [SubscriptionStatus.PENDING]: { label: 'Pending', color: 'magenta' },
