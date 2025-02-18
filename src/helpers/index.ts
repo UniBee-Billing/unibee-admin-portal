@@ -1,6 +1,6 @@
 import axios from 'axios'
 import dayjs from 'dayjs'
-import Dinero from 'dinero.js'
+import Dinero, { Currency } from 'dinero.js'
 import passwordValidator from 'password-validator'
 import type { UploadRequestOption } from 'rc-upload/lib/interface'
 import { uploadLogoReq } from '../requests'
@@ -69,7 +69,7 @@ export const formatDate = (d: number, showTime?: boolean) => {
     : result.format(`YYYY-MMM-DD ${timeFormat}`)
 }
 
-export const currencyDecimalValidate = (val: number, currency: string) => {
+export const currencyDecimalValidate = (val: number, currency: Currency) => {
   if (Number.isInteger(val)) {
     return true
   }

@@ -226,7 +226,7 @@ const Index = ({
               required: watchDiscountType != DiscountType.PERCENTAGE,
               message: 'Please input your discount amount!'
             },
-            ({ getFieldValue }) => ({
+            () => ({
               validator(_, value) {
                 if (watchDiscountType == DiscountType.PERCENTAGE) {
                   return Promise.resolve()
@@ -235,7 +235,7 @@ const Index = ({
                 if (isNaN(num) || num <= 0) {
                   return Promise.reject('Please input a valid amount (> 0).')
                 }
-                if (!currencyDecimalValidate(num, getFieldValue('currency'))) {
+                if (!currencyDecimalValidate(num, watchCurrency as Currency)) {
                   return Promise.reject('Please input a valid amount')
                 }
                 return Promise.resolve()
