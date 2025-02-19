@@ -952,6 +952,7 @@ export const resumeSubReq = async (subscriptionId: string) => {
 // -------------
 type TGetSubTimelineReq = {
   userId?: number
+  currency?: string
   amountStart?: number
   amountEnd?: number
   status?: number[]
@@ -975,10 +976,14 @@ export const getPaymentTimelineReq = async (
     gatewayIds,
     amountStart,
     amountEnd,
+    currency,
     createTimeStart,
     createTimeEnd
   } = params
   let url = `/merchant/payment/timeline/list?page=${page}&count=${count}`
+  if (currency != null && currency != '') {
+    url += `&currency=${currency}`
+  }
   if (userId != null) {
     url += `&userId=${userId}`
   }
