@@ -1072,6 +1072,7 @@ const Index = () => {
                 }
               })
             ]}
+            extra={`JSON object must be a key-value paired object, like {"a": 1, "b": 2, "c": [1,2,3]}.`}
           >
             <Input.TextArea rows={6} style={{ width: '640px' }} />
           </Form.Item>
@@ -1082,12 +1083,6 @@ const Index = () => {
           >
             {' '}
             <Button onClick={prettifyJSON}>Prettify</Button>
-          </div>
-          <div
-            className="relative ml-2 text-xs text-gray-400"
-            style={{ top: '-32px', left: '178px', width: '450px' }}
-          >
-            {`JSON object must be a key-value paired object, like {"a": 1, "b": 2, "c": [1,2,3]}.`}
           </div>
 
           <Form.Item label="Product Name" name="productName" hidden>

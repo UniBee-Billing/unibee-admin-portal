@@ -35,7 +35,8 @@ const Index = ({ userId }: { userId: number }) => {
     const [res, err] = await getSubscriptionHistoryReq({
       page,
       count: PAGE_SIZE,
-      userId
+      userId,
+      refreshCb: getSubHistory
     })
     setHistoryLoading(false)
     if (err != null) {
