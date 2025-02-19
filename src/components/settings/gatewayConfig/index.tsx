@@ -105,8 +105,9 @@ const Index = () => {
   }
 
   const updateGatewayInStore = async () => {
-    const [gateways, getGatewayErr] = await getPaymentGatewayListReq()
-    if (getGatewayErr == null) {
+    const [gateways, gatewaysErr] = await getPaymentGatewayListReq()
+    if (gatewaysErr != null) {
+      message.error(gatewaysErr.message)
       return
     }
     // after gatewayConfig changed, re-fetch the gatewayList, and save it into local store.
