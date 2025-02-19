@@ -25,7 +25,8 @@ const Index = ({ userId }: { userId: number }) => {
     const [res, err] = await getOneTimePaymentHistoryReq({
       page,
       count: PAGE_SIZE,
-      userId
+      userId,
+      refreshCb: getOneTimeHistory
     })
     setLoading(false)
     if (err != null) {

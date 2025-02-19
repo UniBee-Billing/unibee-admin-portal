@@ -204,11 +204,14 @@ const OTPForm = ({
 
     const defaultPage = await appInitialize()
     if (triggeredByExpired) {
-      sessionStore.refresh?.()
-      sessionStore.setSession({ expired: false, refresh: null })
+      sessionStore.refreshCallbacks?.forEach((cb) => cb && cb())
+      sessionStore.setSession({
+        expired: false,
+        refreshCallbacks: []
+      })
       message.success('Login succeeded')
     } else {
-      sessionStore.setSession({ expired: false, refresh: null })
+      sessionStore.setSession({ expired: false, refreshCallbacks: [] })
       navigate(defaultPage)
     }
   }

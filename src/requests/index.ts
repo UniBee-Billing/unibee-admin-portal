@@ -1,6 +1,6 @@
 import axios from 'axios'
-// import update from 'immutability-helper'
 import { Currency } from 'dinero.js'
+import update from 'immutability-helper'
 import {
   AccountType,
   CreditTxType,
@@ -35,15 +35,21 @@ type PagedReq = {
   page?: number
 }
 
+const updateSessionCb = (refreshCb?: () => void) => {
+  const refreshCallbacks = update(session.refreshCallbacks, {
+    $push: [refreshCb]
+  })
+  session.setSession({
+    expired: true,
+    refreshCallbacks
+  })
+}
+
 const handleStatusCode = (code: number, refreshCb?: () => void) => {
-  // TODO: use Enum to define the code
   if (code == 61 || code == 62) {
-    /*
-        refreshCallbacks: update(session.refreshCallbacks, {
-          $push: [refreshCb]
-        })
-      */
-    session.setSession({ expired: true, refresh: refreshCb ?? null })
+    // TODO: use Enum to define the code
+    // session expired || role/permissions changed(need relogin)
+    updateSessionCb(refreshCb)
     throw new ExpiredError(
       `${code == 61 ? 'Session expired' : 'Your roles or permissions have been changed, please relogin'}`
     )
@@ -99,14 +105,12 @@ type TPassLogin = {
   email: string
   password: string
 }
+// caller will handle the session update(set expired: false)
 export const loginWithPasswordReq = async (body: TPassLogin) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post('/merchant/auth/sso/login', body)
-    session.setSession({ expired: false, refresh: null })
     return [res.data.data, null]
   } catch (err) {
-    session.setSession({ expired: true, refresh: null })
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
   }
@@ -122,17 +126,16 @@ export const loginWithOTPReq = async (email: string) => {
   }
 }
 
+// caller will handle the session update(set expired: false)
 export const loginWithOTPVerifyReq = async (
   email: string,
   verificationCode: string
 ) => {
-  const session = useSessionStore.getState()
   try {
     const res = await request.post(`/merchant/auth/sso/loginOTPVerify`, {
       email,
       verificationCode
     })
-    session.setSession({ expired: false, refresh: null })
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -191,7 +194,7 @@ export const logoutReq = async () => {
   const session = useSessionStore.getState()
   try {
     await request.post(`/merchant/member/logout`, {})
-    session.setSession({ expired: true, refresh: null })
+    session.setSession({ expired: true, refreshCallbacks: [] })
     return [null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -442,9 +445,8 @@ export const copyPlanReq = async (planId: number) => {
 // "planId: null" means caller want to create a new plan, so a resolved promise is passed
 export const getPlanDetailWithMore = async (
   planId: number | null,
-  refreshCb: (() => void) | null
+  refreshCb?: () => void
 ) => {
-  const session = useSessionStore.getState()
   const planDetailRes =
     planId == null
       ? Promise.resolve([{ data: { data: null, code: 0 } }, null])
@@ -468,7 +470,7 @@ export const getPlanDetailWithMore = async (
   const err = errDetail || addonErr || errMetrics || errProduct
   if (null != err) {
     if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: refreshCb })
+      updateSessionCb(refreshCb)
     }
     return [null, err]
   }
@@ -649,7 +651,7 @@ export const getSubDetailWithMore = async (
   const err = errSubDetail || errPlanList
   if (null != err) {
     if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: refreshCb ?? null })
+      updateSessionCb(refreshCb)
     }
     return [null, err]
   }
@@ -682,15 +684,16 @@ export const getSubDetailInProductReq = async ({
 export const getSubscriptionHistoryReq = async ({
   userId,
   page,
-  count
-}: { userId: number } & PagedReq) => {
+  count,
+  refreshCb
+}: { userId: number; refreshCb?: () => void } & PagedReq) => {
   try {
     const res = await request.post(`/merchant/subscription/timeline_list`, {
       userId,
       page,
       count
     })
-    handleStatusCode(res.data.code)
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -701,15 +704,17 @@ export const getSubscriptionHistoryReq = async ({
 export const getOneTimePaymentHistoryReq = async ({
   userId,
   page,
-  count
+  count,
+  refreshCb
 }: {
   userId: number
+  refreshCb?: () => void
 } & PagedReq) => {
   try {
     const res = await request.get(
       `/merchant/payment/item/list?userId=${userId}&page=${page}&count=${count}`
     )
-    handleStatusCode(res.data.code)
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -971,12 +976,12 @@ export const getPaymentTimelineReq = async (
     page,
     count,
     userId,
-    status,
-    timelineTypes,
-    gatewayIds,
+    currency,
     amountStart,
     amountEnd,
-    currency,
+    status,
+    gatewayIds,
+    timelineTypes,
     createTimeStart,
     createTimeEnd
   } = params
@@ -1382,7 +1387,7 @@ export const getDiscountCodeDetailWithMore = async (
   const err = errDiscount || errPlanList
   if (null != err) {
     if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: refreshCb })
+      updateSessionCb(refreshCb)
     }
     return [null, err]
   }
@@ -1756,7 +1761,7 @@ export const getMerchantUserListWithMoreReq = async (refreshCb: () => void) => {
   const err = errMerchantUserList || errRoleList
   if (null != err) {
     if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: refreshCb })
+      updateSessionCb(refreshCb)
     }
     return [null, err]
   }
@@ -1872,18 +1877,27 @@ export const sortGatewayReq = async (
   }
 }
 
+/*
+// depreciated
 export const getAppKeysWithMore = async (refreshCb: () => void) => {
   const [[merchantInfo, errMerchantInfo], [gateways, errGateways]] =
     await Promise.all([getMerchantInfoReq(), getPaymentGatewayListReq()])
   const err = errMerchantInfo || errGateways
   if (null != err) {
     if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: refreshCb })
+      session.setSession({
+        expired: true,
+        refreshCallbacks: update(session.refreshCallbacks, {
+          $push: [refreshCb]
+        }),
+        refresh: refreshCb ?? null
+      })
     }
     return [null, err]
   }
   return [{ merchantInfo, gateways }, null]
 }
+*/
 
 type TWireTransferAccount = {
   gatewayId?: number // required only for updating
@@ -2177,9 +2191,10 @@ export const getExportTmplReq = async ({
   }
 }
 
+/*
 export const getExportFieldsWithMore = async (
   task: TExportDataType,
-  refreshCb: (() => void) | null
+  refreshCb?: () => void
 ) => {
   const session = useSessionStore.getState()
   const [[exportTmplRes, errExportTmpl], [exportFieldsRes, errExportFields]] =
@@ -2190,12 +2205,19 @@ export const getExportFieldsWithMore = async (
   const err = errExportTmpl || errExportFields
   if (null != err) {
     if (err instanceof ExpiredError) {
-      session.setSession({ expired: true, refresh: refreshCb })
+      session.setSession({
+        expired: true,
+        refreshCallbacks: update(session.refreshCallbacks, {
+          $push: [refreshCb]
+        }),
+        refresh: refreshCb ?? null
+      })
     }
     return [null, err]
   }
   return [{ exportTmplRes, exportFieldsRes }, null]
 }
+  */
 
 // 'creating new' and 'editing existing' share almost the same parameter, use templateId == null to check
 export const saveExportTmplReq = async ({
@@ -2406,13 +2428,16 @@ export type TCreditTxParams = {
   sortType?: 'desc' | 'asc'
   sortField?: 'gmt_create' | 'gmt_modify' // Default is gmt_modify
 } & PagedReq
-export const getCreditTxListReq = async (body: TCreditTxParams) => {
+export const getCreditTxListReq = async (
+  body: TCreditTxParams,
+  refreshCb?: () => void
+) => {
   try {
     const res = await request.post(
       `/merchant/credit/credit_transaction_list`,
       body
     )
-    handleStatusCode(res.data.code)
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')

@@ -90,7 +90,7 @@ const Index = ({
       body.sortType = sortFilter.sortType
     }
     setLoading(true)
-    const [res, err] = await getCreditTxListReq(body)
+    const [res, err] = await getCreditTxListReq(body, fetchCreditTxList)
     setLoading(false)
     if (setRefreshTxHist != undefined) {
       setRefreshTxHist(false)
