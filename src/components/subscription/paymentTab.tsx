@@ -98,7 +98,6 @@ const Index = ({
     searchTerm.page = page
     searchTerm.count = PAGE_SIZE
     searchTerm = { ...searchTerm, ...filters }
-
     setLoading(true)
     const [res, err] = await getPaymentTimelineReq(searchTerm, fetchData)
     setLoading(false)
@@ -406,7 +405,6 @@ const Index = ({
           exporting={exporting}
           exportData={exportData}
           onPageChange={pageChange}
-          // normalizeSearchTerms={normalizeSearchTerms}
         />
       )}
       <Table
