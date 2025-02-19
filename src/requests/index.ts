@@ -2157,19 +2157,6 @@ export const exportDataReq = async ({
   }
 }
 
-const getExportFieldsReq = async ({ task }: { task: TExportDataType }) => {
-  try {
-    const res = await request.post(`/merchant/task/export_column_list`, {
-      task
-    })
-    handleStatusCode(res.data.code)
-    return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-
 export const getExportTmplReq = async ({
   task,
   page,
@@ -2190,34 +2177,6 @@ export const getExportTmplReq = async ({
     return [null, e]
   }
 }
-
-/*
-export const getExportFieldsWithMore = async (
-  task: TExportDataType,
-  refreshCb?: () => void
-) => {
-  const session = useSessionStore.getState()
-  const [[exportTmplRes, errExportTmpl], [exportFieldsRes, errExportFields]] =
-    await Promise.all([
-      getExportTmplReq({ task, page: 0, count: 150 }),
-      getExportFieldsReq({ task })
-    ])
-  const err = errExportTmpl || errExportFields
-  if (null != err) {
-    if (err instanceof ExpiredError) {
-      session.setSession({
-        expired: true,
-        refreshCallbacks: update(session.refreshCallbacks, {
-          $push: [refreshCb]
-        }),
-        refresh: refreshCb ?? null
-      })
-    }
-    return [null, err]
-  }
-  return [{ exportTmplRes, exportFieldsRes }, null]
-}
-  */
 
 // 'creating new' and 'editing existing' share almost the same parameter, use templateId == null to check
 export const saveExportTmplReq = async ({
