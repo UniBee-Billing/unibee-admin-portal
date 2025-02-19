@@ -2082,7 +2082,7 @@ export const getActivityLogsReq = async (
 ) => {
   let term = ''
   for (const [key, value] of Object.entries(searchTerm)) {
-    term += `${key}=${value}&`
+    term += `${key}=${encodeURIComponent(value)}&`
   }
   term = term.substring(0, term.length - 1)
   try {
