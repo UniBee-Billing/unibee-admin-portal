@@ -7,8 +7,8 @@ import {
   CreditType,
   DiscountCode,
   ExpiredError,
+  IPlan,
   IProfile,
-  ISubscriptionType,
   PlanStatus,
   PlanType,
   TCreditConfig,
@@ -479,10 +479,7 @@ export const getPlanDetailWithMore = async (
 }
 
 // create a new or save an existing plan
-export const savePlan = async (
-  planDetail: ISubscriptionType['plan'],
-  isNew: boolean
-) => {
+export const savePlan = async (planDetail: Partial<IPlan>, isNew: boolean) => {
   const url = isNew ? '/merchant/plan/new' : `/merchant/plan/edit`
   try {
     const res = await request.post(url, planDetail)
