@@ -165,7 +165,8 @@ export enum PlanStatus {
   EDITING = 1,
   ACTIVE = 2,
   INACTIVE = 3,
-  EXPIRED = 4
+  SOFT_ARCHIVED = 4,
+  HARD_ARCHIVED = 5
 }
 export enum PlanPublishStatus {
   UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans

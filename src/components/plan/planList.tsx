@@ -1,7 +1,9 @@
 import {
   CheckCircleOutlined,
   CopyOutlined,
+  DeleteOutlined,
   EditOutlined,
+  InboxOutlined,
   LoadingOutlined,
   MinusOutlined,
   PlusOutlined,
@@ -9,21 +11,28 @@ import {
 } from '@ant-design/icons'
 import {
   Button,
+  Col,
   message,
+  Modal,
   Pagination,
   Result,
+  Row,
   Space,
   Table,
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-// import currency from 'currency.js'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PLAN_STATUS, PLAN_TYPE } from '../../constants'
 import { formatDate, formatPlanPrice } from '../../helpers'
 import { usePagination } from '../../hooks'
-import { copyPlanReq, getPlanList, TPlanListBody } from '../../requests'
+import {
+  archivePlanReq,
+  copyPlanReq,
+  getPlanList,
+  TPlanListBody
+} from '../../requests'
 import '../../shared.css'
 import {
   IPlan,
@@ -72,6 +81,10 @@ const Index = ({
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState<IPlan[]>([])
   const [copyingPlan, setCopyingPlan] = useState(false)
+  const [archiveModalOpen, setArchiveModalOpen] = useState<undefined | IPlan>(
+    undefined
+  ) // undefined: modal is closed, otherwise: modal is open with this plan
+  const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
   const [filters, setFilters] = useState<TFilters>({
     type: null,
     status: null
@@ -99,8 +112,6 @@ const Index = ({
 
   const fetchPlan = async () => {
     const body: TPlanListBody = {
-      // type: undefined, // get main plan and addon
-      // status: undefined, // active, inactive, expired, editing, all of them
       ...filters,
       productIds: [productId],
       page: page,
@@ -267,6 +278,17 @@ const Index = ({
               icon={<CopyOutlined />}
             />
           </Tooltip>
+          <Tooltip title="Archive">
+            <Button
+              style={{ border: 'unset' }}
+              disabled={
+                record.status == PlanStatus.SOFT_ARCHIVED ||
+                record.status == PlanStatus.HARD_ARCHIVED
+              }
+              onClick={() => toggleArchiveModal(record)}
+              icon={<DeleteOutlined />}
+            />
+          </Tooltip>
         </Space>
       )
     }
@@ -298,6 +320,13 @@ const Index = ({
 
   return (
     <>
+      {archiveModalOpen != null && (
+        <ArchiveModal
+          plan={archiveModalOpen!}
+          closeModal={() => toggleArchiveModal()}
+          refreshCb={fetchPlan}
+        />
+      )}
       {!isProductValid ? (
         <div className="flex justify-center">
           <Result
@@ -355,3 +384,135 @@ const Index = ({
 }
 
 export default Index
+
+const ArchiveOptions = [
+  {
+    type: PlanStatus.SOFT_ARCHIVED as const,
+    icon: <InboxOutlined style={{ fontSize: '48px', color: '#0591FF' }} />,
+    label: 'Soft Archive',
+    description:
+      'Unavailable to new users; upgrades blocked; existing users unaffected.'
+  },
+  {
+    type: PlanStatus.HARD_ARCHIVED as const,
+    icon: <DeleteOutlined style={{ fontSize: '48px', color: '#007AFF' }} />,
+    label: 'Hard Archive',
+    description:
+      'Unavailable to new users; no upgrades or renewals; existing subscriptions end after the current billing cycle.  '
+  }
+]
+
+const ArchiveOption = ({
+  selectedOption,
+  setSelectedOption,
+  disabled
+}: {
+  selectedOption: PlanStatus.SOFT_ARCHIVED | PlanStatus.HARD_ARCHIVED
+  setSelectedOption: (
+    option: PlanStatus.SOFT_ARCHIVED | PlanStatus.HARD_ARCHIVED
+  ) => void
+  disabled: boolean
+}) => {
+  return (
+    <div className={`my-5 flex h-full justify-between gap-3`}>
+      {ArchiveOptions.map((option) => (
+        <div
+          key={option.label}
+          onClick={() => {
+            if (!disabled) {
+              setSelectedOption(option.type)
+            }
+          }}
+          className={`border-1 flex h-56 w-64 shrink-0 grow-0 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} flex-col items-center justify-center rounded-md border-solid p-4 transition-all duration-300 ${selectedOption == option.type ? 'border-[#007AFF] bg-[#0591FF1A]' : 'border-[#D9D9D9] bg-[#FAFAFA]'}`}
+        >
+          <div className="h-2/6 flex-shrink-0 flex-grow-0">{option.icon}</div>
+          <div
+            className={`h-1/6 flex-shrink-0 flex-grow-0 ${selectedOption == option.type ? 'text-[#007AFF]' : 'text-[#000000E0]'}`}
+          >
+            {option.label}
+          </div>
+          <div className="h-3/6 flex-shrink-0 flex-grow-0 text-center text-[#00000073]">
+            {option.description}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const ArchiveModal = ({
+  plan,
+  closeModal,
+  refreshCb
+}: {
+  plan: IPlan
+  closeModal: () => void
+  refreshCb: () => void
+}) => {
+  const [loading, setLoading] = useState(false)
+  const [selectedOption, setSelectedOption] = useState<
+    PlanStatus.SOFT_ARCHIVED | PlanStatus.HARD_ARCHIVED
+  >(PlanStatus.SOFT_ARCHIVED)
+  const onSubmit = async () => {
+    setLoading(true)
+    const [_, err] = await archivePlanReq(plan.id, selectedOption)
+    setLoading(false)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+    message.success('Plan archived')
+    refreshCb()
+    closeModal()
+  }
+  return (
+    <Modal
+      open={true}
+      title="Archive options"
+      width={580}
+      onCancel={closeModal}
+      footer={[
+        <Button key="cancel" onClick={closeModal} disabled={loading}>
+          Cancel
+        </Button>,
+        <Button
+          key="confirm"
+          type="primary"
+          onClick={onSubmit}
+          loading={loading}
+          disabled={loading}
+        >
+          Confirm
+        </Button>
+      ]}
+    >
+      <Row className="mt-4 h-6">
+        <Col span={6} className="text-gray-500">
+          Plan Name
+        </Col>
+        <Col span={18}>
+          <LongTextPopover text={plan.planName} />
+        </Col>
+      </Row>
+      <Row className="h-6">
+        <Col span={6} className="text-gray-500">
+          Plan Description
+        </Col>
+        <Col span={18}>
+          <LongTextPopover text={plan.description} />
+        </Col>
+      </Row>
+      <Row className="h-6">
+        <Col span={6} className="text-gray-500">
+          Plan Price
+        </Col>
+        <Col span={18}>{formatPlanPrice(plan)}</Col>
+      </Row>
+      <ArchiveOption
+        selectedOption={selectedOption}
+        disabled={loading}
+        setSelectedOption={setSelectedOption}
+      />
+    </Modal>
+  )
+}

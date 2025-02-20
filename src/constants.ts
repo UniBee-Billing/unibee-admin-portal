@@ -27,7 +27,8 @@ export const PLAN_STATUS: Record<PlanStatus, { label: string; color: string }> =
     [PlanStatus.EDITING]: { label: 'editing', color: 'blue' },
     [PlanStatus.ACTIVE]: { label: 'active', color: '#87d068' },
     [PlanStatus.INACTIVE]: { label: 'inactive', color: 'purple' },
-    [PlanStatus.EXPIRED]: { label: 'expired', color: 'red' }
+    [PlanStatus.SOFT_ARCHIVED]: { label: 'soft archived', color: 'gray' },
+    [PlanStatus.HARD_ARCHIVED]: { label: 'hard archived', color: 'gray' }
   }
 
 export const SUBSCRIPTION_STATUS: Record<
