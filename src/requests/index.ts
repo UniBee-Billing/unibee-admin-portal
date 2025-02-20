@@ -512,6 +512,23 @@ export const deletePlanReq = async (planId: number) => {
   }
 }
 
+export const archivePlanReq = async (
+  planId: number,
+  archiveOption: PlanStatus.SOFT_ARCHIVED | PlanStatus.HARD_ARCHIVED
+) => {
+  try {
+    const res = await request.post(`/merchant/plan/archive`, {
+      planId,
+      hardArchive: archiveOption === PlanStatus.HARD_ARCHIVED
+    })
+    handleStatusCode(res.data.code)
+    return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 export const togglePublishReq = async ({
   planId,
   publishAction
