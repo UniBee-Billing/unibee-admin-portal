@@ -9,6 +9,7 @@ import {
   ExpiredError,
   IPlan,
   IProfile,
+  PlanPublishStatus,
   PlanStatus,
   PlanType,
   TCreditConfig,
@@ -392,10 +393,10 @@ export const saveExRateKeyReq = async (exchangeRateApiKey: string) => {
 
 // ---------------
 export type TPlanListBody = {
-  type?: number[] | null
-  status?: number[] | null
+  type?: PlanType[] | null
+  status?: PlanStatus[] | null
   productIds?: number[] | null
-  publishStatus?: number // 1-UnPublished，2-Published
+  publishStatus?: PlanPublishStatus // UnPublished, Published
   sortField?: 'plan_name' | 'gmt_create' | 'gmt_modify'
   sortType?: 'asc' | 'desc'
 } & PagedReq
