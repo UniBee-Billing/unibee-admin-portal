@@ -79,7 +79,7 @@ const Index = ({
         expired: false,
         refreshCallbacks: []
       })
-      message.success('Login succeeded')
+      message.success('Login successful')
     } else {
       sessionStore.setSession({
         expired: false,

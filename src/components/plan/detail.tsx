@@ -163,6 +163,8 @@ const Index = () => {
   let formDisabled =
     (plan?.status == PlanStatus.ACTIVE &&
       plan.publishStatus == PlanPublishStatus.PUBLISHED) ||
+    plan?.status == PlanStatus.HARD_ARCHIVED ||
+    plan?.status == PlanStatus.SOFT_ARCHIVED ||
     productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
   const selectAfter = (
