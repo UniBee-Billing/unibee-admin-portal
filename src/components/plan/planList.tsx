@@ -50,8 +50,8 @@ const PLAN_TYPE_FILTER = Object.entries(PLAN_TYPE)
   .sort((a, b) => (a.value < b.value ? -1 : 1))
 
 type TFilters = {
-  type: number[] | null // plan type filter
-  status: number[] | null // plan status filter
+  type: PlanType[] | null
+  status: PlanStatus[] | null
 }
 
 type TSort = {

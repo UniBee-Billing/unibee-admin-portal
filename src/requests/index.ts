@@ -7,8 +7,9 @@ import {
   CreditType,
   DiscountCode,
   ExpiredError,
+  IPlan,
   IProfile,
-  ISubscriptionType,
+  PlanPublishStatus,
   PlanStatus,
   PlanType,
   TCreditConfig,
@@ -392,10 +393,10 @@ export const saveExRateKeyReq = async (exchangeRateApiKey: string) => {
 
 // ---------------
 export type TPlanListBody = {
-  type?: number[] | null
-  status?: number[] | null
+  type?: PlanType[] | null
+  status?: PlanStatus[] | null
   productIds?: number[] | null
-  publishStatus?: number // 1-UnPublished，2-Published
+  publishStatus?: PlanPublishStatus // UnPublished, Published
   sortField?: 'plan_name' | 'gmt_create' | 'gmt_modify'
   sortType?: 'asc' | 'desc'
 } & PagedReq
@@ -479,10 +480,7 @@ export const getPlanDetailWithMore = async (
 }
 
 // create a new or save an existing plan
-export const savePlan = async (
-  planDetail: ISubscriptionType['plan'],
-  isNew: boolean
-) => {
+export const savePlan = async (planDetail: Partial<IPlan>, isNew: boolean) => {
   const url = isNew ? '/merchant/plan/new' : `/merchant/plan/edit`
   try {
     const res = await request.post(url, planDetail)

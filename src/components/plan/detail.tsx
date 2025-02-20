@@ -569,7 +569,9 @@ const Index = () => {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [planId]) // when creating new plan, url is: /plan/new?productId=0, planId is null,
+  // when editing plan, url is: /plan/270?productId=0, planId is 270, after creating, url would become /plan/270?productId=0
+  // I need to rerun fetchData to get the newly created plan detail, otherwise, planId is missing in form
 
   return (
     <div>

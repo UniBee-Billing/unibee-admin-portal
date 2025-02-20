@@ -1,19 +1,17 @@
 import { create } from 'zustand'
 // import { immer } from "zustand/middleware/immer";
-import { persist } from 'zustand/middleware'
+// import { persist } from 'zustand/middleware'
 import {
   CreditType,
   IAppConfig,
   IMerchantMemberProfile,
   IProduct,
-  // IProfile,
   TCreditConfig,
   TGateway,
   TIntegrationKeys,
   TMerchantInfo
 } from '../shared.types'
 // import { createStore } from "zustand";
-// import update from 'immutability-helper'
 
 // logged-in admin profile
 const INITIAL_MERCHANT_MEMBER_PROFILE: IMerchantMemberProfile = {
@@ -76,17 +74,12 @@ interface MerchantInfoSlice extends TMerchantInfo {
   reset: () => void
 }
 
-export const useMerchantInfoStore = create<MerchantInfoSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_INFO,
-      getMerchantInfo: () => get(),
-      setMerchantInfo: (p) => set({ ...p }),
-      reset: () => set(INITIAL_INFO)
-    }),
-    { name: 'merchantInfo' }
-  )
-)
+export const useMerchantInfoStore = create<MerchantInfoSlice>()((set, get) => ({
+  ...INITIAL_INFO,
+  getMerchantInfo: () => get(),
+  setMerchantInfo: (p) => set({ ...p }),
+  reset: () => set(INITIAL_INFO)
+}))
 
 // --------------------------------
 const INITIAL_APP_VALUE: IAppConfig = {
@@ -116,26 +109,21 @@ interface AppConfigSlice extends IAppConfig {
   reset: () => void
 }
 
-export const useAppConfigStore = create<AppConfigSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_APP_VALUE,
-      getAppConfig: () => get(),
-      setAppConfig: (a) => set({ ...a }),
-      setGateway: (g: TGateway[]) => {
-        set({ ...get(), gateway: g })
-      },
-      setIntegrationKeys: (k: TIntegrationKeys) => {
-        set({ ...get(), integrationKeys: k })
-      },
-      setTaskListOpen: (isOpen) => {
-        set({ ...get(), taskListOpen: isOpen })
-      },
-      reset: () => set(INITIAL_APP_VALUE)
-    }),
-    { name: 'appConfig' }
-  )
-)
+export const useAppConfigStore = create<AppConfigSlice>()((set, get) => ({
+  ...INITIAL_APP_VALUE,
+  getAppConfig: () => get(),
+  setAppConfig: (a) => set({ ...a }),
+  setGateway: (g: TGateway[]) => {
+    set({ ...get(), gateway: g })
+  },
+  setIntegrationKeys: (k: TIntegrationKeys) => {
+    set({ ...get(), integrationKeys: k })
+  },
+  setTaskListOpen: (isOpen) => {
+    set({ ...get(), taskListOpen: isOpen })
+  },
+  reset: () => set(INITIAL_APP_VALUE)
+}))
 
 // ---------------
 interface ISession {
@@ -180,15 +168,12 @@ interface PermissionStoreSlice extends IPermission {
   reset: () => void
 }
 export const usePermissionStore = create<PermissionStoreSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_PERM,
-      getPerm: () => get(),
-      setPerm: (a) => set({ ...a }),
-      reset: () => set(INITIAL_PERM)
-    }),
-    { name: 'permission' }
-  )
+  (set, get) => ({
+    ...INITIAL_PERM,
+    getPerm: () => get(),
+    setPerm: (a) => set({ ...a }),
+    reset: () => set(INITIAL_PERM)
+  })
 )
 
 const INITIAL_CREDIT_CONFIG: TCreditConfig = {
