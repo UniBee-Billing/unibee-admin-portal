@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import {
   AccountType,
@@ -19,17 +18,12 @@ import {
   TMerchantInfo,
   TRole
 } from '../shared.types'
-import {
-  useAppConfigStore,
-  useMerchantInfoStore,
-  useSessionStore
-} from '../stores'
+import { useMerchantInfoStore, useSessionStore } from '../stores'
 import { serializeSearchParams } from '../utils/query'
 import { analyticsRequest, request } from './client'
 
 const API_URL = import.meta.env.VITE_API_URL
 const session = useSessionStore.getState()
-const appConfig = useAppConfigStore.getState()
 
 type PagedReq = {
   count?: number
@@ -1634,23 +1628,12 @@ export const revokeInvoiceReq = async (invoiceId: string) => {
   }
 }
 
-// TODO: let caller do the amt convert.
-export const refundReq = async (
-  body: {
-    invoiceId: string
-    refundAmount: number
-    reason: string
-  },
-  currency: Currency
-) => {
+export const refundReq = async (body: {
+  invoiceId: string
+  refundAmount: number
+  reason: string
+}) => {
   try {
-    const c = appConfig.currency[currency]
-    if (c == undefined) {
-      throw new Error(`Currency ${currency} not found`)
-    }
-    body.refundAmount *= c.Scale
-    body.refundAmount = Math.round(body.refundAmount)
-
     const res = await request.post(`/merchant/invoice/refund`, body)
     handleStatusCode(res.data.code)
     return [null, null]

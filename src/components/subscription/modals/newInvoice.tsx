@@ -256,14 +256,11 @@ const Index = ({
     }
 
     setLoading(true)
-    const [_, err] = await refundReq(
-      {
-        invoiceId: detail?.invoiceId,
-        refundAmount: amt,
-        reason: refundReason
-      },
-      currency as Currency
-    )
+    const [_, err] = await refundReq({
+      invoiceId: detail?.invoiceId,
+      refundAmount: amt * appConfig.currency[currency as Currency]!.Scale,
+      reason: refundReason
+    })
     setLoading(false)
     if (null != err) {
       message.error(err.message)
