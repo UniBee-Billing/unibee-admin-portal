@@ -209,7 +209,7 @@ const OTPForm = ({
         expired: false,
         refreshCallbacks: []
       })
-      message.success('Login succeeded')
+      message.success('Login successful')
     } else {
       sessionStore.setSession({ expired: false, refreshCallbacks: [] })
       navigate(defaultPage)

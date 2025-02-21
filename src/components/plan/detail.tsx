@@ -21,7 +21,12 @@ import {
 import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams
+} from 'react-router-dom'
 import {
   currencyDecimalValidate,
   isValidMap,
@@ -111,6 +116,17 @@ const { Option } = Select
 
 const Index = () => {
   const appConfig = useAppConfigStore()
+  const location = useLocation()
+  // location.state from planList page is always null, no idea why
+  const goBackToPlanList = () => {
+    if (location.state?.from) {
+      navigate(location.state.from)
+    } else {
+      navigate(
+        `/plan/list?productId=${productDetail != null ? productDetail.id : 0}`
+      )
+    }
+  }
   const params = useParams()
   const planId = params.planId // http://localhost:5174/plan/270?productId=0, planId is 270
   const isNew = planId == null
@@ -163,6 +179,8 @@ const Index = () => {
   let formDisabled =
     (plan?.status == PlanStatus.ACTIVE &&
       plan.publishStatus == PlanPublishStatus.PUBLISHED) ||
+    plan?.status == PlanStatus.HARD_ARCHIVED ||
+    plan?.status == PlanStatus.SOFT_ARCHIVED ||
     productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
   const selectAfter = (
@@ -1127,11 +1145,7 @@ const Index = () => {
               )}
               <div className="flex justify-center gap-5">
                 <Button
-                  onClick={() =>
-                    navigate(
-                      `/plan/list?productId=${productDetail != null ? productDetail.id : 0}`
-                    )
-                  }
+                  onClick={goBackToPlanList}
                   disabled={loading || activating}
                 >
                   Go Back
