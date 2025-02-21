@@ -74,6 +74,7 @@
     "unitpay",
     "payssion",
     "Submitable",
-    "lightgray"
+    "lightgray",
+    "sortorder"
   ]
 }
