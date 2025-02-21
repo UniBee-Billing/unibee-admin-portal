@@ -918,7 +918,7 @@ const SubscriptionInfoSection = ({
           </div>
         )}
 
-      {subInfo && subInfo.status == 2 && (
+      {subInfo && subInfo.status == SubscriptionStatus.ACTIVE && (
         <div className="mx-0 my-6 flex items-center justify-start gap-9">
           <Button onClick={toggleChangPlanModal}>Change Plan</Button>
           {subInfo.cancelAtPeriodEnd == 0 ? (

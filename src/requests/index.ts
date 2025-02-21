@@ -652,7 +652,11 @@ export const getSubDetailWithMore = async (
       getSubDetail(subscriptionId),
       getPlanList({
         type: [PlanType.MAIN],
-        status: [PlanStatus.ACTIVE],
+        status: [
+          PlanStatus.ACTIVE,
+          PlanStatus.SOFT_ARCHIVED, // users might have subscribed to a plan, then this plan was archived.
+          PlanStatus.HARD_ARCHIVED // on ChangePlan/AssignSub Modal, I still need to get these archived plans.
+        ],
         page: 0,
         count: 150
       })
