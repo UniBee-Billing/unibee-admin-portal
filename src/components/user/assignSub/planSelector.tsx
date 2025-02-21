@@ -35,7 +35,11 @@ export const PlanSelector = ({
       {
         type: [PlanType.MAIN],
         productIds: [productId],
-        status: [PlanStatus.ACTIVE],
+        status: [
+          PlanStatus.ACTIVE,
+          PlanStatus.HARD_ARCHIVED,
+          PlanStatus.SOFT_ARCHIVED
+        ],
         page: 0,
         count: 200
       },
@@ -79,6 +83,9 @@ export const PlanSelector = ({
 
   const optionMapper = (p: IPlan) => ({
     value: p?.id,
+    disabled:
+      p.status == PlanStatus.HARD_ARCHIVED ||
+      p.status == PlanStatus.SOFT_ARCHIVED,
     label: (
       <div className="flex items-center" data-plan-name={p.planName}>
         <div>
@@ -92,6 +99,14 @@ export const PlanSelector = ({
             <Tag color="orange">Current Plan</Tag>
           </div>
         )}
+        {(p.status == PlanStatus.HARD_ARCHIVED ||
+          p.status == PlanStatus.SOFT_ARCHIVED) && (
+          <div className="ml-2">
+            <Tag color="gray">
+              {p.status == PlanStatus.HARD_ARCHIVED ? 'Hard ARV' : 'Soft ARV'}
+            </Tag>
+          </div>
+        )}
         {p.publishStatus == PlanPublishStatus.UNPUBLISHED && (
           <div className="absolute flex h-4 w-4" style={{ right: '14px' }}>
             <HiddenIcon />
@@ -103,7 +118,7 @@ export const PlanSelector = ({
 
   const options = useMemo(() => {
     const published = innerPlans
-      .filter((p) => p.publishStatus != 1)
+      .filter((p) => p.publishStatus != PlanPublishStatus.UNPUBLISHED)
       .map(optionMapper)
     const divider = {
       value: -1,

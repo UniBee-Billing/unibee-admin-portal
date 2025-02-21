@@ -80,7 +80,7 @@ const initializeFilters = (searchParams: URLSearchParams) => {
   }
 }
 
-// todo: make this generic for all tables
+// todo: make this generic for all tables, and do validation check
 const initializeSort = (searchParams: URLSearchParams): Sorts => {
   const sortby = searchParams.get('sortby')
   const sortorder = searchParams.get('sortorder')
@@ -452,7 +452,7 @@ const ArchiveOptions = [
     icon: <DeleteOutlined style={{ fontSize: '48px', color: '#007AFF' }} />,
     label: 'Hard Archive',
     description:
-      'Unavailable to new users; no upgrades or renewals; existing subscriptions end after the current billing cycle.  '
+      'Unavailable to new users; no upgrades or renewals; existing subscriptions end after the current billing cycle.'
   }
 ]
 
