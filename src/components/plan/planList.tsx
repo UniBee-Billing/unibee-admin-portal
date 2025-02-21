@@ -22,8 +22,9 @@ import {
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
+import { SortOrder } from 'antd/es/table/interface'
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { PLAN_STATUS, PLAN_TYPE } from '../../constants'
 import { formatDate, formatPlanPrice } from '../../helpers'
 import { usePagination } from '../../hooks'
@@ -42,6 +43,10 @@ import {
 } from '../../shared.types'
 import LongTextPopover from '../ui/longTextPopover'
 import { PlanStatusTag } from '../ui/statusTag'
+
+type OnChange = NonNullable<TableProps<IPlan>['onChange']>
+type GetSingle<T> = T extends (infer U)[] ? U : never
+type Sorts = GetSingle<Parameters<OnChange>[2]>
 
 const PAGE_SIZE = 10
 const PLAN_STATUS_FILTER = Object.entries(PLAN_STATUS)
@@ -63,11 +68,33 @@ type TFilters = {
   status: PlanStatus[] | null
 }
 
-type TSort = {
-  sortField: 'planName' | 'createTime'
-  sortType: 'desc' | 'asc'
+// todo: make this generic for all tables
+const initializeFilters = (searchParams: URLSearchParams) => {
+  // todo: do validation check, status could be parsed as array or string, and these values are not arbitrary(had to be e.g., one of the enum, like PlanStatus)
+  const type = searchParams.get('type')
+  const status = searchParams.get('status')
+
+  return {
+    type: type ? type.split('-').map(Number) : null,
+    status: status ? status.split('-').map(Number) : null
+  }
 }
 
+// todo: make this generic for all tables
+const initializeSort = (searchParams: URLSearchParams): Sorts => {
+  const sortby = searchParams.get('sortby')
+  const sortorder = searchParams.get('sortorder')
+  const sortFilter: Sorts = {}
+  if (sortby != null && (sortby == 'planName' || sortby == 'createTime')) {
+    sortFilter.columnKey = sortby
+    sortFilter.field = sortby
+    sortFilter.order =
+      sortorder === 'ascend' || sortorder === 'descend'
+        ? (sortorder as SortOrder)
+        : undefined
+  }
+  return sortFilter
+}
 const Index = ({
   productId,
   isProductValid
@@ -75,6 +102,8 @@ const Index = ({
   productId: number
   isProductValid: boolean
 }) => {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const navigate = useNavigate()
   const { page, onPageChange } = usePagination()
   const [total, setTotal] = useState(0)
@@ -85,14 +114,23 @@ const Index = ({
     undefined
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
-  const [filters, setFilters] = useState<TFilters>({
-    type: null,
-    status: null
-  })
-  const [sortFilter, setSortFilter] = useState<TSort | null>(null)
 
+  const [filters, setFilters] = useState<TFilters>(
+    initializeFilters(searchParams)
+  )
+
+  const [sortFilter, setSortFilter] = useState<Sorts>(
+    initializeSort(searchParams)
+  )
+
+  // TODO: why state obj is null in planDetail page?
   const goToDetail = (planId: number) =>
-    navigate(`/plan/${planId}?productId=${productId}`)
+    navigate(`/plan/${planId}?productId=${productId}`, {
+      state: {
+        from: location.pathname + location.search
+      }
+    })
+
   const copyPlan = async (planId: number) => {
     setCopyingPlan(true)
     const [newPlan, err] = await copyPlanReq(planId)
@@ -117,10 +155,10 @@ const Index = ({
       page: page,
       count: PAGE_SIZE
     }
-    if (sortFilter != null) {
+    if (sortFilter.columnKey != null) {
       body.sortField =
-        sortFilter.sortField == 'planName' ? 'plan_name' : 'gmt_create'
-      body.sortType = sortFilter.sortType
+        sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
+      body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
     }
 
     setLoading(true)
@@ -154,6 +192,7 @@ const Index = ({
       key: 'planName',
       width: 120,
       sorter: (a, b) => a.planName.localeCompare(b.planName),
+      sortOrder: sortFilter?.columnKey == 'planName' ? sortFilter.order : null,
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
@@ -184,14 +223,16 @@ const Index = ({
       dataIndex: 'type',
       key: 'type',
       render: (type) => PLAN_TYPE[type as PlanType].label,
-      filters: PLAN_TYPE_FILTER
+      filters: PLAN_TYPE_FILTER,
+      filteredValue: filters.type
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (s) => PlanStatusTag(s as PlanStatus),
-      filters: PLAN_STATUS_FILTER
+      filters: PLAN_STATUS_FILTER,
+      filteredValue: filters.status
     },
     {
       title: 'Published',
@@ -230,8 +271,10 @@ const Index = ({
     {
       title: 'Creation Time',
       dataIndex: 'createTime',
+      key: 'createTime',
       render: (t) => (t == 0 ? '' : formatDate(t)),
-      sorter: (a, b) => a.createTime - b.createTime
+      sorter: (a, b) => a.createTime - b.createTime,
+      sortOrder: sortFilter?.columnKey == 'createTime' ? sortFilter.order : null
     },
     {
       title: (
@@ -296,20 +339,31 @@ const Index = ({
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
     // onPageChange(1, PAGE_SIZE)
-    // console.log('filters', filters)
     setFilters(filters as TFilters)
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    filters.type == null
+      ? searchParams.delete('type')
+      : searchParams.set('type', filters.type.join('-'))
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    filters.status == null
+      ? searchParams.delete('status')
+      : searchParams.set('status', filters.status.join('-'))
+
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
     }
-    let sortFilter: TSort | null = null
+
+    setSortFilter(sorter as Sorts)
     if (sorter.field != undefined) {
-      sortFilter = {
-        sortField: sorter.field == 'planName' ? 'planName' : 'createTime',
-        sortType: sorter.order == 'descend' ? 'desc' : 'asc'
-      }
+      searchParams.set('sortby', sorter.field as string)
+      searchParams.set('sortorder', sorter.order as string)
+    } else {
+      searchParams.delete('sortby')
+      searchParams.delete('sortorder')
     }
 
-    setSortFilter(sortFilter)
+    setSearchParams(searchParams)
   }
 
   useEffect(() => {
