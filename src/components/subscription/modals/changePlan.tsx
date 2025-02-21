@@ -12,6 +12,7 @@ import {
   IPreview,
   IProfile,
   ISubscriptionType,
+  PlanStatus,
   TPromoAccount
 } from '../../../shared.types'
 import { useAppConfigStore } from '../../../stores'
@@ -225,6 +226,12 @@ const ChangePlan = ({
           selectedPlanId={selectedPlanId}
           productId={subInfo!.productId}
           onPlanSelected={(p: IPlan) => setSelectedPlan(p.id)}
+          filterPredicate={
+            (p) =>
+              (p?.status != PlanStatus.SOFT_ARCHIVED &&
+                p?.status != PlanStatus.HARD_ARCHIVED) ||
+              p?.id == subInfo?.plan?.id // it's possible users have subscribed to an archived plan. Selector need to show this plan.
+          }
         />
       </div>
 
