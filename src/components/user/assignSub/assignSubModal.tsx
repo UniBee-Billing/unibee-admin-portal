@@ -30,6 +30,7 @@ import {
   DiscountType,
   IPlan,
   IProfile,
+  PlanStatus,
   TPromoAccount,
   WithDoubleConfirmFields
 } from '../../../shared.types'
@@ -487,6 +488,10 @@ export const AssignSubscriptionModal = ({
               productId={productId}
               selectedPlanId={
                 selectedPlan == undefined ? null : selectedPlan.id
+              }
+              filterPredicate={(p) =>
+                p?.status != PlanStatus.SOFT_ARCHIVED &&
+                p?.status != PlanStatus.HARD_ARCHIVED
               }
             />
 
