@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 // import { immer } from "zustand/middleware/immer";
-// import { persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import {
   CreditType,
   IAppConfig,
@@ -150,6 +150,37 @@ export const useSessionStore = create<SessionStoreSlice>()((set, get) => ({
     set({ ...get(), refreshCallbacks: [] })
   }
 }))
+
+// --------------------------------
+interface UIConfig {
+  sidebarCollapsed: boolean
+}
+
+const INITIAL_UI_CONFIG: UIConfig = {
+  sidebarCollapsed: false
+}
+
+interface UIConfigSlice extends UIConfig {
+  getUIConfig: () => UIConfig
+  setUIConfig: (u: UIConfig) => void
+  toggleSidebar: () => void
+}
+
+export const uiConfigStore = create<UIConfigSlice>()(
+  persist(
+    (set, get) => ({
+      ...INITIAL_UI_CONFIG,
+      getUIConfig: () => get(),
+      setUIConfig: (a) => set({ ...a }),
+      toggleSidebar: () => {
+        set({ ...get(), sidebarCollapsed: !get().sidebarCollapsed })
+      }
+    }),
+    {
+      name: 'ui-config'
+    }
+  )
+)
 
 // --------------------------------
 interface IPermission {
