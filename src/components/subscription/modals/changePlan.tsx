@@ -1,10 +1,5 @@
-import { Button, Divider, Input, InputNumber, message, Modal } from 'antd'
-import { useEffect, useState } from 'react'
-// import HiddenIcon from '../../../assets/hidden.svg?react'
-// import { formatPlanPrice } from '../../../helpers'
-import { Currency } from 'dinero.js'
-import { showAmount } from '../../../helpers'
-import { applyDiscountPreviewReq } from '../../../requests'
+import { showAmount } from '@/helpers'
+import { applyDiscountPreviewReq } from '@/requests'
 import {
   DiscountCode,
   DiscountType,
@@ -14,8 +9,11 @@ import {
   ISubscriptionType,
   PlanStatus,
   TPromoAccount
-} from '../../../shared.types'
-import { useAppConfigStore } from '../../../stores'
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
+import { Button, Divider, Input, InputNumber, message, Modal } from 'antd'
+import { Currency } from 'dinero.js'
+import { useEffect, useState } from 'react'
 import { PlanSelector } from '../../user/assignSub/planSelector'
 import Plan from '../plan'
 

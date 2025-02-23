@@ -1,13 +1,13 @@
-import { Button, Form, Input, InputNumber, Modal, Select, message } from 'antd'
-import { Currency } from 'dinero.js'
-import { useState } from 'react'
-import { currencyDecimalValidate } from '../../../helpers'
+import { currencyDecimalValidate } from '@/helpers'
 import {
   createWireTransferAccountReq,
   updateWireTransferAccountReq
-} from '../../../requests'
-import { TGateway } from '../../../shared.types'
-import { useAppConfigStore } from '../../../stores'
+} from '@/requests/index'
+import { TGateway } from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
+import { Button, Form, Input, InputNumber, Modal, Select, message } from 'antd'
+import { Currency } from 'dinero.js'
+import { useState } from 'react'
 
 export const NEW_WIRE_TRANSFER: TGateway = {
   IsSetupFinished: false,

@@ -1,8 +1,8 @@
+import { showAmount } from '@/helpers'
+import { IPlan } from '@/shared.types'
 import { Checkbox, Divider, Input } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import React, { useEffect, useState } from 'react'
-import { showAmount } from '../../helpers'
-import { IPlan } from '../../shared.types'
 import LongTextPopover from '../ui/longTextPopover'
 
 const TIME_UNITS = [

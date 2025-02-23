@@ -2,14 +2,14 @@ import { Button } from 'antd'
 
 import { Form, Input } from 'antd'
 
+import CopyToClipboard from '@/components/ui/copyToClipboard'
+import { useCopyContent } from '@/hooks/index'
+import { saveWebhookKeyReq } from '@/requests/index'
+import { TGateway } from '@/shared.types'
 import { message } from 'antd'
 import { useForm } from 'antd/es/form/Form'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
-import { useCopyContent } from '../../../hooks'
-import { saveWebhookKeyReq } from '../../../requests'
-import { TGateway } from '../../../shared.types'
-import CopyToClipboard from '../../ui/copyToClipboard'
 
 const WebHookSetup = ({
   gatewayConfig,

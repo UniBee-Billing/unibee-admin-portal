@@ -1,3 +1,6 @@
+import CopyToClipboard from '@/components/ui/copyToClipboard'
+import { METRICS_AGGREGATE_TYPE } from '@/constants'
+import { getMetricDetailReq, saveMetricsReq } from '@/requests/index'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
@@ -15,9 +18,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
-import { METRICS_AGGREGATE_TYPE } from '../../constants'
-import { getMetricDetailReq, saveMetricsReq } from '../../requests'
-import CopyToClipboard from '../ui/copyToClipboard'
+
 const { TextArea } = Input
 
 SyntaxHighlighter.registerLanguage('bash', bash)

@@ -1,3 +1,8 @@
+import ExchangeIcon from '@/assets/exchange.svg?react'
+import { formatBytes, randomString, uploadFile } from '@/helpers'
+import { saveGatewayConfigReq, TGatewayConfigBody } from '@/requests'
+import { TGateway, TGatewayExRate } from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import Icon, { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   DndContext,
@@ -28,11 +33,6 @@ import {
 } from 'antd'
 import update from 'immutability-helper'
 import { useEffect, useState } from 'react'
-import ExchangeIcon from '../../../assets/exchange.svg?react'
-import { formatBytes, randomString, uploadFile } from '../../../helpers'
-import { saveGatewayConfigReq, TGatewayConfigBody } from '../../../requests'
-import { TGateway, TGatewayExRate } from '../../../shared.types'
-import { useAppConfigStore } from '../../../stores'
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 

@@ -1,7 +1,7 @@
+import { useFetch } from '@/hooks'
+import { request } from '@/requests/client'
 import { List, message } from 'antd'
 import { PropsWithChildren } from 'react'
-import { useFetch } from '../../hooks'
-import { request } from '../../requests/client'
 import { Config } from './components'
 
 interface SubscriptionConfig {

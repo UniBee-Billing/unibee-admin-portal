@@ -1,6 +1,6 @@
+import { useCopyContent } from '@/hooks'
 import { message } from 'antd'
 import React from 'react'
-import { useCopyContent } from '../../hooks'
 
 function Index({ content, disabled }: { content: string; disabled?: boolean }) {
   const [copied, setCopied] = React.useState(false)

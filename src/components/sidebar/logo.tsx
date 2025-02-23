@@ -1,5 +1,5 @@
-import { useMerchantInfoStore } from '../../stores'
-import { withEnvBasePath } from '../../utils'
+import { useMerchantInfoStore } from '@/stores'
+import { withEnvBasePath } from '@/utils'
 
 const LOGO_CONTAINER_HEIGHT = 56
 

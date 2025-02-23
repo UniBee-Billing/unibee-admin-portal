@@ -1,9 +1,9 @@
+import { showAmount } from '@/helpers'
+import { updateSubscription } from '@/requests'
+import { Invoice, InvoiceItem, IPreview } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Col, Divider, Empty, message, Modal, Row, Spin } from 'antd'
 import { useEffect, useState } from 'react'
-import { showAmount } from '../../../helpers'
-import { updateSubscription } from '../../../requests'
-import { Invoice, InvoiceItem, IPreview } from '../../../shared.types'
 
 interface Props {
   subscriptionId?: string

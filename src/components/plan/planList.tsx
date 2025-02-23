@@ -1,3 +1,20 @@
+import LongTextPopover from '@/components/ui/longTextPopover'
+import { PlanStatusTag } from '@/components/ui/statusTag'
+import { PLAN_STATUS, PLAN_TYPE } from '@/constants'
+import {
+  formatDate,
+  formatPlanPrice,
+  initializeFilters,
+  initializeSort
+} from '@/helpers/index'
+import { usePagination } from '@/hooks/index'
+import {
+  archivePlanReq,
+  copyPlanReq,
+  getPlanList,
+  TPlanListBody
+} from '@/requests/index'
+import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import {
   CheckCircleOutlined,
   CopyOutlined,
@@ -22,27 +39,9 @@ import {
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import { SortOrder } from 'antd/es/table/interface'
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { PLAN_STATUS, PLAN_TYPE } from '../../constants'
-import { formatDate, formatPlanPrice } from '../../helpers'
-import { usePagination } from '../../hooks'
-import {
-  archivePlanReq,
-  copyPlanReq,
-  getPlanList,
-  TPlanListBody
-} from '../../requests'
 import '../../shared.css'
-import {
-  IPlan,
-  PlanPublishStatus,
-  PlanStatus,
-  PlanType
-} from '../../shared.types'
-import LongTextPopover from '../ui/longTextPopover'
-import { PlanStatusTag } from '../ui/statusTag'
 
 type OnChange = NonNullable<TableProps<IPlan>['onChange']>
 type GetSingle<T> = T extends (infer U)[] ? U : never
@@ -69,6 +68,7 @@ type TFilters = {
 }
 
 // todo: make this generic for all tables
+/*
 const initializeFilters = (searchParams: URLSearchParams) => {
   // todo: do validation check, status could be parsed as array or string, and these values are not arbitrary(had to be e.g., one of the enum, like PlanStatus)
   const type = searchParams.get('type')
@@ -79,8 +79,10 @@ const initializeFilters = (searchParams: URLSearchParams) => {
     status: status ? status.split('-').map(Number) : null
   }
 }
+  */
 
 // todo: make this generic for all tables, and do validation check
+/*
 const initializeSort = (searchParams: URLSearchParams): Sorts => {
   const sortby = searchParams.get('sortby')
   const sortorder = searchParams.get('sortorder')
@@ -95,6 +97,8 @@ const initializeSort = (searchParams: URLSearchParams): Sorts => {
   }
   return sortFilter
 }
+*/
+
 const Index = ({
   productId,
   isProductValid
@@ -115,21 +119,22 @@ const Index = ({
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
 
-  const [filters, setFilters] = useState<TFilters>(
-    initializeFilters(searchParams)
-  )
+  const [filters, setFilters] = useState<TFilters>({
+    ...initializeFilters('type', Number, PlanType),
+    ...initializeFilters('status', Number, PlanStatus)
+  } as TFilters)
 
   const [sortFilter, setSortFilter] = useState<Sorts>(
-    initializeSort(searchParams)
+    initializeSort<IPlan>(['planName', 'createTime']) // pass all the sortable column.key in array
   )
 
-  // TODO: why state obj is null in planDetail page?
-  const goToDetail = (planId: number) =>
+  const goToDetail = (planId: number) => {
     navigate(`/plan/${planId}?productId=${productId}`, {
       state: {
         from: location.pathname + location.search
       }
     })
+  }
 
   const copyPlan = async (planId: number) => {
     setCopyingPlan(true)
@@ -407,12 +412,14 @@ const Index = ({
               return {
                 onClick: (event) => {
                   if (
+                    // table's onRow event will be triggered first, then those action buttons'.
+                    // use this if-check to make action button' handlers have to chance to run.
                     event.target instanceof Element &&
                     event.target.closest('.plan-action-btn-wrapper') != null
                   ) {
                     return
                   }
-                  navigate(`/plan/${record.id}?productId=${productId}`)
+                  goToDetail(record.id)
                 }
               }
             }}

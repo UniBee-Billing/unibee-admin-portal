@@ -8,6 +8,17 @@ import {
   Space
 } from 'antd'
 
+import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
+import { currencyDecimalValidate } from '@/helpers'
+import {
+  DiscountCode,
+  DiscountCodeApplyType,
+  DiscountCodeBillingType,
+  DiscountCodeStatus,
+  DiscountType,
+  IPlan
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import { Form } from 'antd'
 import { Currency } from 'dinero.js'
 import {
@@ -17,17 +28,6 @@ import {
   SetStateAction,
   useMemo
 } from 'react'
-import { currencyDecimalValidate } from '../../../helpers'
-import {
-  DiscountCode,
-  DiscountCodeApplyType,
-  DiscountCodeBillingType,
-  DiscountCodeStatus,
-  DiscountType,
-  IPlan
-} from '../../../shared.types'
-import { useAppConfigStore } from '../../../stores'
-import { getDiscountCodeStatusTagById } from '../../ui/statusTag'
 import { formatQuantity } from '../helpers'
 
 const { RangePicker } = DatePicker

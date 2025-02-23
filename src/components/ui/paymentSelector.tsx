@@ -1,6 +1,6 @@
+import { TGateway } from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import React, { ChangeEventHandler } from 'react'
-import { TGateway } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 
 const Index = ({
   selected,

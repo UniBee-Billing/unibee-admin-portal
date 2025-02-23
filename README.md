@@ -1,11 +1,14 @@
-# Unibee-admin-portal 
+# Unibee-admin-portal
+
 This project is a single-page WEB application which is Front-end of UniBee billing admin management system.
 
-## Prerequisites 
+## Prerequisites
+
 - Nodejs 18+
 
-## Getting started 
-Clone this repository and install the dependencies. 
+## Getting started
+
+Clone this repository and install the dependencies.
 
 ```shell
 # Clone this repository
@@ -17,6 +20,7 @@ yarn
 ```
 
 ### Running the application
+
 Define the following env variables in `.env` file.
 
 ```
@@ -33,6 +37,7 @@ yarn dev
 ```
 
 ### Building the application
+
 To build the application, run the following command:
 
 ```shell
@@ -42,11 +47,17 @@ yarn build
 The build command will generate the static files in the `dist` folder of the project.
 
 ### Building with Docker
+
 The admin portal also supports building the application using Docker, run the following command to build the docker image:
 
 ```shell
 docker build -t <tag> .
 ```
 
+# Development
+
+Use `yarn add <package>` to add a new dependency, don't use `npm install <package>`.
+
 ## License
+
 AGPLv3.

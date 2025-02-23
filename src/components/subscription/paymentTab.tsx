@@ -1,3 +1,15 @@
+import { PAYMENT_STATUS, PAYMENT_TIME_LINE_TYPE } from '@/constants'
+import { formatDate, showAmount } from '@/helpers'
+import { usePagination } from '@/hooks'
+import { exportDataReq, getPaymentTimelineReq } from '@/requests'
+import '@/shared.css'
+import {
+  IProfile,
+  PaymentItem,
+  PaymentStatus,
+  PaymentTimelineType
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   InfoCircleOutlined,
   LoadingOutlined,
@@ -24,18 +36,6 @@ import type { ColumnsType, TableProps } from 'antd/es/table'
 import { Currency } from 'dinero.js'
 import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PAYMENT_STATUS, PAYMENT_TIME_LINE_TYPE } from '../../constants'
-import { formatDate, showAmount } from '../../helpers'
-import { usePagination } from '../../hooks'
-import { exportDataReq, getPaymentTimelineReq } from '../../requests'
-import '../../shared.css'
-import {
-  IProfile,
-  PaymentItem,
-  PaymentStatus,
-  PaymentTimelineType
-} from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 import RefundInfoModal from '../payment/refundModal'
 import CopyToClipboard from '../ui/copyToClipboard'
 import { PaymentStatusTag } from '../ui/statusTag'

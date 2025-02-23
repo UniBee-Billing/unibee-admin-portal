@@ -117,8 +117,9 @@ const { Option } = Select
 const Index = () => {
   const appConfig = useAppConfigStore()
   const location = useLocation()
-  // location.state from planList page is always null, no idea why
   const goBackToPlanList = () => {
+    // when user navigate from planList to current planDetail, planList will pass a state.from url string which might contain filters like planStatus/planType/sorting .
+    // going back to this url will have those filters applied.
     if (location.state?.from) {
       navigate(location.state.from)
     } else {

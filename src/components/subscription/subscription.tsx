@@ -1,3 +1,24 @@
+import { daysBetweenDate, showAmount } from '@/helpers'
+import {
+  createPreviewReq,
+  extendDueDateReq,
+  getAppConfigReq,
+  getSubDetailWithMore,
+  resumeSubReq,
+  setSimDateReq,
+  terminateSubReq
+} from '@/requests'
+import '@/shared.css'
+import {
+  IPlan,
+  IPreview,
+  IProfile,
+  ISubAddon,
+  ISubscriptionType,
+  SubscriptionEndMode,
+  SubscriptionStatus
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -22,27 +43,6 @@ import update from 'immutability-helper'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
-import { daysBetweenDate, showAmount } from '../../helpers'
-import {
-  createPreviewReq,
-  extendDueDateReq,
-  getAppConfigReq,
-  getSubDetailWithMore,
-  resumeSubReq,
-  setSimDateReq,
-  terminateSubReq
-} from '../../requests'
-import '../../shared.css'
-import {
-  IPlan,
-  IPreview,
-  IProfile,
-  ISubAddon,
-  ISubscriptionType,
-  SubscriptionEndMode,
-  SubscriptionStatus
-} from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import LongTextPopover from '../ui/longTextPopover'

@@ -1,7 +1,7 @@
+import { showAmount } from '@/helpers'
+import { ISubscriptionType } from '@/shared.types'
 import { Button, Col, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
-import { showAmount } from '../../../helpers'
-import { ISubscriptionType } from '../../../shared.types'
 import LongTextPopover from '../../ui/longTextPopover'
 
 interface Props {

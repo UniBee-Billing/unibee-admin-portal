@@ -1,3 +1,7 @@
+import { formatDate, showAmount } from '@/helpers'
+import { usePagination } from '@/hooks'
+import { getProductListReq, getSubscriptionHistoryReq } from '@/requests'
+import { IProduct, ISubAddon, ISubHistoryItem } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Col,
@@ -12,10 +16,6 @@ import {
 import { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { formatDate, showAmount } from '../../helpers'
-import { usePagination } from '../../hooks'
-import { getProductListReq, getSubscriptionHistoryReq } from '../../requests'
-import { IProduct, ISubAddon, ISubHistoryItem } from '../../shared.types'
 import LongTextPopover from '../ui/longTextPopover'
 import { SubHistoryStatus } from '../ui/statusTag'
 

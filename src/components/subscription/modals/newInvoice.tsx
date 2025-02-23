@@ -1,9 +1,6 @@
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
-import { Currency } from 'dinero.js'
-import update from 'immutability-helper'
-import { useState } from 'react'
-import { randomString, showAmount } from '../../../helpers'
+import CouponPopover from '@/components/ui/couponPopover'
+import LongTextPopover from '@/components/ui/longTextPopover'
+import { randomString, showAmount } from '@/helpers'
 import {
   createInvoiceReq,
   deleteInvoiceReq,
@@ -12,16 +9,19 @@ import {
   revokeInvoiceReq,
   saveInvoiceReq,
   sendInvoiceInMailReq
-} from '../../../requests'
+} from '@/requests'
 import {
   IProfile,
   InvoiceItem,
   TInvoicePerm,
   UserInvoice
-} from '../../../shared.types'
-import { useAppConfigStore } from '../../../stores'
-import CouponPopover from '../../ui/couponPopover'
-import LongTextPopover from '../../ui/longTextPopover'
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
+import { Button, Col, Divider, Input, Modal, Row, Select, message } from 'antd'
+import { Currency } from 'dinero.js'
+import update from 'immutability-helper'
+import { useState } from 'react'
 
 const newPlaceholderItem = (): InvoiceItem => ({
   id: randomString(8),
