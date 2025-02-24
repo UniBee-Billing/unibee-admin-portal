@@ -363,7 +363,11 @@ const Index = () => {
     const [planList, err] = await getPlanList(
       {
         type: [PlanType.MAIN],
-        status: [PlanStatus.ACTIVE],
+        status: [
+          PlanStatus.ACTIVE,
+          PlanStatus.SOFT_ARCHIVED, // users might have subscribed to an active plan, but later that plan was archived by admin
+          PlanStatus.HARD_ARCHIVED
+        ],
         page: page,
         count: 100
       },
