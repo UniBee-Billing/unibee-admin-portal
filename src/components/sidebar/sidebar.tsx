@@ -12,7 +12,6 @@ import { SideMenu } from './sideMenu'
 export const Sidebar = () => {
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const { sidebarCollapsed, toggleSidebar } = uiConfigStore()
-  // const [collapsed, setCollapsed] = useState(sidebarCollapsed)
   const { logout } = useUser()
   const role = useMemo(
     () =>
