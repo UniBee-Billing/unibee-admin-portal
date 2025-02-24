@@ -1,5 +1,10 @@
 import { SUBSCRIPTION_STATUS } from '@/constants'
-import { formatDate, formatPlanInterval, showAmount } from '@/helpers'
+import {
+  formatDate,
+  formatPlanInterval,
+  initializeFilters,
+  showAmount
+} from '@/helpers'
 import { usePagination } from '@/hooks'
 import { exportDataReq, getPlanList, getSublist } from '@/requests'
 import '@/shared.css'
@@ -32,10 +37,12 @@ import {
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { Currency } from 'dinero.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   IPlan,
   ISubscriptionType,
+  PlanStatus,
+  PlanType,
   SubscriptionStatus,
   SubscriptionWrapper,
   TImportDataType
@@ -62,6 +69,7 @@ type TFilters = {
 
 const Index = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const appConfigStore = useAppConfigStore()
   const [form] = Form.useForm()
   const { page, onPageChange } = usePagination()
@@ -75,9 +83,9 @@ const Index = () => {
   >(false) // false: modal is close, other values will trigger it open. TImportDataType has 2 values in this component: ActiveSubscriptionImport | HistorySubscriptionImport
 
   const [filters, setFilters] = useState<TFilters>({
-    status: null,
-    planIds: null
-  })
+    ...initializeFilters('status', Number, SubscriptionStatus),
+    planIds: null // when the page is loading, we don't know how many plans we have, so we set planIds to null, in fetchPlan call, we will initialize this filter.
+  } as TFilters)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
 
   const exportData = async () => {
@@ -354,8 +362,8 @@ const Index = () => {
     setLoadingPlans(true)
     const [planList, err] = await getPlanList(
       {
-        type: [1], // 'main plan' only
-        status: [2], // 'active' only
+        type: [PlanType.MAIN],
+        status: [PlanStatus.ACTIVE],
         page: page,
         count: 100
       },
@@ -374,6 +382,20 @@ const Index = () => {
             value: p.plan?.id,
             text: p.plan?.planName
           }))
+
+    // to initialize the planIds filter.
+    // planIds filter on URL is a string like planIds=1-2-3, or it could be null.
+    // initializeFilters's 3rd param is a Enum type or objects of all the plans, with k/v both being planId.
+    // we need to convert the planFilterRef.current to {1: 1, 2: 2, 3: 3, ...}
+    const planIds = searchParams.get('planIds')
+    if (planIds != null && planFilterRef.current.length > 0) {
+      const planIdsMap: { [key: number]: number } = {}
+      planFilterRef.current.forEach((p) => (planIdsMap[p.value] = p.value))
+      setFilters({
+        ...filters,
+        ...initializeFilters('planIds', Number, planIdsMap)
+      })
+    }
   }
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
@@ -382,6 +404,17 @@ const Index = () => {
   ) => {
     // onPageChange(1, PAGE_SIZE)
     setFilters(filters as TFilters)
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    filters.planIds == null
+      ? searchParams.delete('planIds')
+      : searchParams.set('planIds', filters.planIds.join('-'))
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    filters.status == null
+      ? searchParams.delete('status')
+      : searchParams.set('status', filters.status.join('-'))
+
+    setSearchParams(searchParams)
   }
 
   const normalizeSearchTerms = () => {
