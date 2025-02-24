@@ -1,6 +1,3 @@
-import { InfoCircleOutlined } from '@ant-design/icons'
-import { Tag, Tooltip } from 'antd'
-import React, { ReactElement } from 'react'
 import {
   APP_TASK_STATUS,
   DISCOUNT_CODE_STATUS,
@@ -11,7 +8,7 @@ import {
   SUBSCRIPTION_HISTORY_STATUS,
   SUBSCRIPTION_STATUS,
   USER_STATUS
-} from '../../constants'
+} from '@/constants'
 import {
   AppTaskStatus,
   DiscountCodeStatus,
@@ -21,7 +18,10 @@ import {
   SubscriptionHistoryStatus,
   SubscriptionStatus,
   UserStatus
-} from '../../shared.types'
+} from '@/shared.types'
+import { InfoCircleOutlined } from '@ant-design/icons'
+import { Tag, Tooltip } from 'antd'
+import React, { ReactElement } from 'react'
 
 const SubscriptionStatusTag = (status: SubscriptionStatus) => {
   return (

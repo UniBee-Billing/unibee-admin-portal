@@ -1,3 +1,5 @@
+import { getActivityLogsReq } from '@/requests/index'
+import { TActivityLogs } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
@@ -13,12 +15,10 @@ import {
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getActivityLogsReq } from '../../requests'
-import { TActivityLogs } from '../../shared.types'
 
-import { formatDate } from '../../helpers'
-import { usePagination } from '../../hooks'
-import '../../shared.css'
+import { formatDate } from '@/helpers/index'
+import { usePagination } from '@/hooks/index'
+import '@/shared.css'
 
 const PAGE_SIZE = 10
 

@@ -1,3 +1,15 @@
+import { PAYMENT_STATUS, PAYMENT_TIME_LINE_TYPE } from '@/constants'
+import { formatDate, showAmount } from '@/helpers'
+import { usePagination } from '@/hooks'
+import { exportDataReq, getPaymentTimelineReq } from '@/requests'
+import '@/shared.css'
+import {
+  IProfile,
+  PaymentItem,
+  PaymentStatus,
+  PaymentTimelineType
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   InfoCircleOutlined,
   LoadingOutlined,
@@ -21,24 +33,9 @@ import {
   message
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import React, { ReactElement, useEffect, useState } from 'react'
+import { Currency } from 'dinero.js'
+import React, { ReactElement, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  CURRENCY,
-  PAYMENT_STATUS,
-  PAYMENT_TIME_LINE_TYPE
-} from '../../constants'
-import { formatDate, showAmount } from '../../helpers'
-import { usePagination } from '../../hooks'
-import { exportDataReq, getPaymentTimelineReq } from '../../requests'
-import '../../shared.css'
-import {
-  IProfile,
-  PaymentItem,
-  PaymentStatus,
-  PaymentTimelineType
-} from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 import RefundInfoModal from '../payment/refundModal'
 import CopyToClipboard from '../ui/copyToClipboard'
 import { PaymentStatusTag } from '../ui/statusTag'
@@ -101,7 +98,6 @@ const Index = ({
     searchTerm.page = page
     searchTerm.count = PAGE_SIZE
     searchTerm = { ...searchTerm, ...filters }
-
     setLoading(true)
     const [res, err] = await getPaymentTimelineReq(searchTerm, fetchData)
     setLoading(false)
@@ -313,14 +309,18 @@ const Index = ({
       let amtFrom = searchTerm.amountStart,
         amtTo = searchTerm.amountEnd
       if (amtFrom != '' && amtFrom != null) {
-        amtFrom = Number(amtFrom) * CURRENCY[searchTerm.currency].stripe_factor
+        amtFrom =
+          Number(amtFrom) *
+          appConfigStore.currency[searchTerm.currency as Currency]!.Scale
         if (isNaN(amtFrom) || amtFrom < 0) {
           message.error('Invalid amount-from value.')
           return null
         }
       }
       if (amtTo != '' && amtTo != null) {
-        amtTo = Number(amtTo) * CURRENCY[searchTerm.currency].stripe_factor
+        amtTo =
+          Number(amtTo) *
+          appConfigStore.currency[searchTerm.currency as Currency]!.Scale
         if (isNaN(amtTo) || amtTo < 0) {
           message.error('Invalid amount-to value')
           return null
@@ -405,7 +405,6 @@ const Index = ({
           exporting={exporting}
           exportData={exportData}
           onPageChange={pageChange}
-          // normalizeSearchTerms={normalizeSearchTerms}
         />
       )}
       <Table
@@ -482,15 +481,18 @@ const Search = ({
   onPageChange: (page: number, pageSize: number) => void
   clearFilters: () => void
 }) => {
-  const appStore = useAppConfigStore()
+  const appConfigStore = useAppConfigStore()
+  const watchCurrency = Form.useWatch('currency', form)
   const clear = () => {
     form.resetFields()
     onPageChange(1, PAGE_SIZE)
     clearFilters()
   }
 
-  const currencySymbol =
-    CURRENCY[form.getFieldValue('currency') || DEFAULT_TERM.currency].symbol
+  const currencySymbol = useMemo(
+    () => appConfigStore.currency[watchCurrency as Currency]?.Symbol,
+    [watchCurrency]
+  )
 
   return (
     <div>
@@ -575,7 +577,7 @@ const Search = ({
               <Form.Item name="currency" noStyle={true}>
                 <Select
                   style={{ width: 80 }}
-                  options={appStore.supportCurrency.map((c) => ({
+                  options={appConfigStore.supportCurrency.map((c) => ({
                     label: c.Currency,
                     value: c.Currency
                   }))}

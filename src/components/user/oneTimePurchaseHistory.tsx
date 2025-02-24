@@ -1,12 +1,12 @@
+import { formatDate } from '@/helpers'
+import { usePagination } from '@/hooks'
+import { getOneTimePaymentHistoryReq } from '@/requests'
+import { IOneTimeHistoryItem } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Divider, message, Pagination } from 'antd'
 import Table, { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { formatDate } from '../../helpers'
-import { usePagination } from '../../hooks'
-import { getOneTimePaymentHistoryReq } from '../../requests'
-import { IOneTimeHistoryItem } from '../../shared.types'
 import { PaymentStatusTag } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
@@ -25,7 +25,8 @@ const Index = ({ userId }: { userId: number }) => {
     const [res, err] = await getOneTimePaymentHistoryReq({
       page,
       count: PAGE_SIZE,
-      userId
+      userId,
+      refreshCb: getOneTimeHistory
     })
     setLoading(false)
     if (err != null) {

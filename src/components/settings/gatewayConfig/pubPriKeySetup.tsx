@@ -1,10 +1,10 @@
 import { Form, Input, message } from 'antd'
 
+import { saveGatewayConfigReq, TGatewayConfigBody } from '@/requests/index'
+import { TGateway } from '@/shared.types'
 import { Button } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
-import { saveGatewayConfigReq, TGatewayConfigBody } from '../../../requests'
-import { TGateway } from '../../../shared.types'
 
 const PubPriKeySetup = ({
   gatewayConfig,

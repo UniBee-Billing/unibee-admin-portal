@@ -1,3 +1,6 @@
+import { downloadStaticFile, formatDate } from '@/helpers'
+import { getDownloadListReq } from '@/requests'
+import { AppTask, AppTaskStatus } from '@/shared.types'
 import {
   DownloadOutlined,
   InfoCircleOutlined,
@@ -24,9 +27,6 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
 import { useInterval } from 'usehooks-ts'
-import { downloadStaticFile, formatDate } from '../helpers'
-import { getDownloadListReq } from '../requests'
-import { AppTask, AppTaskStatus } from '../shared.types'
 import { AppTaskStatusTag } from './ui/statusTag'
 dayjs.extend(duration)
 dayjs.extend(relativeTime)

@@ -74,11 +74,17 @@ const Index = ({
 
     const defaultPage = await appInitialize()
     if (triggeredByExpired) {
-      sessionStore.refresh?.()
-      sessionStore.setSession({ expired: false, refresh: null })
-      message.success('Login succeeded')
+      sessionStore.refreshCallbacks?.forEach((cb) => cb && cb())
+      sessionStore.setSession({
+        expired: false,
+        refreshCallbacks: []
+      })
+      message.success('Login successful')
     } else {
-      sessionStore.setSession({ expired: false, refresh: null })
+      sessionStore.setSession({
+        expired: false,
+        refreshCallbacks: []
+      })
       navigate(defaultPage)
     }
   }

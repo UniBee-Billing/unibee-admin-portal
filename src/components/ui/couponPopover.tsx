@@ -1,14 +1,14 @@
+import { showAmount } from '@/helpers'
+import {
+  DiscountCode,
+  DiscountCodeBillingType,
+  DiscountType
+} from '@/shared.types'
 import { InfoCircleOutlined } from '@ant-design/icons'
 import { Col, Popover, Row } from 'antd'
 import dayjs from 'dayjs'
 import { isEmpty } from 'lodash'
 import { useNavigate } from 'react-router-dom'
-import { showAmount } from '../../helpers'
-import {
-  DiscountCode,
-  DiscountCodeBillingType,
-  DiscountType
-} from '../../shared.types'
 import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 
 const Index = ({ coupon }: { coupon?: DiscountCode }) => {
@@ -79,7 +79,7 @@ const Index = ({ coupon }: { coupon?: DiscountCode }) => {
               Discount amt
             </Col>
             <Col span={14}>
-              {coupon.discountType === 1
+              {coupon.discountType === DiscountType.PERCENTAGE
                 ? `${coupon.discountPercentage / 100}%`
                 : showAmount(coupon.discountAmount, coupon.currency)}
             </Col>

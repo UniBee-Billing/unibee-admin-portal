@@ -1,3 +1,14 @@
+import { CREDIT_TX_TYPE } from '@/constants'
+import { formatDate, numberWithComma, showAmount } from '@/helpers'
+import { usePagination } from '@/hooks'
+import {
+  exportDataReq,
+  getCreditTxListReq,
+  getCreditUsageStatReq,
+  TCreditTxParams
+} from '@/requests'
+import { CreditTxType, CreditType, IProfile, TCreditTx } from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   LoadingOutlined,
   MinusOutlined,
@@ -17,25 +28,7 @@ import {
 import Table, { ColumnsType } from 'antd/es/table'
 import type { FilterDropdownProps } from 'antd/es/table/interface'
 import { useEffect, useRef, useState } from 'react'
-// import Highlighter from 'react-highlight-words'
 import { useNavigate } from 'react-router-dom'
-import { CREDIT_TX_TYPE } from '../../constants'
-import { formatDate, numberWithComma, showAmount } from '../../helpers'
-import { usePagination } from '../../hooks'
-import {
-  exportDataReq,
-  getCreditTxListReq,
-  getCreditUsageStatReq,
-  TCreditTxParams
-} from '../../requests'
-import {
-  CreditTxType,
-  CreditType,
-  IProfile,
-  TCreditTx
-} from '../../shared.types'
-// import { nextTick } from '../../utils'
-import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 
 const PAGE_SIZE = 10
@@ -90,7 +83,7 @@ const Index = ({
       body.sortType = sortFilter.sortType
     }
     setLoading(true)
-    const [res, err] = await getCreditTxListReq(body)
+    const [res, err] = await getCreditTxListReq(body, fetchCreditTxList)
     setLoading(false)
     if (setRefreshTxHist != undefined) {
       setRefreshTxHist(false)

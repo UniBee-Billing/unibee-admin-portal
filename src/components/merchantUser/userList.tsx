@@ -1,3 +1,15 @@
+import { MerchantUserStatusTag } from '@/components/ui/statusTag'
+import { emailValidate, formatDate } from '@/helpers'
+import { usePagination } from '@/hooks'
+import {
+  getMerchantUserListReq2,
+  getMerchantUserListWithMoreReq,
+  inviteMemberReq,
+  suspendMemberReq,
+  updateMemberRolesReq
+} from '@/requests'
+import { IMerchantMemberProfile, TRole } from '@/shared.types'
+import { useMerchantMemberProfileStore } from '@/stores'
 import {
   LoadingOutlined,
   ProfileOutlined,
@@ -23,19 +35,6 @@ import {
 } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
-import { emailValidate, formatDate } from '../../helpers'
-import { usePagination } from '../../hooks'
-import {
-  getMerchantUserListReq2,
-  getMerchantUserListWithMoreReq,
-  inviteMemberReq,
-  suspendMemberReq,
-  updateMemberRolesReq
-} from '../../requests'
-import '../../shared.css'
-import { IMerchantMemberProfile, TRole } from '../../shared.types'
-import { useMerchantMemberProfileStore } from '../../stores'
-import { MerchantUserStatusTag } from '../ui/statusTag'
 
 const PAGE_SIZE = 10
 

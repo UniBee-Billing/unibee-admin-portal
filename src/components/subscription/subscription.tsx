@@ -1,3 +1,24 @@
+import { daysBetweenDate, showAmount } from '@/helpers'
+import {
+  createPreviewReq,
+  extendDueDateReq,
+  getAppConfigReq,
+  getSubDetailWithMore,
+  resumeSubReq,
+  setSimDateReq,
+  terminateSubReq
+} from '@/requests'
+import '@/shared.css'
+import {
+  IPlan,
+  IPreview,
+  IProfile,
+  ISubAddon,
+  ISubscriptionType,
+  SubscriptionEndMode,
+  SubscriptionStatus
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -22,25 +43,6 @@ import update from 'immutability-helper'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
-import { daysBetweenDate, showAmount } from '../../helpers'
-import {
-  createPreviewReq,
-  extendDueDateReq,
-  getAppConfigReq,
-  getSubDetailWithMore,
-  resumeSubReq,
-  setSimDateReq,
-  terminateSubReq
-} from '../../requests'
-import '../../shared.css'
-import {
-  IPlan,
-  IPreview,
-  IProfile,
-  ISubAddon,
-  ISubscriptionType
-} from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import LongTextPopover from '../ui/longTextPopover'
@@ -82,7 +84,11 @@ const Index = ({
   const [terminateModal, setTerminateModal] = useState(false)
   const [resumeModal, setResumeModal] = useState(false)
   const [activeSub, setActiveSub] = useState<ISubscriptionType | null>(null) // null: when page is loading, no data is ready yet.
-  const [endSubMode, setEndSubMode] = useState<1 | 2 | null>(null) // 1: immediate, 2: end of this billing cycle, null: not selected
+  const [endSubMode, setEndSubMode] = useState<
+    | SubscriptionEndMode.END_NOW
+    | SubscriptionEndMode.END_AT_END_OF_BILLING_CYCLE
+    | null
+  >(null) // null: not selected
   const [isProduction, setIsProduction] = useState(false)
   const [simDateOpen, setSimDateOpen] = useState(false)
   const simDateContainerRef = useRef(null)
@@ -212,7 +218,7 @@ const Index = ({
     setLoading(true)
     const [_, err] = await terminateSubReq(
       activeSub?.subscriptionId as string,
-      endSubMode == 1
+      endSubMode == SubscriptionEndMode.END_NOW
     )
     setLoading(false)
     if (null != err) {
@@ -222,7 +228,7 @@ const Index = ({
 
     toggleTerminateModal()
     message.success(
-      endSubMode == 1
+      endSubMode == SubscriptionEndMode.END_NOW
         ? 'Subscription ended'
         : 'Subscription will end on the end of this billing cycle'
     )
@@ -677,17 +683,18 @@ const SubscriptionInfoSection = ({
               </span>
             </Tooltip>
           )}
-          {/* == 1: payment is pending (wait for user to finished the payment), 7: incomplete */}
-          {subInfo && (subInfo.status == 1 || subInfo.status == 7) && (
-            <Tooltip title="Cancel">
-              <span
-                style={{ cursor: 'pointer', margin: '0 8px' }}
-                onClick={toggleCancelSubModal}
-              >
-                <CloseCircleOutlined />
-              </span>
-            </Tooltip>
-          )}
+          {subInfo &&
+            (subInfo.status == SubscriptionStatus.PENDING || // waiting for payment || incomplete(this status is marked by admin as temporary active)
+              subInfo.status == SubscriptionStatus.INCOMPLETE) && (
+              <Tooltip title="Cancel">
+                <span
+                  style={{ cursor: 'pointer', margin: '0 8px' }}
+                  onClick={toggleCancelSubModal}
+                >
+                  <CloseCircleOutlined />
+                </span>
+              </Tooltip>
+            )}
         </Col>
         <Col span={4} style={colStyle}>
           Subscription Id
@@ -901,15 +908,17 @@ const SubscriptionInfoSection = ({
         </Col>
       </Row>
 
-      {subInfo && (subInfo.status == 1 || subInfo.status == 8) && (
-        <div className="mx-0 my-6 flex items-center justify-start gap-9">
-          <Button onClick={toggleChangeSubStatusModal}>
-            Mark as Incomplete
-          </Button>
-        </div>
-      )}
+      {subInfo &&
+        (subInfo.status == SubscriptionStatus.PENDING ||
+          subInfo.status == SubscriptionStatus.PROCESSING) && (
+          <div className="mx-0 my-6 flex items-center justify-start gap-9">
+            <Button onClick={toggleChangeSubStatusModal}>
+              Mark as Incomplete
+            </Button>
+          </div>
+        )}
 
-      {subInfo && subInfo.status == 2 && (
+      {subInfo && subInfo.status == SubscriptionStatus.ACTIVE && (
         <div className="mx-0 my-6 flex items-center justify-start gap-9">
           <Button onClick={toggleChangPlanModal}>Change Plan</Button>
           {subInfo.cancelAtPeriodEnd == 0 ? (

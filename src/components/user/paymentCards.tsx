@@ -1,3 +1,8 @@
+import {
+  changeUserPaymentMethodReq,
+  getUserPaymentMethodListReq,
+  removeCardPaymentMethodReq
+} from '@/requests'
 import { LoadingOutlined, MinusOutlined, SyncOutlined } from '@ant-design/icons'
 import {
   Button,
@@ -10,11 +15,6 @@ import {
   message
 } from 'antd'
 import { useEffect, useState } from 'react'
-import {
-  changeUserPaymentMethodReq,
-  getUserPaymentMethodListReq,
-  removeCardPaymentMethodReq
-} from '../../requests'
 
 type TCard = {
   id: string

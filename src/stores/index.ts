@@ -6,14 +6,12 @@ import {
   IAppConfig,
   IMerchantMemberProfile,
   IProduct,
-  // IProfile,
   TCreditConfig,
   TGateway,
   TIntegrationKeys,
   TMerchantInfo
 } from '../shared.types'
 // import { createStore } from "zustand";
-// import update from 'immutability-helper'
 
 // logged-in admin profile
 const INITIAL_MERCHANT_MEMBER_PROFILE: IMerchantMemberProfile = {
@@ -76,23 +74,19 @@ interface MerchantInfoSlice extends TMerchantInfo {
   reset: () => void
 }
 
-export const useMerchantInfoStore = create<MerchantInfoSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_INFO,
-      getMerchantInfo: () => get(),
-      setMerchantInfo: (p) => set({ ...p }),
-      reset: () => set(INITIAL_INFO)
-    }),
-    { name: 'merchantInfo' }
-  )
-)
+export const useMerchantInfoStore = create<MerchantInfoSlice>()((set, get) => ({
+  ...INITIAL_INFO,
+  getMerchantInfo: () => get(),
+  setMerchantInfo: (p) => set({ ...p }),
+  reset: () => set(INITIAL_INFO)
+}))
 
 // --------------------------------
 const INITIAL_APP_VALUE: IAppConfig = {
   env: 'local',
   isProd: false,
   supportCurrency: [],
+  currency: {},
   supportTimeZone: [],
   gateway: [],
   taskListOpen: false,
@@ -115,38 +109,29 @@ interface AppConfigSlice extends IAppConfig {
   reset: () => void
 }
 
-export const useAppConfigStore = create<AppConfigSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_APP_VALUE,
-      getAppConfig: () => get(),
-      setAppConfig: (a) => set({ ...a }),
-      setGateway: (g: TGateway[]) => {
-        set({ ...get(), gateway: g })
-      },
-      setIntegrationKeys: (k: TIntegrationKeys) => {
-        set({ ...get(), integrationKeys: k })
-      },
-      setTaskListOpen: (isOpen) => {
-        set({ ...get(), taskListOpen: isOpen })
-      },
-      reset: () => set(INITIAL_APP_VALUE)
-    }),
-    { name: 'appConfig' }
-  )
-)
+export const useAppConfigStore = create<AppConfigSlice>()((set, get) => ({
+  ...INITIAL_APP_VALUE,
+  getAppConfig: () => get(),
+  setAppConfig: (a) => set({ ...a }),
+  setGateway: (g: TGateway[]) => {
+    set({ ...get(), gateway: g })
+  },
+  setIntegrationKeys: (k: TIntegrationKeys) => {
+    set({ ...get(), integrationKeys: k })
+  },
+  setTaskListOpen: (isOpen) => {
+    set({ ...get(), taskListOpen: isOpen })
+  },
+  reset: () => set(INITIAL_APP_VALUE)
+}))
 
 // ---------------
 interface ISession {
   expired: boolean
-  refresh: null | (() => void) // if session is expired when making an async fn call, save this fn here, so after re-login, re-run this fn.
-  // needRedirect?: boolean // after login from /login, user will be redirected to a default page(different role might have different page)
-  // login from LoginModal doesn't need redirect
-  refreshCallbacks?: (() => void)[]
+  refreshCallbacks?: (() => void)[] // if session is expired when making an async fn call, push this fn here, so after re-login, re-run all fn in this array.
 }
 const INITIAL_SESSION: ISession = {
   expired: false,
-  refresh: null,
   refreshCallbacks: []
 }
 interface SessionStoreSlice extends ISession {
@@ -167,6 +152,37 @@ export const useSessionStore = create<SessionStoreSlice>()((set, get) => ({
 }))
 
 // --------------------------------
+interface UIConfig {
+  sidebarCollapsed: boolean
+}
+
+const INITIAL_UI_CONFIG: UIConfig = {
+  sidebarCollapsed: false
+}
+
+interface UIConfigSlice extends UIConfig {
+  getUIConfig: () => UIConfig
+  setUIConfig: (u: UIConfig) => void
+  toggleSidebar: () => void
+}
+
+export const uiConfigStore = create<UIConfigSlice>()(
+  persist(
+    (set, get) => ({
+      ...INITIAL_UI_CONFIG,
+      getUIConfig: () => get(),
+      setUIConfig: (a) => set({ ...a }),
+      toggleSidebar: () => {
+        set({ ...get(), sidebarCollapsed: !get().sidebarCollapsed })
+      }
+    }),
+    {
+      name: 'ui-config'
+    }
+  )
+)
+
+// --------------------------------
 interface IPermission {
   roles: string[] // ['power user', 'Customer Support']
   permissions: string[] // ['plan', 'subscription', 'user', 'invoice', 'payment', 'report'], these items are the accessible pages, like /plan, /subscription.
@@ -183,15 +199,12 @@ interface PermissionStoreSlice extends IPermission {
   reset: () => void
 }
 export const usePermissionStore = create<PermissionStoreSlice>()(
-  persist(
-    (set, get) => ({
-      ...INITIAL_PERM,
-      getPerm: () => get(),
-      setPerm: (a) => set({ ...a }),
-      reset: () => set(INITIAL_PERM)
-    }),
-    { name: 'permission' }
-  )
+  (set, get) => ({
+    ...INITIAL_PERM,
+    getPerm: () => get(),
+    setPerm: (a) => set({ ...a }),
+    reset: () => set(INITIAL_PERM)
+  })
 )
 
 const INITIAL_CREDIT_CONFIG: TCreditConfig = {

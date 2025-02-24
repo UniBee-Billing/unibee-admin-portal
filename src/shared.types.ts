@@ -45,7 +45,7 @@ export enum UserStatus {
   SUSPENDED = 2
 }
 // this is end user profile
-type IProfile = {
+interface IProfile {
   id: number | null
   externalUserId: string
   token: string
@@ -87,7 +87,7 @@ export enum MerchantUserStatus {
   SUSPENDED = 2
 }
 // this is the admin user profile
-type IMerchantMemberProfile = {
+interface IMerchantMemberProfile {
   id: number
   merchantId: number
   email: string
@@ -125,11 +125,16 @@ export type TIntegrationKeys = {
   segmentUserPortalKey: string
 }
 
-type IAppConfig = {
+export type CURRENCY = { Currency: Currency; Symbol: string; Scale: number }
+// { Currency: 'CNY', Symbol: '¥', Scale: 100 }, or
+// { Currency: 'USD', Symbol: '$', Scale: 100 }, ...
+interface IAppConfig {
   env: string
   isProd: boolean
   supportTimeZone: string[]
-  supportCurrency: { Currency: string; Symbol: string; Scale: number }[]
+  supportCurrency: CURRENCY[]
+  currency: Partial<Record<Currency, CURRENCY>> // this is just the record version of supportCurrency for easier lookup, key is currency code, like 'CNY', 'USD', ...
+  // its initial value is empty, hence Partial here. Maybe it's better to provide a default value, like: EUR: { Currency: 'EUR', Symbol: '€', Scale: 100 },
   gateway: TGateway[]
   taskListOpen: boolean // task list is in app.tsx, but this value is accessible to all pages.
   integrationKeys: TIntegrationKeys
@@ -140,7 +145,7 @@ interface IAddon extends IPlan {
   checked: boolean
 }
 
-type IProduct = {
+interface IProduct {
   id: number
   productName: string
   description: string
@@ -160,13 +165,14 @@ export enum PlanStatus {
   EDITING = 1,
   ACTIVE = 2,
   INACTIVE = 3,
-  EXPIRED = 4
+  SOFT_ARCHIVED = 4,
+  HARD_ARCHIVED = 5
 }
 export enum PlanPublishStatus {
   UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans
   PUBLISHED = 2
 }
-type IPlan = {
+interface IPlan {
   id: number
   plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
@@ -204,7 +210,7 @@ export interface ISubAddon extends IPlan {
   addonPlan: ISubAddon
 }
 
-type IBillableMetrics = {
+interface IBillableMetrics {
   id: number
   merchantId: number
   code: string
@@ -230,13 +236,13 @@ export enum SubscriptionStatus {
   CANCELLED = 4, // users(or admin) cancelled the sub(immediately or automatically at the end of billing cycle). It's triggered by human.
   EXPIRED = 5,
   // SUSPENDED = 6, // suspend for a while, might want to resume later. NOT USED YET.
-  INCOMPLETE = 7, // user claimed they have wired the transfer, admin mark the subscriptoin as Incomplete until a DATE, so user can use it before that DATE.
+  INCOMPLETE = 7, // user claimed they have wired the transfer, admin mark the subscription as Incomplete until a DATE, so user can use it before that DATE.
   // if admin had confirmed the transfer, admin has to mark the corresponding invoice as PAID, then this sub will become ACTIVE.
   PROCESSING = 8, // user claimed they have wired the transfer, but we're checking. This status is for wire-transfer only.
   FAILED = 9 // we have't received the payment.
 }
 
-type ISubscriptionType = {
+interface ISubscriptionType {
   id: number
   subscriptionId: string
   planId: number
@@ -252,7 +258,7 @@ type ISubscriptionType = {
   cancelAtPeriodEnd: number // whether this sub will end at the end of billing cycle, 0: false, 1: true
   amount: number
   currency: string
-  taxPercentage: number // BE returns 2000, FE need to show 20%.
+  taxPercentage: number // BE returns 2000, UI need to show 20%.
   plan: IPlan | undefined // ?????????? why it can be undefined.
   addons: ISubAddon[]
   user: IProfile | null
@@ -275,17 +281,21 @@ type ISubscriptionType = {
   gatewayId: number
   latestInvoice?: UserInvoice
 }
+export enum SubscriptionEndMode {
+  END_NOW = 1,
+  END_AT_END_OF_BILLING_CYCLE = 2
+}
 
 export enum SubscriptionHistoryStatus {
   // UNKNOWN_ZERO = 0,
   Active = 1, // current active subscription also show up in history list
-  Finished = 2, // when user upgrade from planA to planB, the old subscriptio with plan A will be marked as finished.
+  Finished = 2, // when user upgrade from planA to planB, the old subscription with plan A will be marked as finished.
   Cancelled = 3,
   Expired = 4
   //UNKNOWN_FIVE = 5
 }
 
-type ISubHistoryItem = {
+interface ISubHistoryItem {
   merchantId: number
   userId: number
   subscriptionId: string
@@ -368,7 +378,7 @@ type DiscountCode = {
   discountType: DiscountType
   discountAmount: number
   discountPercentage: number
-  currency: string
+  currency: Currency
   cycleLimit: number
   startTime: number
   endTime: number

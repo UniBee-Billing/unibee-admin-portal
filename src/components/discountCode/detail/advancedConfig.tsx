@@ -1,9 +1,9 @@
-import { Col, Divider, Form, Radio, Row, Space, Switch } from 'antd'
 import {
   DiscountCode,
   DiscountCodeStatus,
   DiscountCodeUserScope
-} from '../../../shared.types'
+} from '@/shared.types'
+import { Col, Divider, Form, Radio, Row, Space, Switch } from 'antd'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 
 const Index = ({

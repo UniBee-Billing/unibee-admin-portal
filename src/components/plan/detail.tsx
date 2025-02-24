@@ -18,9 +18,15 @@ import {
   Tag,
   message
 } from 'antd'
+import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams
+} from 'react-router-dom'
 import {
   currencyDecimalValidate,
   isValidMap,
@@ -110,7 +116,18 @@ const { Option } = Select
 
 const Index = () => {
   const appConfig = useAppConfigStore()
-  const CURRENCIES = appConfig.supportCurrency
+  const location = useLocation()
+  const goBackToPlanList = () => {
+    // when user navigate from planList to current planDetail, planList will pass a state.from url string which might contain filters like planStatus/planType/sorting .
+    // going back to this url will have those filters applied.
+    if (location.state?.from) {
+      navigate(location.state.from)
+    } else {
+      navigate(
+        `/plan/list?productId=${productDetail != null ? productDetail.id : 0}`
+      )
+    }
+  }
   const params = useParams()
   const planId = params.planId // http://localhost:5174/plan/270?productId=0, planId is 270
   const isNew = planId == null
@@ -143,7 +160,7 @@ const Index = () => {
 
   const itvCountValue = Form.useWatch('intervalCount', form)
   const itvCountUnit = Form.useWatch('intervalUnit', form)
-  const planCurrency = Form.useWatch('currency', form)
+  const currencyWatch = Form.useWatch('currency', form)
   const planTypeWatch = Form.useWatch('type', form)
   const enableTrialWatch = Form.useWatch('enableTrial', form)
 
@@ -163,6 +180,8 @@ const Index = () => {
   let formDisabled =
     (plan?.status == PlanStatus.ACTIVE &&
       plan.publishStatus == PlanPublishStatus.PUBLISHED) ||
+    plan?.status == PlanStatus.HARD_ARCHIVED ||
+    plan?.status == PlanStatus.SOFT_ARCHIVED ||
     productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
   const selectAfter = (
@@ -180,11 +199,10 @@ const Index = () => {
     </Select>
   )
 
-  const getCurrency = () =>
-    CURRENCIES.find((c) => c.Currency == form.getFieldValue('currency'))
+  const getCurrency = () => appConfig.currency[currencyWatch as Currency]
 
-  const getAmount = (amt: number, currency: string) => {
-    const CURRENCY = CURRENCIES.find((c) => c.Currency == currency)
+  const getAmount = (amt: number, currency: Currency) => {
+    const CURRENCY = appConfig.currency[currency]
     if (CURRENCY == undefined) {
       return 0
     }
@@ -208,14 +226,14 @@ const Index = () => {
       (a) =>
         a.intervalCount == itvCountValue &&
         a.intervalUnit == itvCountUnit &&
-        a.currency == planCurrency
+        a.currency == currencyWatch
     )
     setSelectAddons(newAddons)
 
     if (isNew) {
-      setSelectOnetime(addons.filter((a) => a.currency === planCurrency))
+      setSelectOnetime(addons.filter((a) => a.currency === currencyWatch))
     }
-  }, [itvCountUnit, itvCountValue, planCurrency])
+  }, [itvCountUnit, itvCountValue, currencyWatch])
 
   const onSave = async (values: unknown) => {
     if (productDetail === null) {
@@ -231,18 +249,11 @@ const Index = () => {
     f.amount = toFixedNumber(f.amount, 2)
     f.intervalCount = Number(f.intervalCount)
 
-    /*
-enableTrial?: boolean
-trialAmount?: number
-trialDurationTime?: number
-trialDemand?: 'paymentMethod' | '' | boolean // backend requires this field to be a fixed string of 'paymentMethod' or '', but to ease the UX, front-end use <Switch />
-cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UX, front-end use <Switch />
-    */
     if (!f.enableTrial) {
       f.trialAmount = 0 // if trialEnabled is false, these 4 field values have no meaning, ....
       f.trialDurationTime = 0 // but I still need to reset them to default, ...
-      f.trialDemand = f.trialDemand ? 'paymentMethod' : '' // to keep the UI consistent with user input
-      f.cancelAtTrialEnd = f.cancelAtTrialEnd ? 0 : 1
+      f.trialDemand = f.trialDemand ? 'paymentMethod' : '' // 'paymentMethod' | '' | boolean, backend requires this field to be a fixed string of 'paymentMethod' or '', but to ease the UX, front-end use <Switch />
+      f.cancelAtTrialEnd = f.cancelAtTrialEnd ? 0 : 1 // backend requires this field to be a number of 1 | 0, but to ease the UX, front-end use <Switch />
     } else {
       f.trialAmount = Number(f.trialAmount)
       f.trialAmount *= CURRENCY.Scale
@@ -577,7 +588,9 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [planId]) // when creating new plan, url is: /plan/new?productId=0, planId is null,
+  // when editing plan, url is: /plan/270?productId=0, planId is 270, after creating, url would become /plan/270?productId=0
+  // I need to rerun fetchData to get the newly created plan detail, otherwise, planId is missing in form
 
   return (
     <div>
@@ -707,7 +720,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
             <Select
               disabled={disableAfterActive.current || formDisabled}
               style={{ width: 180 }}
-              options={CURRENCIES.map((c) => ({
+              options={appConfig.supportCurrency.map((c) => ({
                 value: c.Currency,
                 label: c.Currency
               }))}
@@ -938,11 +951,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               <Input
                 disabled={!enableTrialWatch || formDisabled}
                 style={{ width: 180 }}
-                prefix={
-                  getCurrency()?.Symbol
-                  // CURRENCY[form.getFieldValue('currency') ?? plan.currency]
-                  // .symbol
-                }
+                prefix={getCurrency()?.Symbol}
               />
             </Form.Item>
             <span className="ml-2 text-xs text-gray-400">
@@ -1084,6 +1093,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
                 }
               })
             ]}
+            extra={`JSON object must be a key-value paired object, like {"a": 1, "b": 2, "c": [1,2,3]}.`}
           >
             <Input.TextArea rows={6} style={{ width: '640px' }} />
           </Form.Item>
@@ -1094,12 +1104,6 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
           >
             {' '}
             <Button onClick={prettifyJSON}>Prettify</Button>
-          </div>
-          <div
-            className="relative ml-2 text-xs text-gray-400"
-            style={{ top: '-32px', left: '178px', width: '450px' }}
-          >
-            {`JSON object must be a key-value paired object, like {"a": 1, "b": 2, "c": [1,2,3]}.`}
           </div>
 
           <Form.Item label="Product Name" name="productName" hidden>
@@ -1142,11 +1146,7 @@ cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number
               )}
               <div className="flex justify-center gap-5">
                 <Button
-                  onClick={() =>
-                    navigate(
-                      `/plan/list?productId=${productDetail != null ? productDetail.id : 0}`
-                    )
-                  }
+                  onClick={goBackToPlanList}
                   disabled={loading || activating}
                 >
                   Go Back

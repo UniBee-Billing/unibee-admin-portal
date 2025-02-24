@@ -1,3 +1,16 @@
+import { SUBSCRIPTION_STATUS, USER_STATUS } from '@/constants'
+import { formatDate } from '@/helpers'
+import { usePagination } from '@/hooks'
+import { exportDataReq, getPlanList, getUserListReq } from '@/requests'
+import '@/shared.css'
+import {
+  IPlan,
+  IProfile,
+  PlanStatus,
+  PlanType,
+  SubscriptionStatus
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   EditOutlined,
   ExportOutlined,
@@ -28,13 +41,6 @@ import {
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { SUBSCRIPTION_STATUS, USER_STATUS } from '../../constants'
-import { formatDate } from '../../helpers'
-import { usePagination } from '../../hooks'
-import { exportDataReq, getPlanList, getUserListReq } from '../../requests'
-import '../../shared.css'
-import { IPlan, IProfile, PlanStatus, PlanType } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import LongTextPopover from '../ui/longTextPopover'
 import { SubscriptionStatusTag, UserStatusTag } from '../ui/statusTag'
@@ -47,10 +53,14 @@ const USER_STATUS_FILTER = Object.entries(USER_STATUS).map((s) => {
   const [value, { label }] = s
   return { value: Number(value), text: label }
 })
-const SUB_STATUS_FILTER = Object.entries(SUBSCRIPTION_STATUS).map((s) => {
-  const [value, { label }] = s
-  return { value: Number(value), text: label }
-})
+
+const SUB_STATUS_FILTER = Object.entries(SUBSCRIPTION_STATUS)
+  .map((s) => {
+    const [value, { label }] = s
+    return { value: Number(value), text: label }
+  })
+  .filter(({ value }) => value != SubscriptionStatus.INITIATING)
+// INITIATING status is used as a placeholder in this component when user has no active subscription, no need to show it in filter.
 
 type TFilters = {
   status: number[] | null

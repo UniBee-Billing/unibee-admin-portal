@@ -1,14 +1,22 @@
+import LongTextPopover from '@/components/ui/longTextPopover'
+import { showAmount } from '@/helpers'
+import { ISubscriptionType, SubscriptionEndMode } from '@/shared.types'
 import { Button, Col, Modal, Radio, RadioChangeEvent, Row, Space } from 'antd'
 import dayjs from 'dayjs'
-import { showAmount } from '../../../helpers'
-import { ISubscriptionType } from '../../../shared.types'
-import LongTextPopover from '../../ui/longTextPopover'
 
 interface Props {
   isOpen: boolean
   loading: boolean
-  terminateMode: 1 | 2 | null // 1: immediate, 2: end of this billing cycle, null: not selected
-  setTerminateMode: (mode: 1 | 2 | null) => void
+  terminateMode:
+    | SubscriptionEndMode.END_NOW
+    | SubscriptionEndMode.END_AT_END_OF_BILLING_CYCLE
+    | null // null: not selected
+  setTerminateMode: (
+    mode:
+      | SubscriptionEndMode.END_NOW
+      | SubscriptionEndMode.END_AT_END_OF_BILLING_CYCLE
+      | null
+  ) => void
   subInfo: ISubscriptionType | null
   onCancel: () => void
   onConfirm: () => void
@@ -38,9 +46,9 @@ const TerminateSub = ({
       <div style={{ margin: '16px 0' }}>
         Are you sure you want to end this subscription{' '}
         <span style={{ color: 'red' }}>
-          {terminateMode == 1
+          {terminateMode == SubscriptionEndMode.END_NOW
             ? 'immediately'
-            : terminateMode == 2
+            : terminateMode == SubscriptionEndMode.END_AT_END_OF_BILLING_CYCLE
               ? 'at the end of billing cycle'
               : ''}
         </span>
@@ -91,8 +99,10 @@ const TerminateSub = ({
         style={{ margin: '18px 0' }}
       >
         <Space direction="vertical">
-          <Radio value={1}>immediately</Radio>
-          <Radio value={2}>end of this cycle</Radio>
+          <Radio value={SubscriptionEndMode.END_NOW}>immediately</Radio>
+          <Radio value={SubscriptionEndMode.END_AT_END_OF_BILLING_CYCLE}>
+            end of this cycle
+          </Radio>
         </Space>
       </Radio.Group>
       <div className="mt-6 flex items-center justify-end gap-4">

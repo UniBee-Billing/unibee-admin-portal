@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { dynamicBase } from 'vite-plugin-dynamic-base'
 import svgr from 'vite-plugin-svgr'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 // https://vitejs.dev/config/
 export default defineConfig((env) => ({
@@ -9,6 +10,7 @@ export default defineConfig((env) => ({
   plugins: [
     react(),
     svgr(),
+    tsconfigPaths(),
     dynamicBase({
       // dynamic public path var string, default window.__dynamic_base__
       publicPath: 'window.__dynamic_base__',

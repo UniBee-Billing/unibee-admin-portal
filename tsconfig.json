@@ -8,6 +8,10 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "types": ["vite-plugin-svgr/client", "vite/client"],
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",

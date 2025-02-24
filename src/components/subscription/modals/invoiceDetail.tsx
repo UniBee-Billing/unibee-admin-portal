@@ -1,15 +1,12 @@
+import { REFUND_STATUS } from '@/constants'
+import { getInvoicePermission, randomString, showAmount } from '@/helpers'
+import { sendInvoiceInMailReq } from '@/requests'
+import { InvoiceItem, IProfile, UserInvoice } from '@/shared.types'
 import { Button, Col, Divider, message, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
-import { REFUND_STATUS } from '../../../constants'
-import {
-  getInvoicePermission,
-  randomString,
-  showAmount
-} from '../../../helpers'
-import { sendInvoiceInMailReq } from '../../../requests'
-import { InvoiceItem, IProfile, UserInvoice } from '../../../shared.types'
 import CouponPopover from '../../ui/couponPopover'
+import LongTextPopover from '../../ui/longTextPopover'
 
 interface Props {
   user: IProfile | undefined
@@ -132,7 +129,9 @@ const Index = ({ detail, closeModal }: Props) => {
             key={v.id}
             style={{ margin: '8px 0', display: 'flex', alignItems: 'center' }}
           >
-            <Col span={12}>{v.description}</Col>
+            <Col span={12}>
+              <LongTextPopover text={v.description} width="360px" />
+            </Col>
             <Col span={4}>
               {showAmount(v.unitAmountExcludingTax as number, v.currency, true)}
             </Col>

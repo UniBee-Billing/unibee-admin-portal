@@ -8,15 +8,8 @@ import {
   Space
 } from 'antd'
 
-import { Form } from 'antd'
-import {
-  Dispatch,
-  PropsWithChildren,
-  ReactNode,
-  SetStateAction,
-  useMemo
-} from 'react'
-import { currencyDecimalValidate } from '../../../helpers'
+import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
+import { currencyDecimalValidate } from '@/helpers'
 import {
   DiscountCode,
   DiscountCodeApplyType,
@@ -24,9 +17,17 @@ import {
   DiscountCodeStatus,
   DiscountType,
   IPlan
-} from '../../../shared.types'
-import { useAppConfigStore } from '../../../stores'
-import { getDiscountCodeStatusTagById } from '../../ui/statusTag'
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
+import { Form } from 'antd'
+import { Currency } from 'dinero.js'
+import {
+  Dispatch,
+  PropsWithChildren,
+  ReactNode,
+  SetStateAction,
+  useMemo
+} from 'react'
 import { formatQuantity } from '../helpers'
 
 const { RangePicker } = DatePicker
@@ -156,8 +157,8 @@ const Index = ({
         <Select
           style={{ width: 180 }}
           options={[
-            { value: 1, label: 'Percentage' },
-            { value: 2, label: 'Fixed amount' }
+            { value: DiscountType.PERCENTAGE, label: 'Percentage' },
+            { value: DiscountType.AMOUNT, label: 'Fixed amount' }
           ]}
         />
       </Form.Item>
@@ -225,7 +226,7 @@ const Index = ({
               required: watchDiscountType != DiscountType.PERCENTAGE,
               message: 'Please input your discount amount!'
             },
-            ({ getFieldValue }) => ({
+            () => ({
               validator(_, value) {
                 if (watchDiscountType == DiscountType.PERCENTAGE) {
                   return Promise.resolve()
@@ -234,7 +235,7 @@ const Index = ({
                 if (isNaN(num) || num <= 0) {
                   return Promise.reject('Please input a valid amount (> 0).')
                 }
-                if (!currencyDecimalValidate(num, getFieldValue('currency'))) {
+                if (!currencyDecimalValidate(num, watchCurrency as Currency)) {
                   return Promise.reject('Please input a valid amount')
                 }
                 return Promise.resolve()
@@ -248,9 +249,7 @@ const Index = ({
             prefix={
               watchCurrency == null || watchCurrency == ''
                 ? ''
-                : appStore.supportCurrency.find(
-                    (c) => c.Currency == watchCurrency
-                  )?.Symbol
+                : appStore.currency[watchCurrency as Currency]?.Symbol
             }
             disabled={
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable

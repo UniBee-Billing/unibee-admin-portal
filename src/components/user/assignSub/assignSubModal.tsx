@@ -7,6 +7,7 @@ import {
   Modal,
   Switch
 } from 'antd'
+import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import {
   ChangeEvent,
@@ -16,7 +17,6 @@ import {
   useRef,
   useState
 } from 'react'
-import { CURRENCY } from '../../../constants'
 import { showAmount } from '../../../helpers'
 import { useLoading } from '../../../hooks'
 import {
@@ -30,6 +30,7 @@ import {
   DiscountType,
   IPlan,
   IProfile,
+  PlanStatus,
   TPromoAccount,
   WithDoubleConfirmFields
 } from '../../../shared.types'
@@ -379,7 +380,7 @@ export const AssignSubscriptionModal = ({
     }
     if (creditAmt) {
       return (
-        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
+        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${appConfig.currency[credit.credit.currency as Currency]?.Symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
       )
     }
   }
@@ -455,7 +456,7 @@ export const AssignSubscriptionModal = ({
     <Modal
       title="Choose a Subscription Plan"
       open={true}
-      width={'720px'}
+      width={'760px'}
       footer={[
         <Button key="cancel" onClick={closeModal} disabled={loading}>
           Cancel
@@ -487,6 +488,10 @@ export const AssignSubscriptionModal = ({
               productId={productId}
               selectedPlanId={
                 selectedPlan == undefined ? null : selectedPlan.id
+              }
+              filterPredicate={(p) =>
+                p?.status != PlanStatus.SOFT_ARCHIVED &&
+                p?.status != PlanStatus.HARD_ARCHIVED
               }
             />
 

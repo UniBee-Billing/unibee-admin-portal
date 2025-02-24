@@ -1,6 +1,6 @@
+import { saveExRateKeyReq } from '@/requests/index'
 import { Button, Input, Modal, message } from 'antd'
 import { useState } from 'react'
-import { saveExRateKeyReq } from '../../../requests'
 const { TextArea } = Input
 
 interface IProps {

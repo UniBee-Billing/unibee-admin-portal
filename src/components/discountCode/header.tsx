@@ -1,8 +1,8 @@
+import { WithStyle } from '@/shared.types'
 import { PlusOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import Search, { SearchProps } from 'antd/es/input/Search'
 import { Key } from 'react'
-import { WithStyle } from '../../shared.types'
 import { ExportButton } from '../table/exportButton'
 
 interface HeaderProps {

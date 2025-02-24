@@ -27,7 +27,8 @@ export const PLAN_STATUS: Record<PlanStatus, { label: string; color: string }> =
     [PlanStatus.EDITING]: { label: 'editing', color: 'blue' },
     [PlanStatus.ACTIVE]: { label: 'active', color: '#87d068' },
     [PlanStatus.INACTIVE]: { label: 'inactive', color: 'purple' },
-    [PlanStatus.EXPIRED]: { label: 'expired', color: 'red' }
+    [PlanStatus.SOFT_ARCHIVED]: { label: 'soft archived', color: 'gray' },
+    [PlanStatus.HARD_ARCHIVED]: { label: 'hard archived', color: 'gray' }
   }
 
 export const SUBSCRIPTION_STATUS: Record<
@@ -35,7 +36,7 @@ export const SUBSCRIPTION_STATUS: Record<
   { label: string; color: string }
 > = {
   [SubscriptionStatus.INITIATING]: {
-    label: '', // 'Initiating'
+    label: '', // BE might use this statusCode to represent no active subscription in SubscriptionList page.
     color: 'lightgray'
   },
   [SubscriptionStatus.PENDING]: { label: 'Pending', color: 'magenta' },
@@ -96,6 +97,7 @@ export const APP_TASK_STATUS: Record<
 }
 
 // to be deprecated, use currency from BE
+/*
 export const CURRENCY: {
   [key: string]: {
     symbol: string
@@ -110,6 +112,7 @@ export const CURRENCY: {
   EUR: { symbol: '€', stripe_factor: 100, decimal_places: 2 },
   USDT: { symbol: '₮', stripe_factor: 100, decimal_places: null }
 }
+  */
 
 export const INVOICE_STATUS: { [key: number]: string } = {
   0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist

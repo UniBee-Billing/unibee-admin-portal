@@ -1,10 +1,5 @@
-import { Button, Divider, Input, InputNumber, message, Modal } from 'antd'
-import { useEffect, useState } from 'react'
-// import HiddenIcon from '../../../assets/hidden.svg?react'
-// import { formatPlanPrice } from '../../../helpers'
-import { CURRENCY } from '../../../constants'
-import { showAmount } from '../../../helpers'
-import { applyDiscountPreviewReq } from '../../../requests'
+import { showAmount } from '@/helpers'
+import { applyDiscountPreviewReq } from '@/requests'
 import {
   DiscountCode,
   DiscountType,
@@ -12,8 +7,13 @@ import {
   IPreview,
   IProfile,
   ISubscriptionType,
+  PlanStatus,
   TPromoAccount
-} from '../../../shared.types'
+} from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
+import { Button, Divider, Input, InputNumber, message, Modal } from 'antd'
+import { Currency } from 'dinero.js'
+import { useEffect, useState } from 'react'
 import { PlanSelector } from '../../user/assignSub/planSelector'
 import Plan from '../plan'
 
@@ -61,6 +61,7 @@ const ChangePlan = ({
   onConfirm,
   createPreview
 }: Props) => {
+  const appConfig = useAppConfigStore()
   const [codePreview, setCodePreview] = useState<DiscountCodePreview | null>(
     null
   ) // null: no code provided
@@ -118,7 +119,7 @@ const ChangePlan = ({
       return <div className="text-xs text-gray-500">No promo credit used</div>
     }
     return (
-      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${CURRENCY[credit.credit.currency].symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
+      <div className="text-xs text-green-500">{`At most ${creditAmt} credits (${appConfig.currency[credit.credit.currency as Currency]?.Symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
     )
   }
 
@@ -223,6 +224,12 @@ const ChangePlan = ({
           selectedPlanId={selectedPlanId}
           productId={subInfo!.productId}
           onPlanSelected={(p: IPlan) => setSelectedPlan(p.id)}
+          filterPredicate={
+            (p) =>
+              (p?.status != PlanStatus.SOFT_ARCHIVED &&
+                p?.status != PlanStatus.HARD_ARCHIVED) ||
+              p?.id == subInfo?.plan?.id // it's possible users have subscribed to an archived plan. Selector need to show this plan.
+          }
         />
       </div>
 
