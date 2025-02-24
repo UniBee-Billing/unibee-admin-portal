@@ -31,7 +31,6 @@ const Index = () => {
   const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [invoiceDetail, setInvoiceDetail] = useState<UserInvoice | null>(null)
-  //   const [userProfile, setUserProfile] = useState<IProfile | null>(null)
   const [showInvoiceItems, setShowInvoiceItems] = useState(false)
   const toggleInvoiceItems = () => setShowInvoiceItems(!showInvoiceItems)
   const [refundModalOpen, setRefundModalOpen] = useState(false) // show refund detail
