@@ -1,3 +1,6 @@
+import { getCountryListReq, saveUserProfileReq } from '@/requests'
+import { AccountType, Country, IProfile, UserStatus } from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
@@ -12,9 +15,6 @@ import {
   message
 } from 'antd'
 import { ReactElement, useEffect, useState } from 'react'
-import { getCountryListReq, saveUserProfileReq } from '../../requests'
-import { AccountType, Country, IProfile, UserStatus } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 import PaymentSelector from '../ui/paymentSelector'
 import { UserStatusTag } from '../ui/statusTag'
 import PaymentCardList from '../user/paymentCards'

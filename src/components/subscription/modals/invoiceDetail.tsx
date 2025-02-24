@@ -1,14 +1,10 @@
+import { REFUND_STATUS } from '@/constants'
+import { getInvoicePermission, randomString, showAmount } from '@/helpers'
+import { sendInvoiceInMailReq } from '@/requests'
+import { InvoiceItem, IProfile, UserInvoice } from '@/shared.types'
 import { Button, Col, Divider, message, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
 import React, { useState } from 'react'
-import { REFUND_STATUS } from '../../../constants'
-import {
-  getInvoicePermission,
-  randomString,
-  showAmount
-} from '../../../helpers'
-import { sendInvoiceInMailReq } from '../../../requests'
-import { InvoiceItem, IProfile, UserInvoice } from '../../../shared.types'
 import CouponPopover from '../../ui/couponPopover'
 import LongTextPopover from '../../ui/longTextPopover'
 

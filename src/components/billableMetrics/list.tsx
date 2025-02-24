@@ -1,15 +1,15 @@
+import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
+import { getMetricsListReq } from '@/requests/index'
+import { IBillableMetrics } from '@/shared.types'
 import { LoadingOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons'
 import { Button, Pagination, Space, Table, Tooltip, message } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '../../constants'
-import { getMetricsListReq } from '../../requests'
-import { IBillableMetrics } from '../../shared.types'
 
-import { formatDate } from '../../helpers'
-import { usePagination } from '../../hooks'
-import '../../shared.css'
+import { formatDate } from '@/helpers/index'
+import { usePagination } from '@/hooks/index'
+import '@/shared.css'
 
 const PAGE_SIZE = 10
 

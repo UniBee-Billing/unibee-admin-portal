@@ -1,12 +1,5 @@
-import { LoadingOutlined } from '@ant-design/icons'
-import { Button, Form, Popconfirm, Spin, Tabs, message } from 'antd'
-import dayjs, { Dayjs } from 'dayjs'
-import { Currency } from 'dinero.js'
-import update from 'immutability-helper'
-import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { numBoolConvert, showAmount, toFixedNumber } from '../../../helpers'
-import { useSkipFirstRender } from '../../../hooks'
+import { numBoolConvert, showAmount, toFixedNumber } from '@/helpers'
+import { useSkipFirstRender } from '@/hooks'
 import {
   createDiscountCodeReq,
   deleteDiscountCodeReq,
@@ -14,7 +7,7 @@ import {
   getPlanList,
   toggleDiscountCodeActivateReq,
   updateDiscountCodeReq
-} from '../../../requests'
+} from '@/requests/index'
 import {
   DiscountCode,
   DiscountCodeApplyType,
@@ -24,9 +17,16 @@ import {
   IPlan,
   PlanStatus,
   PlanType
-} from '../../../shared.types'
-import { useAppConfigStore, useMerchantInfoStore } from '../../../stores'
-import { title } from '../../../utils'
+} from '@/shared.types'
+import { useAppConfigStore, useMerchantInfoStore } from '@/stores'
+import { title } from '@/utils'
+import { LoadingOutlined } from '@ant-design/icons'
+import { Button, Form, Popconfirm, Spin, Tabs, message } from 'antd'
+import dayjs, { Dayjs } from 'dayjs'
+import { Currency } from 'dinero.js'
+import update from 'immutability-helper'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 import { UpdateDiscountCodeQuantityModal } from '../updateDiscountCodeQuantityModal'
 import AdvancedConfig from './advancedConfig'

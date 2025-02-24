@@ -1,9 +1,9 @@
+import { deleteProductReq } from '@/requests'
+import { IProduct } from '@/shared.types'
+import { useProductListStore } from '@/stores'
 import { Button, Col, message, Modal, Row } from 'antd'
 import update from 'immutability-helper'
 import { CSSProperties, useState } from 'react'
-import { deleteProductReq } from '../../requests'
-import { IProduct } from '../../shared.types'
-import { useProductListStore } from '../../stores'
 
 const rowStyle: CSSProperties = {
   display: 'flex',

@@ -1,10 +1,10 @@
+import { formatDate } from '@/helpers'
+import { createAdminNoteReq, getAdminNoteReq } from '@/requests'
+import { TAdminNote } from '@/shared.types'
 import { DoubleRightOutlined } from '@ant-design/icons'
 import { Badge, Button, Divider, message } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
-import { formatDate } from '../../helpers'
-import { createAdminNoteReq, getAdminNoteReq } from '../../requests'
-import { TAdminNote } from '../../shared.types'
 import './adminNote.css'
 
 const Index = ({

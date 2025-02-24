@@ -5,6 +5,14 @@ import {
 } from '@ant-design/icons'
 import { Button, List, message, Tag } from 'antd'
 
+import { randomString } from '@/helpers'
+import {
+  getPaymentGatewayConfigListReq,
+  getPaymentGatewayListReq,
+  sortGatewayReq
+} from '@/requests/index'
+import { TGateway } from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   closestCenter,
   DndContext,
@@ -23,14 +31,6 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useState } from 'react'
-import { randomString } from '../../../helpers'
-import {
-  getPaymentGatewayConfigListReq,
-  getPaymentGatewayListReq,
-  sortGatewayReq
-} from '../../../requests'
-import { TGateway } from '../../../shared.types'
-import { useAppConfigStore } from '../../../stores'
 import PaymentGatewaySetupModal from './setupModal'
 import ModalWireTransfer from './wireTransferModal'
 

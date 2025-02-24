@@ -1,8 +1,8 @@
+import { getUserProfile } from '@/requests'
+import { IProfile } from '@/shared.types'
 import { Divider, Empty, Tabs, TabsProps, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { getUserProfile } from '../../requests'
-import { IProfile } from '../../shared.types'
 import UserInfo from '../shared/userInfo'
 import InvoiceTab from '../subscription/invoicesTab'
 import TransactionTab from '../subscription/paymentTab'
@@ -10,14 +10,6 @@ import UserAccountTab from '../subscription/userAccountTab'
 import ProductList from './productList'
 import PromoCredit from './promoCreditTab'
 import UserNote from './userNote'
-
-/*
-const GoBackBtn = () => {
-  const navigate = useNavigate()
-  const goBack = () => navigate(`/user/list`)
-  return <Button onClick={goBack}>Go back</Button>
-}
-  */
 
 const TAB_KEYS = [
   'account',

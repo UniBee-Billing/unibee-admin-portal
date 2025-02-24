@@ -1,8 +1,8 @@
+import LongTextPopover from '@/components/ui/longTextPopover'
+import { showAmount } from '@/helpers'
+import { ISubscriptionType, SubscriptionEndMode } from '@/shared.types'
 import { Button, Col, Modal, Radio, RadioChangeEvent, Row, Space } from 'antd'
 import dayjs from 'dayjs'
-import { showAmount } from '../../../helpers'
-import { ISubscriptionType, SubscriptionEndMode } from '../../../shared.types'
-import LongTextPopover from '../../ui/longTextPopover'
 
 interface Props {
   isOpen: boolean

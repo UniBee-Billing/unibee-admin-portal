@@ -1,5 +1,3 @@
-// import { Link } from "react-router-dom";
-
 import { Result } from 'antd'
 
 export default function NotFound() {

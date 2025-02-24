@@ -1,7 +1,7 @@
+import { updateCreditAmtReq } from '@/requests'
+import { TPromoAccount } from '@/shared.types'
 import { Button, Form, Input, InputNumber, message, Modal } from 'antd'
 import { useState } from 'react'
-import { updateCreditAmtReq } from '../../requests'
-import { TPromoAccount } from '../../shared.types'
 
 const Index = ({
   promoCreditAccount,

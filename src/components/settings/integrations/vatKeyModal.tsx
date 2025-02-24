@@ -1,6 +1,6 @@
+import { saveVatSenseKeyReq } from '@/requests/index'
 import { Button, Col, Input, Modal, Row, message } from 'antd'
 import { useState } from 'react'
-import { saveVatSenseKeyReq } from '../../../requests'
 const { TextArea } = Input
 
 interface IProps {

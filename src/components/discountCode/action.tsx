@@ -1,6 +1,6 @@
+import { useLoading } from '@/hooks'
 import { Button, ButtonProps, Tooltip } from 'antd'
 import { MouseEvent, PropsWithChildren } from 'react'
-import { useLoading } from '../../hooks'
 
 interface ListItemActionButtonProps extends ButtonProps {
   tooltipMessage: string

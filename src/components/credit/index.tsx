@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import PromoCreditTxHistory from '../user/promoCreditTxHist'
+import PromoCreditTxHistory from '@/components/user/promoCreditTxHist'
 
 const Index = () => {
   useEffect(() => {}, [])

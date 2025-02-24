@@ -1,9 +1,9 @@
+import UserInfoSvg from '@/assets/user.svg?react'
+import { useUser } from '@/services'
+import { uiConfigStore, useMerchantMemberProfileStore } from '@/stores'
 import { ArrowLeftOutlined, LogoutOutlined } from '@ant-design/icons'
 import { Divider, Layout } from 'antd'
-import { useMemo, useState } from 'react'
-import UserInfoSvg from '../../assets/user.svg?react'
-import { useUser } from '../../services'
-import { useMerchantMemberProfileStore } from '../../stores'
+import { useMemo } from 'react'
 import { AboutUniBee } from './about/aboutUniBee'
 import { Logo } from './logo'
 import LogoWithAction from './logoWithAction'
@@ -11,7 +11,8 @@ import { SideMenu } from './sideMenu'
 
 export const Sidebar = () => {
   const merchantMemberProfile = useMerchantMemberProfileStore()
-  const [collapsed, setCollapsed] = useState(false)
+  const { sidebarCollapsed, toggleSidebar } = uiConfigStore()
+  // const [collapsed, setCollapsed] = useState(sidebarCollapsed)
   const { logout } = useUser()
   const role = useMemo(
     () =>
@@ -33,14 +34,14 @@ export const Sidebar = () => {
             color: 'gray',
             fontSize: '18px',
             transition: 'all 0.3s ease-in-out',
-            transform: `rotate(${collapsed ? 180 : 0}deg)`
+            transform: `rotate(${sidebarCollapsed ? 180 : 0}deg)`
           }}
         />
       }
       theme="dark"
       collapsible
-      collapsed={collapsed}
-      onCollapse={(value) => setCollapsed(value)}
+      collapsed={sidebarCollapsed}
+      onCollapse={toggleSidebar}
     >
       <div className="h-full overflow-y-auto overflow-x-hidden">
         <div>
@@ -55,9 +56,9 @@ export const Sidebar = () => {
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <AboutUniBee collapsed={collapsed} />
+            <AboutUniBee collapsed={sidebarCollapsed} />
             <LogoWithAction
-              collapsed={collapsed}
+              collapsed={sidebarCollapsed}
               text="Account Info"
               logo={<UserInfoSvg />}
               logoColor="text-gray-400"
@@ -82,7 +83,7 @@ export const Sidebar = () => {
               }
             />
             <LogoWithAction
-              collapsed={collapsed}
+              collapsed={sidebarCollapsed}
               clickHandler={() => logout('login')}
               text="Log out"
               logo={<LogoutOutlined className="mr-2" />}

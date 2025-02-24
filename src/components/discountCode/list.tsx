@@ -1,4 +1,30 @@
 import {
+  formatDateRange,
+  useTableDateFilter
+} from '@/components/table/filters/dateFilter'
+import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
+import {
+  DISCOUNT_CODE_BILLING_TYPE,
+  DISCOUNT_CODE_STATUS,
+  DISCOUNT_CODE_TYPE
+} from '@/constants'
+import { formatDate, showAmount } from '@/helpers'
+import { useLoading, usePagination } from '@/hooks'
+import {
+  deleteDiscountCodeReq,
+  exportDataReq,
+  getDiscountCodeDetailWithMore,
+  getDiscountCodeListReq
+} from '@/requests/index'
+import '@/shared.css'
+import {
+  DiscountCode,
+  DiscountCodeBillingType,
+  DiscountCodeStatus,
+  DiscountType
+} from '@/shared.types'
+import { title } from '@/utils'
+import {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -10,32 +36,6 @@ import { ColumnsType, TableProps } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { Key, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  DISCOUNT_CODE_BILLING_TYPE,
-  DISCOUNT_CODE_STATUS,
-  DISCOUNT_CODE_TYPE
-} from '../../constants'
-import { formatDate, showAmount } from '../../helpers'
-import { useLoading, usePagination } from '../../hooks'
-import {
-  deleteDiscountCodeReq,
-  exportDataReq,
-  getDiscountCodeDetailWithMore,
-  getDiscountCodeListReq
-} from '../../requests'
-import '../../shared.css'
-import {
-  DiscountCode,
-  DiscountCodeBillingType,
-  DiscountCodeStatus,
-  DiscountType
-} from '../../shared.types'
-import { title } from '../../utils'
-import {
-  formatDateRange,
-  useTableDateFilter
-} from '../table/filters/dateFilter'
-import { getDiscountCodeStatusTagById } from '../ui/statusTag'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
 import {

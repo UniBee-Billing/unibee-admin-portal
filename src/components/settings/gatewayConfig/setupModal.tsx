@@ -1,6 +1,6 @@
+import { TGateway } from '@/shared.types'
 import { Badge, Modal, Tabs, TabsProps } from 'antd'
 import { useState } from 'react'
-import { TGateway } from '../../../shared.types'
 import EssentialSetup from './essentialSetup'
 import PubPriKeySetup from './pubPriKeySetup'
 import WebHookSetup from './webHookSetup'

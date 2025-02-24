@@ -1,3 +1,5 @@
+import { TableProps } from 'antd/es/table'
+import { SortOrder } from 'antd/es/table/interface'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import Dinero, { Currency } from 'dinero.js'
@@ -416,3 +418,66 @@ export const uploadFile =
 
     onSuccess(logoUrl)
   }
+
+/*
+@param key - the key of the filter in the url search params, like: status(used to get plan list)
+@param mapper - a function to map the key's value to a number which is compatible with enum value, e.g., "1" -> 1 (same as PlanStatus.ACTIVE)
+@param enumType - the enum type of the filter, e.g., PlanStatus
+*/
+export const initializeFilters = <V extends { [key: string]: string | number }>(
+  key: string,
+  mapper: (value: string) => number,
+  enumType: V // enumType is essentially a map of key-value pairs, e.g., {ACTIVE: 1, INACTIVE: 2, OTHER: 'OTHERS'},
+  // but I cannot declare V as: "V extends EnumType1 | EnumType2 | ...,", because Object.values() cannot be applied to V
+) => {
+  const searchParams = new URLSearchParams(window.location.search)
+  const value = searchParams.get(key)
+
+  if (value == null) {
+    return { [key]: null }
+  }
+  return {
+    [key]: value
+      .split('-')
+      .map(mapper)
+      .filter((v) => Object.values(enumType).includes(v))
+  }
+}
+
+/*
+const initializeSort = (searchParams: URLSearchParams): Sorts => {
+  const sortby = searchParams.get('sortby')
+  const sortorder = searchParams.get('sortorder')
+  const sortFilter: Sorts = {}
+  if (sortby != null && (sortby == 'planName' || sortby == 'createTime')) {
+    sortFilter.columnKey = sortby
+    sortFilter.field = sortby
+    sortFilter.order =
+      sortorder === 'ascend' || sortorder === 'descend'
+        ? (sortorder as SortOrder)
+        : undefined
+  }
+  return sortFilter
+}
+  */
+
+export const initializeSort = <ColumnType>(sortFields: string[]) => {
+  type OnChange = NonNullable<TableProps<ColumnType>['onChange']>
+  type GetSingle<T> = T extends (infer U)[] ? U : never
+  type Sorts = GetSingle<Parameters<OnChange>[2]>
+
+  const searchParams = new URLSearchParams(window.location.search)
+  const sortby = searchParams.get('sortby')
+  const sortorder = searchParams.get('sortorder')
+  const sortFilter: Sorts = {}
+  if (sortby != null && sortFields.includes(sortby)) {
+    // if (sortby != null && (sortby == 'planName' || sortby == 'createTime')) {
+    sortFilter.columnKey = sortby
+    sortFilter.field = sortby
+    sortFilter.order =
+      sortorder === 'ascend' || sortorder === 'descend'
+        ? (sortorder as SortOrder)
+        : undefined
+  }
+  return sortFilter as Sorts
+}

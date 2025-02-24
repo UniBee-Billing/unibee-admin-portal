@@ -1,13 +1,13 @@
-import { Col, Divider, Row } from 'antd'
-import dayjs, { Dayjs } from 'dayjs'
+import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
 import {
   DiscountCodeApplyType,
   DiscountCodeBillingType,
   DiscountCodeStatus,
   DiscountCodeUserScope,
   DiscountType
-} from '../../../shared.types'
-import { getDiscountCodeStatusTagById } from '../../ui/statusTag'
+} from '@/shared.types'
+import { Col, Divider, Row } from 'antd'
+import dayjs, { Dayjs } from 'dayjs'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 import './summary.css'
 

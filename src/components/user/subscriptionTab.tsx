@@ -1,3 +1,7 @@
+import { normalizeSub, showAmount } from '@/helpers'
+import { getSubDetailInProductReq } from '@/requests'
+import { IProfile, ISubscriptionType, UserStatus } from '@/shared.types'
+import { useAppConfigStore } from '@/stores'
 import {
   InfoCircleOutlined,
   LoadingOutlined,
@@ -8,10 +12,6 @@ import { Button, Col, Empty, Popover, Row, Spin, Tooltip, message } from 'antd'
 import dayjs from 'dayjs'
 import { CSSProperties, ReactElement, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { normalizeSub, showAmount } from '../../helpers'
-import { getSubDetailInProductReq } from '../../requests'
-import { IProfile, ISubscriptionType, UserStatus } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import LongTextPopover from '../ui/longTextPopover'

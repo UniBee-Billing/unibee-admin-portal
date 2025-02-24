@@ -1,10 +1,10 @@
+import screenshot from '@/assets/AnalyticsScreenshot.png'
+import { useLicense } from '@/hooks/useVersion'
+import { getRevenueReq } from '@/requests'
 import { CaretUpOutlined, LoadingOutlined } from '@ant-design/icons'
 import { Button, message, Modal, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
-import screenshot from '../../assets/AnalyticsScreenshot.png'
-import { useLicense } from '../../hooks/useVersion'
-import { getRevenueReq } from '../../requests'
 
 type TRevenueAndUser = {
   id: number

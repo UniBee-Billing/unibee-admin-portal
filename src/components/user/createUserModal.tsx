@@ -1,8 +1,7 @@
+import { emailValidate } from '@/helpers'
+import { createNewUserReq } from '@/requests'
 import { Button, Col, Form, Input, Modal, Row, message } from 'antd'
 import { useState } from 'react'
-import { emailValidate } from '../../helpers'
-import { createNewUserReq } from '../../requests'
-// import { Country, IProfile } from '../../shared.types'
 
 const Index = ({
   closeModal,

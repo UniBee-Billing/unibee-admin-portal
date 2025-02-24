@@ -1,7 +1,7 @@
+import { suspendUserReq } from '@/requests'
+import { IProfile } from '@/shared.types'
 import { Button, message, Modal } from 'antd'
 import React, { useState } from 'react'
-import { suspendUserReq } from '../../requests'
-import { IProfile } from '../../shared.types'
 import UserInfo from '../shared/userInfo'
 
 interface Props {

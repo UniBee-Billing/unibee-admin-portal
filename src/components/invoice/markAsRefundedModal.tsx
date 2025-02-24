@@ -1,6 +1,6 @@
+import { markRefundAsSucceedReq } from '@/requests/index'
 import { Button, Form, Input, message, Modal } from 'antd'
 import { useState } from 'react'
-import { markRefundAsSucceedReq } from '../../requests'
 
 const { TextArea } = Input
 

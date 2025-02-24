@@ -1,7 +1,6 @@
-// import { EditFilled, MinusOutlined, PlusOutlined } from '@ant-design/icons'
+import { markInvoiceAsPaidReq } from '@/requests'
 import { Button, Form, Input, message, Modal } from 'antd'
 import { useState } from 'react'
-import { markInvoiceAsPaidReq } from '../../requests'
 
 const { TextArea } = Input
 
