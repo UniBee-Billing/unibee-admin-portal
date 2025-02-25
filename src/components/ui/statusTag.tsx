@@ -12,6 +12,7 @@ import {
 import {
   AppTaskStatus,
   DiscountCodeStatus,
+  InvoiceStatus,
   MerchantUserStatus,
   PaymentStatus,
   PlanStatus,
@@ -19,9 +20,8 @@ import {
   SubscriptionStatus,
   UserStatus
 } from '@/shared.types'
-import { InfoCircleOutlined } from '@ant-design/icons'
-import { Tag, Tooltip } from 'antd'
-import React, { ReactElement } from 'react'
+import { Tag } from 'antd'
+import React from 'react'
 
 const SubscriptionStatusTag = (status: SubscriptionStatus) => {
   return (
@@ -40,44 +40,37 @@ const SubHistoryStatus = (statusId: SubscriptionHistoryStatus) => (
   </Tag>
 )
 
-const IV_STATUS: { [key: number]: ReactElement } = {
-  0: <span>Initiating</span>, // this status only exist for a very short period, users/admin won't even know it exist
-  1: (
-    <div>
-      <Tag color="gray">{INVOICE_STATUS[1]}</Tag>
-      <Tooltip title="You can still edit/delete this draft, user won't receive this invoice until you 'create' it.">
-        <InfoCircleOutlined />
-      </Tooltip>
-    </div>
-  ), // 1: draft
-  2: <Tag color="blue">{INVOICE_STATUS[2]}</Tag>, // 2: awaiting payment/refund
-  3: <Tag color="#87d068">{INVOICE_STATUS[3]}</Tag>, // 3: paid/refunded
-  4: (
-    <div>
-      <Tag color="red">{INVOICE_STATUS[4]}</Tag>
-      <Tooltip title="User didn't finish the payment on time.">
-        <InfoCircleOutlined />
-      </Tooltip>
-    </div>
-  ), // 4: failed
-  5: <Tag color="purple">{INVOICE_STATUS[5]}</Tag>, // 5: cancellled
-  6: <Tag color="cyan">{INVOICE_STATUS[6]}</Tag> // reversed???
-}
-const InvoiceStatus = (statusId: number, isRefund?: boolean) => {
-  if (statusId == 3 && isRefund) {
-    // show 'refunded', status == 3 means invoice Paid, for refund invoice, description should be Refunded
-    return <Tag color="#87d068">Refunded</Tag>
-  } else if (statusId == 3) {
+const InvoiceStatusTag = (statusId: InvoiceStatus, isRefund?: boolean) => {
+  if (statusId == InvoiceStatus.PAID && isRefund) {
+    // for PAID refund invoice, label should be 'Refunded'
+    return <Tag color={INVOICE_STATUS[InvoiceStatus.PAID].color}>Refunded</Tag>
+  } else if (statusId == InvoiceStatus.PAID) {
     // show 'paid'
-    return <Tag color="#87d068">{INVOICE_STATUS[3]}</Tag>
-  } else if (statusId == 2 && isRefund) {
+    return (
+      <Tag color={INVOICE_STATUS[InvoiceStatus.PAID].color}>
+        {INVOICE_STATUS[statusId].label}
+      </Tag>
+    )
+  } else if (statusId == InvoiceStatus.AWAITING_PAYMENT && isRefund) {
     // show 'Awaiting refund'
-    return <Tag color="blue">Awaiting refund</Tag>
-  } else if (statusId == 2) {
+    return (
+      <Tag color={INVOICE_STATUS[InvoiceStatus.AWAITING_PAYMENT].color}>
+        Awaiting refund
+      </Tag>
+    )
+  } else if (statusId == InvoiceStatus.AWAITING_PAYMENT) {
     // show 'Awaiting payment'
-    return <Tag color="blue">{INVOICE_STATUS[2]}</Tag>
+    return (
+      <Tag color={INVOICE_STATUS[InvoiceStatus.AWAITING_PAYMENT].color}>
+        {INVOICE_STATUS[statusId].label}
+      </Tag>
+    )
   } else {
-    return IV_STATUS[statusId]
+    return (
+      <Tag color={INVOICE_STATUS[statusId].color}>
+        {INVOICE_STATUS[statusId].label}
+      </Tag>
+    )
   }
 }
 
@@ -116,7 +109,7 @@ const AppTaskStatusTag = (statusId: AppTaskStatus) => (
 export {
   AppTaskStatusTag,
   getDiscountCodeStatusTagById,
-  InvoiceStatus,
+  InvoiceStatusTag,
   MerchantUserStatusTag,
   PaymentStatusTag,
   PlanStatusTag,

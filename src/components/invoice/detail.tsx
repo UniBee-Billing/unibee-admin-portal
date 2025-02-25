@@ -10,7 +10,7 @@ import { normalizeAmt } from '../helpers'
 import RefundModal from '../payment/refundModal'
 import InvoiceDetailModal from '../subscription/modals/invoiceDetail'
 import CopyToClipboard from '../ui/copyToClipboard'
-import { InvoiceStatus } from '../ui/statusTag'
+import { InvoiceStatusTag } from '../ui/statusTag'
 import MarkAsPaidModal from './markAsPaidModal'
 import MarkAsRefundedModal from './markAsRefundedModal'
 
@@ -183,7 +183,10 @@ const Index = () => {
         </Col>
         <Col span={6}>
           {invoiceDetail != null &&
-            InvoiceStatus(invoiceDetail.status, invoiceDetail?.refund != null)}
+            InvoiceStatusTag(
+              invoiceDetail.status,
+              invoiceDetail?.refund != null
+            )}
           {/* 
             status == 2 (processing) is used mainly for wire-transfer payment/refund, crypto refund,
             in which cases, payment/refund status updates are not provided by 3rd party API,

@@ -9,7 +9,7 @@ import {
 import { usePagination } from '@/hooks'
 import { exportDataReq, getInvoiceListReq } from '@/requests'
 import '@/shared.css'
-import { IProfile, UserInvoice } from '@/shared.types'
+import { InvoiceStatus, IProfile, UserInvoice } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import {
   CheckCircleOutlined,
@@ -30,13 +30,13 @@ import {
   FormInstance,
   Input,
   InputNumber,
+  message,
   Pagination,
   Row,
   Select,
   Space,
   Table,
-  Tooltip,
-  message
+  Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { Currency } from 'dinero.js'
@@ -46,15 +46,15 @@ import MarkAsPaidModal from '../invoice/markAsPaidModal'
 import MarkAsRefundedModal from '../invoice/markAsRefundedModal'
 import RefundInfoModal from '../payment/refundModal'
 import CopyToClipboard from '../ui/copyToClipboard'
-import { InvoiceStatus } from '../ui/statusTag'
+import { InvoiceStatusTag } from '../ui/statusTag'
 import InvoiceDetailModal from './modals/invoiceDetail'
 import NewInvoiceModal from './modals/newInvoice'
 
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
 const STATUS_FILTER = Object.entries(INVOICE_STATUS).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text }
+  const [value, { label }] = s
+  return { value: Number(value), text: label }
 })
 
 type TFilters = {
@@ -313,7 +313,7 @@ const Index = ({
       key: 'status',
       filters: STATUS_FILTER,
       filteredValue: filters.status,
-      render: (s, iv) => InvoiceStatus(s, iv.refund != null) // INVOICE_STATUS[s as keyof typeof INVOICE_STATUS]
+      render: (s, iv) => InvoiceStatusTag(s as InvoiceStatus, iv.refund != null)
     },
     {
       title: 'Paid Date',
