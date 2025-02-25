@@ -53,6 +53,7 @@ const PLAN_STATUS_FILTER = Object.entries(PLAN_STATUS)
     value: Number(statusNumber),
     text: label
   }))
+  .filter(({ value }) => value != PlanStatus.INACTIVE) // inactive is not used.
   .sort((a, b) => (a.value < b.value ? -1 : 1))
 
 const PLAN_TYPE_FILTER = Object.entries(PLAN_TYPE)
@@ -66,38 +67,6 @@ type TFilters = {
   type: PlanType[] | null
   status: PlanStatus[] | null
 }
-
-// todo: make this generic for all tables
-/*
-const initializeFilters = (searchParams: URLSearchParams) => {
-  // todo: do validation check, status could be parsed as array or string, and these values are not arbitrary(had to be e.g., one of the enum, like PlanStatus)
-  const type = searchParams.get('type')
-  const status = searchParams.get('status')
-
-  return {
-    type: type ? type.split('-').map(Number) : null,
-    status: status ? status.split('-').map(Number) : null
-  }
-}
-  */
-
-// todo: make this generic for all tables, and do validation check
-/*
-const initializeSort = (searchParams: URLSearchParams): Sorts => {
-  const sortby = searchParams.get('sortby')
-  const sortorder = searchParams.get('sortorder')
-  const sortFilter: Sorts = {}
-  if (sortby != null && (sortby == 'planName' || sortby == 'createTime')) {
-    sortFilter.columnKey = sortby
-    sortFilter.field = sortby
-    sortFilter.order =
-      sortorder === 'ascend' || sortorder === 'descend'
-        ? (sortorder as SortOrder)
-        : undefined
-  }
-  return sortFilter
-}
-*/
 
 const Index = ({
   productId,
