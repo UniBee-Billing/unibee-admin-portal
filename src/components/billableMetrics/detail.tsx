@@ -1,6 +1,7 @@
 import CopyToClipboard from '@/components/ui/copyToClipboard'
 import { METRICS_AGGREGATE_TYPE } from '@/constants'
 import { getMetricDetailReq, saveMetricsReq } from '@/requests/index'
+import { MetricAggregationType } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
@@ -18,13 +19,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash'
 import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism'
-
 const { TextArea } = Input
 
 SyntaxHighlighter.registerLanguage('bash', bash)
 const AGGR_TYPE_SELECT_OPT = Object.keys(METRICS_AGGREGATE_TYPE)
   .map((s) => ({
-    label: METRICS_AGGREGATE_TYPE[Number(s)],
+    label: METRICS_AGGREGATE_TYPE[Number(s) as MetricAggregationType].label,
     value: Number(s)
   }))
   .sort((a, b) => (a.value < b.value ? -1 : 1))
