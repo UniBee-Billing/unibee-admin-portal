@@ -1,6 +1,11 @@
 import { normalizeSub, showAmount } from '@/helpers'
 import { getSubDetailInProductReq } from '@/requests'
-import { IProfile, ISubscriptionType, UserStatus } from '@/shared.types'
+import {
+  InvoiceStatus,
+  IProfile,
+  ISubscriptionType,
+  UserStatus
+} from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import {
   InfoCircleOutlined,
@@ -8,14 +13,14 @@ import {
   MinusOutlined,
   SyncOutlined
 } from '@ant-design/icons'
-import { Button, Col, Empty, Popover, Row, Spin, Tooltip, message } from 'antd'
+import { Button, Col, Empty, message, Popover, Row, Spin, Tooltip } from 'antd'
 import dayjs from 'dayjs'
 import { CSSProperties, ReactElement, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import LongTextPopover from '../ui/longTextPopover'
-import { InvoiceStatus, SubscriptionStatusTag } from '../ui/statusTag'
+import { InvoiceStatusTag, SubscriptionStatusTag } from '../ui/statusTag'
 import { AssignSubscriptionModal } from './assignSub/assignSubModal'
 
 const rowStyle: CSSProperties = {
@@ -293,7 +298,9 @@ const Index = ({
                     <CopyToClipboard
                       content={subInfo.latestInvoice.invoiceId}
                     />
-                    {InvoiceStatus(subInfo.latestInvoice.status)}{' '}
+                    {InvoiceStatusTag(
+                      subInfo.latestInvoice.status as InvoiceStatus
+                    )}
                   </div>
                 )}
               </Col>

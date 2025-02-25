@@ -5,6 +5,7 @@ import {
   DiscountCodeStatus,
   DiscountType,
   InvoiceBizType,
+  InvoiceStatus,
   MerchantUserStatus,
   MetricAggregationType,
   MetricType,
@@ -87,6 +88,7 @@ export const APP_TASK_STATUS: Record<
   [AppTaskStatus.FAILED]: { label: 'Failed', color: 'red' }
 }
 
+/*
 export const INVOICE_STATUS: { [key: number]: string } = {
   0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist
   1: 'Draft', // admin manually create an invoice, for edit/delete, but users won't receive this invoice.
@@ -95,6 +97,30 @@ export const INVOICE_STATUS: { [key: number]: string } = {
   4: 'Failed', // user not pay the invoice before it get expired
   5: 'Cancelled', // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
   6: 'Reversed' // 取消后被通知支付成功的，这种情况一般是要排查的
+}
+  */
+export const INVOICE_STATUS: Record<
+  InvoiceStatus,
+  { label: string; color: string; tooltip?: string }
+> = {
+  [InvoiceStatus.INITIATING]: { label: 'Initiating', color: 'gray' },
+  [InvoiceStatus.DRAFT]: {
+    label: 'Draft',
+    color: 'gray',
+    tooltip: `You can still edit/delete this draft, user won't receive this invoice until you 'create' it.`
+  },
+  [InvoiceStatus.AWAITING_PAYMENT]: {
+    label: 'Awaiting payment',
+    color: 'blue'
+  },
+  [InvoiceStatus.PAID]: { label: 'Paid', color: '#87d068' },
+  [InvoiceStatus.FAILED]: {
+    label: 'Failed',
+    color: 'red',
+    tooltip: `User didn't finish the payment on time.`
+  },
+  [InvoiceStatus.CANCELLED]: { label: 'Cancelled', color: 'purple' },
+  [InvoiceStatus.REVERSED]: { label: 'Reversed', color: 'cyan' }
 }
 
 export const INVOICE_BIZ_TYPE: Record<InvoiceBizType, string> = {
