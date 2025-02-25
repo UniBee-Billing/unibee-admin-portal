@@ -429,6 +429,7 @@ export const AssignSubscriptionModal = ({
     }
     updatePrice()
   }
+
   const onApplyDiscountCode = () => {
     updatePrice()
   }
@@ -437,9 +438,8 @@ export const AssignSubscriptionModal = ({
     if (!selectedPlan) {
       return
     }
-
     updatePrice()
-  }, [selectedPlan, requirePayment])
+  }, [selectedPlan, requirePayment, gatewayId])
 
   const onDiscountCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDiscountCode(e.target.value)
