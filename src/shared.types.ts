@@ -210,14 +210,27 @@ export interface ISubAddon extends IPlan {
   addonPlan: ISubAddon
 }
 
+export enum MetricType {
+  LIMIT_METERED = 1,
+  CHARGE_METERED = 2,
+  CHARGE_RECURRING = 3
+}
+
+export enum MetricAggregationType {
+  COUNT = 1,
+  COUNT_UNIQUE = 2,
+  LATEST = 3,
+  MAX = 4,
+  SUM = 5
+}
 interface IBillableMetrics {
   id: number
   merchantId: number
   code: string
   metricName: string
   metricDescription: string
-  type: number // 1-limit_metered，2-charge_metered(come later),3-charge_recurring(come later)
-  aggregationType: number // 0-count，1-count unique, 2-latest, 3-max, 4-sum
+  type: MetricType
+  aggregationType: MetricAggregationType
   aggregationProperty: string
   gmtModify: string
   createTime: string
