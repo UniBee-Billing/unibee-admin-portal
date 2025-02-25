@@ -163,7 +163,7 @@ export const getInvoicePermission = (iv: UserInvoice | null): TInvoicePerm => {
         p.deletable = true
         p.publishable = true
         break
-      case 2: // processing mode, user has received the invoice mail with payment link, but hasn't paid yet.
+      case 2: // awaiting-payment, user has received the invoice mail with payment link, but hasn't paid yet.
         /*
         if (isWireTransfer || isCrypto) {
           p.asRefundedMarkable = isRefund
@@ -179,18 +179,18 @@ export const getInvoicePermission = (iv: UserInvoice | null): TInvoicePerm => {
       case 3: // user has paid
         p.downloadable = true
         p.sendable = true
-        p.refundable = iv.refund == null // you cannot refund a refund
+        p.refundable = iv.refund == null && iv.totalAmount != 0 // you cannot refund a refund. Some trial plan's amount is 0.
         break
     }
     return p
   }
 
-  if (iv.subscriptionId != '') {
+  if (iv.subscriptionId != '' && iv.subscriptionId != null) {
     // system generated invoice, not admin manually generated
     p.sendable = true
     p.downloadable = true
     if (iv.status == 3) {
-      p.refundable = iv.refund == null // you cannot refund a refund
+      p.refundable = iv.refund == null && iv.totalAmount != 0 // you cannot refund a refund. Some trial plan's amount is 0.
     }
     if (iv.status == 2) {
       if (isWireTransfer || isCrypto) {
