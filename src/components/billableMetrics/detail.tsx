@@ -1,7 +1,7 @@
 import CopyToClipboard from '@/components/ui/copyToClipboard'
 import { METRICS_AGGREGATE_TYPE } from '@/constants'
 import { getMetricDetailReq, saveMetricsReq } from '@/requests/index'
-import { MetricAggregationType } from '@/shared.types'
+import { MetricAggregationType, MetricType } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   Button,
@@ -40,7 +40,7 @@ const Index = () => {
   const [aggrePropDisabled, setAggrePropDisabled] = useState(true)
   const watchAggreType = Form.useWatch('aggregationType', form)
   useEffect(() => {
-    setAggrePropDisabled(watchAggreType == 1)
+    setAggrePropDisabled(watchAggreType == MetricAggregationType.COUNT)
   }, [watchAggreType])
 
   const watchCode = Form.useWatch('code', form)
@@ -50,7 +50,7 @@ const Index = () => {
     let m
     if (isNew) {
       m = JSON.parse(JSON.stringify(form.getFieldsValue()))
-      if (m.watchAggreType == 1) {
+      if (m.aggregationType == MetricAggregationType.COUNT) {
         delete m.aggregationProperty
       }
     } else {
@@ -89,7 +89,7 @@ const Index = () => {
   }
 
   const getPropsArg = () =>
-    watchAggreType == 1
+    watchAggreType == MetricAggregationType.COUNT
       ? ''
       : `
     "metricProperties": { 
@@ -120,8 +120,8 @@ const Index = () => {
         }
         fullscreen
       />
-      <div className="flex">
-        <div className="w-3/6">
+      <div className="flex gap-8">
+        <div className="w-3/5">
           <Form
             form={form}
             onFinish={onSave}
@@ -129,15 +129,15 @@ const Index = () => {
             wrapperCol={{ span: 24 }}
             layout="horizontal"
             // disabled={componentDisabled}
-            style={{ maxWidth: 600 }}
-            initialValues={{ type: 1 }}
+            // style={{ maxWidth: 600 }}
+            initialValues={{ type: MetricType.LIMIT_METERED }}
           >
             <Row gutter={[16, 16]}>
-              <Col span={10}>Name</Col>
-              <Col span={10}>Code</Col>
+              <Col span={12}>Name</Col>
+              <Col span={12}>Code</Col>
             </Row>
             <Row gutter={[16, 16]}>
-              <Col span={10}>
+              <Col span={12}>
                 <Form.Item
                   name="metricName"
                   noStyle={true}
@@ -151,7 +151,7 @@ const Index = () => {
                   <Input />
                 </Form.Item>
               </Col>
-              <Col span={10}>
+              <Col span={12}>
                 <Form.Item
                   name="code"
                   noStyle={true}
@@ -168,29 +168,31 @@ const Index = () => {
             </Row>
             <Row className="my-4"></Row>
             <Row gutter={[16, 16]}>
-              <Col span={10}>Description</Col>
+              <Col span={12}>Description</Col>
             </Row>
             <Row gutter={[16, 16]}>
-              <Col span={20}>
+              <Col span={24}>
                 <Form.Item name="metricDescription" noStyle={true}>
-                  <TextArea rows={6} />
+                  <TextArea rows={4} showCount maxLength={100} />
                 </Form.Item>
               </Col>
             </Row>
 
             <Row className="my-4"></Row>
             <Row gutter={[16, 16]}>
-              <Col span={10}>Type</Col>
+              <Col span={12}>Type</Col>
             </Row>
             <Row>
               <Col>
                 <Form.Item name="type">
                   <Radio.Group disabled={!isNew}>
-                    <Radio.Button value={1}>Limit metered</Radio.Button>
-                    <Radio.Button value={2} disabled>
+                    <Radio.Button value={MetricType.LIMIT_METERED}>
+                      Limit metered
+                    </Radio.Button>
+                    <Radio.Button value={MetricType.CHARGE_METERED}>
                       Charge metered
                     </Radio.Button>
-                    <Radio.Button value={3} disabled>
+                    <Radio.Button value={MetricType.CHARGE_RECURRING}>
                       Charge recurring
                     </Radio.Button>
                   </Radio.Group>
@@ -200,11 +202,11 @@ const Index = () => {
 
             <Row className="my-4"></Row>
             <Row gutter={[16, 16]}>
-              <Col span={10}>Aggregation Type</Col>
-              {!aggrePropDisabled && <Col span={10}>Property to aggregate</Col>}
+              <Col span={12}>Aggregation Type</Col>
+              {!aggrePropDisabled && <Col span={12}>Property to aggregate</Col>}
             </Row>
             <Row gutter={[16, 16]}>
-              <Col span={10}>
+              <Col span={12}>
                 <Form.Item
                   name="aggregationType"
                   rules={[
@@ -224,7 +226,7 @@ const Index = () => {
                 </Form.Item>
               </Col>
               {!aggrePropDisabled && (
-                <Col span={10}>
+                <Col span={12}>
                   <Form.Item
                     name="aggregationProperty"
                     rules={[
@@ -259,7 +261,7 @@ const Index = () => {
             </div>
           </Form>
         </div>
-        <div className="metrics-code-wrapper relative w-3/6">
+        <div className="metrics-code-wrapper relative w-2/5">
           <SyntaxHighlighter
             language="bash"
             style={prism}
@@ -272,13 +274,10 @@ const Index = () => {
 # __YOUR_API_KEY__,
 # __EXTERNAL_USER_ID__,
 # __EVENT_ID__,
-${watchAggreType == 1 ? '' : '# __PROPERTY_VALUE__'}`}
+${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`}
           </SyntaxHighlighter>
           <div className="absolute bottom-6 flex w-full justify-center">
             <CopyToClipboard content={curlCmd} />
-            {/* <Button type="link" onClick={copyContent} icon={<CopyOutlined />}>
-              Copy to clipboard
-            </Button> */}
           </div>
         </div>
       </div>

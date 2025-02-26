@@ -1,17 +1,8 @@
-import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
-import {
-  DiscountCodeApplyType,
-  DiscountCodeBillingType,
-  DiscountCodeStatus,
-  DiscountCodeUserScope,
-  DiscountType,
-  PlanType
-} from '@/shared.types'
-import { Col, Divider, Row } from 'antd'
-import dayjs, { Dayjs } from 'dayjs'
-// import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 import '@/components/discountCode/detail/summary.css'
+import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
+import { PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
+import { Col, Divider, Row } from 'antd'
 
 export const NotSetPlaceholder = () => (
   <span className="text-red-500">Not set</span>
@@ -25,16 +16,20 @@ type SummaryItem = {
   name: string
   description: string
   enableTrialWatch: boolean
-  planTypeWatch?: PlanType
-  getPlanPrice: () => string
+  watchPlanType?: PlanType
+  getPlanPrice: () => string | undefined
+  planStatus: PlanStatus
+  publishStatus: PlanPublishStatus
 }
 
 const Index = ({
   name,
   description,
   enableTrialWatch,
-  planTypeWatch,
-  getPlanPrice
+  watchPlanType,
+  getPlanPrice,
+  planStatus,
+  publishStatus
 }: SummaryItem) => {
   const items = [
     { label: 'Name', renderContent: name || <NotSetPlaceholder /> },
@@ -44,15 +39,24 @@ const Index = ({
     },
     {
       label: 'Plan Type',
-      renderContent: planTypeWatch ? (
-        PLAN_TYPE[planTypeWatch].label
+      renderContent: watchPlanType ? (
+        PLAN_TYPE[watchPlanType].label
       ) : (
         <NotSetPlaceholder />
       )
     },
     {
       label: 'Price',
-      renderContent: getPlanPrice()
+      renderContent:
+        getPlanPrice() == undefined ? <NotSetPlaceholder /> : getPlanPrice()
+    },
+    {
+      label: 'Status',
+      renderContent: PlanStatusTag(planStatus)
+    },
+    {
+      label: 'Published to user portal',
+      renderContent: publishStatus == PlanPublishStatus.PUBLISHED ? 'Yes' : 'No'
     }
     /* {
       label: 'Status',
@@ -151,10 +155,10 @@ const Index = ({
       </div>
       {items.map((item) => (
         <Row key={item.label} className="flex items-baseline">
-          <Col span={10} className={labelStyle}>
+          <Col span={14} className={labelStyle}>
             {item.label}
           </Col>
-          <Col span={14} className={contentStyle}>
+          <Col span={10} className={contentStyle}>
             {item.renderContent}
           </Col>
         </Row>
@@ -167,15 +171,14 @@ const Index = ({
       {advancedItems.map((item, idx: number) => (
         <div key={item.label}>
           <Row className="flex items-baseline">
-            <Col span={24} className={labelStyle2}>
+            <Col span={10} className={labelStyle2}>
               {item.label}
-            </Col>
-          </Row>
-          <Row className="flex items-baseline">
-            <Col span={24} className={contentStyle2}>
+            </Col>{' '}
+            <Col span={14} className={contentStyle}>
               {item.renderContent}
             </Col>
           </Row>
+
           {idx != advancedItems.length - 1 && <Divider className="my-3" />}
         </div>
       ))}
