@@ -16,7 +16,7 @@ git clone https://github.com/UniBee-Billing/unibee-admin-portal
 
 # Install dependencies
 cd unibee-admin-portal
-yarn
+yarn install
 ```
 
 ### Running the application
@@ -56,7 +56,7 @@ docker build -t <tag> .
 
 # Development
 
-Use `yarn add <package>` to add a new dependency, don't use `npm install <package>`.
+Use `yarn add <package>` to add a new dependency, don't use `npm install <package>`. Create your own local branch for development, then create PR to merge into develop/v1.2.3 branch(v1.2.3 is the latest release branch).
 
 ## License
 
