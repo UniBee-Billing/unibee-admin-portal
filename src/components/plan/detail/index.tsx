@@ -564,6 +564,7 @@ const Index = () => {
                   watchPlanType={watchPlanType}
                   getPlanPrice={getPlanPrice}
                   planStatus={plan.status}
+                  publishStatus={plan.publishStatus}
                 />
               </div>
             </div>

@@ -11,7 +11,7 @@ export const NotSetPlaceholder = () => (
 const labelStyle = 'flex h-11 items-center text-gray-400'
 const contentStyle = 'flex h-11 items-center justify-end'
 const labelStyle2 = 'flex h-6 text-gray-400'
-const contentStyle2 = 'flex h-6'
+// const contentStyle2 = 'flex h-6'
 type SummaryItem = {
   name: string
   description: string
