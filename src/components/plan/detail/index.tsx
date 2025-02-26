@@ -61,9 +61,9 @@ const DEFAULT_NEW_PLAN: TNewPlan = {
   addonIds: [],
   metadata: '',
   enableTrial: false,
-  trialAmount: 0,
-  trialDurationTime: 0,
-  trialDemand: false, // 'paymentMethod' | '' | boolean, backend requires this field to be a fixed string of 'paymentMethod' to represent true or empty string '' to represent false, but to ease the UI/UX, front-end use <Switch />
+  trialAmount: undefined,
+  trialDurationTime: undefined,
+  trialDemand: false, // 'paymentMethod' | '' | boolean, backend requires this field to be a fixed string of 'paymentMethod' to represent true or empty string '' to represent false, but to ease the UI/UX, front-end use boolean for <Switch />
   cancelAtTrialEnd: true //  0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UI, front-end use <Switch />
 } as const // mark every props readonly
 
@@ -90,6 +90,7 @@ const unitToSeconds = (value: number, unit: number) => {
 
 const Index = () => {
   const appConfig = useAppConfigStore()
+  const [form] = Form.useForm()
   const location = useLocation()
   const goBackToPlanList = () => {
     // when user navigate from planList to current planDetail, planList will pass a state.from url string which might contain filters like planStatus/planType/sorting .
@@ -103,6 +104,7 @@ const Index = () => {
     }
   }
   const params = useParams()
+  const navigate = useNavigate()
   const planId = params.planId // http://localhost:5174/plan/270?productId=0, planId is 270
   const isNew = planId == null
   const [searchParams, _] = useSearchParams()
@@ -128,17 +130,55 @@ const Index = () => {
   const [trialLengthUnit, setTrialLengthUnit] = useState(
     TIME_UNITS.find((u) => u.label == 'days')?.value
   ) // default unit is days
-  const navigate = useNavigate()
-  const [form] = Form.useForm()
+
+  // todo: make a billable metrics summary state obj.
 
   const itvCountValue = Form.useWatch('intervalCount', form)
   const itvCountUnit = Form.useWatch('intervalUnit', form)
   const watchCurrency = Form.useWatch('currency', form)
   const watchPlanType = Form.useWatch('type', form)
-  const enableTrialWatch = Form.useWatch('enableTrial', form)
   const watchAmount = Form.useWatch('amount', form)
   const watchPlanName = Form.useWatch('planName', form)
   const watchPlanDescription = Form.useWatch('description', form)
+  const watchAddons = Form.useWatch('addonIds', form)
+  const watchOnetimeAddons = Form.useWatch('onetimeAddonIds', form)
+  // trial related
+  const enableTrialWatch = Form.useWatch('enableTrial', form)
+  const watchTrialAmount = Form.useWatch('trialAmount', form)
+  const watchTrialDurationTime = Form.useWatch('trialDurationTime', form)
+  const watchTrialDemand = Form.useWatch('trialDemand', form)
+  const watchCancelAtTrialEnd = Form.useWatch('cancelAtTrialEnd', form)
+
+  //currency changed, trial amt also changed.
+  const [trialSummary, setTrialSummary] = useState<{
+    trialEnabled: boolean
+    price: string
+    durationTime: string
+    requireBankInfo: boolean
+    AutoRenew: boolean
+  }>({
+    trialEnabled: enableTrialWatch,
+    price: '', // watchTrialAmount,
+    durationTime: '', //  watchTrialDurationTime,
+    requireBankInfo: watchTrialDemand,
+    AutoRenew: !watchCancelAtTrialEnd
+  })
+
+  useEffect(() => {
+    setTrialSummary({
+      trialEnabled: enableTrialWatch,
+      price: '', // watchTrialAmount,
+      durationTime: '', //  watchTrialDurationTime,
+      requireBankInfo: watchTrialDemand,
+      AutoRenew: !watchCancelAtTrialEnd
+    })
+  }, [
+    enableTrialWatch,
+    watchTrialAmount,
+    watchTrialDurationTime,
+    watchTrialDemand,
+    watchCurrency
+  ])
 
   // disable editing for 4 keys fields after activate(currency, price, intervalUnit/Count)
   const disableAfterActive = useRef(
@@ -208,6 +248,15 @@ const Index = () => {
       setSelectOnetime(addons.filter((a) => a.currency === watchCurrency))
     }
   }, [itvCountUnit, itvCountValue, watchCurrency])
+
+  useEffect(() => {
+    // user choosed PlanType.MAIN, then select addons/onetimeAddons,
+    // then switch to PlanType.Addon, which is not allowed to have addons,
+    // so we need to clear the addonIds/onetimeAddonIds
+    if (isNew || plan?.type == PlanType.MAIN) {
+      form.setFieldsValue({ addonIds: [], onetimeAddonIds: [] })
+    }
+  }, [watchPlanType])
 
   const onSave = async (values: unknown) => {
     if (productDetail === null) {
@@ -565,6 +614,10 @@ const Index = () => {
                   getPlanPrice={getPlanPrice}
                   planStatus={plan.status}
                   publishStatus={plan.publishStatus}
+                  selectAddons={selectAddons}
+                  selectOnetime={selectOnetime}
+                  watchAddons={watchAddons}
+                  watchOnetimeAddons={watchOnetimeAddons}
                 />
               </div>
             </div>
