@@ -54,6 +54,7 @@ import {
 } from 'react-router-dom'
 import AdvancedConfig from './advancedConfig'
 import BasicConfig from './basicConfig'
+import Summary from './summary'
 
 interface Metric {
   metricId: number
@@ -115,8 +116,6 @@ const unitToSeconds = (value: number, unit: number) => {
   return value * unit
 }
 
-const { Option } = Select
-
 const Index = () => {
   const appConfig = useAppConfigStore()
   const location = useLocation()
@@ -166,8 +165,7 @@ const Index = () => {
   const currencyWatch = Form.useWatch('currency', form)
   const planTypeWatch = Form.useWatch('type', form)
   const enableTrialWatch = Form.useWatch('enableTrial', form)
-
-  const onTrialLengthUnitChange = (val: number) => setTrialLengthUnit(val)
+  const amountWatch = Form.useWatch('amount', form)
 
   // disable editing for 4 keys fields after activate(currency, price, intervalUnit/Count)
   const disableAfterActive = useRef(
@@ -187,21 +185,6 @@ const Index = () => {
     plan?.status == PlanStatus.SOFT_ARCHIVED ||
     productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
-  const selectAfter = (
-    <Select
-      value={trialLengthUnit}
-      style={{ width: 150 }}
-      onChange={onTrialLengthUnitChange}
-      disabled={!enableTrialWatch || formDisabled}
-    >
-      {TIME_UNITS.map((u) => (
-        <Option key={u.label} value={u.value}>
-          {u.label}
-        </Option>
-      ))}
-    </Select>
-  )
-
   const getCurrency = () => appConfig.currency[currencyWatch as Currency]!
 
   const getAmount = (amt: number, currency: Currency) => {
@@ -210,6 +193,14 @@ const Index = () => {
       return 0
     }
     return amt / CURRENCY.Scale
+  }
+
+  const getPlanPrice = () => {
+    if (currencyWatch == undefined) {
+      return ''
+    }
+    const itv = `/${itvCountValue == 1 ? '' : itvCountValue + ' '}${itvCountValue == 1 ? itvCountUnit : itvCountUnit + 's'}`
+    return showAmount(amountWatch, currencyWatch, true) + itv
   }
 
   useEffect(() => {
@@ -534,20 +525,6 @@ const Index = () => {
     fetchData()
   }
 
-  const prettifyJSON = () => {
-    const metadata = form.getFieldValue('metadata')
-    if (metadata == '' || metadata == null) {
-      return
-    }
-    try {
-      const obj = JSON.parse(metadata)
-      form.setFieldValue('metadata', JSON.stringify(obj, null, 4))
-    } catch {
-      message.error('Invalid custom data.')
-      return
-    }
-  }
-
   useEffect(() => {
     fetchData()
   }, [planId]) // when creating new plan, url is: /plan/new?productId=0, planId is null,
@@ -564,59 +541,124 @@ const Index = () => {
         fullscreen
       />
       {plan && (
-        <Form
-          form={form}
-          onFinish={onSave}
-          labelCol={{ flex: '186px' }}
-          wrapperCol={{ flex: 1 }}
-          colon={false}
-          disabled={formDisabled}
-          initialValues={plan}
-        >
-          <div className="flex gap-4">
-            <Tabs
-              defaultActiveKey="general"
-              className="w-2/3"
-              items={[
-                {
-                  key: 'general',
-                  label: 'Basic Plan Setup',
-                  forceRender: true,
-                  children: (
-                    <BasicConfig
-                      refresh={fetchData}
-                      selectAddons={selectAddons}
-                      selectOnetime={selectOnetime}
-                      isNew={isNew}
-                      getCurrency={getCurrency}
-                      loading={loading}
-                      productDetail={productDetail}
-                      plan={plan}
-                      planTypeWatch={planTypeWatch}
-                      formDisabled={formDisabled}
-                      disableAfterActive={disableAfterActive}
-                    />
-                  )
-                },
-                {
-                  key: 'advanced',
-                  label: 'Advanced Setup',
-                  forceRender: true,
-                  children: (
-                    <AdvancedConfig
-                      enableTrialWatch={enableTrialWatch}
-                      formDisabled={formDisabled}
-                      getCurrency={getCurrency}
-                      form={form}
-                      planTypeWatch={planTypeWatch}
-                    />
-                  )
-                }
-              ]}
-            />
-            <div className="w-1/3">summary</div>
-          </div>
-        </Form>
+        <>
+          {' '}
+          <Form
+            form={form}
+            onFinish={onSave}
+            labelCol={{ flex: '186px' }}
+            wrapperCol={{ flex: 1 }}
+            colon={false}
+            disabled={formDisabled}
+            initialValues={plan}
+          >
+            <div className="flex gap-4">
+              <Tabs
+                defaultActiveKey="general"
+                className="w-2/3"
+                items={[
+                  {
+                    key: 'general',
+                    label: 'Basic Plan Setup',
+                    forceRender: true,
+                    children: (
+                      <BasicConfig
+                        refresh={fetchData}
+                        selectAddons={selectAddons}
+                        selectOnetime={selectOnetime}
+                        isNew={isNew}
+                        getCurrency={getCurrency}
+                        loading={loading}
+                        productDetail={productDetail}
+                        plan={plan}
+                        planTypeWatch={planTypeWatch}
+                        formDisabled={formDisabled}
+                        disableAfterActive={disableAfterActive}
+                      />
+                    )
+                  },
+                  {
+                    key: 'advanced',
+                    label: 'Advanced Setup',
+                    forceRender: true,
+                    children: (
+                      <AdvancedConfig
+                        enableTrialWatch={enableTrialWatch}
+                        formDisabled={formDisabled}
+                        getCurrency={getCurrency}
+                        form={form}
+                        planTypeWatch={planTypeWatch}
+                        metricsList={metricsList}
+                      />
+                    )
+                  }
+                ]}
+              />
+              <div className="w-1/3">
+                <Summary
+                  name={plan.planName}
+                  description={plan.description}
+                  enableTrialWatch={enableTrialWatch}
+                  planTypeWatch={planTypeWatch}
+                  getPlanPrice={getPlanPrice}
+                />
+              </div>
+            </div>
+          </Form>
+          <div className="my-6 flex justify-between gap-5">
+            <div className="flex w-full justify-between">
+              {!isNew && plan.status == PlanStatus.EDITING && (
+                <Popconfirm
+                  title="Deletion Confirm"
+                  description="Are you sure to delete this plan?"
+                  onConfirm={onDelete}
+                  showCancel={false}
+                  okText="Yes"
+                >
+                  <Button
+                    danger
+                    disabled={loading || activating || productDetail === null}
+                  >
+                    Delete
+                  </Button>
+                </Popconfirm>
+              )}
+              <div className="flex justify-center gap-5">
+                <Button
+                  onClick={goBackToPlanList}
+                  disabled={loading || activating}
+                >
+                  Go Back
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  disabled={
+                    loading || activating || !savable || productDetail === null
+                  }
+                >
+                  Save
+                </Button>
+                {!isNew && (
+                  <Button
+                    onClick={onActivate}
+                    loading={activating}
+                    disabled={
+                      isNew ||
+                      plan.status != 1 ||
+                      activating ||
+                      loading ||
+                      productDetail === null
+                    }
+                  >
+                    Activate
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>{' '}
+        </>
       )}
     </div>
   )
