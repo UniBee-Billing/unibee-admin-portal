@@ -1,5 +1,5 @@
 import { PlanStatusTag } from '@/components/ui/statusTag'
-import { currencyDecimalValidate, showAmount } from '@/helpers'
+import { currencyDecimalValidate } from '@/helpers'
 import {
   CURRENCY,
   IPlan,
