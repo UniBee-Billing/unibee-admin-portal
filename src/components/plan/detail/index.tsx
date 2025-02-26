@@ -1,17 +1,9 @@
-import { PlanStatusTag } from '@/components/ui/statusTag'
-import {
-  currencyDecimalValidate,
-  isValidMap,
-  randomString,
-  showAmount,
-  toFixedNumber
-} from '@/helpers'
+import { isValidMap, randomString, showAmount, toFixedNumber } from '@/helpers'
 import {
   activatePlan,
   deletePlanReq,
   getPlanDetailWithMore,
-  savePlan,
-  togglePublishReq
+  savePlan
 } from '@/requests'
 import {
   IBillableMetrics,
@@ -22,29 +14,9 @@ import {
   PlanType
 } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
-import {
-  CheckCircleOutlined,
-  LoadingOutlined,
-  MinusOutlined,
-  PlusOutlined
-} from '@ant-design/icons'
-import {
-  Button,
-  Col,
-  Form,
-  Input,
-  InputNumber,
-  Popconfirm,
-  Row,
-  Select,
-  Spin,
-  Switch,
-  Tabs,
-  Tag,
-  message
-} from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
+import { Button, Form, Popconfirm, Spin, Tabs, message } from 'antd'
 import { Currency } from 'dinero.js'
-import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import {
   useLocation,
@@ -138,7 +110,6 @@ const Index = () => {
   const [productDetail, setProductDetail] = useState<IProduct | null>(null)
   const [loading, setLoading] = useState(false)
   const [activating, setActivating] = useState(false)
-  const [publishing, setPublishing] = useState(false) // when toggling publish/unpublish
   const [plan, setPlan] = useState<IPlan | TNewPlan | null>(
     isNew ? DEFAULT_NEW_PLAN : null
   ) // plan obj is used for Form's initialValue, any changes is handled by Form itself, not updated here.
@@ -162,10 +133,12 @@ const Index = () => {
 
   const itvCountValue = Form.useWatch('intervalCount', form)
   const itvCountUnit = Form.useWatch('intervalUnit', form)
-  const currencyWatch = Form.useWatch('currency', form)
-  const planTypeWatch = Form.useWatch('type', form)
+  const watchCurrency = Form.useWatch('currency', form)
+  const watchPlanType = Form.useWatch('type', form)
   const enableTrialWatch = Form.useWatch('enableTrial', form)
-  const amountWatch = Form.useWatch('amount', form)
+  const watchAmount = Form.useWatch('amount', form)
+  const watchPlanName = Form.useWatch('planName', form)
+  const watchPlanDescription = Form.useWatch('description', form)
 
   // disable editing for 4 keys fields after activate(currency, price, intervalUnit/Count)
   const disableAfterActive = useRef(
@@ -185,7 +158,7 @@ const Index = () => {
     plan?.status == PlanStatus.SOFT_ARCHIVED ||
     productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
-  const getCurrency = () => appConfig.currency[currencyWatch as Currency]!
+  const getCurrency = () => appConfig.currency[watchCurrency as Currency]!
 
   const getAmount = (amt: number, currency: Currency) => {
     const CURRENCY = appConfig.currency[currency]
@@ -196,17 +169,24 @@ const Index = () => {
   }
 
   const getPlanPrice = () => {
-    if (currencyWatch == undefined) {
-      return ''
+    if (
+      watchCurrency == undefined ||
+      watchAmount == undefined ||
+      !Number.isInteger(itvCountValue)
+    ) {
+      return undefined
+    }
+    const result = showAmount(watchAmount, watchCurrency, true)
+    if (watchPlanType == PlanType.ONE_TIME_ADD_ON) {
+      return result
     }
     const itv = `/${itvCountValue == 1 ? '' : itvCountValue + ' '}${itvCountValue == 1 ? itvCountUnit : itvCountUnit + 's'}`
-    return showAmount(amountWatch, currencyWatch, true) + itv
+    return result + itv
   }
 
   useEffect(() => {
     if (!isNew && plan?.status != PlanStatus.EDITING) {
-      // even we can edit active plan, but these 3 keys fields are not editable.
-      // editing existing plan && not editing
+      // even we can edit active plan, but these 3 keys fields in [dep array] are not editable.
       return
     }
     if (
@@ -220,14 +200,14 @@ const Index = () => {
       (a) =>
         a.intervalCount == itvCountValue &&
         a.intervalUnit == itvCountUnit &&
-        a.currency == currencyWatch
+        a.currency == watchCurrency
     )
     setSelectAddons(newAddons)
 
     if (isNew) {
-      setSelectOnetime(addons.filter((a) => a.currency === currencyWatch))
+      setSelectOnetime(addons.filter((a) => a.currency === watchCurrency))
     }
-  }, [itvCountUnit, itvCountValue, currencyWatch])
+  }, [itvCountUnit, itvCountValue, watchCurrency])
 
   const onSave = async (values: unknown) => {
     if (productDetail === null) {
@@ -269,7 +249,7 @@ const Index = () => {
       delete f.publishStatus
       delete f.type // once plan created, you cannot change its type(main plan, addon)
     }
-    if (planTypeWatch == PlanType.ONE_TIME_ADD_ON) {
+    if (watchPlanType == PlanType.ONE_TIME_ADD_ON) {
       // one-time payment plans don't have these props
       delete f.intervalCount
       delete f.intervalUnit
@@ -507,24 +487,6 @@ const Index = () => {
     )
   }
 
-  // used only when editing an active plan
-  const togglePublish = async () => {
-    setPublishing(true)
-    const [_, err] = await togglePublishReq({
-      planId: (plan as IPlan).id,
-      publishAction:
-        plan!.publishStatus == PlanPublishStatus.UNPUBLISHED
-          ? 'PUBLISH'
-          : 'UNPUBLISH'
-    })
-    if (null != err) {
-      message.error(err.message)
-      return
-    }
-    setPublishing(false)
-    fetchData()
-  }
-
   useEffect(() => {
     fetchData()
   }, [planId]) // when creating new plan, url is: /plan/new?productId=0, planId is null,
@@ -555,7 +517,7 @@ const Index = () => {
             <div className="flex gap-4">
               <Tabs
                 defaultActiveKey="general"
-                className="w-2/3"
+                className="w-3/4"
                 items={[
                   {
                     key: 'general',
@@ -564,14 +526,12 @@ const Index = () => {
                     children: (
                       <BasicConfig
                         refresh={fetchData}
-                        selectAddons={selectAddons}
-                        selectOnetime={selectOnetime}
                         isNew={isNew}
                         getCurrency={getCurrency}
                         loading={loading}
                         productDetail={productDetail}
                         plan={plan}
-                        planTypeWatch={planTypeWatch}
+                        watchPlanType={watchPlanType}
                         formDisabled={formDisabled}
                         disableAfterActive={disableAfterActive}
                       />
@@ -584,30 +544,33 @@ const Index = () => {
                     children: (
                       <AdvancedConfig
                         enableTrialWatch={enableTrialWatch}
+                        selectAddons={selectAddons}
+                        selectOnetime={selectOnetime}
                         formDisabled={formDisabled}
                         getCurrency={getCurrency}
                         form={form}
-                        planTypeWatch={planTypeWatch}
+                        watchPlanType={watchPlanType}
                         metricsList={metricsList}
                       />
                     )
                   }
                 ]}
               />
-              <div className="w-1/3">
+              <div className="w-1/4">
                 <Summary
-                  name={plan.planName}
-                  description={plan.description}
+                  name={watchPlanName}
+                  description={watchPlanDescription}
                   enableTrialWatch={enableTrialWatch}
-                  planTypeWatch={planTypeWatch}
+                  watchPlanType={watchPlanType}
                   getPlanPrice={getPlanPrice}
+                  planStatus={plan.status}
                 />
               </div>
             </div>
           </Form>
           <div className="my-6 flex justify-between gap-5">
             <div className="flex w-full justify-between">
-              {!isNew && plan.status == PlanStatus.EDITING && (
+              {!isNew && plan.status == PlanStatus.EDITING ? (
                 <Popconfirm
                   title="Deletion Confirm"
                   description="Are you sure to delete this plan?"
@@ -622,7 +585,10 @@ const Index = () => {
                     Delete
                   </Button>
                 </Popconfirm>
-              )}
+              ) : (
+                <span></span>
+              )}{' '}
+              {/* this span is a placeholder for the delete button, I want the goback/save/active buttons always on the right side */}
               <div className="flex justify-center gap-5">
                 <Button
                   onClick={goBackToPlanList}
@@ -632,8 +598,8 @@ const Index = () => {
                 </Button>
                 <Button
                   type="primary"
-                  htmlType="submit"
                   loading={loading}
+                  onClick={form.submit}
                   disabled={
                     loading || activating || !savable || productDetail === null
                   }
@@ -646,7 +612,7 @@ const Index = () => {
                     loading={activating}
                     disabled={
                       isNew ||
-                      plan.status != 1 ||
+                      plan.status != PlanStatus.EDITING ||
                       activating ||
                       loading ||
                       productDetail === null

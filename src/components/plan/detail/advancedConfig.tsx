@@ -1,5 +1,10 @@
-import { currencyDecimalValidate, isValidMap, randomString } from '@/helpers'
-import { CURRENCY, IBillableMetrics, PlanType } from '@/shared.types'
+import {
+  currencyDecimalValidate,
+  isValidMap,
+  randomString,
+  showAmount
+} from '@/helpers'
+import { CURRENCY, IBillableMetrics, IPlan, PlanType } from '@/shared.types'
 import {
   FormatPainterOutlined,
   MinusOutlined,
@@ -57,8 +62,10 @@ interface Props {
   formDisabled: boolean
   getCurrency: () => CURRENCY
   form: FormInstance
-  planTypeWatch: PlanType
+  watchPlanType: PlanType
   metricsList: IBillableMetrics[]
+  selectAddons: IPlan[]
+  selectOnetime: IPlan[]
 }
 
 const Index = ({
@@ -66,8 +73,10 @@ const Index = ({
   formDisabled,
   getCurrency,
   form,
-  planTypeWatch,
-  metricsList
+  watchPlanType,
+  metricsList,
+  selectAddons,
+  selectOnetime
 }: Props) => {
   // const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([]) // all the billable metrics, not used for edit, but used in <Select /> for user to choose.
   const [selectedMetrics, setSelectedMetrics] = useState<TMetricsItem[]>([
@@ -150,10 +159,112 @@ const Index = ({
     </Select>
   )
 
+  const addonsItem: CollapseProps['items'] = [
+    {
+      key: 'addons',
+      label: 'Addons',
+      style: { backgroundColor: '#F5F5F5' },
+      forceRender: true,
+      children: (
+        <>
+          {
+            <Form.Item
+              label="Add-ons"
+              name="addonIds"
+              dependencies={['currency', 'intervalCount', 'intervalUnit']}
+              rules={[
+                {
+                  required: false,
+                  message: ''
+                },
+                () => ({
+                  validator(_, value) {
+                    if (value == null || value.length == 0) {
+                      return Promise.resolve()
+                    }
+                    for (const addonId of value) {
+                      if (
+                        selectAddons.findIndex((a) => a.id == addonId) == -1
+                      ) {
+                        return Promise.reject('Addon not found!')
+                      }
+                    }
+                    return Promise.resolve()
+                  }
+                })
+              ]}
+            >
+              <Select
+                mode="multiple"
+                allowClear
+                disabled={
+                  watchPlanType == PlanType.ADD_ON ||
+                  watchPlanType == PlanType.ONE_TIME_ADD_ON ||
+                  formDisabled
+                } // you cannot add addon to another addon (or another one time payment)
+                style={{ width: '100%' }}
+                options={selectAddons.map((a) => ({
+                  label: `${a.planName} (${showAmount(a.amount, a.currency)}/${a.intervalCount == 1 ? '' : a.intervalCount}${a.intervalUnit})`,
+                  value: a.id
+                }))}
+              />
+            </Form.Item>
+          }
+
+          {
+            <Form.Item
+              label="One-time-payment add-on"
+              name="onetimeAddonIds"
+              dependencies={['currency']}
+              rules={[
+                {
+                  required: false,
+                  message: ''
+                },
+                () => ({
+                  validator(_, value) {
+                    if (value == null || value.length == 0) {
+                      return Promise.resolve()
+                    }
+                    for (const addonId of value) {
+                      if (
+                        selectOnetime.findIndex((a) => a.id == addonId) == -1
+                      ) {
+                        return Promise.reject('Addon not found!')
+                      }
+                    }
+                    return Promise.resolve()
+                  }
+                })
+              ]}
+            >
+              <Select
+                mode="multiple"
+                allowClear
+                disabled={
+                  watchPlanType == PlanType.ADD_ON ||
+                  watchPlanType == PlanType.ONE_TIME_ADD_ON ||
+                  formDisabled
+                } // you cannot add one-time payment addon to another addon (or another one time payment)
+                style={{ width: '100%' }}
+                options={selectOnetime.map((a) => ({
+                  label: `${a.planName} (${showAmount(a.amount, a.currency)})`,
+                  value: a.id
+                }))}
+              />
+            </Form.Item>
+          }
+        </>
+      )
+    }
+  ]
+
   const trialItem: CollapseProps['items'] = [
     {
       key: 'trial',
       collapsible: 'icon',
+      style: { backgroundColor: '#F5F5F5' },
+      forceRender: true,
       label: (
         <div className="flex justify-start gap-3">
           <span>Trial</span>
@@ -263,6 +374,8 @@ const Index = ({
     {
       key: 'billable',
       label: 'Usage-based billing model',
+      forceRender: true,
+      style: { backgroundColor: '#F5F5F5' },
       children: (
         <div>
           <Form.Item noStyle={true}>
@@ -279,7 +392,7 @@ const Index = ({
               <Col span={2}>
                 <div
                   onClick={addMetrics}
-                  className={`w-16 font-bold ${planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`w-16 font-bold ${watchPlanType == PlanType.ONE_TIME_ADD_ON || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <PlusOutlined />
                 </div>
@@ -290,7 +403,7 @@ const Index = ({
                 <Col span={5}>
                   <Select
                     disabled={
-                      planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled
+                      watchPlanType == PlanType.ONE_TIME_ADD_ON || formDisabled
                     }
                     value={m.metricId}
                     onChange={onMetricSelectChange(m.localId)}
@@ -319,7 +432,7 @@ const Index = ({
                 <Col span={3}>
                   <Input
                     disabled={
-                      planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled
+                      watchPlanType == PlanType.ONE_TIME_ADD_ON || formDisabled
                     }
                     value={m.metricLimit}
                     onChange={updateMetrics(m.localId)}
@@ -328,7 +441,7 @@ const Index = ({
                 <Col span={2}>
                   <div
                     onClick={() => removeMetrics(m.localId)}
-                    className={`w-16 font-bold ${planTypeWatch == PlanType.ONE_TIME_ADD_ON || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`w-16 font-bold ${watchPlanType == PlanType.ONE_TIME_ADD_ON || formDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <MinusOutlined />
                   </div>
@@ -344,6 +457,11 @@ const Index = ({
   return (
     <div className="pt-4">
       <div className="flex flex-col gap-6">
+        <Collapse
+          items={addonsItem}
+          expandIconPosition="end"
+          defaultActiveKey={['addons']}
+        />
         <Collapse
           items={trialItem}
           expandIconPosition="end"
@@ -368,7 +486,7 @@ const Index = ({
           </Tooltip>
           <div className="h-2"></div>
           <Form.Item
-            noStyle={true}
+            // noStyle={true}
             name="metadata"
             rules={[
               {
@@ -379,7 +497,7 @@ const Index = ({
                 validator(_, value) {
                   return isValidMap(value)
                     ? Promise.resolve()
-                    : Promise.reject('Invalid JSON object string')
+                    : Promise.reject('Invalid JSON string')
                 }
               })
             ]}

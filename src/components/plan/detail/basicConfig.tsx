@@ -21,12 +21,10 @@ interface Props {
   isNew: boolean
   productDetail: IProduct | null
   plan: IPlan | TNewPlan
-  planTypeWatch: PlanType
+  watchPlanType: PlanType
   formDisabled: boolean
   disableAfterActive: MutableRefObject<boolean>
   getCurrency: () => CURRENCY
-  selectAddons: IPlan[]
-  selectOnetime: IPlan[]
   loading: boolean
   refresh: () => void
 }
@@ -34,17 +32,15 @@ const Index = ({
   isNew,
   productDetail,
   plan,
-  planTypeWatch,
+  watchPlanType,
   formDisabled,
   disableAfterActive,
   getCurrency,
-  selectAddons,
-  selectOnetime,
   loading,
   refresh
 }: Props) => {
   const appConfig = useAppConfigStore()
-  const [publishing, setPublishing] = useState(false) // when toggling publish/unpublish
+  const [publishing, setPublishing] = useState(false)
 
   // used only when editing an active plan
   const togglePublish = async () => {
@@ -106,6 +102,18 @@ const Index = ({
         ]}
       >
         <Input.TextArea rows={4} maxLength={500} showCount />
+      </Form.Item>
+
+      <Form.Item label="Plan Type" name="type">
+        <Select
+          style={{ width: 180 }}
+          disabled={!isNew || plan.status != PlanStatus.EDITING}
+          options={[
+            { value: PlanType.MAIN, label: 'Main plan' },
+            { value: PlanType.ADD_ON, label: 'Addon' },
+            { value: PlanType.ONE_TIME_ADD_ON, label: 'One time payment' }
+          ]}
+        />
       </Form.Item>
 
       <Form.Item label="External Plan Id" name="externalPlanId">
@@ -207,7 +215,7 @@ const Index = ({
           name="intervalUnit"
           rules={[
             {
-              required: planTypeWatch != PlanType.ONE_TIME_ADD_ON,
+              required: watchPlanType != PlanType.ONE_TIME_ADD_ON,
               message: 'Please select interval unit!'
             }
           ]}
@@ -215,7 +223,7 @@ const Index = ({
           <Select
             style={{ width: 180 }}
             disabled={
-              planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
+              watchPlanType == PlanType.ONE_TIME_ADD_ON ||
               disableAfterActive.current ||
               formDisabled
             } // one-time payment has no interval unit/count
@@ -236,115 +244,30 @@ const Index = ({
           {
             required: true,
             message: 'Please input interval count!'
-          }
+          },
+          () => ({
+            validator(_, value) {
+              if (!Number.isInteger(value)) {
+                return Promise.reject(
+                  `Please input a valid interval count (> 1).`
+                )
+              }
+              return Promise.resolve()
+            }
+          })
         ]}
       >
-        <Input
+        <InputNumber
           disabled={
-            planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
+            watchPlanType == PlanType.ONE_TIME_ADD_ON ||
             disableAfterActive.current ||
             formDisabled
           }
           style={{ width: 180 }}
+          min={1}
         />
         {/* one-time payment has no interval unit/count */}
       </Form.Item>
-
-      <Form.Item label="Plan Type" name="type">
-        <Select
-          style={{ width: 180 }}
-          disabled={!isNew || plan.status != PlanStatus.EDITING}
-          options={[
-            { value: PlanType.MAIN, label: 'Main plan' },
-            { value: PlanType.ADD_ON, label: 'Addon' },
-            { value: PlanType.ONE_TIME_ADD_ON, label: 'One time payment' }
-          ]}
-        />
-      </Form.Item>
-
-      {plan.type == PlanType.MAIN && (
-        <Form.Item
-          label="Add-ons"
-          name="addonIds"
-          dependencies={['currency', 'intervalCount', 'intervalUnit']}
-          rules={[
-            {
-              required: false,
-              message: ''
-            },
-            () => ({
-              validator(_, value) {
-                if (value == null || value.length == 0) {
-                  return Promise.resolve()
-                }
-                for (const addonId of value) {
-                  if (selectAddons.findIndex((a) => a.id == addonId) == -1) {
-                    return Promise.reject('Addon not found!')
-                  }
-                }
-                return Promise.resolve()
-              }
-            })
-          ]}
-        >
-          <Select
-            mode="multiple"
-            allowClear
-            disabled={
-              planTypeWatch == PlanType.ADD_ON ||
-              planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
-              formDisabled
-            } // you cannot add addon to another addon (or another one time payment)
-            style={{ width: '100%' }}
-            options={selectAddons.map((a) => ({
-              label: `${a.planName} (${showAmount(a.amount, a.currency)}/${a.intervalCount == 1 ? '' : a.intervalCount}${a.intervalUnit})`,
-              value: a.id
-            }))}
-          />
-        </Form.Item>
-      )}
-
-      {plan.type == PlanType.MAIN && (
-        <Form.Item
-          label="One-time-payment add-on"
-          name="onetimeAddonIds"
-          dependencies={['currency']}
-          rules={[
-            {
-              required: false,
-              message: ''
-            },
-            () => ({
-              validator(_, value) {
-                if (value == null || value.length == 0) {
-                  return Promise.resolve()
-                }
-                for (const addonId of value) {
-                  if (selectOnetime.findIndex((a) => a.id == addonId) == -1) {
-                    return Promise.reject('Addon not found!')
-                  }
-                }
-                return Promise.resolve()
-              }
-            })
-          ]}
-        >
-          <Select
-            mode="multiple"
-            allowClear
-            disabled={
-              planTypeWatch == PlanType.ADD_ON ||
-              planTypeWatch == PlanType.ONE_TIME_ADD_ON ||
-              formDisabled
-            } // you cannot add one-time payment addon to another addon (or another one time payment)
-            style={{ width: '100%' }}
-            options={selectOnetime.map((a) => ({
-              label: `${a.planName} (${showAmount(a.amount, a.currency)})`,
-              value: a.id
-            }))}
-          />
-        </Form.Item>
-      )}
     </div>
   )
 }
