@@ -610,10 +610,6 @@ const Index = () => {
                   name={watchPlanName}
                   description={watchPlanDescription}
                   enableTrialWatch={enableTrialWatch}
-                  watchTrialAmount={watchTrialAmount}
-                  watchTrialDurationTime={watchTrialDurationTime}
-                  watchTrialDemand={watchTrialDemand}
-                  watchCancelAtTrialEnd={watchCancelAtTrialEnd}
                   watchPlanType={watchPlanType}
                   getPlanPrice={getPlanPrice}
                   planStatus={plan.status}
