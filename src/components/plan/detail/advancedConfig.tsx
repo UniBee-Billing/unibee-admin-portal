@@ -4,8 +4,15 @@ import {
   randomString,
   showAmount
 } from '@/helpers'
-import { CURRENCY, IBillableMetrics, IPlan, PlanType } from '@/shared.types'
 import {
+  CURRENCY,
+  IBillableMetrics,
+  IPlan,
+  MetricType,
+  PlanType
+} from '@/shared.types'
+import {
+  DownOutlined,
   FormatPainterOutlined,
   MinusOutlined,
   PlusOutlined
@@ -15,12 +22,15 @@ import {
   Col,
   Collapse,
   CollapseProps,
+  Dropdown,
   Form,
   FormInstance,
   Input,
+  InputNumber,
   message,
   Row,
   Select,
+  Space,
   Tooltip
 } from 'antd'
 import update from 'immutability-helper'
@@ -204,7 +214,14 @@ const Index = ({
                 } // you cannot add addon to another addon (or another one time payment)
                 style={{ width: '100%' }}
                 options={selectAddons.map((a) => ({
-                  label: `${a.planName} (${showAmount(a.amount, a.currency)}/${a.intervalCount == 1 ? '' : a.intervalCount}${a.intervalUnit})`,
+                  label: (
+                    <>
+                      <span>{a.planName}</span>
+                      <span className="ml-2 text-xs text-gray-500">
+                        {`(${showAmount(a.amount, a.currency)}/${a.intervalCount == 1 ? '' : a.intervalCount}${a.intervalUnit})`}{' '}
+                      </span>{' '}
+                    </>
+                  ),
                   value: a.id
                 }))}
               />
@@ -248,7 +265,12 @@ const Index = ({
                 } // you cannot add one-time payment addon to another addon (or another one time payment)
                 style={{ width: '100%' }}
                 options={selectOnetime.map((a) => ({
-                  label: `${a.planName} (${showAmount(a.amount, a.currency)})`,
+                  label: (
+                    <>
+                      <span>{a.planName}</span>
+                      <span className="ml-2 text-xs text-gray-500">{`(${showAmount(a.amount, a.currency)})`}</span>{' '}
+                    </>
+                  ),
                   value: a.id
                 }))}
               />
@@ -293,9 +315,9 @@ const Index = ({
                     const num = Number(value)
                     const planPrice = Number(getFieldValue('amount'))
                     if (isNaN(planPrice)) {
-                      return Promise.reject('Invalid plan price')
+                      return Promise.reject('Input a valid plan price first.')
                     }
-                    if (isNaN(num) || num < 0 || num >= planPrice) {
+                    if (isNaN(num) || num <= 0 || num >= planPrice) {
                       return Promise.reject(
                         `Please input a valid price (>= 0 and < plan price ${getFieldValue('amount')}).`
                       )
@@ -310,10 +332,11 @@ const Index = ({
                 })
               ]}
             >
-              <Input
+              <InputNumber
                 disabled={!enableTrialWatch || formDisabled}
-                style={{ width: 180 }}
+                style={{ width: 240 }}
                 prefix={getCurrency()?.Symbol}
+                min={0}
               />
             </Form.Item>
             <span className="ml-2 text-xs text-gray-400">
@@ -334,33 +357,33 @@ const Index = ({
                   if (!enableTrialWatch) {
                     return Promise.resolve()
                   }
-                  const num = Number(value)
-                  if (isNaN(num) || num <= 0) {
-                    return Promise.reject('Invalid trial length (>0)')
+                  if (!Number.isInteger(value)) {
+                    return Promise.reject('Invalid trial length (>=1)')
                   }
                   return Promise.resolve()
                 }
               })
             ]}
           >
-            <Input
-              // style={{ width: 220 }}
+            <InputNumber
+              min={1}
+              style={{ width: 240 }}
               addonAfter={selectAfter}
               disabled={!enableTrialWatch || formDisabled}
             />
           </Form.Item>
 
-          <div className="relative">
+          <div className="relative flex items-center">
             <Form.Item label="Trial requires bank card info" name="trialDemand">
               <Switch disabled={!enableTrialWatch || formDisabled} />
             </Form.Item>
-            <span
-              className="absolute ml-60 text-xs text-gray-400"
+            <div
+              className="absolute mb-6 ml-60 text-xs text-gray-400"
               // style={{ top: '-45px', left: '240px', width: '600px' }}
             >
               When enabled, users can only use bank card payment (no Crypto or
               wire transfer) for their first purchase.
-            </span>
+            </div>
           </div>
 
           <Form.Item label="Auto renew after trial end" name="cancelAtTrialEnd">
@@ -449,6 +472,41 @@ const Index = ({
               </Row>
             ))}
           </Form.Item>
+          <Dropdown
+            arrow={true}
+            menu={{
+              items: [
+                {
+                  label: 'Limit metered',
+                  key: MetricType.LIMIT_METERED,
+                  onClick: () => {
+                    console.log('Limit metered')
+                  }
+                },
+                {
+                  label: 'Charge metered',
+                  key: MetricType.CHARGE_METERED,
+                  onClick: () => {
+                    console.log('Charge metered')
+                  }
+                },
+                {
+                  label: 'Charge recurring',
+                  key: MetricType.CHARGE_RECURRING,
+                  onClick: () => {
+                    console.log('Charge recurring')
+                  }
+                }
+              ]
+            }}
+          >
+            <Button icon={<PlusOutlined />} variant="outlined" color="default">
+              <Space>
+                Add billing model
+                <DownOutlined />
+              </Space>
+            </Button>
+          </Dropdown>
         </div>
       )
     }

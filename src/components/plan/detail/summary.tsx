@@ -1,7 +1,7 @@
 import '@/components/discountCode/detail/summary.css'
 import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
-import { PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
+import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import { Col, Divider, Row } from 'antd'
 
 export const NotSetPlaceholder = () => (
@@ -20,6 +20,10 @@ type SummaryItem = {
   getPlanPrice: () => string | undefined
   planStatus: PlanStatus
   publishStatus: PlanPublishStatus
+  selectAddons: IPlan[]
+  selectOnetime: IPlan[]
+  watchAddons: number[]
+  watchOnetimeAddons: number[]
 }
 
 const Index = ({
@@ -29,8 +33,22 @@ const Index = ({
   watchPlanType,
   getPlanPrice,
   planStatus,
-  publishStatus
+  publishStatus,
+  selectAddons,
+  selectOnetime,
+  watchAddons,
+  watchOnetimeAddons
 }: SummaryItem) => {
+  const formatAddonList = (addonType: 'addon' | 'onetimeAddon') => {
+    const list = addonType == 'addon' ? selectAddons : selectOnetime
+    const selectedList = addonType == 'addon' ? watchAddons : watchOnetimeAddons
+    return list
+      .filter((item) => selectedList.includes(item.id))
+      .map((item) => {
+        return `${item.planName}`
+      })
+      .join(', ')
+  }
   const items = [
     { label: 'Name', renderContent: name || <NotSetPlaceholder /> },
     {
@@ -141,7 +159,19 @@ const Index = ({
 
   const advancedItems = [
     {
-      label: 'Trial enabled',
+      label: 'Addons',
+      renderContent: <p className="long-content">{formatAddonList('addon')}</p>,
+      hidden: watchAddons == null || watchAddons.length == 0
+    },
+    {
+      label: 'One time addons',
+      renderContent: (
+        <p className="long-content">{formatAddonList('onetimeAddon')}</p>
+      ),
+      hidden: watchOnetimeAddons == null || watchOnetimeAddons.length == 0
+    },
+    {
+      label: 'Allow trial',
       renderContent: enableTrialWatch ? 'Yes' : 'No'
     }
   ]
@@ -168,20 +198,22 @@ const Index = ({
         <Divider type="vertical" className="ml-0 h-7 w-0.5 bg-[#1677FF]" />
         <div className="text-lg">Advanced Setup</div>
       </div>
-      {advancedItems.map((item, idx: number) => (
-        <div key={item.label}>
-          <Row className="flex items-baseline">
-            <Col span={10} className={labelStyle2}>
-              {item.label}
-            </Col>{' '}
-            <Col span={14} className={contentStyle}>
-              {item.renderContent}
-            </Col>
-          </Row>
+      {advancedItems
+        .filter((item) => !item.hidden)
+        .map((item, idx: number) => (
+          <div key={item.label}>
+            <Row className="flex items-baseline">
+              <Col span={10} className={labelStyle2}>
+                {item.label}
+              </Col>{' '}
+              <Col span={14} className={contentStyle}>
+                {item.renderContent}
+              </Col>
+            </Row>
 
-          {idx != advancedItems.length - 1 && <Divider className="my-3" />}
-        </div>
-      ))}
+            {/* {idx != advancedItems.length - 1 && <Divider className="my-3" />} */}
+          </div>
+        ))}
     </div>
   )
 }
