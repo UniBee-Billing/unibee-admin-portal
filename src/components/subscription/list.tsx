@@ -535,9 +535,7 @@ const Index = () => {
                 ) {
                   return
                 }
-                navigate(`/subscription/${record.subscriptionId}`, {
-                  state: { subscriptionId: record.subscriptionId }
-                })
+                navigate(`/subscription/${record.subscriptionId}`)
               }
             }
           }}

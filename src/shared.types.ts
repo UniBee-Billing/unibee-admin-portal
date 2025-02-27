@@ -3,7 +3,7 @@ import { Dayjs } from 'dayjs'
 import { Currency } from 'dinero.js'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from './components/discountCode/helpers'
 
-export enum AccountType {
+export const enum AccountType {
   NONE = 0,
   PERSONAL = 1,
   BUSINESS = 2
@@ -40,7 +40,7 @@ export type TPromoAccount = {
   createTime: number
 }
 
-export enum UserStatus {
+export const enum UserStatus {
   ACTIVE = 0,
   SUSPENDED = 2
 }
@@ -82,7 +82,7 @@ interface IProfile {
   createTime: number
 }
 
-export enum MerchantUserStatus {
+export const enum MerchantUserStatus {
   ACTIVE = 0,
   SUSPENDED = 2
 }
@@ -168,7 +168,7 @@ export enum PlanStatus {
   SOFT_ARCHIVED = 4,
   HARD_ARCHIVED = 5
 }
-export enum PlanPublishStatus {
+export const enum PlanPublishStatus {
   UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans
   PUBLISHED = 2
 }
@@ -210,14 +210,27 @@ export interface ISubAddon extends IPlan {
   addonPlan: ISubAddon
 }
 
+export const enum MetricType {
+  LIMIT_METERED = 1,
+  CHARGE_METERED = 2,
+  CHARGE_RECURRING = 3
+}
+
+export const enum MetricAggregationType {
+  COUNT = 1,
+  COUNT_UNIQUE = 2,
+  LATEST = 3,
+  MAX = 4,
+  SUM = 5
+}
 interface IBillableMetrics {
   id: number
   merchantId: number
   code: string
   metricName: string
   metricDescription: string
-  type: number // 1-limit_metered，2-charge_metered(come later),3-charge_recurring(come later)
-  aggregationType: number // 0-count，1-count unique, 2-latest, 3-max, 4-sum
+  type: MetricType
+  aggregationType: MetricAggregationType
   aggregationProperty: string
   gmtModify: string
   createTime: string
@@ -281,12 +294,12 @@ interface ISubscriptionType {
   gatewayId: number
   latestInvoice?: UserInvoice
 }
-export enum SubscriptionEndMode {
+export const enum SubscriptionEndMode {
   END_NOW = 1,
   END_AT_END_OF_BILLING_CYCLE = 2
 }
 
-export enum SubscriptionHistoryStatus {
+export const enum SubscriptionHistoryStatus {
   // UNKNOWN_ZERO = 0,
   Active = 1, // current active subscription also show up in history list
   Finished = 2, // when user upgrade from planA to planB, the old subscription with plan A will be marked as finished.
@@ -343,27 +356,27 @@ type IPreview = {
   invoice: Invoice
   nextPeriodInvoice: Invoice
 }
-export enum DiscountType {
+export const enum DiscountType {
   PERCENTAGE = 1,
   AMOUNT = 2
 }
-export enum DiscountCodeBillingType {
+export const enum DiscountCodeBillingType {
   ONE_TIME = 1,
   RECURRING = 2
 }
-export enum DiscountCodeStatus {
+export const enum DiscountCodeStatus {
   EDITING = 1,
   ACTIVE = 2,
   INACTIVE = 3,
   EXPIRED = 4,
   ARCHIVED = 10
 }
-export enum DiscountCodeApplyType {
+export const enum DiscountCodeApplyType {
   ALL = 0,
   SELECTED = 1,
   NOT_SELECTED = 2
 }
-export enum DiscountCodeUserScope {
+export const enum DiscountCodeUserScope {
   ALL_USERS = 0, // all users can use this code
   NEW_USERS = 1, // only new users can use this code
   RENEWAL_USERS = 2 // only for subscription renewal
@@ -402,7 +415,7 @@ type DiscountCode = {
   upgradeLongerOnly: boolean // code use for long plan subscription upgrade(from monthly to yearly)
 }
 
-export enum DiscountCodeUsageStatus {
+export const enum DiscountCodeUsageStatus {
   FINISHED = 1,
   ROLLBACK
 }
@@ -429,7 +442,7 @@ type TransactionItem = {
   user: IProfile
 }
 
-export enum PaymentStatus {
+export const enum PaymentStatus {
   PENDING = 0,
   SUCCEEDED = 1,
   FAILED = 2,
@@ -437,7 +450,7 @@ export enum PaymentStatus {
 }
 
 // payment can go bi-directional, user -> merchant: payment, merchant -> user: refund
-export enum PaymentTimelineType {
+export const enum PaymentTimelineType {
   PAYMENT = 0,
   REFUND = 1
 }
@@ -508,7 +521,7 @@ type Invoice = {
   lines: InvoiceItem[]
 }
 
-export enum RefundStatus {
+export const enum RefundStatus {
   AWAITING_REFUND = 10,
   REFUNDED = 20,
   FAILED = 30,
@@ -527,31 +540,20 @@ type TRefund = {
   invoiceId: string
 }
 
-export enum InvoiceBizType {
+export const enum InvoiceBizType {
   ONE_TIME = 1,
   MANUALLY_CREATED = 2,
   SUBSCRIPTION = 3
 }
-/*
-export const INVOICE_STATUS: { [key: number]: string } = {
-  0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist
-  1: 'Draft', // admin manually create an invoice, for edit/delete, but users won't receive this invoice.
-  2: 'Awaiting payment', // admin has clicked the 'create' button in invoice editing modal, user will receive a mail with payment link. Admin can revoke the invoice if user hasn't made the payment.
-  3: 'Paid', // user paid the invoice
-  4: 'Failed', // user not pay the invoice before it get expired
-  5: 'Cancelled', // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
-  6: 'Reversed' // 取消后被通知支付成功的，这种情况一般是要排查的
-}
 
-*/
-export enum INVOICE_STATUS {
-  INITIATING = 0,
-  DRAFT = 1,
-  AWAITING_PAYMENT = 2,
-  PAID = 3,
-  FAILED = 4,
-  CANCELLED = 5,
-  REVERSED = 6
+export const enum InvoiceStatus {
+  INITIATING = 0, // this status only exist for a very short period, users/admin won't even know it exist
+  DRAFT = 1, // admin manually create an invoice, for edit/delete, but users won't receive this invoice.
+  AWAITING_PAYMENT = 2, // admin has clicked the 'create' button in invoice editing modal, user will receive a mail with payment link. Admin can revoke the invoice if user hasn't made the payment.
+  PAID = 3, // user paid the invoice
+  FAILED = 4, // user not pay the invoice before it get expired
+  CANCELLED = 5, // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
+  REVERSED = 6 // 取消后被通知支付成功的，这种情况一般是要排查的
 }
 type UserInvoice = {
   id: number
@@ -575,7 +577,7 @@ type UserInvoice = {
   subscriptionAmount: number
   currency: string
   lines: InvoiceItem[]
-  status: number // go check INVOICE_STATUS in constants.ts
+  status: InvoiceStatus
   sendStatus: number
   sendEmail: string
   sendPdf: string
@@ -737,7 +739,7 @@ export type TActivityLogs = {
   member: IMerchantMemberProfile[]
 }
 
-export enum CreditType {
+export const enum CreditType {
   MAIN = 1, // main, rechargeable
   PROMO_CREDIT = 2 // promo credit account
 }
@@ -780,7 +782,7 @@ export type TCreditTx = {
   by: string // if credit amt is updated by admin, adminMember is not null. if amt is updated by user themselves(consumed, earned or other methods), this field is not empty.
 }
 
-export enum CreditTxType {
+export const enum CreditTxType {
   TOP_UP = 1,
   CONSUMPTION = 2,
   FROM_REFUND = 3,
@@ -805,7 +807,7 @@ export type AppTask = {
   taskCost: number
   format: 'xlsx' | 'csv'
 }
-export enum AppTaskStatus {
+export const enum AppTaskStatus {
   QUEUED = 0,
   RUNNING = 1,
   SUCCEEDED = 2,

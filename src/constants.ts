@@ -5,7 +5,10 @@ import {
   DiscountCodeStatus,
   DiscountType,
   InvoiceBizType,
+  InvoiceStatus,
   MerchantUserStatus,
+  MetricAggregationType,
+  MetricType,
   PaymentStatus,
   PaymentTimelineType,
   PlanStatus,
@@ -52,11 +55,6 @@ export const SUBSCRIPTION_HISTORY_STATUS: Record<
   SubscriptionHistoryStatus,
   { label: string; color: string }
 > = {
-  /*
-  [SubscriptionHistoryStatus.UNKNOWN_ZERO]: {
-    label: 'unknown 0',
-    color: 'lightgray'
-  }, */
   [SubscriptionHistoryStatus.Active]: { label: 'Active', color: '#87d068' },
   [SubscriptionHistoryStatus.Finished]: { label: 'Finished', color: 'blue' },
   [SubscriptionHistoryStatus.Cancelled]: {
@@ -64,12 +62,6 @@ export const SUBSCRIPTION_HISTORY_STATUS: Record<
     color: 'purple'
   },
   [SubscriptionHistoryStatus.Expired]: { label: 'Expired', color: 'red' }
-  /*
-  [SubscriptionHistoryStatus.UNKNOWN_FIVE]: {
-    label: 'unknown 5',
-    color: 'lightgray'
-  }
-    */
 }
 
 export const USER_STATUS: Record<UserStatus, { label: string; color: string }> =
@@ -96,32 +88,28 @@ export const APP_TASK_STATUS: Record<
   [AppTaskStatus.FAILED]: { label: 'Failed', color: 'red' }
 }
 
-// to be deprecated, use currency from BE
-/*
-export const CURRENCY: {
-  [key: string]: {
-    symbol: string
-    stripe_factor: number
-    decimal_places: number | null
-  }
-} = {
-  CNY: { symbol: '¥', stripe_factor: 100, decimal_places: 2 },
-  USD: { symbol: '$', stripe_factor: 100, decimal_places: 2 },
-  JPY: { symbol: '¥', stripe_factor: 1, decimal_places: 0 },
-  RUB: { symbol: '₽', stripe_factor: 100, decimal_places: 2 },
-  EUR: { symbol: '€', stripe_factor: 100, decimal_places: 2 },
-  USDT: { symbol: '₮', stripe_factor: 100, decimal_places: null }
-}
-  */
-
-export const INVOICE_STATUS: { [key: number]: string } = {
-  0: 'Initiating', // this status only exist for a very short period, users/admin won't even know it exist
-  1: 'Draft', // admin manually create an invoice, for edit/delete, but users won't receive this invoice.
-  2: 'Awaiting payment', // admin has clicked the 'create' button in invoice editing modal, user will receive a mail with payment link. Admin can revoke the invoice if user hasn't made the payment.
-  3: 'Paid', // user paid the invoice
-  4: 'Failed', // user not pay the invoice before it get expired
-  5: 'Cancelled', // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
-  6: 'Reversed' // 取消后被通知支付成功的，这种情况一般是要排查的
+export const INVOICE_STATUS: Record<
+  InvoiceStatus,
+  { label: string; color: string; tooltip?: string }
+> = {
+  [InvoiceStatus.INITIATING]: { label: 'Initiating', color: 'gray' },
+  [InvoiceStatus.DRAFT]: {
+    label: 'Draft',
+    color: 'gray',
+    tooltip: `You can still edit/delete this draft, user won't receive this invoice until you 'create' it.`
+  },
+  [InvoiceStatus.AWAITING_PAYMENT]: {
+    label: 'Awaiting payment',
+    color: 'blue'
+  },
+  [InvoiceStatus.PAID]: { label: 'Paid', color: '#87d068' },
+  [InvoiceStatus.FAILED]: {
+    label: 'Failed',
+    color: 'red',
+    tooltip: `User didn't finish the payment on time.`
+  },
+  [InvoiceStatus.CANCELLED]: { label: 'Cancelled', color: 'purple' },
+  [InvoiceStatus.REVERSED]: { label: 'Reversed', color: 'cyan' }
 }
 
 export const INVOICE_BIZ_TYPE: Record<InvoiceBizType, string> = {
@@ -130,18 +118,21 @@ export const INVOICE_BIZ_TYPE: Record<InvoiceBizType, string> = {
   [InvoiceBizType.SUBSCRIPTION]: 'Recurring'
 }
 
-export const METRICS_TYPE: { [key: number]: string } = {
-  1: 'limit_metered',
-  2: 'charge_metered', // not used yet
-  3: 'charge_recurring' // not used yet
+export const METRICS_TYPE: Record<MetricType, { label: string }> = {
+  [MetricType.LIMIT_METERED]: { label: 'Limit metered' },
+  [MetricType.CHARGE_METERED]: { label: 'Charge metered' },
+  [MetricType.CHARGE_RECURRING]: { label: 'Charge recurring' }
 }
 
-export const METRICS_AGGREGATE_TYPE: { [key: number]: string } = {
-  1: 'count',
-  2: 'count unique',
-  3: 'latest',
-  4: 'max',
-  5: 'sum'
+export const METRICS_AGGREGATE_TYPE: Record<
+  MetricAggregationType,
+  { label: string }
+> = {
+  [MetricAggregationType.COUNT]: { label: 'count' },
+  [MetricAggregationType.COUNT_UNIQUE]: { label: 'count unique' },
+  [MetricAggregationType.LATEST]: { label: 'latest' },
+  [MetricAggregationType.MAX]: { label: 'max' },
+  [MetricAggregationType.SUM]: { label: 'sum' }
 }
 
 export const DISCOUNT_CODE_STATUS: Record<

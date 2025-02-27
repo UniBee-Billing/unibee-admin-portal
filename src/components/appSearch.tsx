@@ -1,7 +1,6 @@
-import { INVOICE_STATUS } from '@/constants'
 import { showAmount } from '@/helpers'
 import { appSearchReq } from '@/requests'
-import { IProfile, UserInvoice } from '@/shared.types'
+import { IProfile, InvoiceStatus, UserInvoice } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Col, Divider, Input, Row, Spin, message } from 'antd'
 import dayjs from 'dayjs'
@@ -9,7 +8,7 @@ import { CSSProperties, ChangeEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
 import './appSearch.css'
-import { SubscriptionStatusTag } from './ui/statusTag'
+import { InvoiceStatusTag, SubscriptionStatusTag } from './ui/statusTag'
 
 const { Search } = Input
 
@@ -240,7 +239,7 @@ const InvoiceMatch = ({
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  {INVOICE_STATUS[iv.status as keyof typeof INVOICE_STATUS]}
+                  {InvoiceStatusTag(iv.status as InvoiceStatus)}
                 </div>
               </Col>
               <Col

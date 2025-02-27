@@ -10,6 +10,7 @@ import {
 } from '@/requests'
 import '@/shared.css'
 import {
+  InvoiceStatus,
   IPlan,
   IPreview,
   IProfile,
@@ -46,7 +47,7 @@ import { useOnClickOutside } from 'usehooks-ts'
 import CopyToClipboard from '../ui/copyToClipboard'
 import CouponPopover from '../ui/couponPopover'
 import LongTextPopover from '../ui/longTextPopover'
-import { InvoiceStatus, SubscriptionStatusTag } from '../ui/statusTag'
+import { InvoiceStatusTag, SubscriptionStatusTag } from '../ui/statusTag'
 import CancelPendingSubModal from './modals/cancelPendingSub'
 import ChangePlanModal from './modals/changePlan'
 import ChangeSubStatusModal from './modals/changeSubStatus'
@@ -824,7 +825,7 @@ const SubscriptionInfoSection = ({
                 {subInfo.latestInvoice.invoiceId}
               </Button>
               <CopyToClipboard content={subInfo.latestInvoice.invoiceId} />
-              {InvoiceStatus(subInfo.latestInvoice.status)}{' '}
+              {InvoiceStatusTag(subInfo.latestInvoice.status as InvoiceStatus)}
             </div>
           )}
         </Col>

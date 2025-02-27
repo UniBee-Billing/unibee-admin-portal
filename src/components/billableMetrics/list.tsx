@@ -1,6 +1,10 @@
 import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
 import { getMetricsListReq } from '@/requests/index'
-import { IBillableMetrics } from '@/shared.types'
+import {
+  IBillableMetrics,
+  MetricAggregationType,
+  MetricType
+} from '@/shared.types'
 import { LoadingOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons'
 import { Button, Pagination, Space, Table, Tooltip, message } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
@@ -62,16 +66,18 @@ const Index = () => {
       dataIndex: 'type',
       key: 'type',
       render: (t) => {
-        return <span>{METRICS_TYPE[t]}</span>
+        return <span>{METRICS_TYPE[t as MetricType].label}</span>
       }
     },
     {
       title: 'Aggregation Type',
       dataIndex: 'aggregationType',
       key: 'aggregationType',
-      render: (aggreType) => {
-        return <span>{METRICS_AGGREGATE_TYPE[aggreType]}</span>
-      }
+      render: (aggreType) => (
+        <span>
+          {METRICS_AGGREGATE_TYPE[aggreType as MetricAggregationType].label}
+        </span>
+      )
     },
     {
       title: 'Aggregation Property',

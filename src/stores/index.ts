@@ -56,7 +56,7 @@ export const useProductListStore = create<ProductListSlice>()((set, get) => ({
   reset: () => set(INITIAL_PRODUCT_LIST)
 }))
 
-// the merchant which the current logged-in user is working for
+// the merchant which the current logged-in admin user is working for
 const INITIAL_INFO: TMerchantInfo = {
   id: -1,
   address: '',
@@ -74,12 +74,21 @@ interface MerchantInfoSlice extends TMerchantInfo {
   reset: () => void
 }
 
-export const useMerchantInfoStore = create<MerchantInfoSlice>()((set, get) => ({
-  ...INITIAL_INFO,
-  getMerchantInfo: () => get(),
-  setMerchantInfo: (p) => set({ ...p }),
-  reset: () => set(INITIAL_INFO)
-}))
+export const useMerchantInfoStore = create<MerchantInfoSlice>()(
+  persist(
+    // when refreshing the page, the merchant info is lost(need to refetch from BE), so at this moment, the company logo at top-left is gone.
+    // persisting merchnt-info can fix this.
+    (set, get) => ({
+      ...INITIAL_INFO,
+      getMerchantInfo: () => get(),
+      setMerchantInfo: (p) => set({ ...p }),
+      reset: () => set(INITIAL_INFO)
+    }),
+    {
+      name: 'merchantInfo'
+    }
+  )
+)
 
 // --------------------------------
 const INITIAL_APP_VALUE: IAppConfig = {

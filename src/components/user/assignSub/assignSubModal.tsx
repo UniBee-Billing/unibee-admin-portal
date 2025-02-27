@@ -429,6 +429,7 @@ export const AssignSubscriptionModal = ({
     }
     updatePrice()
   }
+
   const onApplyDiscountCode = () => {
     updatePrice()
   }
@@ -437,9 +438,8 @@ export const AssignSubscriptionModal = ({
     if (!selectedPlan) {
       return
     }
-
     updatePrice()
-  }, [selectedPlan, requirePayment])
+  }, [selectedPlan, requirePayment, gatewayId]) // different gateway has different vat rate, so we need to update the price when gateway changed
 
   const onDiscountCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDiscountCode(e.target.value)
