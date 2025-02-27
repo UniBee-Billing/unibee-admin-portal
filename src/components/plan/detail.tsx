@@ -92,7 +92,6 @@ const DEFAULT_NEW_PLAN: TNewPlan = {
 } as const // mark every props readonly
 
 const TIME_UNITS = [
-  // in seconds
   { label: 'hours', value: 60 * 60 },
   { label: 'days', value: 60 * 60 * 24 },
   { label: 'weeks', value: 60 * 60 * 24 * 7 },
