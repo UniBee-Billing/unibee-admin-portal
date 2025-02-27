@@ -114,9 +114,15 @@ const Index = () => {
   const navigate = useNavigate()
   const planId = params.planId // http://localhost:5174/plan/270?productId=0, planId is 270
   const isNew = planId == null
-  const [searchParams, _] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const productId = useRef(parseInt(searchParams.get('productId') ?? '0'))
   const [productDetail, setProductDetail] = useState<IProduct | null>(null)
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') ?? 'basic')
+  const onTabChange = (key: string) => {
+    searchParams.set('tab', key)
+    setSearchParams(searchParams)
+    setActiveTab(key)
+  }
   const [loading, setLoading] = useState(false)
   const [activating, setActivating] = useState(false)
   const [plan, setPlan] = useState<IPlan | TNewPlan | null>(
@@ -583,11 +589,12 @@ const Index = () => {
           >
             <div className="flex gap-4">
               <Tabs
-                defaultActiveKey="general"
+                activeKey={activeTab}
+                onChange={onTabChange}
                 className="w-3/4"
                 items={[
                   {
-                    key: 'general',
+                    key: 'basic',
                     label: 'Basic Plan Setup',
                     forceRender: true,
                     children: (
