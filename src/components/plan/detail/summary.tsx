@@ -3,6 +3,7 @@ import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import { Col, Divider, Row } from 'antd'
+import { TrialSummary } from '.'
 
 export const NotSetPlaceholder = () => (
   <span className="text-red-500">Not set</span>
@@ -15,7 +16,6 @@ const labelStyle2 = 'flex h-6 text-gray-400'
 type SummaryItem = {
   name: string
   description: string
-  enableTrialWatch: boolean
   watchPlanType?: PlanType
   getPlanPrice: () => string | undefined
   planStatus: PlanStatus
@@ -24,12 +24,12 @@ type SummaryItem = {
   selectOnetime: IPlan[]
   watchAddons: number[]
   watchOnetimeAddons: number[]
+  trialSummary: TrialSummary
 }
 
 const Index = ({
   name,
   description,
-  enableTrialWatch,
   watchPlanType,
   getPlanPrice,
   planStatus,
@@ -37,13 +37,14 @@ const Index = ({
   selectAddons,
   selectOnetime,
   watchAddons,
-  watchOnetimeAddons
+  watchOnetimeAddons,
+  trialSummary
 }: SummaryItem) => {
   const formatAddonList = (addonType: 'addon' | 'onetimeAddon') => {
     const list = addonType == 'addon' ? selectAddons : selectOnetime
     const selectedList = addonType == 'addon' ? watchAddons : watchOnetimeAddons
     return list
-      .filter((item) => selectedList.includes(item.id))
+      ?.filter((item) => selectedList?.includes(item.id))
       .map((item) => {
         return `${item.planName}`
       })
@@ -172,7 +173,32 @@ const Index = ({
     },
     {
       label: 'Allow trial',
-      renderContent: enableTrialWatch ? 'Yes' : 'No'
+      renderContent: trialSummary.trialEnabled ? 'Yes' : 'No'
+    },
+    {
+      label: 'Trial price',
+      hidden: !trialSummary.trialEnabled,
+      renderContent: trialSummary.price || <NotSetPlaceholder />
+    },
+    {
+      label: 'Trial length',
+      hidden: !trialSummary.trialEnabled,
+      renderContent:
+        trialSummary.durationTime == undefined ? (
+          <NotSetPlaceholder />
+        ) : (
+          trialSummary.durationTime
+        )
+    },
+    {
+      label: 'Require bank bank',
+      hidden: !trialSummary.trialEnabled,
+      renderContent: trialSummary.requireBankInfo ? 'Yes' : 'No'
+    },
+    {
+      label: 'Auto renew',
+      hidden: !trialSummary.trialEnabled,
+      renderContent: trialSummary.AutoRenew ? 'Yes' : 'No'
     }
   ]
   return (
@@ -200,7 +226,7 @@ const Index = ({
       </div>
       {advancedItems
         .filter((item) => !item.hidden)
-        .map((item, idx: number) => (
+        .map((item) => (
           <div key={item.label}>
             <Row className="flex items-baseline">
               <Col span={10} className={labelStyle2}>

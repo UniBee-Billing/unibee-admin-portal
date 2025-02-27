@@ -47,7 +47,7 @@ export type TNewPlan = Omit<
   | 'merchantId'
   | 'productId'
   | 'product'
->
+> // might need to omit more, like trial related fields.
 
 const DEFAULT_NEW_PLAN: TNewPlan = {
   currency: 'EUR',
@@ -67,14 +67,21 @@ const DEFAULT_NEW_PLAN: TNewPlan = {
   cancelAtTrialEnd: true //  0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UI, front-end use <Switch />
 } as const // mark every props readonly
 
-const TIME_UNITS = [
+export type TrialSummary = {
+  trialEnabled: boolean
+  price: string | undefined
+  durationTime: string | undefined
+  requireBankInfo: boolean | undefined
+  AutoRenew: boolean | undefined
+}
+export const TIME_UNITS = [
   // in seconds
   { label: 'hours', value: 60 * 60 },
   { label: 'days', value: 60 * 60 * 24 },
   { label: 'weeks', value: 60 * 60 * 24 * 7 },
   { label: 'months(30days)', value: 60 * 60 * 24 * 30 }
 ]
-const secondsToUnit = (sec: number) => {
+export const secondsToUnit = (sec: number) => {
   const units = [...TIME_UNITS].sort((a, b) => b.value - a.value)
   for (let i = 0; i < units.length; i++) {
     if (sec % units[i].value === 0) {
@@ -150,34 +157,46 @@ const Index = () => {
   const watchCancelAtTrialEnd = Form.useWatch('cancelAtTrialEnd', form)
 
   //currency changed, trial amt also changed.
-  const [trialSummary, setTrialSummary] = useState<{
-    trialEnabled: boolean
-    price: string
-    durationTime: string
-    requireBankInfo: boolean
-    AutoRenew: boolean
-  }>({
+  const [trialSummary, setTrialSummary] = useState<TrialSummary>({
     trialEnabled: enableTrialWatch,
-    price: '', // watchTrialAmount,
-    durationTime: '', //  watchTrialDurationTime,
-    requireBankInfo: watchTrialDemand,
-    AutoRenew: !watchCancelAtTrialEnd
+    price: undefined, // watchTrialAmount,
+    durationTime: undefined, //  watchTrialDurationTime,
+    requireBankInfo: undefined,
+    AutoRenew: undefined
   })
 
   useEffect(() => {
+    let durationTime =
+      enableTrialWatch &&
+      Number.isInteger(watchTrialDurationTime) &&
+      watchTrialDurationTime > 0
+        ? watchTrialDurationTime
+        : undefined
+
+    if (durationTime != undefined) {
+      const unitLabel = TIME_UNITS.find(
+        (u) => u.value == trialLengthUnit
+      )?.label
+      durationTime = `${durationTime} ${unitLabel}`
+    }
+
     setTrialSummary({
       trialEnabled: enableTrialWatch,
-      price: '', // watchTrialAmount,
-      durationTime: '', //  watchTrialDurationTime,
-      requireBankInfo: watchTrialDemand,
-      AutoRenew: !watchCancelAtTrialEnd
+      price: enableTrialWatch
+        ? showAmount(watchTrialAmount, watchCurrency, true)
+        : undefined,
+      durationTime: durationTime,
+      requireBankInfo: enableTrialWatch ? watchTrialDemand : undefined,
+      AutoRenew: enableTrialWatch ? watchCancelAtTrialEnd : undefined
     })
   }, [
     enableTrialWatch,
     watchTrialAmount,
     watchTrialDurationTime,
     watchTrialDemand,
-    watchCurrency
+    watchCancelAtTrialEnd,
+    watchCurrency,
+    trialLengthUnit
   ])
 
   // disable editing for 4 keys fields after activate(currency, price, intervalUnit/Count)
@@ -250,10 +269,10 @@ const Index = () => {
   }, [itvCountUnit, itvCountValue, watchCurrency])
 
   useEffect(() => {
-    // user choosed PlanType.MAIN, then select addons/onetimeAddons,
+    // user choosed PlanType.MAIN, then select several addons/onetimeAddons,
     // then switch to PlanType.Addon, which is not allowed to have addons,
     // so we need to clear the addonIds/onetimeAddonIds
-    if (isNew || plan?.type == PlanType.MAIN) {
+    if (watchPlanType != PlanType.MAIN) {
       form.setFieldsValue({ addonIds: [], onetimeAddonIds: [] })
     }
   }, [watchPlanType])
@@ -510,7 +529,6 @@ const Index = () => {
 
     setPlan(planDetail.plan)
     form.setFieldsValue(planDetail.plan)
-
     // if empty, insert an placeholder item.
     const metrics =
       null == planDetail.metricPlanLimits ||
@@ -594,6 +612,8 @@ const Index = () => {
                       <AdvancedConfig
                         enableTrialWatch={enableTrialWatch}
                         selectAddons={selectAddons}
+                        trialLengthUnit={trialLengthUnit}
+                        setTrialLengthUnit={setTrialLengthUnit}
                         selectOnetime={selectOnetime}
                         formDisabled={formDisabled}
                         getCurrency={getCurrency}
@@ -609,15 +629,11 @@ const Index = () => {
                 <Summary
                   name={watchPlanName}
                   description={watchPlanDescription}
-                  enableTrialWatch={enableTrialWatch}
-                  watchTrialAmount={watchTrialAmount}
-                  watchTrialDurationTime={watchTrialDurationTime}
-                  watchTrialDemand={watchTrialDemand}
-                  watchCancelAtTrialEnd={watchCancelAtTrialEnd}
                   watchPlanType={watchPlanType}
                   getPlanPrice={getPlanPrice}
                   planStatus={plan.status}
                   publishStatus={plan.publishStatus}
+                  trialSummary={trialSummary}
                   selectAddons={selectAddons}
                   selectOnetime={selectOnetime}
                   watchAddons={watchAddons}
