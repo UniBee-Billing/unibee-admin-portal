@@ -8,6 +8,7 @@ import {
   InvoiceStatus,
   MerchantUserStatus,
   MetricAggregationType,
+  MetricChargeType,
   MetricType,
   PaymentStatus,
   PaymentTimelineType,
@@ -33,6 +34,11 @@ export const PLAN_STATUS: Record<PlanStatus, { label: string; color: string }> =
     [PlanStatus.SOFT_ARCHIVED]: { label: 'soft archived', color: 'gray' },
     [PlanStatus.HARD_ARCHIVED]: { label: 'hard archived', color: 'gray' }
   }
+
+export const METRIC_CHARGE_TYPE: Record<MetricChargeType, { label: string }> = {
+  [MetricChargeType.STANDARD]: { label: 'Standard pricing' },
+  [MetricChargeType.GRADUATED]: { label: 'Graduated pricing' }
+}
 
 export const SUBSCRIPTION_STATUS: Record<
   SubscriptionStatus,
