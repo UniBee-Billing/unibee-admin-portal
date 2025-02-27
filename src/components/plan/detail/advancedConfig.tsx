@@ -37,35 +37,13 @@ import update from 'immutability-helper'
 
 import { Switch } from 'antd'
 import { useState } from 'react'
+import { TIME_UNITS } from '.'
 
 type TMetricsItem = {
   localId: string
   metricId?: number
   metricLimit?: number | string
 }
-
-const TIME_UNITS = [
-  // in seconds
-  { label: 'hours', value: 60 * 60 },
-  { label: 'days', value: 60 * 60 * 24 },
-  { label: 'weeks', value: 60 * 60 * 24 * 7 },
-  { label: 'months(30days)', value: 60 * 60 * 24 * 30 }
-]
-/*
-const secondsToUnit = (sec: number) => {
-  const units = [...TIME_UNITS].sort((a, b) => b.value - a.value)
-  for (let i = 0; i < units.length; i++) {
-    if (sec % units[i].value === 0) {
-      return [sec / units[i].value, units[i].value] // if sec is 60 * 60 * 24 * 30 * 3, then return [3, 60 * 60 * 24 * 30 * 3]
-    }
-  }
-  throw Error('Invalid time unit')
-}
-
-const unitToSeconds = (value: number, unit: number) => {
-  return value * unit
-}
-  */
 
 interface Props {
   enableTrialWatch: boolean
@@ -76,6 +54,8 @@ interface Props {
   metricsList: IBillableMetrics[]
   selectAddons: IPlan[]
   selectOnetime: IPlan[]
+  trialLengthUnit: number | undefined
+  setTrialLengthUnit: (val: number) => void
 }
 
 const Index = ({
@@ -86,7 +66,9 @@ const Index = ({
   watchPlanType,
   metricsList,
   selectAddons,
-  selectOnetime
+  selectOnetime,
+  trialLengthUnit,
+  setTrialLengthUnit
 }: Props) => {
   // const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([]) // all the billable metrics, not used for edit, but used in <Select /> for user to choose.
   const [selectedMetrics, setSelectedMetrics] = useState<TMetricsItem[]>([
@@ -94,9 +76,6 @@ const Index = ({
     { localId: randomString(8) }
   ])
 
-  const [trialLengthUnit, setTrialLengthUnit] = useState(
-    TIME_UNITS.find((u) => u.label == 'days')?.value
-  ) // default unit is days
   const onTrialLengthUnitChange = (val: number) => setTrialLengthUnit(val)
 
   // it just adds an empty metrics item
@@ -301,7 +280,7 @@ const Index = ({
             <Form.Item
               name="trialAmount"
               noStyle
-              dependencies={['amount', 'currency']}
+              dependencies={['amount', 'currency', 'enableTrial']}
               rules={[
                 {
                   required: enableTrialWatch,
@@ -347,6 +326,7 @@ const Index = ({
           <Form.Item
             label="Trial length"
             name="trialDurationTime"
+            dependencies={['enableTrial']}
             rules={[
               {
                 required: enableTrialWatch,
