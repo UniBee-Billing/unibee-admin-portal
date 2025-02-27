@@ -550,3 +550,33 @@ const Index = ({
 }
 
 export default Index
+
+const BillableMetricSetup = () => {
+  return (
+    <div>
+      <div>
+        <div>LIMIT_METERED</div>
+        <Row>
+          <Col>Name</Col>
+          <Col>Code</Col>
+          <Col>Aggregation Type</Col>
+          <Col>Aggregation Property</Col>
+          <Col>Limit Value</Col>
+        </Row>
+        values
+      </div>
+
+      <div>
+        <div>LIMIT_METERED</div>
+        <Row>
+          <Col>Name</Col>
+          <Col>Code</Col>
+          <Col>Aggregation Type</Col>
+          <Col>Aggregation Property</Col>
+          <Col>Limit Value</Col>
+        </Row>
+        values
+      </div>
+    </div>
+  )
+}

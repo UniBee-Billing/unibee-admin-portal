@@ -206,6 +206,7 @@ const Index = ({
           disabled={disableAfterActive.current || formDisabled}
           style={{ width: 180 }}
           prefix={getCurrency()?.Symbol}
+          min={0}
         />
       </Form.Item>
 
