@@ -189,10 +189,10 @@ const Index = () => {
                     <Radio.Button value={MetricType.LIMIT_METERED}>
                       Limit metered
                     </Radio.Button>
-                    <Radio.Button value={MetricType.CHARGE_METERED} disabled>
+                    <Radio.Button value={MetricType.CHARGE_METERED}>
                       Charge metered
                     </Radio.Button>
-                    <Radio.Button value={MetricType.CHARGE_RECURRING} disabled>
+                    <Radio.Button value={MetricType.CHARGE_RECURRING}>
                       Charge recurring
                     </Radio.Button>
                   </Radio.Group>
