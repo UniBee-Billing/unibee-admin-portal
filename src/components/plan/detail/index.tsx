@@ -1,4 +1,4 @@
-import { isValidMap, randomString, showAmount, toFixedNumber } from '@/helpers'
+import { isValidMap, showAmount, toFixedNumber } from '@/helpers'
 import {
   activatePlan,
   deletePlanReq,
@@ -28,16 +28,6 @@ import AdvancedConfig from './advancedConfig'
 import BasicConfig from './basicConfig'
 import Summary from './summary'
 
-interface Metric {
-  metricId: number
-  metricLimit: number
-}
-
-type TMetricsItem = {
-  localId: string
-  metricId?: number
-  metricLimit?: number | string
-}
 export type TNewPlan = Omit<
   IPlan,
   | 'id'
@@ -136,15 +126,12 @@ const Index = () => {
   const [selectOnetime, setSelectOnetime] = useState<IPlan[]>([]) // one-time payment addon list in <Select /> for the current main plan, this list will change based on different plan currency
   // one plan can have many regular addons, but only ONE one-time payment addon, but backend support multiple.
   const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([]) // all the billable metrics, not used for edit, but used in <Select /> for user to choose.
-  const [selectedMetrics, setSelectedMetrics] = useState<TMetricsItem[]>([
-    // metrics are hard to let form handle change, I have to manually handle it
-    { localId: randomString(8) }
-  ])
+
+  const [saveMetricData, setSaveMetricData] = useState(false)
+
   const [trialLengthUnit, setTrialLengthUnit] = useState(
     TIME_UNITS.find((u) => u.label == 'days')?.value
   ) // default unit is days
-
-  // todo: make a billable metrics summary state obj.
 
   const itvCountValue = Form.useWatch('intervalCount', form)
   const itvCountUnit = Form.useWatch('intervalUnit', form)
@@ -283,9 +270,7 @@ const Index = () => {
     }
   }, [watchPlanType])
 
-  const onSave = async (values: unknown) => {
-    // console.log('on save call: values', values)
-
+  const onSave = async () => {
     if (productDetail === null) {
       return
     }
@@ -293,9 +278,14 @@ const Index = () => {
     if (CURRENCY == undefined) {
       return
     }
-    const f = JSON.parse(JSON.stringify(values))
 
-    f.amount = Number(f.amount)
+    setLoading(true)
+    setSaveMetricData(true)
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setSaveMetricData(false)
+
+    const f = JSON.parse(JSON.stringify(form.getFieldsValue()))
+
     f.amount = Number(f.amount)
     f.amount *= CURRENCY.Scale
     f.amount = toFixedNumber(f.amount, 2)
@@ -340,6 +330,7 @@ const Index = () => {
     }
 
     if (!isValidMap(f.metadata)) {
+      setLoading(false)
       message.error('Invalid custom data')
       return
     }
@@ -362,7 +353,6 @@ const Index = () => {
     f.metricLimits = m
     */
 
-    setLoading(true)
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
     if (null != err) {
@@ -541,17 +531,6 @@ const Index = () => {
 
     setPlan(planDetail.plan)
     form.setFieldsValue(planDetail.plan)
-    // if empty, insert an placeholder item.
-    const metrics =
-      null == planDetail.metricPlanLimits ||
-      planDetail.metricPlanLimits.length == 0
-        ? [{ localId: randomString(8) }]
-        : planDetail.metricPlanLimits.map((m: Metric) => ({
-            localId: randomString(8),
-            metricId: m.metricId,
-            metricLimit: m.metricLimit
-          }))
-    setSelectedMetrics(metrics)
 
     setSelectAddons(
       regularAddons.filter(
@@ -623,6 +602,7 @@ const Index = () => {
                     forceRender: true,
                     children: (
                       <AdvancedConfig
+                        saveMetricData={saveMetricData}
                         enableTrialWatch={enableTrialWatch}
                         selectAddons={selectAddons}
                         trialLengthUnit={trialLengthUnit}
@@ -633,6 +613,7 @@ const Index = () => {
                         form={form}
                         watchPlanType={watchPlanType}
                         metricsList={metricsList}
+                        plan={plan}
                       />
                     )
                   }
