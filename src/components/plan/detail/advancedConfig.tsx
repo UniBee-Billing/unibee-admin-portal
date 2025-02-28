@@ -45,14 +45,9 @@ import update from 'immutability-helper'
 
 import { METRIC_CHARGE_TYPE } from '@/constants'
 import { Switch } from 'antd'
-import { PropsWithChildren, useState } from 'react'
-import { TIME_UNITS } from '.'
+import { PropsWithChildren, useEffect, useState } from 'react'
+import { TIME_UNITS, TNewPlan } from '.'
 import Graduation from './icons/graduation.svg?react'
-type TMetricsItem = {
-  localId: string
-  metricId?: number
-  metricLimit?: number | string
-}
 
 interface Props {
   enableTrialWatch: boolean
@@ -65,6 +60,8 @@ interface Props {
   selectOnetime: IPlan[]
   trialLengthUnit: number | undefined
   setTrialLengthUnit: (val: number) => void
+  saveMetricData: boolean
+  plan: IPlan | TNewPlan
 }
 
 const Index = ({
@@ -77,57 +74,11 @@ const Index = ({
   selectAddons,
   selectOnetime,
   trialLengthUnit,
-  setTrialLengthUnit
+  setTrialLengthUnit,
+  saveMetricData,
+  plan
 }: Props) => {
-  // const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([]) // all the billable metrics, not used for edit, but used in <Select /> for user to choose.
-  const [selectedMetrics, setSelectedMetrics] = useState<TMetricsItem[]>([
-    // metrics are hard to let form handle change, I have to manually handle it
-    { localId: randomString(8) }
-  ])
-
   const onTrialLengthUnitChange = (val: number) => setTrialLengthUnit(val)
-
-  // it just adds an empty metrics item
-  const addMetrics = () => {
-    if (formDisabled) {
-      return
-    }
-    const m: TMetricsItem = { localId: randomString(8) }
-    setSelectedMetrics(update(selectedMetrics, { $push: [m] }))
-  }
-
-  const removeMetrics = (localId: string) => {
-    if (formDisabled) {
-      return
-    }
-    const idx = selectedMetrics.findIndex((m) => m.localId == localId)
-    if (idx != -1) {
-      setSelectedMetrics(update(selectedMetrics, { $splice: [[idx, 1]] }))
-    }
-  }
-
-  const updateMetrics =
-    (localId: string) => (evt: React.ChangeEvent<HTMLInputElement>) => {
-      const idx = selectedMetrics.findIndex((m) => m.localId == localId)
-      if (idx != -1) {
-        setSelectedMetrics(
-          update(selectedMetrics, {
-            [idx]: { metricLimit: { $set: evt.target.value } }
-          })
-        )
-      }
-    }
-
-  const onMetricSelectChange = (localId: string) => (val: number) => {
-    const idx = selectedMetrics.findIndex((m) => m.localId == localId)
-    if (idx != -1) {
-      const newMetrics = update(selectedMetrics, {
-        [idx]: { metricId: { $set: val } }
-      })
-      setSelectedMetrics(newMetrics)
-    }
-  }
-
   const prettifyJSON = () => {
     const metadata = form.getFieldValue('metadata')
     if (metadata == '' || metadata == null) {
@@ -394,6 +345,8 @@ const Index = ({
             metricsList={metricsList}
             getCurrency={getCurrency}
             form={form}
+            saveMetricData={saveMetricData}
+            plan={plan}
           />
         </div>
       )
@@ -463,13 +416,14 @@ type BillableMetricSetupProps = {
   metricsList: IBillableMetrics[] // all the billable metrics we have created, not used for edit, but used in <Select /> for user to choose.
   getCurrency: () => CURRENCY
   form: FormInstance
+  saveMetricData: boolean
+  plan: IPlan | TNewPlan
 }
 
 const defaultMetricLimit = (): MetricLimits & { localId: string } => ({
   metricId: null,
   metricLimit: 0,
   localId: randomString(8)
-  // graduatedAmounts: []
 })
 const defaultMetricMeteredCharge = (): MetricMeteredCharge & {
   localId: string
@@ -499,12 +453,40 @@ type MetricData = {
 const BillableMetricSetup = ({
   metricsList,
   getCurrency,
-  form
+  form,
+  saveMetricData,
+  plan
 }: BillableMetricSetupProps) => {
+  const { metricLimits, metricMeteredCharge, metricRecurringCharge } = plan
+
+  const metricLimitsLocal =
+    metricLimits == null
+      ? []
+      : metricLimits.map((m) => ({
+          ...m,
+          localId: randomString(8)
+        }))
+
+  const metricMeteredChargeLocal =
+    metricMeteredCharge == null
+      ? []
+      : metricMeteredCharge.map((m) => ({
+          ...m,
+          localId: randomString(8)
+        }))
+
+  const metricRecurringChargeLocal =
+    metricRecurringCharge == null
+      ? []
+      : metricRecurringCharge.map((m) => ({
+          ...m,
+          localId: randomString(8)
+        }))
+
   const [metricData, setMetricData] = useState<MetricData>({
-    metricLimits: [],
-    metricMeteredCharge: [],
-    metricRecurringCharge: []
+    metricLimits: metricLimitsLocal,
+    metricMeteredCharge: metricMeteredChargeLocal,
+    metricRecurringCharge: metricRecurringChargeLocal
   })
 
   const [graduationSetupModalOpen, setGraduationSetupModalOpen] = useState<{
@@ -612,6 +594,12 @@ const BillableMetricSetup = ({
         )
       }
     }
+
+  useEffect(() => {
+    if (saveMetricData) {
+      form.setFieldsValue(metricData)
+    }
+  }, [saveMetricData])
 
   return (
     <div>
@@ -740,14 +728,14 @@ const BillableMetricSetup = ({
           </Space>
         </Button>
       </Dropdown>
-      &nbsp;&nbsp;&nbsp;&nbsp;
+      {/* &nbsp;&nbsp;&nbsp;&nbsp;
       <Button
         onClick={() => {
           form.setFieldsValue(metricData)
         }}
       >
         Save data
-      </Button>
+      </Button> */}
     </div>
   )
 }
