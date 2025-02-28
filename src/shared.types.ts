@@ -172,8 +172,8 @@ export const enum PlanPublishStatus {
   UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans
   PUBLISHED = 2
 }
-export type MetricLimit = {
-  metricId: number
+export type MetricLimits = {
+  metricId: number | null
   metricLimit: number
   graduatedAmounts?: MetricGraduatedAmount[] // this prop is not needed is business, but for the ease of configurating in UI.
 }
@@ -188,7 +188,7 @@ export type MetricGraduatedAmount = {
   flatAmount: number | null
 }
 export type MetricMeteredCharge = {
-  metricId: number
+  metricId: number | null
   chargeType: MetricChargeType
   standardAmount: number
   standardStartValue: number
@@ -213,7 +213,7 @@ interface IPlan {
   onetimeAddonIds?: number[] // which one-time payment addons have been attached to this plan (main plan only)
   metricPlanLimits?: { metricId: number; metricLimit: number }[]
   // -- billable metrics related fields
-  metricLimits?: MetricLimit[]
+  metricLimits?: MetricLimits[]
   metricMeteredCharge?: MetricMeteredCharge[] // they shared the same structure.
   metricRecurringCharge?: MetricMeteredCharge[]
   // --
