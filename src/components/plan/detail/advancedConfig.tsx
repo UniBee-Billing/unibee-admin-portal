@@ -898,94 +898,103 @@ const ChargeSetup = ({
         </Col>
       </Row>
       {metricData.map((m: MetricMeteredCharge & { localId: string }) => (
-        <Row key={m.localId} className="my-2">
-          <Col span={5}>
-            <Select
-              style={{ width: 160 }}
-              value={m.metricId}
-              onChange={onMetricIdSelectChange(metricDataType, m.localId)}
-              options={metricsList.map((m) => ({
-                label: m.metricName,
-                value: m.id
-              }))}
-            />
-          </Col>
-          <Col span={5}>
-            <Select
-              style={{ width: 160 }}
-              value={m.chargeType}
-              onChange={onChargeTypeSelectChange(metricDataType, m.localId)}
-              options={[
-                {
-                  label: METRIC_CHARGE_TYPE[MetricChargeType.STANDARD].label,
-                  value: MetricChargeType.STANDARD
-                },
-                {
-                  label: METRIC_CHARGE_TYPE[MetricChargeType.GRADUATED].label,
-                  value: MetricChargeType.GRADUATED
-                }
-              ]}
-            />
-          </Col>
-          <Col span={6}>
-            <InputNumber
-              style={{ width: 120 }}
-              placeholder="Price"
-              prefix={getCurrency()?.Symbol}
-              min={0}
-              value={m.standardAmount}
-              onChange={onMetricFieldChange(
-                metricDataType,
-                m.localId,
-                'standardAmount'
-              )}
-              disabled={m.chargeType == MetricChargeType.GRADUATED}
-            />
-          </Col>
-          <Col span={4}>
-            <InputNumber
-              style={{ width: 120 }}
-              placeholder="Start value"
-              min={0}
-              value={m.standardStartValue}
-              onChange={onMetricFieldChange(
-                metricDataType,
-                m.localId,
-                'standardStartValue'
-              )}
-              disabled={m.chargeType == MetricChargeType.GRADUATED}
-            />
-          </Col>
-          <Col span={2}>
-            <BadgedButton
-              showBadge={m.graduatedAmounts.length > 0}
-              count={m.graduatedAmounts.length}
-            >
-              <Tooltip title="Graduation setup">
-                <Button
-                  onClick={() =>
-                    setGraduationSetupModalOpen({
-                      metricType: metricDataType,
-                      localId: m.localId
-                    })
+        <div key={m.localId}>
+          <Row key={m.localId} className="my-2">
+            <Col span={5}>
+              <Select
+                style={{ width: 160 }}
+                value={m.metricId}
+                onChange={onMetricIdSelectChange(metricDataType, m.localId)}
+                options={metricsList.map((m) => ({
+                  label: m.metricName,
+                  value: m.id
+                }))}
+              />
+            </Col>
+            <Col span={5}>
+              <Select
+                style={{ width: 160 }}
+                value={m.chargeType}
+                onChange={onChargeTypeSelectChange(metricDataType, m.localId)}
+                options={[
+                  {
+                    label: METRIC_CHARGE_TYPE[MetricChargeType.STANDARD].label,
+                    value: MetricChargeType.STANDARD
+                  },
+                  {
+                    label: METRIC_CHARGE_TYPE[MetricChargeType.GRADUATED].label,
+                    value: MetricChargeType.GRADUATED
                   }
-                  size="small"
-                  style={{ border: 'none' }}
-                  disabled={m.chargeType == MetricChargeType.STANDARD}
-                  icon={<Graduation />}
-                />
-              </Tooltip>
-            </BadgedButton>
-          </Col>
-          <Col span={2}>
-            <Button
-              icon={<MinusOutlined />}
-              size="small"
-              style={{ border: 'none' }}
-              onClick={() => removeMetricData(metricDataType, m.localId)}
-            />
-          </Col>
-        </Row>
+                ]}
+              />
+            </Col>
+            <Col span={6}>
+              <InputNumber
+                style={{ width: 120 }}
+                placeholder="Price"
+                prefix={getCurrency()?.Symbol}
+                min={0}
+                value={m.standardAmount}
+                onChange={onMetricFieldChange(
+                  metricDataType,
+                  m.localId,
+                  'standardAmount'
+                )}
+                disabled={m.chargeType == MetricChargeType.GRADUATED}
+              />
+            </Col>
+            <Col span={4}>
+              <InputNumber
+                style={{ width: 120 }}
+                placeholder="Start value"
+                min={0}
+                value={m.standardStartValue}
+                onChange={onMetricFieldChange(
+                  metricDataType,
+                  m.localId,
+                  'standardStartValue'
+                )}
+                disabled={m.chargeType == MetricChargeType.GRADUATED}
+              />
+            </Col>
+            <Col span={2}>
+              <BadgedButton
+                showBadge={m.graduatedAmounts.length > 0}
+                count={m.graduatedAmounts.length}
+              >
+                <Tooltip title="Graduation setup">
+                  <Button
+                    onClick={() =>
+                      setGraduationSetupModalOpen({
+                        metricType: metricDataType,
+                        localId: m.localId
+                      })
+                    }
+                    size="small"
+                    style={{ border: 'none' }}
+                    disabled={m.chargeType == MetricChargeType.STANDARD}
+                    icon={<Graduation />}
+                  />
+                </Tooltip>
+              </BadgedButton>
+            </Col>
+            <Col span={2}>
+              <Button
+                icon={<MinusOutlined />}
+                size="small"
+                style={{ border: 'none' }}
+                onClick={() => removeMetricData(metricDataType, m.localId)}
+              />
+            </Col>
+          </Row>
+          {/* <Row>
+            <Col span={21}>
+              <div className="min-h-10 w-full rounded-md bg-white p-2">
+                graduation setup
+              </div>
+            </Col>
+          </Row> */}
+        </div>
       ))}
     </div>
   )
@@ -1046,73 +1055,78 @@ const GraduationSetupModal = ({
 
   return (
     <Modal title="Graduation setup" width={720} open={true} footer={false}>
-      <div>
-        <Row>
-          <Col span={6}>Amount</Col>
-          <Col span={6}>Start Value</Col>
-          <Col span={5}>End Value</Col>
-          <Col span={5}>Flat amount</Col>
+      {' '}
+      <Row>
+        <Col span={6}>Per unit</Col>
+        <Col span={6}>Start Value</Col>
+        <Col span={5}>End Value</Col>
+        <Col span={5}>Flat fee</Col>
+        <Col span={2}>
+          <Button
+            icon={<PlusOutlined />}
+            onClick={addGraduationData}
+            style={{ border: 'none' }}
+          />
+        </Col>
+      </Row>
+      {graduationData.map((m) => (
+        <Row key={m.localId} className="my-4">
+          <Col span={6}>
+            <InputNumber
+              style={{ width: 120 }}
+              placeholder="Amount"
+              value={m.perAmount}
+              prefix={getCurrency()?.Symbol}
+              onChange={onGraduationDataChange(m.localId, 'perAmount')}
+            />
+          </Col>
+          <Col span={6}>
+            <InputNumber
+              style={{ width: 120 }}
+              placeholder="Start value"
+              value={m.startValue}
+              onChange={onGraduationDataChange(m.localId, 'startValue')}
+            />
+          </Col>
+          <Col span={5}>
+            <InputNumber
+              style={{ width: 120 }}
+              placeholder="End value"
+              value={m.endValue}
+              onChange={onGraduationDataChange(m.localId, 'endValue')}
+            />
+          </Col>
+          <Col span={5}>
+            <InputNumber
+              style={{ width: 120 }}
+              placeholder="Flat amount"
+              prefix={getCurrency()?.Symbol}
+              value={m.flatAmount}
+              onChange={onGraduationDataChange(m.localId, 'flatAmount')}
+            />
+          </Col>
           <Col span={2}>
             <Button
-              icon={<PlusOutlined />}
-              onClick={addGraduationData}
               style={{ border: 'none' }}
+              icon={<MinusOutlined />}
+              size="small"
+              onClick={() => removeGraduationData(m.localId)}
             />
           </Col>
         </Row>
-        {graduationData.map((m) => (
-          <Row key={m.localId} className="my-4">
-            <Col span={6}>
-              <InputNumber
-                style={{ width: 120 }}
-                placeholder="Amount"
-                value={m.perAmount}
-                prefix={getCurrency()?.Symbol}
-                onChange={onGraduationDataChange(m.localId, 'perAmount')}
-              />
-            </Col>
-            <Col span={6}>
-              <InputNumber
-                style={{ width: 120 }}
-                placeholder="Start value"
-                value={m.startValue}
-                onChange={onGraduationDataChange(m.localId, 'startValue')}
-              />
-            </Col>
-            <Col span={5}>
-              <InputNumber
-                style={{ width: 120 }}
-                placeholder="End value"
-                value={m.endValue}
-                onChange={onGraduationDataChange(m.localId, 'endValue')}
-              />
-            </Col>
-            <Col span={5}>
-              <InputNumber
-                style={{ width: 120 }}
-                placeholder="Flat amount"
-                prefix={getCurrency()?.Symbol}
-                value={m.flatAmount}
-                onChange={onGraduationDataChange(m.localId, 'flatAmount')}
-              />
-            </Col>
-            <Col span={2}>
-              <Button
-                style={{ border: 'none' }}
-                icon={<MinusOutlined />}
-                size="small"
-                onClick={() => removeGraduationData(m.localId)}
-              />
-            </Col>
-          </Row>
-        ))}
-      </div>
+      ))}
       <div className="flex justify-end gap-3">
         <Button onClick={onCancel}>Cancel</Button>
         <Button onClick={() => onOK(graduationData)}>OK</Button>
       </div>
     </Modal>
   )
+} //     <Modal title="Graduation setup" width={720} open={true} footer={false}>
+{
+  /* <div className="flex justify-end gap-3">
+        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={() => onOK(graduationData)}>OK</Button>
+      </div> */
 }
 
 interface BadgedButtonProps extends PropsWithChildren<object> {
