@@ -10,7 +10,7 @@ import {
   IPlan,
   MetricChargeType,
   MetricGraduatedAmount,
-  MetricLimit,
+  MetricLimits,
   MetricMeteredCharge,
   MetricType,
   PlanType
@@ -37,7 +37,8 @@ import {
   Row,
   Select,
   Space,
-  Tooltip
+  Tooltip,
+  Typography
 } from 'antd'
 import update from 'immutability-helper'
 
@@ -391,42 +392,8 @@ const Index = ({
           <BillableMetricSetup
             metricsList={metricsList}
             getCurrency={getCurrency}
+            form={form}
           />
-          <Dropdown
-            arrow={true}
-            menu={{
-              items: [
-                {
-                  label: 'Limit metered',
-                  key: MetricType.LIMIT_METERED,
-                  onClick: () => {
-                    console.log('Limit metered')
-                  }
-                },
-                {
-                  label: 'Charge metered',
-                  key: MetricType.CHARGE_METERED,
-                  onClick: () => {
-                    console.log('Charge metered')
-                  }
-                },
-                {
-                  label: 'Charge recurring',
-                  key: MetricType.CHARGE_RECURRING,
-                  onClick: () => {
-                    console.log('Charge recurring')
-                  }
-                }
-              ]
-            }}
-          >
-            <Button icon={<PlusOutlined />} variant="outlined" color="default">
-              <Space>
-                Add billing model
-                <DownOutlined />
-              </Space>
-            </Button>
-          </Dropdown>
         </div>
       )
     }
@@ -494,18 +461,19 @@ export default Index
 type BillableMetricSetupProps = {
   metricsList: IBillableMetrics[] // all the billable metrics we have created, not used for edit, but used in <Select /> for user to choose.
   getCurrency: () => CURRENCY
+  form: FormInstance
 }
 
-const defaultMetricLimit = (): MetricLimit & { localId: string } => ({
-  metricId: 0,
+const defaultMetricLimit = (): MetricLimits & { localId: string } => ({
+  metricId: null,
   metricLimit: 0,
-  localId: randomString(8),
-  graduatedAmounts: []
+  localId: randomString(8)
+  // graduatedAmounts: []
 })
 const defaultMetricMeteredCharge = (): MetricMeteredCharge & {
   localId: string
 } => ({
-  metricId: 0,
+  metricId: null,
   chargeType: MetricChargeType.STANDARD,
   standardAmount: 0,
   standardStartValue: 0,
@@ -515,7 +483,7 @@ const defaultMetricMeteredCharge = (): MetricMeteredCharge & {
 const defaultMetricRecurringCharge = (): MetricMeteredCharge & {
   localId: string
 } => ({
-  metricId: 0,
+  metricId: null,
   chargeType: MetricChargeType.STANDARD,
   standardAmount: 0,
   standardStartValue: 0,
@@ -523,24 +491,45 @@ const defaultMetricRecurringCharge = (): MetricMeteredCharge & {
   localId: randomString(8)
 })
 type MetricData = {
-  metricLimits: (MetricLimit & { localId: string })[]
-  metricMeteredCharges: (MetricMeteredCharge & { localId: string })[]
-  metricRecurringCharges: (MetricMeteredCharge & { localId: string })[]
+  metricLimits: (MetricLimits & { localId: string })[]
+  metricMeteredCharge: (MetricMeteredCharge & { localId: string })[]
+  metricRecurringCharge: (MetricMeteredCharge & { localId: string })[]
 }
 const BillableMetricSetup = ({
   metricsList,
-  getCurrency
+  getCurrency,
+  form
 }: BillableMetricSetupProps) => {
   const [metricData, setMetricData] = useState<MetricData>({
     metricLimits: [],
-    metricMeteredCharges: [],
-    metricRecurringCharges: []
+    metricMeteredCharge: [],
+    metricRecurringCharge: []
   })
+
+  console.log(
+    'insdie billablemsetup, form.getFieldsValue(): ',
+    form.getFieldsValue()
+  )
 
   const [graduationSetupModalOpen, setGraduationSetupModalOpen] = useState<{
     metricType: keyof MetricData
     localId: string
   } | null>(null)
+
+  const addLimitData = () => {
+    setMetricData(
+      update(metricData, { metricLimits: { $push: [defaultMetricLimit()] } })
+    )
+  }
+
+  const removeLimitData = (localId: string) => {
+    const idx = metricData.metricLimits.findIndex((m) => m.localId == localId)
+    if (idx != -1) {
+      setMetricData(
+        update(metricData, { metricLimits: { $splice: [[idx, 1]] } })
+      )
+    }
+  }
 
   const addMetricData = (type: keyof MetricData) => {
     switch (type) {
@@ -551,14 +540,14 @@ const BillableMetricSetup = ({
           })
         )
         break
-      case 'metricMeteredCharges':
+      case 'metricMeteredCharge':
         setMetricData(
           update(metricData, {
             [type]: { $push: [defaultMetricMeteredCharge()] }
           })
         )
         break
-      case 'metricRecurringCharges':
+      case 'metricRecurringCharge':
         setMetricData(
           update(metricData, {
             [type]: { $push: [defaultMetricRecurringCharge()] }
@@ -575,6 +564,21 @@ const BillableMetricSetup = ({
     }
   }
 
+  const onMetricFieldChange =
+    (
+      type: keyof MetricData,
+      localId: string,
+      field: keyof MetricLimits | keyof MetricMeteredCharge
+    ) =>
+    (val: number | null) => {
+      const idx = metricData[type].findIndex((m) => m.localId == localId)
+      if (idx != -1) {
+        setMetricData(
+          update(metricData, { [type]: { [idx]: { [field]: { $set: val } } } })
+        )
+      }
+    }
+
   const onSaveGraduationData =
     (type: keyof MetricData, localId: string) =>
     (graduationData: MetricGraduatedAmount[]) => {
@@ -590,7 +594,7 @@ const BillableMetricSetup = ({
     }
 
   const onChargeTypeSelectChange =
-    (type: keyof MetricData, localId: string) => (val: number) => {
+    (type: keyof MetricData, localId: string) => (val: number | null) => {
       const idx = metricData[type].findIndex((m) => m.localId == localId)
       if (idx != -1) {
         setMetricData(
@@ -601,8 +605,37 @@ const BillableMetricSetup = ({
       }
     }
 
+  const onMetricIdSelectChange =
+    (type: keyof MetricData, localId: string) => (val: number | null) => {
+      const idx = metricData[type].findIndex((m) => m.localId == localId)
+      if (idx != -1) {
+        setMetricData(
+          update(metricData, {
+            [type]: { [idx]: { metricId: { $set: val } } }
+          })
+        )
+      }
+    }
+
   return (
     <div>
+      <Form.Item label="Billable metrics" name="metricLimits" hidden={true}>
+        <Input.TextArea rows={6} />
+      </Form.Item>
+      <Form.Item
+        label="Billable metrics"
+        name="metricMeteredCharge"
+        hidden={true}
+      >
+        <Input.TextArea rows={6} />
+      </Form.Item>
+      <Form.Item
+        label="Billable metrics"
+        name="metricRecurringCharge"
+        hidden={true}
+      >
+        <Input.TextArea rows={6} />
+      </Form.Item>
       {graduationSetupModalOpen != null && (
         <GraduationSetupModal
           data={
@@ -618,154 +651,270 @@ const BillableMetricSetup = ({
           getCurrency={getCurrency}
         />
       )}
-      <div className="my-4 rounded-md bg-gray-100 p-4">
-        <div>Limit metered(metricLimits)</div>
-        <Row>
-          <Col>Name</Col>
-          <Col>Code</Col>
-          <Col>Aggregation Type</Col>
-          <Col>Aggregation Property</Col>
-          <Col>Limit Value</Col>
-        </Row>
-        <Row>
-          <Col>
+      <LimitSetup
+        metricData={metricData.metricLimits}
+        metricsList={metricsList.filter(
+          (m) => m.type == MetricType.LIMIT_METERED
+        )}
+        onMetricFieldChange={onMetricFieldChange}
+        onMetricIdSelectChange={onMetricIdSelectChange}
+        // getCurrency={getCurrency}
+        addLimitData={addLimitData}
+        removeLimitData={removeLimitData}
+      />
+      <ChargeSetup
+        metricData={metricData.metricMeteredCharge}
+        isRecurring={false}
+        metricDataType="metricMeteredCharge"
+        metricsList={metricsList.filter(
+          (m) => m.type == MetricType.CHARGE_METERED
+        )}
+        getCurrency={getCurrency}
+        addMetricData={addMetricData}
+        removeMetricData={removeMetricData}
+        onMetricFieldChange={onMetricFieldChange}
+        onChargeTypeSelectChange={onChargeTypeSelectChange}
+        onMetricIdSelectChange={onMetricIdSelectChange}
+        setGraduationSetupModalOpen={setGraduationSetupModalOpen}
+      />
+      <ChargeSetup
+        metricData={metricData.metricRecurringCharge}
+        isRecurring={true}
+        metricDataType="metricRecurringCharge"
+        metricsList={metricsList.filter(
+          (m) => m.type == MetricType.CHARGE_RECURRING
+        )}
+        getCurrency={getCurrency}
+        addMetricData={addMetricData}
+        removeMetricData={removeMetricData}
+        onMetricFieldChange={onMetricFieldChange}
+        onChargeTypeSelectChange={onChargeTypeSelectChange}
+        onMetricIdSelectChange={onMetricIdSelectChange}
+        setGraduationSetupModalOpen={setGraduationSetupModalOpen}
+      />
+      <Dropdown
+        arrow={true}
+        menu={{
+          items: [
+            {
+              label: 'Limit metered',
+              key: MetricType.LIMIT_METERED,
+              onClick: () => {
+                console.log('Limit metered')
+              }
+            },
+            {
+              label: 'Charge metered',
+              key: MetricType.CHARGE_METERED,
+              onClick: () => {
+                console.log('Charge metered')
+              }
+            },
+            {
+              label: 'Charge recurring',
+              key: MetricType.CHARGE_RECURRING,
+              onClick: () => {
+                console.log('Charge recurring')
+              }
+            }
+          ]
+        }}
+      >
+        <Button icon={<PlusOutlined />} variant="outlined" color="default">
+          <Space>
+            Add billing model
+            <DownOutlined />
+          </Space>
+        </Button>
+      </Dropdown>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <Button
+        onClick={() => {
+          console.log('saving billabme tric data...,', metricData)
+          form.setFieldsValue(metricData)
+        }}
+      >
+        Save data
+      </Button>
+    </div>
+  )
+}
+
+const LimitSetup = ({
+  metricData,
+  metricsList,
+  onMetricFieldChange,
+  onMetricIdSelectChange,
+  //getCurrency,
+  addLimitData,
+  removeLimitData
+}: {
+  metricData: (MetricLimits & { localId: string })[]
+  metricsList: IBillableMetrics[]
+  onMetricFieldChange: (
+    type: keyof MetricData,
+    localId: string,
+    field: keyof MetricLimits
+  ) => (val: number | null) => void
+  onMetricIdSelectChange: (
+    type: keyof MetricData,
+    localId: string
+  ) => (val: number | null) => void
+  // getCurrency: () => CURRENCY
+  addLimitData: () => void
+  removeLimitData: (localId: string) => void
+}) => {
+  // const getMetricData
+  return (
+    <div className="my-4 rounded-md bg-gray-100 p-4">
+      <Typography.Title level={5}>Limit metered</Typography.Title>
+      <Row className="mb-2">
+        <Col span={6}>Name</Col>
+        <Col span={6}>Code</Col>
+        {/* <Col>Aggregation Type</Col>
+        <Col>Aggregation Property</Col> */}
+        <Col span={10}>Limit Value</Col>
+        <Col span={2}>
+          {' '}
+          <Button
+            icon={<PlusOutlined />}
+            size="small"
+            style={{ border: 'none' }}
+            variant="outlined"
+            onClick={addLimitData}
+            color="default"
+          />
+        </Col>
+      </Row>
+      {metricData.map((m) => (
+        <Row key={m.localId} className="my-2">
+          <Col span={6}>
             <Select
               style={{ width: 180 }}
+              value={m.metricId}
+              onChange={onMetricIdSelectChange('metricLimits', m.localId)}
               options={metricsList
                 .filter((m) => m.type == MetricType.LIMIT_METERED)
                 .map((m) => ({ label: m.metricName, value: m.id }))}
             />
           </Col>
-        </Row>
-      </div>
-      {/*            ************************ */}
-      {/*            ************************ */}
-      {/*            ************************ */}
-      {/*            ************************ */}
-      {/*            ************************ */}
-
-      <div className="my-4 rounded-md bg-gray-100 p-4">
-        <div>Charge metered(metricMeteredCharge)</div>
-        <Row>
-          <Col>Name</Col>
-          <Col>Code</Col>
-          <Col>Aggregation Type</Col>
-          <Col>Aggregation Property</Col>
-          <Col>Limit Value</Col>
-          <Col>
-            {' '}
+          <Col span={6}></Col>
+          <Col span={10}>
+            <InputNumber
+              style={{ width: 120 }}
+              placeholder="Limit value"
+              min={0}
+              value={m.metricLimit}
+              onChange={onMetricFieldChange(
+                'metricLimits',
+                m.localId,
+                'metricLimit'
+              )}
+            />
+          </Col>
+          <Col span={2}>
             <Button
-              icon={<PlusOutlined />}
-              variant="outlined"
-              onClick={() => addMetricData('metricMeteredCharges')}
-              color="default"
+              icon={<MinusOutlined />}
+              size="small"
+              style={{ border: 'none' }}
+              onClick={() => removeLimitData(m.localId)}
             />
           </Col>
         </Row>
-        {metricData.metricMeteredCharges.map((m) => (
-          <Row key={m.localId} className="my-4">
-            <Col span={6}>
-              <Select
-                style={{ width: 160 }}
-                options={metricsList
-                  .filter((m) => m.type == MetricType.CHARGE_METERED)
-                  .map((m) => ({ label: m.metricName, value: m.id }))}
-              />
-            </Col>
-            <Col span={6}>
-              <Select
-                style={{ width: 160 }}
-                value={m.chargeType}
-                onChange={onChargeTypeSelectChange(
-                  'metricMeteredCharges',
-                  m.localId
-                )}
-                options={[
-                  {
-                    label: METRIC_CHARGE_TYPE[MetricChargeType.STANDARD].label,
-                    value: MetricChargeType.STANDARD
-                  },
-                  {
-                    label: METRIC_CHARGE_TYPE[MetricChargeType.GRADUATED].label,
-                    value: MetricChargeType.GRADUATED
-                  }
-                ]}
-              />
-            </Col>
-            <Col span={4}>
-              <InputNumber
-                style={{ width: 120 }}
-                placeholder="Price"
-                prefix={getCurrency()?.Symbol}
-                min={0}
-                disabled={m.chargeType == MetricChargeType.GRADUATED}
-              />
-            </Col>
-            <Col span={4}>
-              <InputNumber
-                style={{ width: 120 }}
-                placeholder="Start value"
-                min={0}
-                disabled={m.chargeType == MetricChargeType.GRADUATED}
-              />
-            </Col>
-            <Col span={2}>
-              <BadgedButton
-                showBadge={m.graduatedAmounts.length > 0}
-                count={m.graduatedAmounts.length}
-              >
-                <Button
-                  onClick={() =>
-                    setGraduationSetupModalOpen({
-                      metricType: 'metricMeteredCharges',
-                      localId: m.localId
-                    })
-                  }
-                  disabled={m.chargeType == MetricChargeType.STANDARD}
-                  icon={<Graduation />}
-                />
-              </BadgedButton>
-            </Col>
-            <Col span={2}>
-              <Button
-                icon={<MinusOutlined />}
-                style={{ border: 'none' }}
-                onClick={() =>
-                  removeMetricData('metricMeteredCharges', m.localId)
-                }
-              />
-            </Col>
-          </Row>
-        ))}
-      </div>
+      ))}
+    </div>
+  )
+}
 
-      {/*            ************************ */}
-      {/*            ************************ */}
-      {/*            ************************ */}
-      {/*            ************************ */}
-      {/*            ************************ */}
-
-      <div className="my-4 rounded-md bg-gray-100 p-4">
-        <div>Charge recurring(metricRecurringCharge)</div>
-        <Row>
-          <Col>Name</Col>
-          <Col>Code</Col>
-          <Col>Aggregation Type</Col>
-          <Col>Aggregation Property</Col>
-          <Col>Limit Value</Col>
-        </Row>
-        <Row>
-          <Col>
+type ChargeSetupProps = {
+  metricData: (MetricMeteredCharge & { localId: string })[]
+  metricDataType: keyof MetricData
+  metricsList: IBillableMetrics[]
+  isRecurring: boolean
+  getCurrency: () => CURRENCY
+  addMetricData: (type: keyof MetricData) => void
+  removeMetricData: (type: keyof MetricData, localId: string) => void
+  onMetricFieldChange: (
+    type: keyof MetricData,
+    localId: string,
+    field: keyof MetricMeteredCharge
+  ) => (val: number | null) => void
+  onChargeTypeSelectChange: (
+    type: keyof MetricData,
+    localId: string
+  ) => (val: number | null) => void
+  onMetricIdSelectChange: (
+    type: keyof MetricData,
+    localId: string
+  ) => (val: number | null) => void
+  setGraduationSetupModalOpen: (
+    modalOpen: { metricType: keyof MetricData; localId: string } | null
+  ) => void
+}
+const rowHeaderStyle = 'text-gray-400'
+const ChargeSetup = ({
+  metricData,
+  metricDataType,
+  metricsList,
+  isRecurring,
+  getCurrency,
+  addMetricData,
+  removeMetricData,
+  onMetricFieldChange,
+  onChargeTypeSelectChange,
+  onMetricIdSelectChange,
+  setGraduationSetupModalOpen
+}: ChargeSetupProps) => {
+  return (
+    <div className="my-4 rounded-md bg-gray-100 p-4">
+      <Typography.Title level={5}>
+        Charge metered{isRecurring ? ' (recurring)' : ''}
+      </Typography.Title>
+      <Row>
+        <Col span={5} className={rowHeaderStyle}>
+          Name
+        </Col>
+        <Col span={5} className={rowHeaderStyle}>
+          {' '}
+        </Col>
+        {/* <Col>Aggregation Type</Col>
+        <Col>Aggregation Property</Col> */}
+        <Col span={6} className={rowHeaderStyle}>
+          Price
+        </Col>
+        <Col span={6} className={rowHeaderStyle}>
+          Start value
+        </Col>
+        <Col span={2}>
+          {' '}
+          <Button
+            icon={<PlusOutlined />}
+            size="small"
+            style={{ border: 'none' }}
+            variant="outlined"
+            onClick={() => addMetricData(metricDataType)}
+            color="default"
+          />
+        </Col>
+      </Row>
+      {metricData.map((m: MetricMeteredCharge & { localId: string }) => (
+        <Row key={m.localId} className="my-2">
+          <Col span={5}>
             <Select
               style={{ width: 160 }}
-              options={metricsList
-                .filter((m) => m.type == MetricType.CHARGE_RECURRING)
-                .map((m) => ({ label: m.metricName, value: m.id }))}
+              value={m.metricId}
+              onChange={onMetricIdSelectChange(metricDataType, m.localId)}
+              options={metricsList.map((m) => ({
+                label: m.metricName,
+                value: m.id
+              }))}
             />
           </Col>
-          <Col>
+          <Col span={5}>
             <Select
               style={{ width: 160 }}
+              value={m.chargeType}
+              onChange={onChargeTypeSelectChange(metricDataType, m.localId)}
               options={[
                 {
                   label: METRIC_CHARGE_TYPE[MetricChargeType.STANDARD].label,
@@ -778,12 +927,69 @@ const BillableMetricSetup = ({
               ]}
             />
           </Col>
+          <Col span={6}>
+            <InputNumber
+              style={{ width: 120 }}
+              placeholder="Price"
+              prefix={getCurrency()?.Symbol}
+              min={0}
+              value={m.standardAmount}
+              onChange={onMetricFieldChange(
+                metricDataType,
+                m.localId,
+                'standardAmount'
+              )}
+              disabled={m.chargeType == MetricChargeType.GRADUATED}
+            />
+          </Col>
+          <Col span={4}>
+            <InputNumber
+              style={{ width: 120 }}
+              placeholder="Start value"
+              min={0}
+              value={m.standardStartValue}
+              onChange={onMetricFieldChange(
+                metricDataType,
+                m.localId,
+                'standardStartValue'
+              )}
+              disabled={m.chargeType == MetricChargeType.GRADUATED}
+            />
+          </Col>
+          <Col span={2}>
+            <BadgedButton
+              showBadge={m.graduatedAmounts.length > 0}
+              count={m.graduatedAmounts.length}
+            >
+              <Tooltip title="Graduation setup">
+                <Button
+                  onClick={() =>
+                    setGraduationSetupModalOpen({
+                      metricType: metricDataType,
+                      localId: m.localId
+                    })
+                  }
+                  size="small"
+                  style={{ border: 'none' }}
+                  disabled={m.chargeType == MetricChargeType.STANDARD}
+                  icon={<Graduation />}
+                />
+              </Tooltip>
+            </BadgedButton>
+          </Col>
+          <Col span={2}>
+            <Button
+              icon={<MinusOutlined />}
+              size="small"
+              style={{ border: 'none' }}
+              onClick={() => removeMetricData(metricDataType, m.localId)}
+            />
+          </Col>
         </Row>
-      </div>
+      ))}
     </div>
   )
 }
-//   const onSaveGraduationData = (type: keyof MetricData, localId: string, graduationData: MetricGraduatedAmount[]) => {
 
 const GraduationSetupModal = ({
   data,
@@ -894,13 +1100,14 @@ const GraduationSetupModal = ({
               <Button
                 style={{ border: 'none' }}
                 icon={<MinusOutlined />}
+                size="small"
                 onClick={() => removeGraduationData(m.localId)}
               />
             </Col>
           </Row>
         ))}
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
         <Button onClick={onCancel}>Cancel</Button>
         <Button onClick={() => onOK(graduationData)}>OK</Button>
       </div>
@@ -917,4 +1124,11 @@ const BadgedButton: React.FC<BadgedButtonProps> = ({
   showBadge,
   count,
   children
-}) => (showBadge ? <Badge count={count}>{children}</Badge> : children)
+}) =>
+  showBadge ? (
+    <Badge count={count} color="gray">
+      {children}
+    </Badge>
+  ) : (
+    children
+  )

@@ -283,7 +283,9 @@ const Index = () => {
     }
   }, [watchPlanType])
 
-  const onSave = async (values: unknown) => {
+  const onSave = async (values: any) => {
+    // console.log('on save call: values', values)
+
     if (productDetail === null) {
       return
     }
@@ -292,6 +294,9 @@ const Index = () => {
       return
     }
     const f = JSON.parse(JSON.stringify(values))
+    console.log('on save call after stringify: values', f)
+
+    f.amount = Number(f.amount)
     f.amount = Number(f.amount)
     f.amount *= CURRENCY.Scale
     f.amount = toFixedNumber(f.amount, 2)
@@ -348,6 +353,7 @@ const Index = () => {
       delete f.currency
     }
 
+    /*
     let m = JSON.parse(JSON.stringify(selectedMetrics)) // selectedMetrics.map(metric => ({metricLimit: Number(metric.metricLimit)}))
     m = m.map((metrics: Metric) => ({
       metricId: metrics.metricId,
@@ -355,6 +361,7 @@ const Index = () => {
     }))
     m = m.filter((metric: Metric) => !isNaN(metric.metricLimit))
     f.metricLimits = m
+    */
 
     setLoading(true)
     const [updatedPlan, err] = await savePlan(f, isNew)
@@ -431,6 +438,7 @@ const Index = () => {
     }
 
     const { planDetail, addonList, metricsList, productList } = detailRes
+    console.log('detailRes', detailRes)
     if (productList.products != null) {
       const productDetail = productList.products.find(
         (p: IProduct) => p.id == productId.current
@@ -533,6 +541,7 @@ const Index = () => {
         planDetail.plan.cancelAtTrialEnd == 1 ? false : true
     }
 
+    console.log('planDetail.plan', planDetail.plan)
     setPlan(planDetail.plan)
     form.setFieldsValue(planDetail.plan)
     // if empty, insert an placeholder item.
