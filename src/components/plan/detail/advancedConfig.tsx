@@ -28,6 +28,7 @@ import {
   Collapse,
   CollapseProps,
   Dropdown,
+  Empty,
   Form,
   FormInstance,
   Input,
@@ -506,11 +507,6 @@ const BillableMetricSetup = ({
     metricRecurringCharge: []
   })
 
-  console.log(
-    'insdie billablemsetup, form.getFieldsValue(): ',
-    form.getFieldsValue()
-  )
-
   const [graduationSetupModalOpen, setGraduationSetupModalOpen] = useState<{
     metricType: keyof MetricData
     localId: string
@@ -636,6 +632,14 @@ const BillableMetricSetup = ({
       >
         <Input.TextArea rows={6} />
       </Form.Item>
+      {metricData.metricLimits.length == 0 &&
+        metricData.metricMeteredCharge.length == 0 &&
+        metricData.metricRecurringCharge.length == 0 && (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="No billable metrics"
+          />
+        )}
       {graduationSetupModalOpen != null && (
         <GraduationSetupModal
           data={
@@ -651,70 +655,79 @@ const BillableMetricSetup = ({
           getCurrency={getCurrency}
         />
       )}
-      <LimitSetup
-        metricData={metricData.metricLimits}
-        metricsList={metricsList.filter(
-          (m) => m.type == MetricType.LIMIT_METERED
-        )}
-        onMetricFieldChange={onMetricFieldChange}
-        onMetricIdSelectChange={onMetricIdSelectChange}
-        // getCurrency={getCurrency}
-        addLimitData={addLimitData}
-        removeLimitData={removeLimitData}
-      />
-      <ChargeSetup
-        metricData={metricData.metricMeteredCharge}
-        isRecurring={false}
-        metricDataType="metricMeteredCharge"
-        metricsList={metricsList.filter(
-          (m) => m.type == MetricType.CHARGE_METERED
-        )}
-        getCurrency={getCurrency}
-        addMetricData={addMetricData}
-        removeMetricData={removeMetricData}
-        onMetricFieldChange={onMetricFieldChange}
-        onChargeTypeSelectChange={onChargeTypeSelectChange}
-        onMetricIdSelectChange={onMetricIdSelectChange}
-        setGraduationSetupModalOpen={setGraduationSetupModalOpen}
-      />
-      <ChargeSetup
-        metricData={metricData.metricRecurringCharge}
-        isRecurring={true}
-        metricDataType="metricRecurringCharge"
-        metricsList={metricsList.filter(
-          (m) => m.type == MetricType.CHARGE_RECURRING
-        )}
-        getCurrency={getCurrency}
-        addMetricData={addMetricData}
-        removeMetricData={removeMetricData}
-        onMetricFieldChange={onMetricFieldChange}
-        onChargeTypeSelectChange={onChargeTypeSelectChange}
-        onMetricIdSelectChange={onMetricIdSelectChange}
-        setGraduationSetupModalOpen={setGraduationSetupModalOpen}
-      />
+      {metricData.metricLimits.length > 0 && (
+        <LimitSetup
+          metricData={metricData.metricLimits}
+          metricsList={metricsList.filter(
+            (m) => m.type == MetricType.LIMIT_METERED
+          )}
+          onMetricFieldChange={onMetricFieldChange}
+          onMetricIdSelectChange={onMetricIdSelectChange}
+          // getCurrency={getCurrency}
+          addLimitData={addLimitData}
+          removeLimitData={removeLimitData}
+        />
+      )}
+      {metricData.metricMeteredCharge.length > 0 && (
+        <ChargeSetup
+          metricData={metricData.metricMeteredCharge}
+          isRecurring={false}
+          metricDataType="metricMeteredCharge"
+          metricsList={metricsList.filter(
+            (m) => m.type == MetricType.CHARGE_METERED
+          )}
+          getCurrency={getCurrency}
+          addMetricData={addMetricData}
+          removeMetricData={removeMetricData}
+          onMetricFieldChange={onMetricFieldChange}
+          onChargeTypeSelectChange={onChargeTypeSelectChange}
+          onMetricIdSelectChange={onMetricIdSelectChange}
+          setGraduationSetupModalOpen={setGraduationSetupModalOpen}
+        />
+      )}
+      {metricData.metricRecurringCharge.length > 0 && (
+        <ChargeSetup
+          metricData={metricData.metricRecurringCharge}
+          isRecurring={true}
+          metricDataType="metricRecurringCharge"
+          metricsList={metricsList.filter(
+            (m) => m.type == MetricType.CHARGE_RECURRING
+          )}
+          getCurrency={getCurrency}
+          addMetricData={addMetricData}
+          removeMetricData={removeMetricData}
+          onMetricFieldChange={onMetricFieldChange}
+          onChargeTypeSelectChange={onChargeTypeSelectChange}
+          onMetricIdSelectChange={onMetricIdSelectChange}
+          setGraduationSetupModalOpen={setGraduationSetupModalOpen}
+        />
+      )}
       <Dropdown
         arrow={true}
         menu={{
           items: [
             {
               label: 'Limit metered',
+              disabled: metricData.metricLimits.length > 0,
               key: MetricType.LIMIT_METERED,
               onClick: () => {
-                console.log('Limit metered')
+                addMetricData('metricLimits')
               }
             },
             {
               label: 'Charge metered',
+              disabled: metricData.metricMeteredCharge.length > 0,
               key: MetricType.CHARGE_METERED,
               onClick: () => {
-                console.log('Charge metered')
+                addMetricData('metricMeteredCharge')
               }
             },
             {
               label: 'Charge recurring',
+              disabled: metricData.metricRecurringCharge.length > 0,
               key: MetricType.CHARGE_RECURRING,
               onClick: () => {
-                console.log('Charge recurring')
+                addMetricData('metricRecurringCharge')
               }
             }
           ]
@@ -730,7 +743,6 @@ const BillableMetricSetup = ({
       &nbsp;&nbsp;&nbsp;&nbsp;
       <Button
         onClick={() => {
-          console.log('saving billabme tric data...,', metricData)
           form.setFieldsValue(metricData)
         }}
       >
