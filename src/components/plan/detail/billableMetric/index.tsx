@@ -98,46 +98,15 @@ const Index = ({
     localId: string
   } | null>(null)
 
-  const addLimitData = () => {
+  const addMetricData = <T extends keyof MetricData>(
+    type: T, // T is MetricData key, MetricData value is an array of MetricLimits | MetricMeteredCharge
+    defaultData: (typeof metricData)[T][number] // based on the key, defaultData type is this array's item type.
+  ) =>
     setMetricData(
-      update(metricData, { metricLimits: { $push: [defaultMetricLimit()] } })
+      update(metricData, {
+        [type]: { $push: [defaultData] }
+      })
     )
-  }
-
-  const removeLimitData = (localId: string) => {
-    const idx = metricData.metricLimits.findIndex((m) => m.localId == localId)
-    if (idx != -1) {
-      setMetricData(
-        update(metricData, { metricLimits: { $splice: [[idx, 1]] } })
-      )
-    }
-  }
-
-  const addMetricData = (type: keyof MetricData) => {
-    switch (type) {
-      case 'metricLimits':
-        setMetricData(
-          update(metricData, {
-            [type]: { $push: [defaultMetricLimit()] }
-          })
-        )
-        break
-      case 'metricMeteredCharge':
-        setMetricData(
-          update(metricData, {
-            [type]: { $push: [defaultMetricMeteredCharge()] }
-          })
-        )
-        break
-      case 'metricRecurringCharge':
-        setMetricData(
-          update(metricData, {
-            [type]: { $push: [defaultMetricRecurringCharge()] }
-          })
-        )
-        break
-    }
-  }
 
   const removeMetricData = (type: keyof MetricData, localId: string) => {
     const idx = metricData[type].findIndex((m) => m.localId == localId)
@@ -147,10 +116,12 @@ const Index = ({
   }
 
   const onMetricFieldChange =
-    (
-      type: keyof MetricData,
+    <T extends keyof MetricData>(
+      type: T,
       localId: string,
-      field: keyof MetricLimits | keyof MetricMeteredCharge
+      field: T extends 'metricLimits'
+        ? keyof MetricLimits
+        : keyof MetricMeteredCharge
     ) =>
     (val: number | null) => {
       const idx = metricData[type].findIndex((m) => m.localId == localId)
@@ -256,8 +227,8 @@ const Index = ({
           onMetricFieldChange={onMetricFieldChange}
           onMetricIdSelectChange={onMetricIdSelectChange}
           // getCurrency={getCurrency}
-          addLimitData={addLimitData}
-          removeLimitData={removeLimitData}
+          addLimitData={(type) => addMetricData(type, defaultMetricLimit())}
+          removeLimitData={removeMetricData}
         />
       )}
       {metricData.metricMeteredCharge.length > 0 && (
@@ -269,7 +240,9 @@ const Index = ({
             (m) => m.type == MetricType.CHARGE_METERED
           )}
           getCurrency={getCurrency}
-          addMetricData={addMetricData}
+          addMetricData={(type) =>
+            addMetricData(type, defaultMetricMeteredCharge())
+          }
           removeMetricData={removeMetricData}
           onMetricFieldChange={onMetricFieldChange}
           onChargeTypeSelectChange={onChargeTypeSelectChange}
@@ -286,7 +259,9 @@ const Index = ({
             (m) => m.type == MetricType.CHARGE_RECURRING
           )}
           getCurrency={getCurrency}
-          addMetricData={addMetricData}
+          addMetricData={(type) =>
+            addMetricData(type, defaultMetricRecurringCharge())
+          }
           removeMetricData={removeMetricData}
           onMetricFieldChange={onMetricFieldChange}
           onChargeTypeSelectChange={onChargeTypeSelectChange}
@@ -303,7 +278,7 @@ const Index = ({
               disabled: metricData.metricLimits.length > 0,
               key: MetricType.LIMIT_METERED,
               onClick: () => {
-                addMetricData('metricLimits')
+                addMetricData('metricLimits', defaultMetricLimit())
               }
             },
             {
@@ -311,7 +286,10 @@ const Index = ({
               disabled: metricData.metricMeteredCharge.length > 0,
               key: MetricType.CHARGE_METERED,
               onClick: () => {
-                addMetricData('metricMeteredCharge')
+                addMetricData(
+                  'metricMeteredCharge',
+                  defaultMetricMeteredCharge()
+                )
               }
             },
             {
@@ -319,7 +297,10 @@ const Index = ({
               disabled: metricData.metricRecurringCharge.length > 0,
               key: MetricType.CHARGE_RECURRING,
               onClick: () => {
-                addMetricData('metricRecurringCharge')
+                addMetricData(
+                  'metricRecurringCharge',
+                  defaultMetricRecurringCharge()
+                )
               }
             }
           ]

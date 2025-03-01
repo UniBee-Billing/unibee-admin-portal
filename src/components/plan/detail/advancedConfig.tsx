@@ -301,6 +301,7 @@ const Index = ({
       )
     }
   ]
+
   const billableItem: CollapseProps['items'] = [
     {
       key: 'billable',

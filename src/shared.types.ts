@@ -172,20 +172,20 @@ export const enum PlanPublishStatus {
   UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans
   PUBLISHED = 2
 }
-export type MetricLimits = {
-  metricId: number | null
-  metricLimit: number | null
-  graduatedAmounts?: MetricGraduatedAmount[] // this prop is not needed is business, but for the ease of configurating in UI.
-}
-export const enum MetricChargeType {
-  STANDARD = 0,
-  GRADUATED = 1
-}
 export type MetricGraduatedAmount = {
   perAmount: number | null
   startValue: number | null
   endValue: number | null
   flatAmount: number | null
+}
+export type MetricLimits = {
+  metricId: number | null
+  metricLimit: number | null
+  graduatedAmounts?: MetricGraduatedAmount[] // this prop is not needed in business sense, its existence is only for TS type checking. I want to handle MetricLimits and MetricMeteredCharge in the same way.
+}
+export const enum MetricChargeType {
+  STANDARD = 0,
+  GRADUATED = 1
 }
 export type MetricMeteredCharge = {
   metricId: number | null

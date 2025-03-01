@@ -28,8 +28,8 @@ const Index = ({
     localId: string
   ) => (val: number | null) => void
   // getCurrency: () => CURRENCY
-  addLimitData: () => void
-  removeLimitData: (localId: string) => void
+  addLimitData: (type: keyof MetricData) => void
+  removeLimitData: (type: keyof MetricData, localId: string) => void
 }) => {
   // const getMetricData
   return (
@@ -48,7 +48,7 @@ const Index = ({
             size="small"
             style={{ border: 'none' }}
             variant="outlined"
-            onClick={addLimitData}
+            onClick={() => addLimitData('metricLimits')}
             color="default"
           />
         </Col>
@@ -84,7 +84,7 @@ const Index = ({
               icon={<MinusOutlined />}
               size="small"
               style={{ border: 'none' }}
-              onClick={() => removeLimitData(m.localId)}
+              onClick={() => removeLimitData('metricLimits', m.localId)}
             />
           </Col>
         </Row>
