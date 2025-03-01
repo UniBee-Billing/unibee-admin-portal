@@ -58,6 +58,8 @@ const Index = ({
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
 }) => {
   const appStore = useAppConfigStore()
+  const getCurrency = () => appStore.currency[watchCurrency as Currency]!
+
   const SubForm = ({ children }: PropsWithChildren) => (
     <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
       {children}

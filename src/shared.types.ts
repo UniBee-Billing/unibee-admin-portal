@@ -174,7 +174,7 @@ export const enum PlanPublishStatus {
 }
 export type MetricLimits = {
   metricId: number | null
-  metricLimit: number
+  metricLimit: number | null
   graduatedAmounts?: MetricGraduatedAmount[] // this prop is not needed is business, but for the ease of configurating in UI.
 }
 export const enum MetricChargeType {
@@ -190,8 +190,8 @@ export type MetricGraduatedAmount = {
 export type MetricMeteredCharge = {
   metricId: number | null
   chargeType: MetricChargeType
-  standardAmount: number
-  standardStartValue: number
+  standardAmount: number | null
+  standardStartValue: number | null
   graduatedAmounts: MetricGraduatedAmount[]
 }
 
