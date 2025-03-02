@@ -1,11 +1,16 @@
-import { Button, InputNumber, Select, Typography } from 'antd'
+import { Button, Input, InputNumber, Select, Typography } from 'antd'
 
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Row } from 'antd'
 
+import { METRICS_AGGREGATE_TYPE } from '@/constants'
 import { IBillableMetrics, MetricLimits, MetricType } from '@/shared.types'
 import { Col } from 'antd'
+import { useMemo } from 'react'
 import { MetricData } from './types'
+
+const rowHeaderStyle = 'text-gray-400'
+const colSpan = [5, 5, 4, 4, 4, 2]
 
 const Index = ({
   metricData,
@@ -16,7 +21,7 @@ const Index = ({
   addLimitData,
   removeLimitData
 }: {
-  metricData: (MetricLimits & { localId: string })[]
+  metricData: MetricLimits[]
   metricsList: IBillableMetrics[]
   onMetricFieldChange: (
     type: keyof MetricData,
@@ -31,44 +36,84 @@ const Index = ({
   addLimitData: (type: keyof MetricData) => void
   removeLimitData: (type: keyof MetricData, localId: string) => void
 }) => {
-  // const getMetricData
+  const header = [
+    { label: 'Name' },
+    { label: 'Code' },
+    { label: 'Props' },
+    { label: 'Aggregation type' },
+    { label: 'Limit value' },
+    {
+      label: (
+        <Button
+          icon={<PlusOutlined />}
+          size="small"
+          style={{ border: 'none' }}
+          variant="outlined"
+          onClick={() => addLimitData('metricLimits')}
+          color="default"
+        />
+      )
+    }
+  ]
+
+  const getMetricInfo = (metricId: number | undefined) =>
+    metricId != undefined
+      ? metricsList.find((m) => m.id === metricId)!
+      : undefined
+
+  const metricSelected = (metricId: number) =>
+    metricData.find((m) => m.metricId === metricId) != undefined
+
   return (
     <div className="my-4 rounded-md bg-gray-100 p-4">
       <Typography.Title level={5}>Limit metered</Typography.Title>
-      <Row className="mb-2">
-        <Col span={6}>Name</Col>
-        <Col span={6}>Code</Col>
-        {/* <Col>Aggregation Type</Col>
-          <Col>Aggregation Property</Col> */}
-        <Col span={10}>Limit Value</Col>
-        <Col span={2}>
-          {' '}
-          <Button
-            icon={<PlusOutlined />}
-            size="small"
-            style={{ border: 'none' }}
-            variant="outlined"
-            onClick={() => addLimitData('metricLimits')}
-            color="default"
-          />
-        </Col>
+      <Row>
+        {header.map((h, i) => (
+          <Col key={i} span={colSpan[i]} className={rowHeaderStyle}>
+            {h.label}
+          </Col>
+        ))}
       </Row>
+
       {metricData.map((m) => (
         <Row key={m.localId} className="my-2">
-          <Col span={6}>
+          <Col span={colSpan[0]}>
             <Select
-              style={{ width: 180 }}
+              style={{ width: '80%' }}
               value={m.metricId}
               onChange={onMetricIdSelectChange('metricLimits', m.localId)}
               options={metricsList
                 .filter((m) => m.type == MetricType.LIMIT_METERED)
-                .map((m) => ({ label: m.metricName, value: m.id }))}
+                .map((m) => ({
+                  label: m.metricName,
+                  value: m.id,
+                  disabled: metricSelected(m.id)
+                }))}
             />
           </Col>
-          <Col span={6}></Col>
-          <Col span={10}>
+          <Col span={colSpan[1]}>
+            <span>
+              {m.metricId != null && getMetricInfo(m.metricId!)?.code}
+            </span>
+          </Col>
+          <Col span={colSpan[2]}>
+            <span>
+              {m.metricId != null &&
+                getMetricInfo(m.metricId!)?.aggregationProperty}
+            </span>
+          </Col>
+          <Col span={colSpan[3]}>
+            <span>
+              {m.metricId != null &&
+                getMetricInfo(m.metricId)?.aggregationType != null &&
+                METRICS_AGGREGATE_TYPE[
+                  getMetricInfo(m.metricId)!.aggregationType
+                ].label}
+            </span>
+          </Col>
+          <Col span={colSpan[4]}>
             <InputNumber
-              style={{ width: 120 }}
+              style={{ width: '80%' }}
               placeholder="Limit value"
               min={0}
               value={m.metricLimit}
@@ -79,7 +124,7 @@ const Index = ({
               )}
             />
           </Col>
-          <Col span={2}>
+          <Col span={colSpan[5]}>
             <Button
               icon={<MinusOutlined />}
               size="small"

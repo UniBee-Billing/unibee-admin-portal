@@ -57,8 +57,7 @@ const Index = ({
   setIsOpenUpdateDiscountCodeQuantityModal: Dispatch<SetStateAction<boolean>>
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
 }) => {
-  const appStore = useAppConfigStore()
-  //   const getCurrency = () => appStore.currency[watchCurrency as Currency]!
+  const appConfigStore = useAppConfigStore()
 
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
@@ -208,7 +207,7 @@ const Index = ({
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable
             }
             style={{ width: 180 }}
-            options={appStore.supportCurrency.map((c) => ({
+            options={appConfigStore.supportCurrency.map((c) => ({
               label: c.Currency,
               value: c.Currency
             }))}
@@ -248,7 +247,7 @@ const Index = ({
               watchCurrency == null || watchCurrency == '' ? (
                 <span></span>
               ) : (
-                appStore.currency[watchCurrency as Currency]?.Symbol
+                appConfigStore.currency[watchCurrency as Currency]?.Symbol
               )
             }
             disabled={

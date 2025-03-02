@@ -7,7 +7,16 @@ import {
   MetricType
 } from '@/shared.types'
 import { DownOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Dropdown, Empty, Form, FormInstance, Input, Space } from 'antd'
+import {
+  Button,
+  Dropdown,
+  Empty,
+  Form,
+  FormInstance,
+  Input,
+  Modal,
+  Space
+} from 'antd'
 
 import update from 'immutability-helper'
 import { useContext, useEffect, useState } from 'react'
@@ -113,6 +122,19 @@ const Index = ({
       }
     }
 
+  const toggleGraduationSetup = (type: keyof MetricData, localId: string) => {
+    const idx = metricData[type].findIndex((m) => m.localId == localId)
+    if (idx != -1) {
+      setMetricData(
+        update(metricData, {
+          [type]: {
+            [idx]: { expanded: { $set: !metricData[type][idx].expanded } }
+          }
+        })
+      )
+    }
+  }
+
   useEffect(() => {
     if (saveMetricData) {
       form.setFieldsValue(metricData)
@@ -147,19 +169,21 @@ const Index = ({
           />
         )}
       {graduationSetupModalOpen != null && (
-        <GraduationSetupModal
-          data={
-            metricData[graduationSetupModalOpen.metricType].find(
-              (m) => m.localId == graduationSetupModalOpen.localId
-            )?.graduatedAmounts
-          }
-          onCancel={() => setGraduationSetupModalOpen(null)}
-          onOK={onSaveGraduationData(
-            graduationSetupModalOpen.metricType,
-            graduationSetupModalOpen.localId
-          )}
-          getCurrency={getCurrency}
-        />
+        <Modal title="Graduation setup" width={720} open={true} footer={false}>
+          <GraduationSetupModal
+            data={
+              metricData[graduationSetupModalOpen.metricType].find(
+                (m) => m.localId == graduationSetupModalOpen.localId
+              )?.graduatedAmounts
+            }
+            onCancel={() => setGraduationSetupModalOpen(null)}
+            onOK={onSaveGraduationData(
+              graduationSetupModalOpen.metricType,
+              graduationSetupModalOpen.localId
+            )}
+            getCurrency={getCurrency}
+          />
+        </Modal>
       )}
       {metricData.metricLimits.length > 0 && (
         <LimitMetricSetup
@@ -191,6 +215,7 @@ const Index = ({
           onChargeTypeSelectChange={onChargeTypeSelectChange}
           onMetricIdSelectChange={onMetricIdSelectChange}
           setGraduationSetupModalOpen={setGraduationSetupModalOpen}
+          toggleGraduationSetup={toggleGraduationSetup}
         />
       )}
       {metricData.metricRecurringCharge.length > 0 && (
@@ -210,6 +235,7 @@ const Index = ({
           onChargeTypeSelectChange={onChargeTypeSelectChange}
           onMetricIdSelectChange={onMetricIdSelectChange}
           setGraduationSetupModalOpen={setGraduationSetupModalOpen}
+          toggleGraduationSetup={toggleGraduationSetup}
         />
       )}
       <Dropdown

@@ -56,18 +56,15 @@ export const transformMetricData = (
           }))
   } else {
     metricLimitsLocal = metricLimits.map((m) => ({
-      ...m,
-      localId: randomString(8)
+      ...m
     }))
 
     metricMeteredChargeLocal = metricMeteredCharge.map((m) => ({
-      ...m,
-      localId: randomString(8)
+      ...m
     }))
 
     metricRecurringChargeLocal = metricRecurringCharge.map((m) => ({
-      ...m,
-      localId: randomString(8)
+      ...m
     }))
   }
   return {
