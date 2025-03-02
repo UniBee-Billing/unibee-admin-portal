@@ -60,11 +60,6 @@ const Index = ({
   const appStore = useAppConfigStore()
   //   const getCurrency = () => appStore.currency[watchCurrency as Currency]!
 
-  const SubForm = ({ children }: PropsWithChildren) => (
-    <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
-      {children}
-    </div>
-  )
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
       [DiscountCodeStatus.ACTIVE]: (
@@ -164,7 +159,8 @@ const Index = ({
           ]}
         />
       </Form.Item>
-      <SubForm>
+      <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
+        {' '}
         <Form.Item
           label="Discount percentage"
           name="discountPercentage"
@@ -249,16 +245,18 @@ const Index = ({
             min={0}
             style={{ width: 180 }}
             prefix={
-              watchCurrency == null || watchCurrency == ''
-                ? ''
-                : appStore.currency[watchCurrency as Currency]?.Symbol
+              watchCurrency == null || watchCurrency == '' ? (
+                <span></span>
+              ) : (
+                appStore.currency[watchCurrency as Currency]?.Symbol
+              )
             }
             disabled={
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable
             }
           />
         </Form.Item>
-      </SubForm>
+      </div>
       <Form.Item
         label="One-time or recurring"
         name="billingType"
@@ -278,7 +276,8 @@ const Index = ({
           ]}
         />
       </Form.Item>
-      <SubForm>
+      <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
+        {' '}
         <Form.Item
           label="Recurring cycle"
           extra="How many billing cycles this discount code can be applied on a
@@ -320,7 +319,7 @@ const Index = ({
             />
           </Form.Item>
         </Form.Item>
-      </SubForm>
+      </div>
 
       <Form.Item
         label="Code Apply Date Range"

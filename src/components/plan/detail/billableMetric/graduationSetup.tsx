@@ -9,7 +9,8 @@ import { Button } from 'antd'
 
 import { Modal } from 'antd'
 import update from 'immutability-helper'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
+import { MetricDataContext } from '../metricDataContext'
 
 const Index = ({
   data,
@@ -22,6 +23,8 @@ const Index = ({
   onOK: (graduationData: MetricGraduatedAmount[]) => void
   getCurrency: () => CURRENCY
 }) => {
+  const { metricData, setMetricData } = useContext(MetricDataContext)
+  // console.log('metricData from context: ', metricData)
   const [graduationData, setGraduationData] = useState<
     (MetricGraduatedAmount & { localId: string })[]
   >(

@@ -14,8 +14,8 @@ import {
   Switch,
   Tooltip
 } from 'antd'
-import { TIME_UNITS, TNewPlan } from '.'
 import BillableMetricSetup from './billableMetric'
+import { TIME_UNITS } from './types'
 
 interface Props {
   enableTrialWatch: boolean
@@ -29,7 +29,6 @@ interface Props {
   trialLengthUnit: number | undefined
   setTrialLengthUnit: (val: number) => void
   saveMetricData: boolean
-  plan: IPlan | TNewPlan
 }
 
 const Index = ({
@@ -43,8 +42,7 @@ const Index = ({
   selectOnetime,
   trialLengthUnit,
   setTrialLengthUnit,
-  saveMetricData,
-  plan
+  saveMetricData
 }: Props) => {
   const onTrialLengthUnitChange = (val: number) => setTrialLengthUnit(val)
   const prettifyJSON = () => {
@@ -285,10 +283,7 @@ const Index = ({
             <Form.Item label="Trial requires bank card info" name="trialDemand">
               <Switch disabled={!enableTrialWatch || formDisabled} />
             </Form.Item>
-            <div
-              className="absolute mb-6 ml-60 text-xs text-gray-400"
-              // style={{ top: '-45px', left: '240px', width: '600px' }}
-            >
+            <div className="absolute mb-6 ml-60 text-xs text-gray-400">
               When enabled, users can only use bank card payment (no Crypto or
               wire transfer) for their first purchase.
             </div>
@@ -315,7 +310,6 @@ const Index = ({
             getCurrency={getCurrency}
             form={form}
             saveMetricData={saveMetricData}
-            plan={plan}
           />
         </div>
       )

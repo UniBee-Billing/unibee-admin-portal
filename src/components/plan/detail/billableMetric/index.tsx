@@ -1,9 +1,6 @@
-import { randomString } from '@/helpers'
 import {
   CURRENCY,
   IBillableMetrics,
-  IPlan,
-  MetricChargeType,
   MetricGraduatedAmount,
   MetricLimits,
   MetricMeteredCharge,
@@ -13,8 +10,13 @@ import { DownOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Empty, Form, FormInstance, Input, Space } from 'antd'
 
 import update from 'immutability-helper'
-import { useEffect, useState } from 'react'
-import { TNewPlan } from '..'
+import { useContext, useEffect, useState } from 'react'
+import {
+  defaultMetricLimit,
+  defaultMetricMeteredCharge,
+  defaultMetricRecurringCharge
+} from '../constants'
+import { MetricDataContext } from '../metricDataContext'
 import GraduationSetupModal from './graduationSetup'
 import LimitMetricSetup from './limitMetricSetup'
 import MeteredMetricSetup from './meteredMetricSetup'
@@ -25,74 +27,15 @@ type BillableMetricSetupProps = {
   getCurrency: () => CURRENCY
   form: FormInstance
   saveMetricData: boolean
-  plan: IPlan | TNewPlan
 }
-
-const defaultMetricLimit = (): MetricLimits & { localId: string } => ({
-  metricId: null,
-  metricLimit: null,
-  localId: randomString(8)
-})
-const defaultMetricMeteredCharge = (): MetricMeteredCharge & {
-  localId: string
-} => ({
-  metricId: null,
-  chargeType: MetricChargeType.STANDARD,
-  standardAmount: null,
-  standardStartValue: null,
-  graduatedAmounts: [],
-  localId: randomString(8)
-})
-const defaultMetricRecurringCharge = (): MetricMeteredCharge & {
-  localId: string
-} => ({
-  metricId: null,
-  chargeType: MetricChargeType.STANDARD,
-  standardAmount: null,
-  standardStartValue: null,
-  graduatedAmounts: [],
-  localId: randomString(8)
-})
 
 const Index = ({
   metricsList,
   getCurrency,
   form,
-  saveMetricData,
-  plan
+  saveMetricData
 }: BillableMetricSetupProps) => {
-  const { metricLimits, metricMeteredCharge, metricRecurringCharge } = plan
-
-  const metricLimitsLocal =
-    metricLimits == null
-      ? []
-      : metricLimits.map((m) => ({
-          ...m,
-          localId: randomString(8)
-        }))
-
-  const metricMeteredChargeLocal =
-    metricMeteredCharge == null
-      ? []
-      : metricMeteredCharge.map((m) => ({
-          ...m,
-          localId: randomString(8)
-        }))
-
-  const metricRecurringChargeLocal =
-    metricRecurringCharge == null
-      ? []
-      : metricRecurringCharge.map((m) => ({
-          ...m,
-          localId: randomString(8)
-        }))
-
-  const [metricData, setMetricData] = useState<MetricData>({
-    metricLimits: metricLimitsLocal,
-    metricMeteredCharge: metricMeteredChargeLocal,
-    metricRecurringCharge: metricRecurringChargeLocal
-  })
-
+  const { metricData, setMetricData } = useContext(MetricDataContext)
   const [graduationSetupModalOpen, setGraduationSetupModalOpen] = useState<{
     metricType: keyof MetricData
     localId: string
@@ -313,14 +256,6 @@ const Index = ({
           </Space>
         </Button>
       </Dropdown>
-      {/* &nbsp;&nbsp;&nbsp;&nbsp;
-        <Button
-          onClick={() => {
-            form.setFieldsValue(metricData)
-          }}
-        >
-          Save data
-        </Button> */}
     </div>
   )
 }
