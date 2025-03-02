@@ -238,9 +238,17 @@ const Index = ({
             min={0}
             style={{ width: 180 }}
             prefix={
+<<<<<<< HEAD
               watchCurrency == null || watchCurrency == ''
                 ? ''
                 : appConfigStore.currency[watchCurrency as Currency]?.Symbol
+=======
+              watchCurrency == null || watchCurrency == '' ? (
+                <span></span>
+              ) : (
+                appConfigStore.currency[watchCurrency as Currency]?.Symbol
+              )
+>>>>>>> a40e157 (style: styling metric setup)
             }
             disabled={
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable
