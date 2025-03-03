@@ -77,7 +77,7 @@ interface MerchantInfoSlice extends TMerchantInfo {
 export const useMerchantInfoStore = create<MerchantInfoSlice>()(
   persist(
     // when refreshing the page, the merchant info is lost(need to refetch from BE), so at this moment, the company logo at top-left is gone.
-    // persisting merchnt-info can fix this.
+    // persisting merchant-info can fix this.
     (set, get) => ({
       ...INITIAL_INFO,
       getMerchantInfo: () => get(),
