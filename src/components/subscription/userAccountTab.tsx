@@ -87,7 +87,10 @@ const UserAccountTab = ({
   }, [])
 
   useEffect(() => {
-    if (user != null) setGatewayId(user.gatewayId)
+    if (user != null) {
+      form.setFieldsValue(user)
+      setGatewayId(user.gatewayId)
+    }
   }, [user])
 
   const userType = Form.useWatch('type', form)

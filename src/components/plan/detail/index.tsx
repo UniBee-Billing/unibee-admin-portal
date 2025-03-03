@@ -216,7 +216,7 @@ const Index = () => {
   }, [itvCountUnit, itvCountValue, watchCurrency])
 
   useEffect(() => {
-    // user choosed PlanType.MAIN, then select several addons/onetimeAddons,
+    // user chose PlanType.MAIN, then select several addons/onetimeAddons,
     // then switch to PlanType.Addon, which is not allowed to have addons,
     // so we need to clear the addonIds/onetimeAddonIds
     if (watchPlanType != PlanType.MAIN) {
@@ -642,7 +642,7 @@ const Index = () => {
               ) : (
                 <span></span>
               )}{' '}
-              {/* this span is a placeholder for the delete button, I want the goback/save/active buttons always on the right side */}
+              {/* this span is a placeholder for the delete button, I want the go-back/save/active buttons always on the right side */}
               <div className="flex justify-center gap-5">
                 <Button
                   onClick={goBackToPlanList}

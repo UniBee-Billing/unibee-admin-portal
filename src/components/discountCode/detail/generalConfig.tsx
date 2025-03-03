@@ -100,7 +100,7 @@ const Index = ({
           }
         ]}
       >
-        <Input />
+        <Input disabled={!canActiveItemEdit(code?.status)} />
       </Form.Item>
 
       <Form.Item
@@ -238,11 +238,9 @@ const Index = ({
             min={0}
             style={{ width: 180 }}
             prefix={
-              watchCurrency == null || watchCurrency == '' ? (
-                <span></span>
-              ) : (
-                appConfigStore.currency[watchCurrency as Currency]?.Symbol
-              )
+              watchCurrency == null || watchCurrency == ''
+                ? ''
+                : appConfigStore.currency[watchCurrency as Currency]?.Symbol
             }
             disabled={
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable

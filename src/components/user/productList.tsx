@@ -41,7 +41,7 @@ const Index = ({
 
   useEffect(() => {
     getProductList()
-  }, [])
+  }, [userId])
 
   return (
     <>

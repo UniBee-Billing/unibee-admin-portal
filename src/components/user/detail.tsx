@@ -58,7 +58,7 @@ const Index = () => {
 
   useEffect(() => {
     fetchUserProfile()
-  }, [])
+  }, [userId])
 
   const tabItems: TabsProps['items'] = [
     {

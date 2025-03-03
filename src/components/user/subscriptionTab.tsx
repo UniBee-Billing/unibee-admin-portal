@@ -77,7 +77,7 @@ const Index = ({
 
   useEffect(() => {
     getSubInProduct()
-  }, [productId])
+  }, [productId, userId])
 
   useEffect(() => {
     if (refreshSub) {
