@@ -15,7 +15,7 @@ import { togglePublishReq } from '@/requests'
 import { useAppConfigStore } from '@/stores'
 import { Form } from 'antd'
 import { MutableRefObject, useState } from 'react'
-import { TNewPlan } from '.'
+import { TNewPlan } from './types'
 
 interface Props {
   isNew: boolean

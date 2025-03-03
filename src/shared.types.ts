@@ -172,27 +172,32 @@ export const enum PlanPublishStatus {
   UNPUBLISHED = 1, // on UserPortal, use this flag to hide unpublished plans
   PUBLISHED = 2
 }
-export type MetricLimits = {
-  metricId: number | null
-  metricLimit: number
-  graduatedAmounts?: MetricGraduatedAmount[] // this prop is not needed is business, but for the ease of configurating in UI.
-}
-export const enum MetricChargeType {
-  STANDARD = 0,
-  GRADUATED = 1
-}
 export type MetricGraduatedAmount = {
+  localId: string // not exist in BE, only for easy array manipulation in FE. localId in all other data structure are all for this purpose.
   perAmount: number | null
   startValue: number | null
   endValue: number | null
   flatAmount: number | null
 }
+export type MetricLimits = {
+  localId: string
+  metricId: number | null
+  metricLimit: number | null
+  graduatedAmounts?: MetricGraduatedAmount[] // this prop is not needed in business sense, its existence is only for TS type checking. I want to handle MetricLimits and MetricMeteredCharge in the same way.
+  expanded?: boolean // not exist in BE, not exist in business sense, just for easy type checking.
+}
+export const enum MetricChargeType {
+  STANDARD = 0,
+  GRADUATED = 1
+}
 export type MetricMeteredCharge = {
+  localId: string
   metricId: number | null
   chargeType: MetricChargeType
-  standardAmount: number
-  standardStartValue: number
+  standardAmount: number | null
+  standardStartValue: number | null
   graduatedAmounts: MetricGraduatedAmount[]
+  expanded?: boolean // not exist in BE, only for UI display. If true, and chargeType == GRADUATED: graduatedAmounts are expanded for user to update, false: collapsed.
 }
 
 interface IPlan {
