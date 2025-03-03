@@ -3,7 +3,9 @@ import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import { Col, Divider, Row } from 'antd'
-import { TrialSummary } from '.'
+import { useContext } from 'react'
+import { MetricDataContext } from './metricDataContext'
+import { TrialSummary } from './types'
 
 export const NotSetPlaceholder = () => (
   <span className="text-red-500">Not set</span>
@@ -40,6 +42,8 @@ const Index = ({
   watchOnetimeAddons,
   trialSummary
 }: SummaryItem) => {
+  const { metricData, setMetricData } = useContext(MetricDataContext)
+  // console.log('metricData from context in summary: ', metricData)
   const formatAddonList = (addonType: 'addon' | 'onetimeAddon') => {
     const list = addonType == 'addon' ? selectAddons : selectOnetime
     const selectedList = addonType == 'addon' ? watchAddons : watchOnetimeAddons
