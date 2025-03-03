@@ -251,10 +251,6 @@ const Index = ({
     setGraduationData(update(graduationData, { $set: newGraduationData }))
   }
 
-  useEffect(() => {
-    // recalculaeStartEndValue(true)
-  }, [graduationData.length])
-
   return (
     <div className="p-4">
       <Row className="flex items-center pr-1">
