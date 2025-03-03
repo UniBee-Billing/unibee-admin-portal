@@ -21,13 +21,7 @@ import {
 import { useAppConfigStore } from '@/stores'
 import { Form } from 'antd'
 import { Currency } from 'dinero.js'
-import {
-  Dispatch,
-  PropsWithChildren,
-  ReactNode,
-  SetStateAction,
-  useMemo
-} from 'react'
+import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react'
 import { formatQuantity } from '../helpers'
 
 const { RangePicker } = DatePicker
@@ -58,11 +52,7 @@ const Index = ({
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
 }) => {
   const appStore = useAppConfigStore()
-  const SubForm = ({ children }: PropsWithChildren) => (
-    <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
-      {children}
-    </div>
-  )
+
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
       [DiscountCodeStatus.ACTIVE]: (
@@ -110,7 +100,7 @@ const Index = ({
           }
         ]}
       >
-        <Input />
+        <Input disabled={!canActiveItemEdit(code?.status)} />
       </Form.Item>
 
       <Form.Item
@@ -162,7 +152,8 @@ const Index = ({
           ]}
         />
       </Form.Item>
-      <SubForm>
+      <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
+        {' '}
         <Form.Item
           label="Discount percentage"
           name="discountPercentage"
@@ -256,7 +247,7 @@ const Index = ({
             }
           />
         </Form.Item>
-      </SubForm>
+      </div>
       <Form.Item
         label="One-time or recurring"
         name="billingType"
@@ -276,7 +267,8 @@ const Index = ({
           ]}
         />
       </Form.Item>
-      <SubForm>
+      <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
+        {' '}
         <Form.Item
           label="Recurring cycle"
           extra="How many billing cycles this discount code can be applied on a
@@ -318,7 +310,7 @@ const Index = ({
             />
           </Form.Item>
         </Form.Item>
-      </SubForm>
+      </div>
 
       <Form.Item
         label="Code Apply Date Range"
