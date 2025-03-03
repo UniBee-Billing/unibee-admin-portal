@@ -283,7 +283,11 @@ const Index = ({
           {/* <Col span={22}> */}
           <div className={`flex w-full justify-end drop-shadow-lg`}>
             <div
-              style={{ width: '85%', marginRight: '15%' }}
+              style={{
+                width: '85%',
+                marginRight: '15%',
+                scrollbarGutter: 'stable both-edges'
+              }}
               className={`relative overflow-hidden rounded-md bg-white transition-all duration-300 ${m.expanded && m.chargeType == MetricChargeType.GRADUATED ? 'max-h-96' : 'max-h-0'}`}
             >
               <GraduationSetup

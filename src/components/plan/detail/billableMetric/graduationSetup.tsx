@@ -160,12 +160,20 @@ const Index = ({
   }
 
   // don't update the last record's endvalue.
+  // if there is only one record, its startValue should be 0, endValue should be -1
   const recalculaeStartEndValue = (autocalculate: boolean = false) => {
     if (graduationData.length == 0) return
     const val = graduationData.map((m) => ({
       startValue: m.startValue,
       endValue: m.endValue
     }))
+    if (val.length == 1) {
+      val[0].startValue = 0
+      val[0].endValue = -1
+    }
+    if (val.length == 2) {
+      val[1].endValue = -1
+    }
     let currEnd =
       autocalculate && val[0].endValue == null
         ? val[0].startValue! + 1
@@ -188,7 +196,7 @@ const Index = ({
 
   return (
     <div className="p-4">
-      <Row className="flex items-center">
+      <Row className="flex items-center pr-1">
         {header.map((h, i) => (
           <Col key={i} span={colSpan[i]} className="text-sm text-gray-400">
             {h.label}
