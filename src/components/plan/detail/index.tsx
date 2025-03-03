@@ -1,4 +1,4 @@
-import { isValidMap, showAmount, toFixedNumber } from '@/helpers'
+import { isValidMap, randomString, showAmount, toFixedNumber } from '@/helpers'
 import {
   activatePlan,
   deletePlanReq,
@@ -26,67 +26,21 @@ import {
 } from 'react-router-dom'
 import AdvancedConfig from './advancedConfig'
 import BasicConfig from './basicConfig'
+import { MetricData } from './billableMetric/types'
+import { DEFAULT_NEW_PLAN } from './constants'
+import { secondsToUnit, transformMetricData, unitToSeconds } from './helpers'
+import { MetricDataContext } from './metricDataContext'
 import Summary from './summary'
-
-export type TNewPlan = Omit<
-  IPlan,
-  | 'id'
-  | 'amount'
-  | 'createTime'
-  | 'companyId'
-  | 'merchantId'
-  | 'productId'
-  | 'product'
-> // might need to omit more, like trial related fields.
-
-const DEFAULT_NEW_PLAN: TNewPlan = {
-  currency: 'EUR',
-  planName: '',
-  description: '',
-  intervalUnit: 'month',
-  intervalCount: 1,
-  status: PlanStatus.EDITING,
-  publishStatus: PlanPublishStatus.UNPUBLISHED,
-  type: PlanType.MAIN,
-  addonIds: [],
-  metadata: '',
-  enableTrial: false,
-  trialAmount: undefined,
-  trialDurationTime: undefined,
-  trialDemand: false, // 'paymentMethod' | '' | boolean, backend requires this field to be a fixed string of 'paymentMethod' to represent true or empty string '' to represent false, but to ease the UI/UX, front-end use boolean for <Switch />
-  cancelAtTrialEnd: true //  0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UI, front-end use <Switch />
-} as const // mark every props readonly
-
-export type TrialSummary = {
-  trialEnabled: boolean
-  price: string | undefined
-  durationTime: string | undefined
-  requireBankInfo: boolean | undefined
-  AutoRenew: boolean | undefined
-}
-export const TIME_UNITS = [
-  // in seconds
-  { label: 'hours', value: 60 * 60 },
-  { label: 'days', value: 60 * 60 * 24 },
-  { label: 'weeks', value: 60 * 60 * 24 * 7 },
-  { label: 'months(30days)', value: 60 * 60 * 24 * 30 }
-]
-export const secondsToUnit = (sec: number) => {
-  const units = [...TIME_UNITS].sort((a, b) => b.value - a.value)
-  for (let i = 0; i < units.length; i++) {
-    if (sec % units[i].value === 0) {
-      return [sec / units[i].value, units[i].value] // if sec is 60 * 60 * 24 * 30 * 3, then return [3, 60 * 60 * 24 * 30 * 3]
-    }
-  }
-  throw Error('Invalid time unit')
-}
-
-const unitToSeconds = (value: number, unit: number) => {
-  return value * unit
-}
+import { TIME_UNITS, TNewPlan, TrialSummary } from './types'
 
 const Index = () => {
   const appConfig = useAppConfigStore()
+  const [metricData, setMetricData] = useState<MetricData>({
+    // metricData is too complicated to be controlled by antd form, so we use context to manage it.
+    metricLimits: [],
+    metricMeteredCharge: [],
+    metricRecurringCharge: []
+  })
   const [form] = Form.useForm()
   const location = useLocation()
   const goBackToPlanList = () => {
@@ -343,16 +297,6 @@ const Index = () => {
       delete f.currency
     }
 
-    /*
-    let m = JSON.parse(JSON.stringify(selectedMetrics)) // selectedMetrics.map(metric => ({metricLimit: Number(metric.metricLimit)}))
-    m = m.map((metrics: Metric) => ({
-      metricId: metrics.metricId,
-      metricLimit: Number(metrics.metricLimit)
-    }))
-    m = m.filter((metric: Metric) => !isNaN(metric.metricLimit))
-    f.metricLimits = m
-    */
-
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
     if (null != err) {
@@ -529,6 +473,45 @@ const Index = () => {
         planDetail.plan.cancelAtTrialEnd == 1 ? false : true
     }
 
+    const { metricLimits, metricMeteredCharge, metricRecurringCharge } =
+      planDetail.plan as IPlan
+
+    /*  transformMetricData(
+      { metricLimits, metricMeteredCharge, metricRecurringCharge },
+      getCurrency(),
+      'downward'
+    )
+      */
+
+    const metricLimitsLocal =
+      metricLimits == null
+        ? []
+        : metricLimits.map((m) => ({
+            ...m,
+            localId: randomString(8)
+          }))
+
+    const metricMeteredChargeLocal =
+      metricMeteredCharge == null
+        ? []
+        : metricMeteredCharge.map((m) => ({
+            ...m,
+            localId: randomString(8)
+          }))
+
+    const metricRecurringChargeLocal =
+      metricRecurringCharge == null
+        ? []
+        : metricRecurringCharge.map((m) => ({
+            ...m,
+            localId: randomString(8)
+          }))
+    setMetricData({
+      metricLimits: metricLimitsLocal,
+      metricMeteredCharge: metricMeteredChargeLocal,
+      metricRecurringCharge: metricRecurringChargeLocal
+    })
+
     setPlan(planDetail.plan)
     form.setFieldsValue(planDetail.plan)
 
@@ -552,7 +535,12 @@ const Index = () => {
   // I need to rerun fetchData to get the newly created plan detail, otherwise, planId is missing in form
 
   return (
-    <div>
+    <MetricDataContext.Provider
+      value={{
+        metricData,
+        setMetricData
+      }}
+    >
       <Spin
         spinning={loading}
         indicator={
@@ -562,7 +550,6 @@ const Index = () => {
       />
       {plan && (
         <>
-          {' '}
           <Form
             form={form}
             onFinish={onSave}
@@ -613,7 +600,6 @@ const Index = () => {
                         form={form}
                         watchPlanType={watchPlanType}
                         metricsList={metricsList}
-                        plan={plan}
                       />
                     )
                   }
@@ -694,7 +680,7 @@ const Index = () => {
           </div>{' '}
         </>
       )}
-    </div>
+    </MetricDataContext.Provider>
   )
 }
 

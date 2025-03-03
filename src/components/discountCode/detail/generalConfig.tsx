@@ -21,13 +21,7 @@ import {
 import { useAppConfigStore } from '@/stores'
 import { Form } from 'antd'
 import { Currency } from 'dinero.js'
-import {
-  Dispatch,
-  PropsWithChildren,
-  ReactNode,
-  SetStateAction,
-  useMemo
-} from 'react'
+import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react'
 import { formatQuantity } from '../helpers'
 
 const { RangePicker } = DatePicker
@@ -57,12 +51,8 @@ const Index = ({
   setIsOpenUpdateDiscountCodeQuantityModal: Dispatch<SetStateAction<boolean>>
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
 }) => {
-  const appStore = useAppConfigStore()
-  const SubForm = ({ children }: PropsWithChildren) => (
-    <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
-      {children}
-    </div>
-  )
+  const appConfigStore = useAppConfigStore()
+
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
       [DiscountCodeStatus.ACTIVE]: (
@@ -162,7 +152,8 @@ const Index = ({
           ]}
         />
       </Form.Item>
-      <SubForm>
+      <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
+        {' '}
         <Form.Item
           label="Discount percentage"
           name="discountPercentage"
@@ -210,7 +201,7 @@ const Index = ({
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable
             }
             style={{ width: 180 }}
-            options={appStore.supportCurrency.map((c) => ({
+            options={appConfigStore.supportCurrency.map((c) => ({
               label: c.Currency,
               value: c.Currency
             }))}
@@ -247,16 +238,18 @@ const Index = ({
             min={0}
             style={{ width: 180 }}
             prefix={
-              watchCurrency == null || watchCurrency == ''
-                ? ''
-                : appStore.currency[watchCurrency as Currency]?.Symbol
+              watchCurrency == null || watchCurrency == '' ? (
+                <span></span>
+              ) : (
+                appConfigStore.currency[watchCurrency as Currency]?.Symbol
+              )
             }
             disabled={
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable
             }
           />
         </Form.Item>
-      </SubForm>
+      </div>
       <Form.Item
         label="One-time or recurring"
         name="billingType"
@@ -276,7 +269,8 @@ const Index = ({
           ]}
         />
       </Form.Item>
-      <SubForm>
+      <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
+        {' '}
         <Form.Item
           label="Recurring cycle"
           extra="How many billing cycles this discount code can be applied on a
@@ -318,7 +312,7 @@ const Index = ({
             />
           </Form.Item>
         </Form.Item>
-      </SubForm>
+      </div>
 
       <Form.Item
         label="Code Apply Date Range"
