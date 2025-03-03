@@ -2,12 +2,11 @@ import { showAmount } from '@/helpers'
 import { appSearchReq } from '@/requests'
 import { IProfile, InvoiceStatus, UserInvoice } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
-import { Col, Divider, Input, Row, Spin, message } from 'antd'
+import { Col, Divider, Empty, Input, Row, Spin, message } from 'antd'
 import dayjs from 'dayjs'
 import { CSSProperties, ChangeEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnClickOutside } from 'usehooks-ts'
-import './appSearch.css'
 import { InvoiceStatusTag, SubscriptionStatusTag } from './ui/statusTag'
 
 const { Search } = Input
@@ -30,6 +29,12 @@ const Index = () => {
   const show = () => setShowResult(true)
   useOnClickOutside(resultWrapperRef, hide)
 
+  // when admin is on /user/123, if appSearch return 2 results(id: 456, 789), click 456 go to /user/456,
+  // on userDetail page, don't forget to check userId change using:
+  // const params = useParams()
+  // const userId = Number(params.userId), add userId in useEffect depArray, if changed, refresh the userProfile
+  // otherwise, click /user/456, has no effect.
+  // Other pages should follow this pattern.
   const goToDetail = (pageId: string) => {
     hide()
     navigate(`/${pageId}`)
@@ -62,14 +67,7 @@ const Index = () => {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        height: '100%',
-        position: 'relative'
-      }}
-    >
+    <div className="relative flex h-full items-center">
       <Search
         value={term}
         onChange={onTermChange}
@@ -77,35 +75,20 @@ const Index = () => {
         onClick={show}
         onPressEnter={onEnter}
         allowClear={true}
-        // prefix={<SearchOutlined />}
         placeholder="Search invoice Id, customer email"
         style={{ width: '320px' }}
       />
       <div
         ref={resultWrapperRef}
+        className="z-800 h-max-[520px] absolute top-[52px] w-[640px] rounded-lg border border-[#E0E0E0] bg-[#FAFAFA] px-4 py-2 drop-shadow-lg"
         style={{
-          position: 'absolute',
-          top: '52px',
-          width: '640px',
-          height: '500px',
+          zIndex: 800,
           visibility: `${showResult ? 'visible' : 'hidden'}`,
-          background: '#FAFAFA',
-          zIndex: '800',
-          border: '1px solid #E0E0E0',
-          borderRadius: '6px',
-          boxShadow: 'rgba(0, 0, 0, 0.1) 0px 4px 12px'
+          border: '1px solid #E0E0E0'
         }}
       >
         {searching ? (
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
+          <div className="flex h-full w-full items-center justify-center">
             {' '}
             <Spin
               spinning={true}
@@ -113,18 +96,18 @@ const Index = () => {
             />
           </div>
         ) : (
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             {/* <div>precision match</div> */}
             <Divider
               orientation="left"
-              style={{ margin: '8px 0', color: '#757575' }}
+              style={{ margin: '12px 0', color: '#757575' }}
             >
               Invoices
             </Divider>
             <InvoiceMatch list={invoiceList} goToDetail={goToDetail} />
             <Divider
               orientation="left"
-              style={{ margin: '8px 0', color: '#757575' }}
+              style={{ margin: '12px 0', color: '#757575' }}
             >
               Customers
             </Divider>
@@ -145,6 +128,8 @@ const colStyle: CSSProperties = {
   alignItems: 'center'
 }
 
+const colSpan = [6, 5, 3, 5, 5]
+const header = ['Title', 'Status', 'Amt', 'Start', 'End']
 const InvoiceMatch = ({
   list,
   goToDetail
@@ -154,124 +139,43 @@ const InvoiceMatch = ({
 }) => {
   return (
     <>
-      <Row
-        align={'middle'}
-        justify={'space-between'}
-        style={{
-          display: 'flex',
-          width: '100%',
-          height: '32px',
-          padding: '0 6px',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
-      >
-        <Col span={7} style={colStyle}>
-          Title
-        </Col>
-        <Col span={3} style={colStyle}>
-          Status
-        </Col>
-        <Col span={4} style={colStyle}>
-          Amt
-        </Col>
-        <Col span={5} style={colStyle}>
-          Start
-        </Col>
-        <Col span={5} style={colStyle}>
-          End
-        </Col>
+      <Row className="mb-3 flex h-8 w-full items-center justify-between py-2">
+        {header.map((h, i) => (
+          <Col key={i} span={colSpan[i]} style={colStyle}>
+            {h}
+          </Col>
+        ))}
       </Row>
-      {list == null ? (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          No Match Found
-        </div>
+      {list == null || list.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No Invoice Found"
+        />
       ) : (
         <div
           style={{ maxHeight: '160px', minHeight: '48px', overflowY: 'auto' }}
         >
           {list.map((iv) => (
             <Row
-              style={{
-                display: 'flex',
-                width: '100%',
-                height: '32px',
-                padding: '0 6px',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                color: '#757575'
-              }}
-              align={'middle'}
-              // style={{ height: "32px", margin: "6px 0" }}
-              className="clickable-item"
+              className="flex h-8 w-full items-center justify-between hover:cursor-pointer hover:bg-gray-200"
               key={iv.id}
               onClick={() => goToDetail(`invoice/${iv.invoiceId}`)}
             >
-              <Col
-                span={7}
-                style={{
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
+              <Col span={colSpan[0]} className="flex h-8 items-center">
                 <span>{iv.invoiceName}</span>
               </Col>
-              <Col
-                span={3}
-                style={{
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                <div
-                  style={{
-                    width: '68px',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {InvoiceStatusTag(iv.status as InvoiceStatus)}
-                </div>
+              <Col span={colSpan[1]} className="flex h-8 items-center">
+                <span>{InvoiceStatusTag(iv.status as InvoiceStatus)}</span>
               </Col>
-              <Col
-                span={4}
-                style={{
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
+              <Col span={colSpan[2]} className="flex h-8 items-center">
                 <span>{showAmount(iv.totalAmount, iv.currency)}</span>
               </Col>
-              <Col
-                span={5}
-                style={{
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
+              <Col span={colSpan[3]} className="flex h-8 items-center">
                 <span>
                   {dayjs(new Date(iv.periodStart * 1000)).format('YYYY-MMM-DD')}
                 </span>
               </Col>
-              <Col
-                span={5}
-                style={{
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
+              <Col span={colSpan[4]} className="flex h-8 items-center">
                 <span>
                   {dayjs(new Date(iv.periodEnd * 1000)).format('YYYY-MMM-DD')}
                 </span>
@@ -284,6 +188,8 @@ const InvoiceMatch = ({
   )
 }
 
+const colSpan2 = [5, 5, 4, 6, 4]
+const header2 = ['Name', 'Email', 'Country', 'Sub', 'Sub Status']
 const AccountMatch = ({
   list,
   goToDetail
@@ -296,41 +202,24 @@ const AccountMatch = ({
       <Row
         align={'middle'}
         justify={'space-between'}
-        style={{
-          display: 'flex',
-          width: '100%',
-          height: '32px',
-          padding: '0 6px',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
+        className="mb-3 flex h-8 w-full items-center justify-between py-2"
       >
-        <Col span={5} style={colStyle}>
-          Name
-        </Col>
-        <Col span={5} style={colStyle}>
-          Email
-        </Col>
-        <Col span={4} style={colStyle}>
-          Country
-        </Col>
-        <Col span={5} style={colStyle}>
-          Subscription
-        </Col>
-        <Col span={5} style={colStyle}>
-          Status
-        </Col>
+        {header2.map((h, i) => (
+          <Col key={i} span={colSpan2[i]} style={colStyle}>
+            {h}
+          </Col>
+        ))}
       </Row>
-      {list == null ? (
-        <div className="flex items-center justify-center">No Match Found</div>
+      {list == null || list.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="No Customer Found"
+        />
       ) : (
-        <div
-          style={{ maxHeight: '160px', minHeight: '48px', overflowY: 'auto' }}
-        >
+        <div style={{ maxHeight: '160px', overflowY: 'auto' }}>
           {list.map((u) => (
             <Row
               style={{
-                display: 'flex',
                 width: '100%',
                 height: '32px',
                 padding: '0 6px',
@@ -340,12 +229,12 @@ const AccountMatch = ({
               }}
               align={'middle'}
               // style={{ height: "32px", margin: "6px 0" }}
-              className="clickable-item"
+              className="flex h-8 w-full items-center justify-between py-2 hover:cursor-pointer hover:bg-gray-200"
               key={u.id}
               onClick={() => goToDetail(`user/${u.id}`)}
             >
               <Col
-                span={5}
+                span={colSpan2[0]}
                 style={{
                   height: '32px',
                   display: 'flex',
@@ -358,7 +247,7 @@ const AccountMatch = ({
                 <span>{u.firstName}</span>
               </Col>
               <Col
-                span={5}
+                span={colSpan2[1]}
                 style={{
                   height: '32px',
                   display: 'flex',
@@ -367,7 +256,7 @@ const AccountMatch = ({
               >
                 <div
                   style={{
-                    width: '64px',
+                    // width: '64px',
                     textOverflow: 'ellipsis',
                     overflow: 'hidden',
                     whiteSpace: 'nowrap'
@@ -377,7 +266,7 @@ const AccountMatch = ({
                 </div>
               </Col>
               <Col
-                span={4}
+                span={colSpan2[2]}
                 style={{
                   height: '32px',
                   display: 'flex',
@@ -396,7 +285,7 @@ const AccountMatch = ({
                 </div>
               </Col>
               <Col
-                span={5}
+                span={colSpan2[3]}
                 style={{
                   height: '32px',
                   display: 'flex',
@@ -414,7 +303,7 @@ const AccountMatch = ({
                 </span>
               </Col>
               <Col
-                span={5}
+                span={colSpan2[4]}
                 style={{
                   height: '32px',
                   display: 'flex',
