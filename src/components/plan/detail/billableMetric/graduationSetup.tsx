@@ -96,9 +96,19 @@ const Index = ({
 
   // if the last one is removed, 2nd to last will become the new last(with infinity set)
   const removeGraduationData = (localId: string) => {
+    type StartEndValType = (number | null)[]
+    let vals: { startValue: StartEndValType; endValue: StartEndValType } = {
+      startValue: [],
+      endValue: []
+    }
+    vals = graduationData.reduce((acc, curr) => {
+      acc.startValue.push(curr.startValue)
+      acc.endValue.push(curr.endValue)
+      return acc
+    }, vals)
     const idx = graduationData.findIndex((m) => m.localId == localId)
     if (idx != -1) {
-      setGraduationData(update(graduationData, { $splice: [[idx, 1]] }))
+      // setGraduationData(update(graduationData, { $splice: [[idx, 1]] }))
     }
   }
 
@@ -107,6 +117,11 @@ const Index = ({
     (val: number | null) => {
       const idx = graduationData.findIndex((m) => m.localId == localId)
       if (idx != -1) {
+        const cascadeUpdate =
+          field == 'endValue' &&
+          typeof val == 'number' &&
+          val > graduationData[idx].startValue!
+
         setGraduationData(
           update(graduationData, { [idx]: { [field]: { $set: val } } })
         )
@@ -191,7 +206,7 @@ const Index = ({
   }
 
   useEffect(() => {
-    recalculaeStartEndValue(true)
+    // recalculaeStartEndValue(true)
   }, [graduationData.length])
 
   return (

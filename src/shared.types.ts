@@ -419,7 +419,7 @@ type DiscountCode = {
   merchantId: number
   name: string
   code: string
-  status?: DiscountCodeStatus // when creating a new obj, it has no status.
+  status: DiscountCodeStatus
   billingType: DiscountCodeBillingType
   discountType: DiscountType
   discountAmount: number
