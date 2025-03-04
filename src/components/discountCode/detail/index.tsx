@@ -32,10 +32,11 @@ import { UpdateDiscountCodeQuantityModal } from '../updateDiscountCodeQuantityMo
 import AdvancedConfig from './advancedConfig'
 import GeneralConfig from './generalConfig'
 import Summary, { NotSetPlaceholder } from './summary'
-const DEFAULT_CODE: DiscountCode = {
+const DEFAULT_NEW_CODE: DiscountCode = {
   merchantId: useMerchantInfoStore.getState().id,
   name: '',
   code: '',
+  status: DiscountCodeStatus.EDITING,
   billingType: DiscountCodeBillingType.RECURRING,
   discountType: DiscountType.AMOUNT,
   discountAmount: 0,
@@ -76,7 +77,7 @@ const Index = () => {
   const isNew = !codeId || isCopy
   const [loading, setLoading] = useState(false)
   const [code, setCode] = useState<DiscountCode | null>(
-    !codeId && !isCopy ? DEFAULT_CODE : null
+    !codeId && !isCopy ? DEFAULT_NEW_CODE : null
   )
   const [planList, setPlanList] = useState<IPlan[]>([])
   const planListRef = useRef<IPlan[]>([])
@@ -190,9 +191,9 @@ const Index = () => {
     const { plans } = res
     // if NEW_CODE.currency is EUR, and discountType == fixed-amt, then filter the planList to contain only euro plans
     let planList = plans == null ? [] : plans.map((p: IPlan) => p.plan)
-    if (DEFAULT_CODE.discountType == DiscountType.AMOUNT) {
+    if (DEFAULT_NEW_CODE.discountType == DiscountType.AMOUNT) {
       planList = planList.filter(
-        (p: IPlan) => p.currency == DEFAULT_CODE.currency
+        (p: IPlan) => p.currency == DEFAULT_NEW_CODE.currency
       )
     }
     setPlanList(planList)
