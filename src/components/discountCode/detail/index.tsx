@@ -239,11 +239,8 @@ const Index = () => {
     }
 
     const method = isNew ? createDiscountCodeReq : updateDiscountCodeReq
-
     setLoading(true)
-
     const [data, err] = await method(code)
-
     setLoading(false)
 
     if (err) {
@@ -252,12 +249,10 @@ const Index = () => {
     }
 
     message.success(`Discount code ${isNew ? 'created' : 'updated'}`)
-
     if (isNew) {
       navigate(`/discount-code/${data.discount.id}`)
       return
     }
-
     goBack()
   }
 
