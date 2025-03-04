@@ -24,7 +24,6 @@ export const unitToSeconds = (value: number, unit: number) => {
 
 export type MetricValidationError = {
   metricType: MetricType
-  rowIdx: number
   localId: string
   field: string
   errMsg: string
@@ -40,7 +39,6 @@ const validateMetricLimits = (
     if (metricLimit.metricId == null) {
       return {
         metricType: MetricType.LIMIT_METERED,
-        rowIdx: i,
         localId: metricLimit.localId,
         field: 'metricId',
         errMsg: 'Metric name is required'
@@ -54,7 +52,6 @@ const validateMetricLimits = (
     ) {
       return {
         metricType: MetricType.LIMIT_METERED,
-        rowIdx: i,
         localId: metricLimit.localId,
         field: 'metricLimit',
         errMsg: 'Metric limit must be a positive integer'
@@ -76,7 +73,6 @@ const validateMetricCharge = (
     if (metricCharge.metricId == null) {
       return {
         metricType: metricType,
-        rowIdx: i,
         localId: metricCharge.localId,
         field: 'metricId',
         errMsg: 'Metric name is required'
@@ -110,6 +106,39 @@ export const validateMetricData = (
 
 export const transformTrialData = () => {}
 
+const meteredChargeTransform = (
+  data: MetricMeteredCharge[],
+  currency: CURRENCY,
+  direction: 'downward' | 'upward'
+) =>
+  data == null
+    ? []
+    : data.map((m) => ({
+        ...m,
+        standardAmount:
+          m.standardAmount == null ? null : m.standardAmount / currency.Scale,
+        graduatedAmounts:
+          m.graduatedAmounts == null || m.graduatedAmounts.length == 0
+            ? []
+            : m.graduatedAmounts.map((g) => ({
+                ...g,
+                localId: randomString(8),
+                perAmount:
+                  g.perAmount == null
+                    ? null
+                    : direction == 'downward'
+                      ? g.perAmount / currency.Scale
+                      : g.perAmount * currency.Scale,
+                flatAmount:
+                  g.flatAmount == null
+                    ? null
+                    : direction == 'downward'
+                      ? g.flatAmount / currency.Scale
+                      : g.flatAmount * currency.Scale
+              })),
+        localId: randomString(8)
+      }))
+
 // downward(BE -> FE) | upward(FE -> BE)
 export const transformMetricData = (
   metricData: MetricData,
@@ -121,46 +150,30 @@ export const transformMetricData = (
   let metricLimitsLocal: MetricLimits[] = []
   let metricMeteredChargeLocal: MetricMeteredCharge[] = []
   let metricRecurringChargeLocal: MetricMeteredCharge[] = []
-  if (direction === 'downward') {
-    metricLimitsLocal =
-      metricLimits == null
-        ? []
-        : metricLimits.map((m) => ({
-            ...m,
-            localId: randomString(8)
-          }))
 
-    metricMeteredChargeLocal =
-      metricMeteredCharge == null
-        ? []
-        : metricMeteredCharge.map((m) => ({
-            ...m,
-            localId: randomString(8)
-          }))
+  metricLimitsLocal =
+    metricLimits == null
+      ? []
+      : metricLimits.map((m) => ({
+          ...m,
+          localId: randomString(8)
+        }))
 
-    metricRecurringChargeLocal =
-      metricRecurringCharge == null
-        ? []
-        : metricRecurringCharge.map((m) => ({
-            ...m,
-            localId: randomString(8)
-          }))
-  } else {
-    metricLimitsLocal = metricLimits.map((m) => ({
-      ...m
-    }))
+  metricMeteredChargeLocal = meteredChargeTransform(
+    metricMeteredCharge,
+    currency,
+    direction
+  )
 
-    metricMeteredChargeLocal = metricMeteredCharge.map((m) => ({
-      ...m
-    }))
+  metricRecurringChargeLocal = meteredChargeTransform(
+    metricRecurringCharge,
+    currency,
+    direction
+  )
 
-    metricRecurringChargeLocal = metricRecurringCharge.map((m) => ({
-      ...m
-    }))
-  }
   return {
-    metricLimits: metricLimitsLocal,
-    metricMeteredCharge: metricMeteredChargeLocal,
-    metricRecurringCharge: metricRecurringChargeLocal
+    metricLimitsLocal,
+    metricMeteredChargeLocal,
+    metricRecurringChargeLocal
   }
 }
