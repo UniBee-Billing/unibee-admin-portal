@@ -321,8 +321,6 @@ const Index = () => {
       navigate(`/plan/${updatedPlan.id}?productId=${updatedPlan.productId}`, {
         replace: true
       })
-    } else {
-      // navigate(`/plan/list`)
     }
   }
 
