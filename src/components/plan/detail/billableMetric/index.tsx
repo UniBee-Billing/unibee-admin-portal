@@ -1,32 +1,21 @@
 import {
   CURRENCY,
   IBillableMetrics,
-  MetricGraduatedAmount,
   MetricLimits,
   MetricMeteredCharge,
   MetricType
 } from '@/shared.types'
 import { DownOutlined, PlusOutlined } from '@ant-design/icons'
-import {
-  Button,
-  Dropdown,
-  Empty,
-  Form,
-  FormInstance,
-  Input,
-  Modal,
-  Space
-} from 'antd'
+import { Button, Dropdown, Empty, FormInstance, Space } from 'antd'
 
 import update from 'immutability-helper'
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
 import {
   defaultMetricLimit,
   defaultMetricMeteredCharge,
   defaultMetricRecurringCharge
 } from '../constants'
 import { MetricDataContext } from '../metricDataContext'
-import GraduationSetupModal from './graduationSetup'
 import LimitMetricSetup from './limitMetricSetup'
 import MeteredMetricSetup from './meteredMetricSetup'
 import { MetricData } from './types'
@@ -34,22 +23,10 @@ import { MetricData } from './types'
 type BillableMetricSetupProps = {
   metricsList: IBillableMetrics[] // all the billable metrics we have created in /billable-metrics, not used for edit, but used in <Select /> for user to choose.
   getCurrency: () => CURRENCY
-  form: FormInstance
-  saveMetricData: boolean
 }
 
-const Index = ({
-  metricsList,
-  getCurrency,
-  form,
-  saveMetricData
-}: BillableMetricSetupProps) => {
+const Index = ({ metricsList, getCurrency }: BillableMetricSetupProps) => {
   const { metricData, setMetricData } = useContext(MetricDataContext)
-  const [graduationSetupModalOpen, setGraduationSetupModalOpen] = useState<{
-    metricType: keyof MetricData
-    localId: string
-  } | null>(null)
-
   const addMetricData = <T extends keyof MetricData>(
     type: T, // T is MetricData key, MetricData value is an array of MetricLimits | MetricMeteredCharge
     defaultData: (typeof metricData)[T][number] // based on the key, defaultData type is this array's item type.
@@ -82,20 +59,6 @@ const Index = ({
           update(metricData, { [type]: { [idx]: { [field]: { $set: val } } } })
         )
       }
-    }
-
-  const onSaveGraduationData =
-    (type: keyof MetricData, localId: string) =>
-    (graduationData: MetricGraduatedAmount[]) => {
-      const idx = metricData[type].findIndex((m) => m.localId == localId)
-      if (idx != -1) {
-        setMetricData(
-          update(metricData, {
-            [type]: { [idx]: { graduatedAmounts: { $set: graduationData } } }
-          })
-        )
-      }
-      setGraduationSetupModalOpen(null)
     }
 
   const onChargeTypeSelectChange =
@@ -135,31 +98,8 @@ const Index = ({
     }
   }
 
-  useEffect(() => {
-    if (saveMetricData) {
-      form.setFieldsValue(metricData)
-    }
-  }, [saveMetricData])
-
   return (
     <div>
-      <Form.Item label="Billable metrics" name="metricLimits" hidden={true}>
-        <Input.TextArea rows={6} />
-      </Form.Item>
-      <Form.Item
-        label="Billable metrics"
-        name="metricMeteredCharge"
-        hidden={true}
-      >
-        <Input.TextArea rows={6} />
-      </Form.Item>
-      <Form.Item
-        label="Billable metrics"
-        name="metricRecurringCharge"
-        hidden={true}
-      >
-        <Input.TextArea rows={6} />
-      </Form.Item>
       {metricData.metricLimits.length == 0 &&
         metricData.metricMeteredCharge.length == 0 &&
         metricData.metricRecurringCharge.length == 0 && (
@@ -168,23 +108,6 @@ const Index = ({
             description="No billable metrics"
           />
         )}
-      {graduationSetupModalOpen != null && (
-        <Modal title="Graduation setup" width={720} open={true} footer={false}>
-          <GraduationSetupModal
-            data={
-              metricData[graduationSetupModalOpen.metricType].find(
-                (m) => m.localId == graduationSetupModalOpen.localId
-              )?.graduatedAmounts
-            }
-            onCancel={() => setGraduationSetupModalOpen(null)}
-            onOK={onSaveGraduationData(
-              graduationSetupModalOpen.metricType,
-              graduationSetupModalOpen.localId
-            )}
-            getCurrency={getCurrency}
-          />
-        </Modal>
-      )}
       {metricData.metricLimits.length > 0 && (
         <LimitMetricSetup
           metricData={metricData.metricLimits}
@@ -214,7 +137,6 @@ const Index = ({
           onMetricFieldChange={onMetricFieldChange}
           onChargeTypeSelectChange={onChargeTypeSelectChange}
           onMetricIdSelectChange={onMetricIdSelectChange}
-          setGraduationSetupModalOpen={setGraduationSetupModalOpen}
           toggleGraduationSetup={toggleGraduationSetup}
         />
       )}
@@ -234,7 +156,6 @@ const Index = ({
           onMetricFieldChange={onMetricFieldChange}
           onChargeTypeSelectChange={onChargeTypeSelectChange}
           onMetricIdSelectChange={onMetricIdSelectChange}
-          setGraduationSetupModalOpen={setGraduationSetupModalOpen}
           toggleGraduationSetup={toggleGraduationSetup}
         />
       )}
