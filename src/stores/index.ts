@@ -90,7 +90,6 @@ export const useMerchantInfoStore = create<MerchantInfoSlice>()(
   )
 )
 
-// --------------------------------
 const INITIAL_APP_VALUE: IAppConfig = {
   env: 'local',
   isProd: false,
@@ -159,7 +158,6 @@ export const useSessionStore = create<SessionStoreSlice>()((set, get) => ({
   }
 }))
 
-// --------------------------------
 interface UIConfig {
   sidebarCollapsed: boolean
 }
@@ -190,7 +188,6 @@ export const uiConfigStore = create<UIConfigSlice>()(
   )
 )
 
-// --------------------------------
 interface IPermission {
   roles: string[] // ['power user', 'Customer Support']
   permissions: string[] // ['plan', 'subscription', 'user', 'invoice', 'payment', 'report'], these items are the accessible pages, like /plan, /subscription.
