@@ -1,5 +1,5 @@
 import { randomString, showAmount } from '@/helpers'
-import { CURRENCY, MetricGraduatedAmount } from '@/shared.types'
+import { CURRENCY, MetricGraduatedAmount, MetricType } from '@/shared.types'
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Col, InputNumber } from 'antd'
 
@@ -7,30 +7,50 @@ import { Row } from 'antd'
 
 import { Button } from 'antd'
 
-import { Modal } from 'antd'
 import update from 'immutability-helper'
 import { useContext, useEffect, useState } from 'react'
 import { MetricDataContext } from '../metricDataContext'
+import { MetricData } from './types'
 
 const colSpan = [4, 4, 4, 4, 7, 1]
 const Index = ({
   data,
-  onCancel,
-  onOK,
+  metricDataType,
+  metricLocalId,
+  // onCancel,
+  // onOK,
   getCurrency
 }: {
+  metricDataType: keyof MetricData
+  metricLocalId: string
   data: MetricGraduatedAmount[] | undefined
-  onCancel: () => void
-  onOK: (graduationData: MetricGraduatedAmount[]) => void
   getCurrency: () => CURRENCY
 }) => {
   const { metricData, setMetricData } = useContext(MetricDataContext)
-  // console.log('metricData from context: ', metricData)
+  //   console.log('datatype/localId: ', metricDataType, metricLocalId)
+  const dataIdx = metricData[metricDataType].findIndex(
+    (m) => m.localId == metricLocalId
+  )
+
   const [graduationData, setGraduationData] = useState<MetricGraduatedAmount[]>(
     data == undefined
       ? []
       : data.map((d) => ({ ...d, localId: randomString(8) }))
   )
+
+  console.log('graduationData: ', graduationData)
+
+  useEffect(() => {
+    if (dataIdx != -1) {
+      setMetricData(
+        update(metricData, {
+          [metricDataType]: {
+            [dataIdx]: { graduatedAmounts: { $set: graduationData } }
+          }
+        })
+      )
+    }
+  }, [graduationData])
 
   // If array is initally empty, add 2 records.
   const addGraduationData = () => {
@@ -56,23 +76,23 @@ const Index = ({
         })
       )
     } else {
-      setGraduationData(
-        update(graduationData, {
-          $splice: [
-            [
-              graduationData.length - 1,
-              0,
-              {
-                startValue: null,
-                endValue: null,
-                perAmount: null,
-                flatAmount: null,
-                localId: randomString(8)
-              }
-            ]
-          ]
-        })
-      )
+      const maxStartValue = graduationData[graduationData.length - 1].startValue // startValue is auto calculated, it's never null.
+      const len = graduationData.length
+      let newGraduationData = update(graduationData, {
+        [len - 1]: { endValue: { $set: maxStartValue! + 1 } }
+      })
+      newGraduationData = update(newGraduationData, {
+        $push: [
+          {
+            startValue: maxStartValue! + 2,
+            endValue: -1,
+            perAmount: null,
+            flatAmount: null,
+            localId: randomString(8)
+          }
+        ]
+      })
+      setGraduationData(newGraduationData)
     }
   }
 
@@ -94,38 +114,69 @@ const Index = ({
     }
   ]
 
-  // if the last one is removed, 2nd to last will become the new last(with infinity set)
   const removeGraduationData = (localId: string) => {
-    type StartEndValType = (number | null)[]
-    let vals: { startValue: StartEndValType; endValue: StartEndValType } = {
-      startValue: [],
-      endValue: []
-    }
-    vals = graduationData.reduce((acc, curr) => {
-      acc.startValue.push(curr.startValue)
-      acc.endValue.push(curr.endValue)
-      return acc
-    }, vals)
     const idx = graduationData.findIndex((m) => m.localId == localId)
-    if (idx != -1) {
-      // setGraduationData(update(graduationData, { $splice: [[idx, 1]] }))
+    if (idx == -1) {
+      return
     }
+    const lastValData = update(graduationData, { $splice: [[idx, 1]] })
+    let firstValData = lastValData
+    if (idx != graduationData.length - 1) {
+      firstValData = update(graduationData, { $splice: [[idx + 1, 1]] })
+    }
+    const newGraduationData = lastValData.map((m, i) => ({
+      ...m,
+      startValue: firstValData[i].startValue
+    }))
+    newGraduationData[newGraduationData.length - 1].endValue = -1
+    setGraduationData(update(graduationData, { $set: newGraduationData }))
   }
 
   const onGraduationDataChange =
     (localId: string, field: keyof MetricGraduatedAmount) =>
     (val: number | null) => {
       const idx = graduationData.findIndex((m) => m.localId == localId)
-      if (idx != -1) {
-        const cascadeUpdate =
-          field == 'endValue' &&
-          typeof val == 'number' &&
-          val > graduationData[idx].startValue!
-
-        setGraduationData(
-          update(graduationData, { [idx]: { [field]: { $set: val } } })
-        )
+      if (idx == -1) {
+        return
       }
+
+      if (field == 'perAmount' || field == 'flatAmount') {
+        setGraduationData(
+          update(graduationData, {
+            [idx]: { [field]: { $set: val } }
+          })
+        )
+        return
+      }
+
+      const cascadeUpdate =
+        field == 'endValue' &&
+        typeof val == 'number' && // when input field is clared, its value is null, its typeof is object.
+        Number.isInteger(val) &&
+        val > graduationData[idx].startValue!
+
+      if (!cascadeUpdate) {
+        return
+      }
+
+      const newGraduationData = [...graduationData]
+      // If we are editing the 8th line, startValue of 8th line should be unchanged, endValue should be changed to val(passed from parameter)
+      // from 9th line onwards, startValue should be val + 1, endValue should be val + 2, then val++ = 2
+      newGraduationData[idx] = {
+        ...newGraduationData[idx],
+        endValue: val
+      }
+
+      let newVal = val + 2
+      for (let i = idx + 1; i < graduationData.length; i++) {
+        newGraduationData[i] = {
+          ...newGraduationData[i],
+          startValue: newVal - 1,
+          endValue: i == graduationData.length - 1 ? -1 : newVal
+        }
+        newVal += 2
+      }
+      setGraduationData(newGraduationData)
     }
 
   const calculateCost = (
