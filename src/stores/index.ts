@@ -134,7 +134,6 @@ export const useAppConfigStore = create<AppConfigSlice>()((set, get) => ({
   reset: () => set(INITIAL_APP_VALUE)
 }))
 
-// ---------------
 interface ISession {
   expired: boolean
   refreshCallbacks?: (() => void)[] // if session is expired when making an async fn call, push this fn here, so after re-login, re-run all fn in this array.
