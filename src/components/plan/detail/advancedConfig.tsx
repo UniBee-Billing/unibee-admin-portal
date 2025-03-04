@@ -28,7 +28,6 @@ interface Props {
   selectOnetime: IPlan[]
   trialLengthUnit: number | undefined
   setTrialLengthUnit: (val: number) => void
-  saveMetricData: boolean
 }
 
 const Index = ({
@@ -41,8 +40,7 @@ const Index = ({
   selectAddons,
   selectOnetime,
   trialLengthUnit,
-  setTrialLengthUnit,
-  saveMetricData
+  setTrialLengthUnit
 }: Props) => {
   const onTrialLengthUnitChange = (val: number) => setTrialLengthUnit(val)
   const prettifyJSON = () => {
@@ -308,8 +306,6 @@ const Index = ({
           <BillableMetricSetup
             metricsList={metricsList}
             getCurrency={getCurrency}
-            form={form}
-            saveMetricData={saveMetricData}
           />
         </div>
       )

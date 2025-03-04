@@ -7,10 +7,10 @@ import {
   CURRENCY,
   IBillableMetrics,
   MetricChargeType,
-  MetricMeteredCharge
+  MetricMeteredCharge,
+  MetricType
 } from '@/shared.types'
 import {
-  EyeOutlined,
   InfoCircleOutlined,
   MinusOutlined,
   PlusOutlined
@@ -52,9 +52,6 @@ type ChargeSetupProps = {
     type: keyof MetricData,
     localId: string
   ) => (val: number | null) => void
-  setGraduationSetupModalOpen: (
-    modalOpen: { metricType: keyof MetricData; localId: string } | null
-  ) => void
   toggleGraduationSetup: (type: keyof MetricData, localId: string) => void
 }
 const rowHeaderStyle = 'text-gray-400'
@@ -71,7 +68,6 @@ const Index = ({
   onMetricFieldChange,
   onChargeTypeSelectChange,
   onMetricIdSelectChange,
-  setGraduationSetupModalOpen,
   toggleGraduationSetup
 }: ChargeSetupProps) => {
   const metricSelected = (metricId: number) =>
@@ -189,14 +185,8 @@ const Index = ({
                     count={m.graduatedAmounts.length}
                   >
                     <Button
-                      onClick={
-                        () => toggleGraduationSetup(metricDataType, m.localId)
-                        /*
-                      setGraduationSetupModalOpen({
-                        metricType: metricDataType,
-                        localId: m.localId
-                      })
-                      */
+                      onClick={() =>
+                        toggleGraduationSetup(metricDataType, m.localId)
                       }
                       size="small"
                       style={{ border: 'none' }}
@@ -247,40 +237,8 @@ const Index = ({
                 onClick={() => removeMetricData(metricDataType, m.localId)}
               />
             </Col>
-            {/* m.chargeType == MetricChargeType.GRADUATED && (
-              <Col span={2}>
-                <Button
-                  icon={<EyeOutlined />}
-                  size="small"
-                  style={{ border: 'none' }}
-                  onClick={() =>
-                    toggleGraduationSetup(metricDataType, m.localId)
-                  }
-                />
-              </Col>
-            )*/}
           </Row>
 
-          {/* m.expanded && m.chargeType == MetricChargeType.GRADUATED && (
-            <Row>
-              <Col span={20}></Col>
-              <Col span={2}>
-                <div
-                  style={{
-                    position: 'relative',
-                    top: 0,
-                    width: 0,
-                    height: 0,
-                    borderLeft: '12px solid transparent',
-                    borderRight: '12px solid transparent',
-                    borderBottom: '12px solid white'
-                  }}
-                ></div>
-              </Col>{' '}
-            </Row>
-          )*/}
-          {/* <Row> */}
-          {/* <Col span={22}> */}
           <div className={`flex w-full justify-end drop-shadow-lg`}>
             <div
               style={{
@@ -292,14 +250,12 @@ const Index = ({
             >
               <GraduationSetup
                 data={m.graduatedAmounts}
-                onCancel={() => {}}
-                onOK={() => {}}
+                metricDataType={metricDataType}
+                metricLocalId={m.localId}
                 getCurrency={getCurrency}
               />
             </div>
           </div>
-          {/* </Col> */}
-          {/* </Row> */}
         </div>
       ))}
     </div>

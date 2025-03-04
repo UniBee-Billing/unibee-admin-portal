@@ -81,8 +81,6 @@ const Index = () => {
   // one plan can have many regular addons, but only ONE one-time payment addon, but backend support multiple.
   const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([]) // all the billable metrics, not used for edit, but used in <Select /> for user to choose.
 
-  const [saveMetricData, setSaveMetricData] = useState(false)
-
   const [trialLengthUnit, setTrialLengthUnit] = useState(
     TIME_UNITS.find((u) => u.label == 'days')?.value
   ) // default unit is days
@@ -233,11 +231,6 @@ const Index = () => {
       return
     }
 
-    setLoading(true)
-    setSaveMetricData(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setSaveMetricData(false)
-
     const f = JSON.parse(JSON.stringify(form.getFieldsValue()))
 
     f.amount = Number(f.amount)
@@ -296,6 +289,10 @@ const Index = () => {
       delete f.amount
       delete f.currency
     }
+
+    f.metricLimits = metricData.metricLimits
+    f.metricMeteredCharge = metricData.metricMeteredCharge
+    f.metricRecurringCharge = metricData.metricRecurringCharge
 
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
@@ -589,7 +586,6 @@ const Index = () => {
                     forceRender: true,
                     children: (
                       <AdvancedConfig
-                        saveMetricData={saveMetricData}
                         enableTrialWatch={enableTrialWatch}
                         selectAddons={selectAddons}
                         trialLengthUnit={trialLengthUnit}
