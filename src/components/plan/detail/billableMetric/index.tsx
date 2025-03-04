@@ -6,7 +6,7 @@ import {
   MetricType
 } from '@/shared.types'
 import { DownOutlined, PlusOutlined } from '@ant-design/icons'
-import { Button, Dropdown, Empty, FormInstance, Space } from 'antd'
+import { Button, Dropdown, Empty, Space } from 'antd'
 
 import update from 'immutability-helper'
 import { useContext } from 'react'

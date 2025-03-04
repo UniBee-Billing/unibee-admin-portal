@@ -2,7 +2,6 @@ import { currencyDecimalValidate, isValidMap, showAmount } from '@/helpers'
 import { CURRENCY, IBillableMetrics, IPlan, PlanType } from '@/shared.types'
 import { FormatPainterOutlined } from '@ant-design/icons'
 import {
-  Badge,
   Button,
   Collapse,
   CollapseProps,

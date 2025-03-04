@@ -1,14 +1,9 @@
-import {
-  METRIC_CHARGE_TYPE,
-  METRICS_AGGREGATE_TYPE,
-  METRICS_TYPE
-} from '@/constants'
+import { METRIC_CHARGE_TYPE, METRICS_AGGREGATE_TYPE } from '@/constants'
 import {
   CURRENCY,
   IBillableMetrics,
   MetricChargeType,
-  MetricMeteredCharge,
-  MetricType
+  MetricMeteredCharge
 } from '@/shared.types'
 import {
   InfoCircleOutlined,
@@ -23,7 +18,6 @@ import {
   Popover,
   Row,
   Select,
-  Tooltip,
   Typography
 } from 'antd'
 import { PropsWithChildren } from 'react'
