@@ -1,5 +1,5 @@
 import { randomString, showAmount } from '@/helpers'
-import { CURRENCY, MetricGraduatedAmount, MetricType } from '@/shared.types'
+import { CURRENCY, MetricGraduatedAmount } from '@/shared.types'
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Col, InputNumber } from 'antd'
 
@@ -198,12 +198,12 @@ const Index = ({
     if (endValue == -1) {
       range = 1
     }
-    const label = `${range} x ${currency.Symbol}${perAmount} + ${currency.Symbol}${flatAmount}`
+    const label = `${range} x ${currency?.Symbol}${perAmount} + ${currency?.Symbol}${flatAmount}`
     return returnNumber
       ? range * perAmount + flatAmount
       : `${label} = ${showAmount(
           range * perAmount + flatAmount,
-          currency.Currency,
+          currency?.Currency,
           true
         )}`
   }
@@ -218,37 +218,6 @@ const Index = ({
       )
       return acc + (typeof cost === 'number' ? cost : 0)
     }, 0)
-  }
-
-  // don't update the last record's endvalue.
-  // if there is only one record, its startValue should be 0, endValue should be -1
-  const recalculaeStartEndValue = (autocalculate: boolean = false) => {
-    if (graduationData.length == 0) return
-    const val = graduationData.map((m) => ({
-      startValue: m.startValue,
-      endValue: m.endValue
-    }))
-    if (val.length == 1) {
-      val[0].startValue = 0
-      val[0].endValue = -1
-    }
-    if (val.length == 2) {
-      val[1].endValue = -1
-    }
-    let currEnd =
-      autocalculate && val[0].endValue == null
-        ? val[0].startValue! + 1
-        : val[0].endValue
-    for (let i = 1; i < val.length; i++) {
-      val[i].startValue = currEnd! + 1
-      val[i].endValue = currEnd! + 2
-      currEnd = val[i].endValue
-    }
-    const newGraduationData = graduationData.map((v, idx) => ({
-      ...v,
-      ...val[idx]
-    }))
-    setGraduationData(update(graduationData, { $set: newGraduationData }))
   }
 
   return (
@@ -331,7 +300,7 @@ const Index = ({
             <Col span={8} className="flex items-center font-bold text-gray-600">
               {`${graduationData[graduationData.length - 1].startValue} units would cost ${showAmount(
                 calculateTotalCost(),
-                getCurrency().Currency,
+                getCurrency()?.Currency,
                 true
               )}`}
             </Col>

@@ -1,4 +1,4 @@
-import { Button, Input, InputNumber, Select, Typography } from 'antd'
+import { Button, InputNumber, Select, Typography } from 'antd'
 
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Row } from 'antd'
@@ -6,7 +6,6 @@ import { Row } from 'antd'
 import { METRICS_AGGREGATE_TYPE } from '@/constants'
 import { IBillableMetrics, MetricLimits, MetricType } from '@/shared.types'
 import { Col } from 'antd'
-import { useMemo } from 'react'
 import { MetricData } from './types'
 
 const rowHeaderStyle = 'text-gray-400'

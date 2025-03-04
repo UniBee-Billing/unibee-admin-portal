@@ -42,7 +42,7 @@ const Index = ({
   watchOnetimeAddons,
   trialSummary
 }: SummaryItem) => {
-  const { metricData, setMetricData } = useContext(MetricDataContext)
+  // const { metricData, setMetricData } = useContext(MetricDataContext)
   // console.log('metricData from context in summary: ', metricData)
   const formatAddonList = (addonType: 'addon' | 'onetimeAddon') => {
     const list = addonType == 'addon' ? selectAddons : selectOnetime
