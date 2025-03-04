@@ -1,5 +1,10 @@
 import { randomString } from '@/helpers'
-import { CURRENCY, MetricLimits, MetricMeteredCharge } from '@/shared.types'
+import {
+  CURRENCY,
+  MetricLimits,
+  MetricMeteredCharge,
+  MetricType
+} from '@/shared.types'
 import { MetricData } from './billableMetric/types'
 import { TIME_UNITS } from './types'
 
@@ -15,6 +20,92 @@ export const secondsToUnit = (sec: number) => {
 
 export const unitToSeconds = (value: number, unit: number) => {
   return value * unit
+}
+
+export type MetricValidationError = {
+  metricType: MetricType
+  rowIdx: number
+  localId: string
+  field: string
+  errMsg: string
+}
+const validateMetricLimits = (
+  metricLimits: MetricLimits[] | null
+): MetricValidationError | null => {
+  if (metricLimits == null) {
+    return null
+  }
+  for (let i = 0; i < metricLimits.length; i++) {
+    const metricLimit = metricLimits[i]
+    if (metricLimit.metricId == null) {
+      return {
+        metricType: MetricType.LIMIT_METERED,
+        rowIdx: i,
+        localId: metricLimit.localId,
+        field: 'metricId',
+        errMsg: 'Metric name is required'
+      }
+    }
+    const limitValue = metricLimit.metricLimit
+    if (
+      limitValue == null ||
+      limitValue === 0 ||
+      !Number.isInteger(limitValue)
+    ) {
+      return {
+        metricType: MetricType.LIMIT_METERED,
+        rowIdx: i,
+        localId: metricLimit.localId,
+        field: 'metricLimit',
+        errMsg: 'Metric limit must be a positive integer'
+      }
+    }
+  }
+  return null
+}
+
+const validateMetricCharge = (
+  metricType: MetricType,
+  metricMeteredCharge: MetricMeteredCharge[] | null
+): MetricValidationError | null => {
+  if (metricMeteredCharge == null) {
+    return null
+  }
+  for (let i = 0; i < metricMeteredCharge.length; i++) {
+    const metricCharge = metricMeteredCharge[i]
+    if (metricCharge.metricId == null) {
+      return {
+        metricType: metricType,
+        rowIdx: i,
+        localId: metricCharge.localId,
+        field: 'metricId',
+        errMsg: 'Metric name is required'
+      }
+    }
+  }
+  return null
+}
+
+export const validateMetricData = (
+  metricData: MetricData
+): MetricValidationError | null => {
+  const { metricLimits, metricMeteredCharge, metricRecurringCharge } =
+    metricData
+  const metricLimitsErr = validateMetricLimits(metricLimits)
+  const metricMeteredChargeErr = validateMetricCharge(
+    MetricType.CHARGE_METERED,
+    metricMeteredCharge
+  )
+  const metricRecurringChargeErr = validateMetricCharge(
+    MetricType.CHARGE_RECURRING,
+    metricRecurringCharge
+  )
+  const errs =
+    metricLimitsErr || metricMeteredChargeErr || metricRecurringChargeErr
+  if (errs != null) {
+    return errs
+  }
+  return null
 }
 
 export const transformTrialData = () => {}

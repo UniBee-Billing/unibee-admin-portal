@@ -28,7 +28,13 @@ import AdvancedConfig from './advancedConfig'
 import BasicConfig from './basicConfig'
 import { MetricData } from './billableMetric/types'
 import { DEFAULT_NEW_PLAN } from './constants'
-import { secondsToUnit, transformMetricData, unitToSeconds } from './helpers'
+import {
+  MetricValidationError,
+  secondsToUnit,
+  transformMetricData,
+  unitToSeconds,
+  validateMetricData
+} from './helpers'
 import { MetricDataContext } from './metricDataContext'
 import Summary from './summary'
 import { TIME_UNITS, TNewPlan, TrialSummary } from './types'
@@ -41,6 +47,9 @@ const Index = () => {
     metricMeteredCharge: [],
     metricRecurringCharge: []
   })
+  const [metricError, setMetricError] = useState<MetricValidationError | null>(
+    null
+  )
   const [form] = Form.useForm()
   const location = useLocation()
   const goBackToPlanList = () => {
@@ -290,9 +299,20 @@ const Index = () => {
       delete f.currency
     }
 
+    const metricError = validateMetricData({
+      metricLimits: metricData.metricLimits,
+      metricMeteredCharge: metricData.metricMeteredCharge,
+      metricRecurringCharge: metricData.metricRecurringCharge
+    })
+    if (metricError != null) {
+      setMetricError(metricError)
+      return
+    }
     f.metricLimits = metricData.metricLimits
     f.metricMeteredCharge = metricData.metricMeteredCharge
     f.metricRecurringCharge = metricData.metricRecurringCharge
+
+    return
 
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
@@ -535,7 +555,9 @@ const Index = () => {
     <MetricDataContext.Provider
       value={{
         metricData,
-        setMetricData
+        setMetricData,
+        metricError,
+        setMetricError
       }}
     >
       <Spin
