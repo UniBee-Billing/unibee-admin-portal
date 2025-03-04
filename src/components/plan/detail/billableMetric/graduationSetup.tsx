@@ -1,4 +1,4 @@
-import { randomString, showAmount } from '@/helpers'
+import { randomString, roundTo2Decimals, showAmount } from '@/helpers'
 import { CURRENCY, MetricGraduatedAmount } from '@/shared.types'
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Col, InputNumber } from 'antd'
@@ -146,7 +146,7 @@ const Index = ({
 
       const cascadeUpdate =
         field == 'endValue' &&
-        typeof val == 'number' && // when input field is clared, its value is null, its typeof is object.
+        typeof val == 'number' && // when input field is clared, its value is null(typeof is object).
         Number.isInteger(val) &&
         val > graduationData[idx].startValue!
 
@@ -208,7 +208,7 @@ const Index = ({
         )}`
   }
   const calculateTotalCost = () => {
-    return graduationData.reduce((acc, curr) => {
+    const result = graduationData.reduce((acc, curr) => {
       const cost = calculateCost(
         curr.startValue,
         curr.endValue,
@@ -218,6 +218,7 @@ const Index = ({
       )
       return acc + (typeof cost === 'number' ? cost : 0)
     }, 0)
+    return roundTo2Decimals(result)
   }
 
   return (

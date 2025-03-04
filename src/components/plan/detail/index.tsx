@@ -493,36 +493,20 @@ const Index = () => {
     const { metricLimits, metricMeteredCharge, metricRecurringCharge } =
       planDetail.plan as IPlan
 
-    /*  transformMetricData(
-      { metricLimits, metricMeteredCharge, metricRecurringCharge },
-      getCurrency(),
+    const {
+      metricLimitsLocal,
+      metricMeteredChargeLocal,
+      metricRecurringChargeLocal
+    } = transformMetricData(
+      {
+        metricLimits,
+        metricMeteredCharge,
+        metricRecurringCharge
+      } as MetricData,
+      appConfig.currency[planDetail.plan.currency as Currency]!,
       'downward'
     )
-      */
 
-    const metricLimitsLocal =
-      metricLimits == null
-        ? []
-        : metricLimits.map((m) => ({
-            ...m,
-            localId: randomString(8)
-          }))
-
-    const metricMeteredChargeLocal =
-      metricMeteredCharge == null
-        ? []
-        : metricMeteredCharge.map((m) => ({
-            ...m,
-            localId: randomString(8)
-          }))
-
-    const metricRecurringChargeLocal =
-      metricRecurringCharge == null
-        ? []
-        : metricRecurringCharge.map((m) => ({
-            ...m,
-            localId: randomString(8)
-          }))
     setMetricData({
       metricLimits: metricLimitsLocal,
       metricMeteredCharge: metricMeteredChargeLocal,
