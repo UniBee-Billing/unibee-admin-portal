@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: main
 
       - name: Parse version
         id: parse_version
