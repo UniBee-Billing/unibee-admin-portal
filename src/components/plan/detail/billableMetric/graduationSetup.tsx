@@ -17,8 +17,6 @@ const Index = ({
   data,
   metricDataType,
   metricLocalId,
-  // onCancel,
-  // onOK,
   getCurrency
 }: {
   metricDataType: keyof MetricData
@@ -27,7 +25,6 @@ const Index = ({
   getCurrency: () => CURRENCY
 }) => {
   const { metricData, setMetricData } = useContext(MetricDataContext)
-  //   console.log('datatype/localId: ', metricDataType, metricLocalId)
   const dataIdx = metricData[metricDataType].findIndex(
     (m) => m.localId == metricLocalId
   )
@@ -37,8 +34,6 @@ const Index = ({
       ? []
       : data.map((d) => ({ ...d, localId: randomString(8) }))
   )
-
-  console.log('graduationData: ', graduationData)
 
   useEffect(() => {
     if (dataIdx != -1) {
