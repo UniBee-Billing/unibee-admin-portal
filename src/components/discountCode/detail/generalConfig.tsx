@@ -115,7 +115,7 @@ const Index = ({
       >
         <Input disabled={!isNew} />
       </Form.Item>
-      {!isNew && (
+      {!isNew && code.status != null && (
         <Form.Item label="Status">
           {getDiscountCodeStatusTagById(code.status as number)}
         </Form.Item>
