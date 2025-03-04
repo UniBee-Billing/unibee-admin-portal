@@ -308,11 +308,12 @@ const Index = () => {
       setMetricError(metricError)
       return
     }
-    f.metricLimits = metricData.metricLimits
-    f.metricMeteredCharge = metricData.metricMeteredCharge
-    f.metricRecurringCharge = metricData.metricRecurringCharge
+    const metric = transformMetricData(metricData, getCurrency(), 'upward')
+    f.metricLimits = metric.metricLimitsLocal
+    f.metricMeteredCharge = metric.metricMeteredChargeLocal
+    f.metricRecurringCharge = metric.metricRecurringChargeLocal
 
-    return
+    // return
 
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)

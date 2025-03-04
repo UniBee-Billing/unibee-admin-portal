@@ -116,7 +116,11 @@ const meteredChargeTransform = (
     : data.map((m) => ({
         ...m,
         standardAmount:
-          m.standardAmount == null ? null : m.standardAmount / currency.Scale,
+          m.standardAmount == null
+            ? null
+            : direction == 'downward'
+              ? m.standardAmount / currency.Scale
+              : m.standardAmount * currency.Scale,
         graduatedAmounts:
           m.graduatedAmounts == null || m.graduatedAmounts.length == 0
             ? []
