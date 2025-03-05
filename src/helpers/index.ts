@@ -75,9 +75,8 @@ export const currencyDecimalValidate = (val: number, currency: Currency) => {
   if (Number.isInteger(val)) {
     return true
   }
-  const c = useAppConfigStore
-    .getState()
-    .supportCurrency.find((c) => c.Currency == currency)
+  const c = useAppConfigStore.getState().currency[currency]
+  //.supportCurrency.find((c) => c.Currency == currency)
   if (c == undefined) {
     // should throw error
     return false
@@ -484,4 +483,8 @@ export const initializeSort = <ColumnType>(sortFields: string[]) => {
 
 export const roundTo2Decimals = (num: number) => {
   return Math.round((num + Number.EPSILON) * 100) / 100
+}
+
+export const isDecimal = (num: number) => {
+  return num % 1 !== 0
 }

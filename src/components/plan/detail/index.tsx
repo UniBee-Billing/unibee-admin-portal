@@ -1,4 +1,4 @@
-import { isValidMap, randomString, showAmount, toFixedNumber } from '@/helpers'
+import { isValidMap, showAmount, toFixedNumber } from '@/helpers'
 import {
   activatePlan,
   deletePlanReq,

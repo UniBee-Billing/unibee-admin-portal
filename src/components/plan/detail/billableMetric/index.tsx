@@ -8,6 +8,7 @@ import {
 import { DownOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Empty, Space } from 'antd'
 
+import { currencyDecimalValidate } from '@/helpers'
 import update from 'immutability-helper'
 import { useContext } from 'react'
 import {
@@ -53,6 +54,14 @@ const Index = ({ metricsList, getCurrency }: BillableMetricSetupProps) => {
         : keyof MetricMeteredCharge
     ) =>
     (val: number | null) => {
+      if (
+        val != null &&
+        field == 'standardAmount' &&
+        !currencyDecimalValidate(val, getCurrency().Currency)
+      ) {
+        return
+      }
+
       const idx = metricData[type].findIndex((m) => m.localId == localId)
       if (idx != -1) {
         setMetricData(

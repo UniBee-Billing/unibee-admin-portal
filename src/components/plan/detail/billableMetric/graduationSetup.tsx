@@ -1,4 +1,9 @@
-import { randomString, roundTo2Decimals, showAmount } from '@/helpers'
+import {
+  currencyDecimalValidate,
+  randomString,
+  roundTo2Decimals,
+  showAmount
+} from '@/helpers'
 import { CURRENCY, MetricGraduatedAmount } from '@/shared.types'
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import { Col, InputNumber } from 'antd'
@@ -136,6 +141,13 @@ const Index = ({
       }
 
       if (field == 'perAmount' || field == 'flatAmount') {
+        if (
+          val != null &&
+          !currencyDecimalValidate(val, getCurrency().Currency)
+        ) {
+          return
+        }
+
         setGraduationData(
           update(graduationData, {
             [idx]: { [field]: { $set: val } }
