@@ -1,6 +1,8 @@
+import { Currency } from 'dinero.js'
 import {
   AppTaskStatus,
   CreditTxType,
+  CURRENCY,
   DiscountCodeBillingType,
   DiscountCodeStatus,
   DiscountType,
@@ -19,11 +21,38 @@ import {
   SubscriptionStatus,
   UserStatus
 } from './shared.types'
-
 export const PLAN_TYPE: Record<PlanType, { label: string }> = {
   [PlanType.MAIN]: { label: 'Main plan' },
   [PlanType.ADD_ON]: { label: 'Add-on' },
   [PlanType.ONE_TIME_ADD_ON]: { label: 'One-time payment' }
+}
+
+export const LOCAL_CURRENCY: Partial<Record<Currency, CURRENCY>> = {
+  EUR: {
+    Currency: 'EUR',
+    Symbol: '€',
+    Scale: 100
+  },
+  USD: {
+    Currency: 'USD',
+    Symbol: '$',
+    Scale: 100
+  },
+  RUB: {
+    Currency: 'RUB',
+    Symbol: '₽',
+    Scale: 100
+  },
+  JPY: {
+    Currency: 'JPY',
+    Symbol: '¥',
+    Scale: 1
+  },
+  CNY: {
+    Currency: 'CNY',
+    Symbol: '¥',
+    Scale: 100
+  }
 }
 
 export const PLAN_STATUS: Record<PlanStatus, { label: string; color: string }> =
