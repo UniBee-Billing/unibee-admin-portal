@@ -26,7 +26,11 @@ const Index = () => {
 
   const fetchMetricsList = async () => {
     setLoading(true)
-    const [res, err] = await getMetricsListReq(fetchMetricsList)
+    const [res, err] = await getMetricsListReq({
+      refreshCb: fetchMetricsList,
+      page,
+      count: PAGE_SIZE
+    })
     setLoading(false)
     if (err != null) {
       message.error((err as Error).message)
@@ -38,7 +42,7 @@ const Index = () => {
   }
 
   const onNewMetrics = () => {
-    onPageChange(1, 100)
+    onPageChange(1, PAGE_SIZE)
     // setPage(0) // if user are on page 3, after creating new plan, they'll be redirected back to page 1,so the newly created plan will be shown on the top
     navigate(`/billable-metric/new`)
   }
@@ -48,7 +52,6 @@ const Index = () => {
       title: 'Name',
       dataIndex: 'metricName',
       key: 'metricName'
-      // render: (text) => <a>{text}</a>,
     },
 
     {
@@ -144,13 +147,6 @@ const Index = () => {
 
   return (
     <>
-      {/* <div
-        style={{ padding: '16px 0', display: 'flex', justifyContent: 'end' }}
-      >
-        <Button type="primary" onClick={onNewMetrics}>
-          New Billable Metric
-        </Button>
-  </div> */}
       <Table
         columns={columns}
         dataSource={metricsList}

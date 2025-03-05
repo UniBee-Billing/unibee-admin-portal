@@ -1,6 +1,7 @@
 import { randomString } from '@/helpers'
 import {
   CURRENCY,
+  MetricChargeType,
   MetricLimits,
   MetricMeteredCharge,
   MetricType
@@ -116,13 +117,14 @@ const meteredChargeTransform = (
     : data.map((m) => ({
         ...m,
         standardAmount:
-          m.standardAmount == null
+          m.standardAmount == null || m.chargeType == MetricChargeType.GRADUATED // for graduated charge, standardAmount is meaningless
             ? null
             : direction == 'downward'
               ? m.standardAmount / currency.Scale
               : m.standardAmount * currency.Scale,
         graduatedAmounts:
-          m.graduatedAmounts == null || m.graduatedAmounts.length == 0
+          m.graduatedAmounts == null ||
+          m.chargeType == MetricChargeType.STANDARD // for STANDARD charge, graduatedAmounts is meaningless.
             ? []
             : m.graduatedAmounts.map((g) => ({
                 ...g,
