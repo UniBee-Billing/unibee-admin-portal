@@ -17,7 +17,6 @@ const Index = ({
   metricsList,
   onMetricFieldChange,
   onMetricIdSelectChange,
-  //getCurrency,
   addLimitData,
   removeLimitData
 }: {
@@ -37,7 +36,6 @@ const Index = ({
   removeLimitData: (type: keyof MetricData, localId: string) => void
 }) => {
   const { metricError } = useContext(MetricDataContext)
-  console.log('metricError', metricError)
   const header = [
     { label: 'Name' },
     { label: 'Code' },

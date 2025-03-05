@@ -237,7 +237,7 @@ const Index = ({
             <div
               style={{
                 width: '85%',
-                marginRight: '15%',
+                marginRight: '10%',
                 scrollbarGutter: 'stable both-edges'
               }}
               className={`relative overflow-hidden rounded-md bg-white transition-all duration-300 ${m.expanded && m.chargeType == MetricChargeType.GRADUATED ? 'max-h-96' : 'max-h-0'}`}
