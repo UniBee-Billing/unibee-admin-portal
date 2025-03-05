@@ -306,6 +306,7 @@ const Index = ({
           <BillableMetricSetup
             metricsList={metricsList}
             getCurrency={getCurrency}
+            formDisabled={formDisabled}
           />
         </div>
       )

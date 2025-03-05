@@ -47,6 +47,7 @@ type ChargeSetupProps = {
     localId: string
   ) => (val: number | null) => void
   toggleGraduationSetup: (type: keyof MetricData, localId: string) => void
+  formDisabled: boolean
 }
 const rowHeaderStyle = 'text-gray-400'
 const colSpan = [6, 7, 4, 5, 2]
@@ -62,7 +63,8 @@ const Index = ({
   onMetricFieldChange,
   onChargeTypeSelectChange,
   onMetricIdSelectChange,
-  toggleGraduationSetup
+  toggleGraduationSetup,
+  formDisabled
 }: ChargeSetupProps) => {
   const metricSelected = (metricId: number) =>
     metricData.find((m) => m.metricId === metricId) != undefined
@@ -251,6 +253,7 @@ const Index = ({
                 metricDataType={metricDataType}
                 metricLocalId={m.localId}
                 getCurrency={getCurrency}
+                formDisabled={formDisabled}
               />
             </div>
           </div>
