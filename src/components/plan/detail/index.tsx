@@ -1,3 +1,4 @@
+import { LOCAL_CURRENCY } from '@/constants'
 import { isValidMap, showAmount, toFixedNumber } from '@/helpers'
 import {
   activatePlan,
@@ -171,10 +172,10 @@ const Index = () => {
     plan?.status == PlanStatus.SOFT_ARCHIVED ||
     productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
-  const getCurrency = () => appConfig.currency[watchCurrency as Currency]!
+  const getCurrency = () => LOCAL_CURRENCY[watchCurrency as Currency]! // appConfig.currency[watchCurrency as Currency]!
 
   const getAmount = (amt: number, currency: Currency) => {
-    const CURRENCY = appConfig.currency[currency]
+    const CURRENCY = LOCAL_CURRENCY[currency] // appConfig.currency[currency]
     if (CURRENCY == undefined) {
       return 0
     }
@@ -494,6 +495,8 @@ const Index = () => {
     const { metricLimits, metricMeteredCharge, metricRecurringCharge } =
       planDetail.plan as IPlan
 
+    // console.log('app config currency: ', appConfig.currency)
+
     const {
       metricLimitsLocal,
       metricMeteredChargeLocal,
@@ -504,7 +507,8 @@ const Index = () => {
         metricMeteredCharge,
         metricRecurringCharge
       } as MetricData,
-      appConfig.currency[planDetail.plan.currency as Currency]!,
+      // appConfig.currency[planDetail.plan.currency as Currency]!,
+      LOCAL_CURRENCY[planDetail.plan.currency as Currency]!,
       'downward'
     )
 
