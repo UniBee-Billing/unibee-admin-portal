@@ -68,7 +68,10 @@ const Index = ({
     metricData.find((m) => m.metricId === metricId) != undefined
 
   const getMetricInfo = (metricId: number) => {
-    const metric = metricsList.find((m) => m.id === metricId)!
+    const metric = metricsList.find((m) => m.id === metricId)
+    if (metric == undefined) {
+      return null
+    }
     const content = [
       {
         label: 'Code',
@@ -182,6 +185,7 @@ const Index = ({
                       onClick={() =>
                         toggleGraduationSetup(metricDataType, m.localId)
                       }
+                      disabled={false} // this button is to toggle the show/hide of graduated amounts, no need to disable after plan activated
                       size="small"
                       style={{ border: 'none' }}
                       icon={
