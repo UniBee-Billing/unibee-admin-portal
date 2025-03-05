@@ -24,9 +24,14 @@ import { MetricData } from './types'
 type BillableMetricSetupProps = {
   metricsList: IBillableMetrics[] // all the billable metrics we have created in /billable-metrics, not used for edit, but used in <Select /> for user to choose.
   getCurrency: () => CURRENCY
+  formDisabled: boolean
 }
 
-const Index = ({ metricsList, getCurrency }: BillableMetricSetupProps) => {
+const Index = ({
+  metricsList,
+  getCurrency,
+  formDisabled
+}: BillableMetricSetupProps) => {
   const { metricData, setMetricData } = useContext(MetricDataContext)
   const addMetricData = <T extends keyof MetricData>(
     type: T, // T is MetricData key, MetricData value is an array of MetricLimits | MetricMeteredCharge
@@ -147,6 +152,7 @@ const Index = ({ metricsList, getCurrency }: BillableMetricSetupProps) => {
           onChargeTypeSelectChange={onChargeTypeSelectChange}
           onMetricIdSelectChange={onMetricIdSelectChange}
           toggleGraduationSetup={toggleGraduationSetup}
+          formDisabled={formDisabled}
         />
       )}
       {metricData.metricRecurringCharge.length > 0 && (
@@ -166,6 +172,7 @@ const Index = ({ metricsList, getCurrency }: BillableMetricSetupProps) => {
           onChargeTypeSelectChange={onChargeTypeSelectChange}
           onMetricIdSelectChange={onMetricIdSelectChange}
           toggleGraduationSetup={toggleGraduationSetup}
+          formDisabled={formDisabled}
         />
       )}
       <Dropdown

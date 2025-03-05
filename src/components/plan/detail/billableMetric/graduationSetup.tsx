@@ -22,12 +22,14 @@ const Index = ({
   data,
   metricDataType,
   metricLocalId,
-  getCurrency
+  getCurrency,
+  formDisabled
 }: {
   metricDataType: keyof MetricData
   metricLocalId: string
   data: MetricGraduatedAmount[] | undefined
   getCurrency: () => CURRENCY
+  formDisabled: boolean
 }) => {
   const { metricData, setMetricData } = useContext(MetricDataContext)
   const dataIdx = metricData[metricDataType].findIndex(
@@ -298,7 +300,7 @@ const Index = ({
             </Col>
             <Col span={colSpan[5]}>
               <Button
-                disabled={idx == 0}
+                disabled={idx == 0 || formDisabled}
                 style={{ border: 'none' }}
                 icon={<MinusOutlined />}
                 size="small"
