@@ -495,7 +495,7 @@ const Index = () => {
     const { metricLimits, metricMeteredCharge, metricRecurringCharge } =
       planDetail.plan as IPlan
 
-    // console.log('app config currency: ', appConfig.currency)
+    // console.log('app config: ', appConfig)
 
     const {
       metricLimitsLocal,

@@ -220,7 +220,7 @@ const Index = ({
                     if (isNaN(planPrice)) {
                       return Promise.reject('Input a valid plan price first.')
                     }
-                    if (isNaN(num) || num <= 0 || num >= planPrice) {
+                    if (isNaN(num) || num < 0 || num >= planPrice) {
                       return Promise.reject(
                         `Please input a valid price (>= 0 and < plan price ${getFieldValue('amount')}).`
                       )
