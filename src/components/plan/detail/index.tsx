@@ -1,4 +1,3 @@
-import { LOCAL_CURRENCY } from '@/constants'
 import { isValidMap, showAmount, toFixedNumber } from '@/helpers'
 import {
   activatePlan,
@@ -171,10 +170,11 @@ const Index = () => {
     plan?.status == PlanStatus.SOFT_ARCHIVED ||
     productDetail === null // (plan active && published) or productId is invalid(productDetail is null)
 
-  const getCurrency = () => LOCAL_CURRENCY[watchCurrency as Currency]! // appConfig.currency[watchCurrency as Currency]!
+  const getCurrency = () =>
+    useAppConfigStore.getState().currency[watchCurrency as Currency]!
 
   const getAmount = (amt: number, currency: Currency) => {
-    const CURRENCY = LOCAL_CURRENCY[currency] // appConfig.currency[currency]
+    const CURRENCY = useAppConfigStore.getState().currency[currency]
     if (CURRENCY == undefined) {
       return 0
     }
