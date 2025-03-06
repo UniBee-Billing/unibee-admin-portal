@@ -290,7 +290,7 @@ const Index = ({
                       'Please input a valid cycle limit number between 0 ~ 1000.'
                     )
                   }
-                  if (isNaN(num) || num < 0 || num > 999) {
+                  if (isNaN(num) || num < 0 || num > 1000) {
                     return Promise.reject(
                       'Please input a valid cycle limit number between 0 ~ 1000.'
                     )
@@ -301,7 +301,7 @@ const Index = ({
             ]}
           >
             <InputNumber
-              min={1}
+              min={0}
               style={{ width: 180 }}
               disabled={
                 watchBillingType == DiscountCodeBillingType.ONE_TIME ||
