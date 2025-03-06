@@ -41,7 +41,6 @@ import Summary from './summary'
 import { TIME_UNITS, TNewPlan, TrialSummary } from './types'
 
 const Index = () => {
-  const appConfig = useAppConfigStore()
   const [metricData, setMetricData] = useState<MetricData>({
     // metricData is too complicated to be controlled by antd form, so we use context to manage it.
     metricLimits: [],
@@ -495,8 +494,11 @@ const Index = () => {
     const { metricLimits, metricMeteredCharge, metricRecurringCharge } =
       planDetail.plan as IPlan
 
-    // console.log('app config: ', appConfig)
-
+    // we cannot use appConfig.currency to get the currency object in the following call, because appConfig.currency is just an obj, it will not be updated.
+    // in case of session expired, and user refresh the page, at this moment, appConfig.currency is empty.
+    // after user enter the password in LoginModal, although the whole appConfig obj will be updated(including currency obj)
+    // but fetchData still referenced the old, empty appConfig.currency.
+    // so we need to use useAppConfigStore.getState().currency to get the latest currency object.
     const {
       metricLimitsLocal,
       metricMeteredChargeLocal,
@@ -507,8 +509,9 @@ const Index = () => {
         metricMeteredCharge,
         metricRecurringCharge
       } as MetricData,
-      // appConfig.currency[planDetail.plan.currency as Currency]!,
-      LOCAL_CURRENCY[planDetail.plan.currency as Currency]!,
+      useAppConfigStore.getState().currency[
+        planDetail.plan.currency as Currency
+      ]!,
       'downward'
     )
 

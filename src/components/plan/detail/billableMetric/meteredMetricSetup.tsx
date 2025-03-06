@@ -203,7 +203,6 @@ const Index = ({
             <Col span={colSpan[2]}>
               <InputNumber
                 style={{ width: '80%' }}
-                placeholder="Price"
                 prefix={getCurrency()?.Symbol}
                 min={0}
                 value={m.standardAmount}
@@ -218,7 +217,6 @@ const Index = ({
             <Col span={colSpan[3]}>
               <InputNumber
                 style={{ width: '80%' }}
-                placeholder="Start value"
                 min={0}
                 value={m.standardStartValue}
                 onChange={onMetricFieldChange(
