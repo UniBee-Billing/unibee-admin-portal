@@ -8,9 +8,9 @@ import {
 } from '@/shared.types'
 import { Col, Divider, Row } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
+import { ReactNode } from 'react'
 import { DISCOUNT_CODE_UPGRADE_SCOPE } from '../helpers'
 import './summary.css'
-
 export const NotSetPlaceholder = () => (
   <span className="text-red-500">Not set</span>
 )
@@ -30,7 +30,7 @@ type SummaryItem = {
   validityRange: null | [Dayjs | null, Dayjs | null]
   applyType: DiscountCodeApplyType
   planIds: null | number[]
-  getPlanLabel: (planId: number) => string
+  getPlanLabel: (planId: number, compact: boolean) => ReactNode
   userScope: DiscountCodeUserScope
   upgradeScope: DISCOUNT_CODE_UPGRADE_SCOPE
   userLimit: boolean
@@ -122,7 +122,7 @@ const Summary = ({
             <NotSetPlaceholder />
           ) : (
             <p className="long-content">
-              {planIds?.map((id) => getPlanLabel(id)).join(', ')}
+              {planIds?.map((id) => getPlanLabel(id, true)).join(', ')}
             </p>
           )
         ) : planIds == null || planIds.length == 0 ? (
@@ -131,7 +131,7 @@ const Summary = ({
           <div className="flex flex-col items-end">
             <div className="text-right text-red-500">All plans except:</div>
             <p className="long-content">
-              {planIds?.map((id) => getPlanLabel(id)).join(', ')}
+              {planIds?.map((id) => getPlanLabel(id, true)).join(', ')}
             </p>
           </div>
         )

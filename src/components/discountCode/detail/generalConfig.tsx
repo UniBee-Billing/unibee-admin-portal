@@ -47,7 +47,7 @@ const Index = ({
   watchDiscountType: number
   watchCurrency: string
   planList: IPlan[]
-  getPlanLabel: (planId: number) => string
+  getPlanLabel: (planId: number) => ReactNode
   setIsOpenUpdateDiscountCodeQuantityModal: Dispatch<SetStateAction<boolean>>
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
 }) => {

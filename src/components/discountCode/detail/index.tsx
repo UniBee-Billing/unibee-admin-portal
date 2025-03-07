@@ -295,12 +295,23 @@ const Index = () => {
   const toggleActiveButtonAction =
     code?.status === DiscountCodeStatus.ACTIVE ? 'deactivate' : 'activate'
 
-  const getPlanLabel = (planId: number) => {
+  const getPlanLabel = (planId: number, compact: boolean = false) => {
     const p = planListRef.current.find((p) => p.id == planId)
     if (null == p) {
       return ''
     }
-    return `${p.planName}(${showAmount(p.amount, p.currency)}/${p.intervalCount == 1 ? '' : p.intervalCount}${p.intervalUnit})`
+    return compact ? (
+      p.planName
+    ) : (
+      <>
+        {p.planName}&nbsp;(
+        <span className="text-xs text-gray-500">
+          {showAmount(p.amount, p.currency)}/
+          {p.intervalCount == 1 ? '' : p.intervalCount}
+          {p.intervalUnit})
+        </span>
+      </>
+    )
   }
 
   // regardless of discount Type, just return the fixed amt or percentage
