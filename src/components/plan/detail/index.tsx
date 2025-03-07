@@ -362,7 +362,7 @@ const Index = () => {
     f.metricRecurringCharge = metric.metricRecurringChargeLocal
 
     // return
-
+    setLoading(true)
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
     if (null != err) {
