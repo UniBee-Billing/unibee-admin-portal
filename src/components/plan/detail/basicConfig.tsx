@@ -171,9 +171,18 @@ const Index = ({
         <Select
           disabled={disableAfterActive.current || formDisabled}
           style={{ width: 180 }}
+          showSearch
+          filterSort={(optionA, optionB) => {
+            return (optionA?.label ?? '')
+              .toLocaleLowerCase()
+              .localeCompare((optionB?.label ?? '').toLocaleLowerCase())
+          }}
+          filterOption={(input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+          }
           options={appConfig.supportCurrency.map((c) => ({
             value: c.Currency,
-            label: c.Currency
+            label: `${c.Currency} (${c.Symbol})`
           }))}
         />
       </Form.Item>

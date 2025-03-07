@@ -116,6 +116,17 @@ const Index = ({
     }
   ]
 
+  /*
+     firstUnit  lastUnit                                  firstUnit  lastUnit
+    ===================                                   ===================
+     0          1                                          0         1
+     2          3         <= after deleting 2nd line,  =>  2         5
+     4          5                                          6         7
+     6          7                                          8         ∞
+     8          ∞
+    ====================
+    the goal is to keep the lastUnit of each line consecutive with the firstUnit of the next line without gap.
+  */
   const removeGraduationData = (localId: string) => {
     const idx = graduationData.findIndex((m) => m.localId == localId)
     if (idx == -1) {
