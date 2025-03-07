@@ -210,13 +210,7 @@ const ResetPasswordModal = ({ email, closeModal, open }: IResetPassProps) => {
     merchantInfoStore.reset()
     appConfig.reset()
     permStore.reset()
-
     localStorage.removeItem('merchantToken')
-    localStorage.removeItem('appConfig')
-    localStorage.removeItem('merchantInfo')
-    localStorage.removeItem('session')
-    localStorage.removeItem('profile')
-    localStorage.removeItem('permissions')
     navigate('/login', {
       state: { msg: 'Password reset succeeded, please relogin.' }
     })

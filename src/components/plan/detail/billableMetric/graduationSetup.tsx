@@ -5,12 +5,8 @@ import {
   showAmount
 } from '@/helpers'
 import { CURRENCY, MetricGraduatedAmount } from '@/shared.types'
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
-import { Col, InputNumber } from 'antd'
-
-import { Row } from 'antd'
-
-import { Button } from 'antd'
+import { MinusOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Button, Col, InputNumber, Row, Tooltip } from 'antd'
 
 import update from 'immutability-helper'
 import { useContext, useEffect, useState } from 'react'
@@ -31,7 +27,8 @@ const Index = ({
   getCurrency: () => CURRENCY
   formDisabled: boolean
 }) => {
-  const { metricData, setMetricData } = useContext(MetricDataContext)
+  const { metricData, setMetricData, resetMetricData } =
+    useContext(MetricDataContext)
   const dataIdx = metricData[metricDataType].findIndex(
     (m) => m.localId == metricLocalId
   )
@@ -255,7 +252,7 @@ const Index = ({
           </Col>
         ))}
       </Row>
-      <div className="max-h-52 overflow-auto">
+      <div className="my-2 max-h-52 overflow-y-auto overflow-x-hidden">
         {graduationData.map((m, idx) => (
           <Row key={m.localId} className="my-3">
             <Col span={colSpan[0]}>
@@ -320,23 +317,30 @@ const Index = ({
             </Col>
           </Row>
         ))}
-        <Row>
-          <Col span={16}></Col>
-          {graduationData.length > 0 && (
-            <Col span={8} className="flex items-center font-bold text-gray-600">
-              {`${graduationData[graduationData.length - 1].startValue} units would cost ${showAmount(
-                calculateTotalCost(),
-                getCurrency()?.Currency,
-                true
-              )}`}
-            </Col>
-          )}
-        </Row>
       </div>
-      {/* <div className="flex justify-end gap-3">
-        <Button onClick={onCancel}>Cancel</Button>
-        <Button onClick={() => onOK(graduationData)}>OK</Button>
-      </div> */}
+      <Row>
+        <Col span={16}></Col>
+        {graduationData.length > 0 && (
+          <Col span={7} className="flex items-center font-bold text-gray-600">
+            {`${graduationData[graduationData.length - 1].startValue} units would cost ${showAmount(
+              calculateTotalCost(),
+              getCurrency()?.Currency,
+              true
+            )}`}
+          </Col>
+        )}
+        {/* <Col span={1}>
+          <Tooltip title="Reset">
+            <Button
+              disabled={formDisabled}
+              size="small"
+              style={{ border: 'none' }}
+              icon={<ReloadOutlined />}
+              // onClick={resetMetricData}
+            />
+          </Tooltip>
+        </Col> */}
+      </Row>
     </div>
   )
 } //     <Modal title="Graduation setup" width={720} open={true} footer={false}>
