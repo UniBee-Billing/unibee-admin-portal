@@ -1,4 +1,5 @@
 import '@/components/discountCode/detail/summary.css'
+// import LongTextPopover from '@/components/ui/longTextPopover'
 import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
@@ -12,7 +13,8 @@ export const NotSetPlaceholder = () => (
 )
 
 const labelStyle = 'flex h-11 items-center text-gray-400'
-const contentStyle = 'flex h-11 items-center justify-end'
+const contentStyle =
+  'flex h-11 items-center justify-end overflow-hidden overflow-ellipsis whitespace-nowrap'
 const labelStyle2 = 'flex h-6 text-gray-400'
 // const contentStyle2 = 'flex h-6'
 type SummaryItem = {
@@ -55,7 +57,10 @@ const Index = ({
       .join(', ')
   }
   const items = [
-    { label: 'Name', renderContent: name || <NotSetPlaceholder /> },
+    {
+      label: 'Name',
+      renderContent: name || <NotSetPlaceholder />
+    },
     {
       label: 'Description',
       renderContent: description || <NotSetPlaceholder />

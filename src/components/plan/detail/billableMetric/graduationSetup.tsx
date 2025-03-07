@@ -9,7 +9,7 @@ import { MinusOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Col, InputNumber, Row, Tooltip } from 'antd'
 
 import update from 'immutability-helper'
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { MetricDataContext } from '../metricDataContext'
 import { MetricData } from './types'
 
@@ -27,11 +27,19 @@ const Index = ({
   getCurrency: () => CURRENCY
   formDisabled: boolean
 }) => {
-  const { metricData, setMetricData, resetMetricData } =
-    useContext(MetricDataContext)
+  const { metricData, setMetricData } = useContext(MetricDataContext)
   const dataIdx = metricData[metricDataType].findIndex(
     (m) => m.localId == metricLocalId
   )
+
+  // this ref is to backup the initial data, used for reset.
+  const graduationDataRef = useRef(
+    metricData[metricDataType][dataIdx].graduatedAmounts
+  )
+  const resetGraduationData = () =>
+    setGraduationData(
+      update(graduationData, { $set: graduationDataRef.current ?? [] })
+    )
 
   const [graduationData, setGraduationData] = useState<MetricGraduatedAmount[]>(
     data == undefined
@@ -320,26 +328,27 @@ const Index = ({
       </div>
       <Row>
         <Col span={16}></Col>
-        {graduationData.length > 0 && (
-          <Col span={7} className="flex items-center font-bold text-gray-600">
-            {`${graduationData[graduationData.length - 1].startValue} units would cost ${showAmount(
+
+        <Col span={7} className="flex items-center font-bold text-gray-600">
+          {graduationData.length > 0 &&
+            `${graduationData[graduationData.length - 1].startValue} units would cost ${showAmount(
               calculateTotalCost(),
               getCurrency()?.Currency,
               true
             )}`}
-          </Col>
-        )}
-        {/* <Col span={1}>
+        </Col>
+
+        <Col span={1}>
           <Tooltip title="Reset">
             <Button
-              disabled={formDisabled}
+              disabled={graduationData.length == 0 || formDisabled}
               size="small"
               style={{ border: 'none' }}
               icon={<ReloadOutlined />}
-              // onClick={resetMetricData}
+              onClick={resetGraduationData}
             />
           </Tooltip>
-        </Col> */}
+        </Col>
       </Row>
     </div>
   )

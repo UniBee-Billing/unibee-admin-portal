@@ -9,7 +9,6 @@ import {
   IBillableMetrics,
   IPlan,
   IProduct,
-  MetricType,
   PlanPublishStatus,
   PlanStatus,
   PlanType
@@ -18,7 +17,6 @@ import { useAppConfigStore } from '@/stores'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Form, Popconfirm, Spin, Tabs, message } from 'antd'
 import { Currency } from 'dinero.js'
-import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import {
   useLocation,
@@ -51,52 +49,6 @@ const Index = () => {
   const [metricError, setMetricError] = useState<MetricValidationError | null>(
     null
   )
-  const metricDataRef = useRef<MetricData | null>(null)
-
-  /*
-  // if the metricData itself was newly created, there is no record in metricDataRef, so we need to reset the metricData to empty record.
-  const resetMetricData = (metricType: MetricType, localId: string) => {
-    // no reset operation for MetricType.LIMIT_METERED
-    if (metricType === MetricType.CHARGE_METERED) {
-      const idx = metricDataRef.current?.metricMeteredCharge.findIndex(
-        (item) => item.localId === localId
-      )
-      if (idx != -1) {
-        return
-      }
-      if (metricDataRef.current?.metricMeteredCharge) {
-        setMetricData(
-          update(metricData, {
-            metricMeteredCharge: {
-              $set: metricDataRef.current.metricMeteredCharge
-            }
-          })
-        )
-      }
-    } else if (metricType === MetricType.CHARGE_RECURRING) {
-      const idx = metricDataRef.current?.metricMeteredCharge.findIndex(
-        (item) => item.localId === localId
-      )
-      if (idx != -1) {
-        return
-      }
-      console.log(
-        'resetMetricData: ',
-        metricDataRef.current?.metricRecurringCharge
-      )
-      if (metricDataRef.current?.metricRecurringCharge) {
-        setMetricData(
-          update(metricData, {
-            metricRecurringCharge: {[idx]: {
-              $set: metricDataRef.current.metricRecurringCharge
-            }}
-          })
-        )
-      }
-    }
-  }
-  */
-
   const [form] = Form.useForm()
   const location = useLocation()
   const goBackToPlanList = () => {
@@ -361,7 +313,6 @@ const Index = () => {
     f.metricMeteredCharge = metric.metricMeteredChargeLocal
     f.metricRecurringCharge = metric.metricRecurringChargeLocal
 
-    // return
     setLoading(true)
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
@@ -568,11 +519,6 @@ const Index = () => {
       metricMeteredCharge: metricMeteredChargeLocal,
       metricRecurringCharge: metricRecurringChargeLocal
     })
-    metricDataRef.current = {
-      metricLimits: metricLimitsLocal,
-      metricMeteredCharge: metricMeteredChargeLocal,
-      metricRecurringCharge: metricRecurringChargeLocal
-    }
 
     setPlan(planDetail.plan)
     form.setFieldsValue(planDetail.plan)
@@ -602,8 +548,7 @@ const Index = () => {
         metricData,
         setMetricData,
         metricError,
-        setMetricError,
-        resetMetricData: (metricType: MetricType, localId: string) => {}
+        setMetricError
       }}
     >
       <Spin
