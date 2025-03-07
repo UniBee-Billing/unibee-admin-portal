@@ -26,13 +26,7 @@ export const useUser = () => {
     merchantInfoStore.reset()
     appConfigStore.reset()
     permissionStore.reset()
-
     localStorage.removeItem('merchantToken')
-    localStorage.removeItem('appConfig')
-    localStorage.removeItem('merchantInfo')
-    localStorage.removeItem('session')
-    localStorage.removeItem('profile')
-    localStorage.removeItem('permissions')
   }, [
     sessionStore,
     merchantMemberProfile,
