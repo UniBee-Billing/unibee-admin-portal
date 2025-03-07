@@ -1,9 +1,9 @@
+import UniBeeLogo from '@/assets/UniBeeLogo2.svg?react'
+import { useLicense, useVersion } from '@/hooks/useVersion'
+import { useMerchantMemberProfileStore } from '@/stores'
+import { withWeakTextLoading, writeClipboardText } from '@/utils'
 import { Alert, Button, ConfigProvider, Modal } from 'antd'
 import React, { useState } from 'react'
-import UniBeeLogo from '../../../assets/UniBeeLogoSymbol.svg?react'
-import { useLicense, useVersion } from '../../../hooks/useVersion'
-import { useMerchantMemberProfileStore } from '../../../stores'
-import { withWeakTextLoading, writeClipboardText } from '../../../utils'
 import LogoWithAction from '../logoWithAction'
 import { ContactCard } from './ContactCard'
 

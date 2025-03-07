@@ -459,7 +459,10 @@ export const getPlanDetailWithMore = async (
       page: 0,
       count: 150
     }),
-    getMetricsListReq(),
+    getMetricsListReq({
+      page: 0,
+      count: 150
+    }),
     getProductListReq({})
   ])
   const err = errDetail || addonErr || errMetrics || errProduct
@@ -549,9 +552,18 @@ export const togglePublishReq = async ({
   }
 }
 
-export const getMetricsListReq = async (refreshCb?: () => void) => {
+export const getMetricsListReq = async ({
+  refreshCb,
+  page,
+  count
+}: { refreshCb?: () => void } & PagedReq) => {
   try {
-    const res = await request.get(`/merchant/metric/list`)
+    const res = await request.get(`/merchant/metric/list`, {
+      params: {
+        page,
+        count
+      }
+    })
     handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {

@@ -47,7 +47,7 @@ const Index = ({
   watchDiscountType: number
   watchCurrency: string
   planList: IPlan[]
-  getPlanLabel: (planId: number) => string
+  getPlanLabel: (planId: number) => ReactNode
   setIsOpenUpdateDiscountCodeQuantityModal: Dispatch<SetStateAction<boolean>>
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
 }) => {
@@ -80,6 +80,7 @@ const Index = ({
       ),
     [code?.status, code?.quantity]
   )
+
   return (
     <div className="pt-4">
       {!isNew && (
@@ -197,12 +198,21 @@ const Index = ({
           ]}
         >
           <Select
+            showSearch
+            filterSort={(optionA, optionB) => {
+              return (optionA?.label ?? '')
+                .toLocaleLowerCase()
+                .localeCompare((optionB?.label ?? '').toLocaleLowerCase())
+            }}
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
             disabled={
               watchDiscountType == DiscountType.PERCENTAGE || !formEditable
             }
             style={{ width: 180 }}
             options={appConfigStore.supportCurrency.map((c) => ({
-              label: c.Currency,
+              label: `${c.Currency} (${c.Symbol})`,
               value: c.Currency
             }))}
           />
