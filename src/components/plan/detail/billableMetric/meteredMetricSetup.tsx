@@ -20,7 +20,7 @@ import {
   Select,
   Typography
 } from 'antd'
-import { PropsWithChildren } from 'react'
+import { MouseEventHandler, PropsWithChildren } from 'react'
 import GraduationSetup from './graduationSetup'
 import GraduationIcon from './icons/graduation.svg?react'
 import { MetricData } from './types'
@@ -37,8 +37,7 @@ type ChargeSetupProps = {
     type: keyof MetricData,
     localId: string,
     field: keyof MetricMeteredCharge
-  ) => (val: number | null) => void
-  toggleGraduationSetup: (type: keyof MetricData, localId: string) => void
+  ) => (val: number | null | MouseEventHandler<HTMLElement>) => void
   formDisabled: boolean
 }
 const rowHeaderStyle = 'text-gray-400'
@@ -53,7 +52,6 @@ const Index = ({
   addMetricData,
   removeMetricData,
   onMetricFieldChange,
-  toggleGraduationSetup,
   formDisabled
 }: ChargeSetupProps) => {
   const metricSelected = (metricId: number) =>
@@ -182,10 +180,14 @@ const Index = ({
                     count={m.graduatedAmounts.length}
                   >
                     <Button
-                      onClick={() =>
-                        toggleGraduationSetup(metricDataType, m.localId)
+                      onClick={(evt) =>
+                        onMetricFieldChange(
+                          metricDataType,
+                          m.localId,
+                          'expanded'
+                        )(evt as unknown as MouseEventHandler<HTMLElement>)
                       }
-                      disabled={false} // this button is to toggle the show/hide of graduated amounts, no need to disable after plan activated
+                      disabled={false} // this button is to toggle the show/hide of graduated amounts, no need to be disabled after plan activated
                       size="small"
                       style={{ border: 'none' }}
                       icon={
@@ -242,7 +244,7 @@ const Index = ({
                 marginRight: '8%',
                 scrollbarGutter: 'stable both-edges'
               }}
-              className={`relative overflow-hidden rounded-md bg-white transition-all duration-300 ${m.expanded && m.chargeType == MetricChargeType.GRADUATED ? 'max-h-96' : 'max-h-0'}`}
+              className={`relative overflow-hidden rounded-md bg-white transition-all duration-200 ${m.expanded && m.chargeType == MetricChargeType.GRADUATED ? 'max-h-96' : 'max-h-0'}`}
             >
               <GraduationSetup
                 data={m.graduatedAmounts}

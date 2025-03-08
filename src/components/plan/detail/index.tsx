@@ -601,12 +601,12 @@ const Index = () => {
                       <AdvancedConfig
                         enableTrialWatch={enableTrialWatch}
                         selectAddons={selectAddons}
+                        selectOnetime={selectOnetime}
                         trialLengthUnit={trialLengthUnit}
                         setTrialLengthUnit={setTrialLengthUnit}
-                        selectOnetime={selectOnetime}
-                        formDisabled={formDisabled}
                         getCurrency={getCurrency}
                         form={form}
+                        formDisabled={formDisabled}
                         watchPlanType={watchPlanType}
                         metricsList={metricsList}
                       />
