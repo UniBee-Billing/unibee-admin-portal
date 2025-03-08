@@ -16,7 +16,6 @@ const Index = ({
   metricData,
   metricsList,
   onMetricFieldChange,
-  onMetricIdSelectChange,
   addLimitData,
   removeLimitData
 }: {
@@ -27,11 +26,6 @@ const Index = ({
     localId: string,
     field: keyof MetricLimits
   ) => (val: number | null) => void
-  onMetricIdSelectChange: (
-    type: keyof MetricData,
-    localId: string
-  ) => (val: number | null) => void
-  // getCurrency: () => CURRENCY
   addLimitData: (type: keyof MetricData) => void
   removeLimitData: (type: keyof MetricData, localId: string) => void
 }) => {
@@ -88,7 +82,11 @@ const Index = ({
               }
               style={{ width: '80%' }}
               value={m.metricId}
-              onChange={onMetricIdSelectChange('metricLimits', m.localId)}
+              onChange={onMetricFieldChange(
+                'metricLimits',
+                m.localId,
+                'metricId'
+              )}
               options={metricsList
                 .filter((m) => m.type == MetricType.LIMIT_METERED)
                 .map((m) => ({

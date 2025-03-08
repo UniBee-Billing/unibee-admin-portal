@@ -42,9 +42,7 @@ const Index = ({
     )
 
   const [graduationData, setGraduationData] = useState<MetricGraduatedAmount[]>(
-    data == undefined
-      ? []
-      : data.map((d) => ({ ...d, localId: randomString(8) }))
+    data ?? []
   )
 
   useEffect(() => {
@@ -176,7 +174,7 @@ const Index = ({
 
       const cascadeUpdate =
         field == 'endValue' &&
-        typeof val == 'number' && // when input field is clared, its value is null(typeof is object).
+        typeof val == 'number' && // when input field is cleared, its value is null(typeof is object).
         Number.isInteger(val) &&
         val > graduationData[idx].startValue!
 
@@ -221,7 +219,7 @@ const Index = ({
       return returnNumber ? 0 : showAmount(0, currency.Currency, true)
     // for first record, its startValue is always 0, the range should not '-1'
     // for last record, its endValue is always infinity, the range should always be [1,1]
-    let range = endValue - startValue + 1 //  + (startValue == 0 ? 0 : 1)
+    let range = endValue - startValue + 1
     if (startValue == 0) {
       range -= 1
     }
@@ -277,8 +275,6 @@ const Index = ({
                   disabled={idx == graduationData.length - 1}
                   style={{ width: '80%' }}
                   value="∞"
-                  // value={m.endValue}
-                  // onChange={onGraduationDataChange(m.localId, 'endValue')}
                 />
               ) : (
                 <InputNumber
@@ -352,12 +348,6 @@ const Index = ({
       </Row>
     </div>
   )
-} //     <Modal title="Graduation setup" width={720} open={true} footer={false}>
-{
-  /* <div className="flex justify-end gap-3">
-          <Button onClick={onCancel}>Cancel</Button>
-          <Button onClick={() => onOK(graduationData)}>OK</Button>
-        </div> */
 }
 
 export default Index

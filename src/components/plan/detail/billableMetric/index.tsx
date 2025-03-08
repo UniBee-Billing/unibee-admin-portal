@@ -75,30 +75,6 @@ const Index = ({
       }
     }
 
-  const onChargeTypeSelectChange =
-    (type: keyof MetricData, localId: string) => (val: number | null) => {
-      const idx = metricData[type].findIndex((m) => m.localId == localId)
-      if (idx != -1) {
-        setMetricData(
-          update(metricData, {
-            [type]: { [idx]: { chargeType: { $set: val } } }
-          })
-        )
-      }
-    }
-
-  const onMetricIdSelectChange =
-    (type: keyof MetricData, localId: string) => (val: number | null) => {
-      const idx = metricData[type].findIndex((m) => m.localId == localId)
-      if (idx != -1) {
-        setMetricData(
-          update(metricData, {
-            [type]: { [idx]: { metricId: { $set: val } } }
-          })
-        )
-      }
-    }
-
   const toggleGraduationSetup = (type: keyof MetricData, localId: string) => {
     const idx = metricData[type].findIndex((m) => m.localId == localId)
     if (idx != -1) {
@@ -129,8 +105,6 @@ const Index = ({
             (m) => m.type == MetricType.LIMIT_METERED
           )}
           onMetricFieldChange={onMetricFieldChange}
-          onMetricIdSelectChange={onMetricIdSelectChange}
-          // getCurrency={getCurrency}
           addLimitData={(type) => addMetricData(type, defaultMetricLimit())}
           removeLimitData={removeMetricData}
         />
@@ -149,8 +123,6 @@ const Index = ({
           }
           removeMetricData={removeMetricData}
           onMetricFieldChange={onMetricFieldChange}
-          onChargeTypeSelectChange={onChargeTypeSelectChange}
-          onMetricIdSelectChange={onMetricIdSelectChange}
           toggleGraduationSetup={toggleGraduationSetup}
           formDisabled={formDisabled}
         />
@@ -169,8 +141,6 @@ const Index = ({
           }
           removeMetricData={removeMetricData}
           onMetricFieldChange={onMetricFieldChange}
-          onChargeTypeSelectChange={onChargeTypeSelectChange}
-          onMetricIdSelectChange={onMetricIdSelectChange}
           toggleGraduationSetup={toggleGraduationSetup}
           formDisabled={formDisabled}
         />

@@ -38,14 +38,6 @@ type ChargeSetupProps = {
     localId: string,
     field: keyof MetricMeteredCharge
   ) => (val: number | null) => void
-  onChargeTypeSelectChange: (
-    type: keyof MetricData,
-    localId: string
-  ) => (val: number | null) => void
-  onMetricIdSelectChange: (
-    type: keyof MetricData,
-    localId: string
-  ) => (val: number | null) => void
   toggleGraduationSetup: (type: keyof MetricData, localId: string) => void
   formDisabled: boolean
 }
@@ -61,8 +53,6 @@ const Index = ({
   addMetricData,
   removeMetricData,
   onMetricFieldChange,
-  onChargeTypeSelectChange,
-  onMetricIdSelectChange,
   toggleGraduationSetup,
   formDisabled
 }: ChargeSetupProps) => {
@@ -140,7 +130,11 @@ const Index = ({
                 <Select
                   style={{ width: '80%' }}
                   value={m.metricId}
-                  onChange={onMetricIdSelectChange(metricDataType, m.localId)}
+                  onChange={onMetricFieldChange(
+                    metricDataType,
+                    m.localId,
+                    'metricId'
+                  )}
                   options={metricsList.map((m) => ({
                     label: m.metricName,
                     value: m.id,
@@ -163,7 +157,11 @@ const Index = ({
                 <Select
                   style={{ width: '80%' }}
                   value={m.chargeType}
-                  onChange={onChargeTypeSelectChange(metricDataType, m.localId)}
+                  onChange={onMetricFieldChange(
+                    metricDataType,
+                    m.localId,
+                    'chargeType'
+                  )}
                   options={[
                     {
                       label:
