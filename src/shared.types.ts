@@ -733,6 +733,8 @@ type TGateway = {
   privateSecretName: string
   setupGatewayPaymentTypes?: GatewayPaymentType[] // some gateways are just a container(e.g., Payssion), the actual gateways are defined in setupGatewayPaymentTypes. This is the list of all possible subgateays types.
   gatewayPaymentTypes?: GatewayPaymentType[] // this is the list of payment types that are actually configured for this container gateway. It's only useful when setupGatewayPaymentTypes is not empty.
+  subGateway: string
+  subGatewayName: string
   gatewayLogo: string
   gatewayIcons: string[]
   gatewayType: GatewayType

@@ -1,7 +1,7 @@
 import { Form, Input, message, Select } from 'antd'
 
 import { saveGatewayConfigReq, TGatewayConfigBody } from '@/requests/index'
-import { TGateway } from '@/shared.types'
+import { GatewayPaymentType, TGateway } from '@/shared.types'
 import { Button } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
@@ -18,19 +18,31 @@ const PubPriKeySetup = ({
   updateGatewayInStore: () => void
 }) => {
   const [form] = Form.useForm()
+  const [paymentTypes, setPaymentTypes] = useState<
+    GatewayPaymentType[] | undefined
+  >(gatewayConfig.gatewayPaymentTypes)
+
+  const paymentTypesNeeded =
+    gatewayConfig.setupGatewayPaymentTypes != null &&
+    gatewayConfig.setupGatewayPaymentTypes.length > 0
+
+  const paymentTypesErr =
+    paymentTypesNeeded &&
+    (paymentTypes == undefined || paymentTypes.length == 0)
 
   const [loading, setLoading] = useState(false)
 
   const onSave = async () => {
     const pubKey = form.getFieldValue('gatewayKey')
     const privateKey = form.getFieldValue('gatewaySecret')
-    const gatewayPaymentTypes = form.getFieldValue('gatewayPaymentTypes')
     const body: TGatewayConfigBody = {
       gatewayKey: pubKey,
       gatewaySecret: privateKey
     }
-    if (gatewayPaymentTypes != null && gatewayPaymentTypes.length > 0) {
-      body.gatewayPaymentTypes = gatewayPaymentTypes
+
+    if (paymentTypesNeeded) {
+      if (paymentTypesErr) return
+      body.gatewayPaymentTypes = paymentTypes!.map((p) => p.paymentType)
     }
 
     const isNew = gatewayConfig.gatewayId == 0
@@ -72,44 +84,60 @@ const PubPriKeySetup = ({
         </Form.Item>
         <div className="h-2" />
 
-        {gatewayConfig.setupGatewayPaymentTypes != null &&
-          gatewayConfig.setupGatewayPaymentTypes.length > 0 && (
-            <Form.Item
-              label="Subgateways"
-              name="gatewayPaymentTypes"
-              rules={[
-                {
-                  required:
-                    gatewayConfig.setupGatewayPaymentTypes != null &&
-                    gatewayConfig.setupGatewayPaymentTypes.length > 0,
-                  message: `Please select your subgateways!`
-                },
-                () => ({
-                  validator(_, value) {
-                    if (value == null || value.length == 0) {
-                      return Promise.reject(`Please select your subgateways!`)
-                    }
-                    return Promise.resolve()
-                  }
-                })
-              ]}
-            >
-              <Select
-                mode="multiple"
-                options={gatewayConfig.setupGatewayPaymentTypes.map((p) => ({
-                  label: (
-                    <>
-                      {p.name}{' '}
-                      <span className="text-xs text-gray-400">
-                        ({p.paymentType} - {p.countryName})
-                      </span>
-                    </>
-                  ),
-                  value: p.paymentType
-                }))}
-              />
-            </Form.Item>
-          )}
+        {gatewayConfig.subGatewayName != '' && (
+          <Form.Item label={gatewayConfig.subGatewayName} name="subGateway">
+            <Input />
+          </Form.Item>
+        )}
+
+        {/*
+        select values of "gatewayPaymentTypes" returned from BE is not string[], but {paymentType, name, autoCharge, category, countryName}[],
+        cannot let form handle its change.
+        */}
+
+        {paymentTypesNeeded && (
+          <Form.Item
+            label="Payment Types"
+            // name="gatewayPaymentTypes"
+            extra={
+              paymentTypesErr ? (
+                <div className="text-sm text-red-500">
+                  Please select your payment types!
+                </div>
+              ) : null
+            }
+          >
+            <Select
+              mode="multiple"
+              status={paymentTypesErr ? 'error' : undefined}
+              value={
+                paymentTypes == undefined
+                  ? []
+                  : paymentTypes.map((p) => p.paymentType)
+              }
+              onChange={(value) =>
+                setPaymentTypes(
+                  value.map((v) =>
+                    gatewayConfig.setupGatewayPaymentTypes!.find(
+                      (p) => p.paymentType === v
+                    )
+                  ) as GatewayPaymentType[]
+                )
+              }
+              options={gatewayConfig.setupGatewayPaymentTypes!.map((p) => ({
+                label: (
+                  <>
+                    {p.name}{' '}
+                    <span className="text-xs text-gray-400">
+                      ({p.paymentType} - {p.countryName})
+                    </span>
+                  </>
+                ),
+                value: p.paymentType
+              }))}
+            />
+          </Form.Item>
+        )}
 
         <Form.Item
           label={gatewayConfig.publicKeyName}

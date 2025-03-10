@@ -25,6 +25,8 @@ export const NEW_WIRE_TRANSFER: TGateway = {
   gatewaySecret: '',
   publicKeyName: '',
   privateSecretName: '',
+  subGateway: '',
+  subGatewayName: '',
   webhookSecret: '',
   webhookEndpointUrl: '',
   gatewayWebhookIntegrationLink: '',

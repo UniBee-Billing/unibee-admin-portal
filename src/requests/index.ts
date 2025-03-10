@@ -264,29 +264,12 @@ export type TGatewayConfigBody = {
   gatewayName?: string
   gatewayKey?: string
   gatewaySecret?: string
-  gatewayPaymentTypes?: GatewayPaymentType[]
+  gatewayPaymentTypes?: string[]
   displayName?: string
   gatewayLogo?: string[]
   sort?: number
   currencyExchange?: TGatewayExRate[]
 }
-// to be depreciated
-/*
-export const saveGatewayKeyReq = async (
-  body: TGatewayConfigBody,
-  isNew: boolean
-) => {
-  const url = isNew ? '/merchant/gateway/setup' : '/merchant/gateway/edit'
-  try {
-    const res = await request.post(url, body)
-    handleStatusCode(res.data.code)
-    return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-*/
 
 export const saveGatewayConfigReq = async (
   body: TGatewayConfigBody,
@@ -302,26 +285,6 @@ export const saveGatewayConfigReq = async (
     return [null, e]
   }
 }
-
-// to be depreciated
-/*
-export const saveChangellyPubKeyReq = async (
-  gatewayId: number,
-  webhookSecret: string
-) => {
-  try {
-    const res = await request.post('/merchant/gateway/setup_webhook', {
-      gatewayId,
-      webhookSecret
-    })
-    handleStatusCode(res.data.code)
-    return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-*/
 
 export const saveWebhookKeyReq = async (
   gatewayId: number,
