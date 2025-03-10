@@ -1,4 +1,4 @@
-import { Form, Input, message } from 'antd'
+import { Form, Input, message, Select } from 'antd'
 
 import { saveGatewayConfigReq, TGatewayConfigBody } from '@/requests/index'
 import { TGateway } from '@/shared.types'
@@ -24,12 +24,15 @@ const PubPriKeySetup = ({
   const onSave = async () => {
     const pubKey = form.getFieldValue('gatewayKey')
     const privateKey = form.getFieldValue('gatewaySecret')
-    const subGateway = form.getFieldValue('subGateway')
+    const gatewayPaymentTypes = form.getFieldValue('gatewayPaymentTypes')
     const body: TGatewayConfigBody = {
       gatewayKey: pubKey,
-      gatewaySecret: privateKey,
-      subGateway: subGateway
+      gatewaySecret: privateKey
     }
+    if (gatewayPaymentTypes != null && gatewayPaymentTypes.length > 0) {
+      body.gatewayPaymentTypes = gatewayPaymentTypes
+    }
+
     const isNew = gatewayConfig.gatewayId == 0
     if (isNew) {
       body.gatewayName = gatewayConfig.gatewayName
@@ -69,14 +72,44 @@ const PubPriKeySetup = ({
         </Form.Item>
         <div className="h-2" />
 
-        {gatewayConfig.subGatewayName != '' && (
-          <div>
-            <Form.Item label={gatewayConfig.subGatewayName} name="subGateway">
-              <Input />
+        {gatewayConfig.setupGatewayPaymentTypes != null &&
+          gatewayConfig.setupGatewayPaymentTypes.length > 0 && (
+            <Form.Item
+              label="Subgateways"
+              name="gatewayPaymentTypes"
+              rules={[
+                {
+                  required:
+                    gatewayConfig.setupGatewayPaymentTypes != null &&
+                    gatewayConfig.setupGatewayPaymentTypes.length > 0,
+                  message: `Please select your subgateways!`
+                },
+                () => ({
+                  validator(_, value) {
+                    if (value == null || value.length == 0) {
+                      return Promise.reject(`Please select your subgateways!`)
+                    }
+                    return Promise.resolve()
+                  }
+                })
+              ]}
+            >
+              <Select
+                mode="multiple"
+                options={gatewayConfig.setupGatewayPaymentTypes.map((p) => ({
+                  label: (
+                    <>
+                      {p.name}{' '}
+                      <span className="text-xs text-gray-400">
+                        ({p.paymentType} - {p.countryName})
+                      </span>
+                    </>
+                  ),
+                  value: p.paymentType
+                }))}
+              />
             </Form.Item>
-            <div className="h-2" />
-          </div>
-        )}
+          )}
 
         <Form.Item
           label={gatewayConfig.publicKeyName}

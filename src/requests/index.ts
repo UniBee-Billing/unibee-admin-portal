@@ -6,6 +6,7 @@ import {
   CreditType,
   DiscountCode,
   ExpiredError,
+  GatewayPaymentType,
   IPlan,
   IProfile,
   PlanPublishStatus,
@@ -259,11 +260,11 @@ export const generateApiKeyReq = async () => {
 }
 
 export type TGatewayConfigBody = {
-  gatewayId?: number //
+  gatewayId?: number
   gatewayName?: string
   gatewayKey?: string
   gatewaySecret?: string
-  subGateway?: string
+  gatewayPaymentTypes?: GatewayPaymentType[]
   displayName?: string
   gatewayLogo?: string[]
   sort?: number

@@ -705,25 +705,37 @@ export type TGatewayExRate = {
   to_currency: string
   exchange_rate: number
 }
+export type GatewayPaymentType = {
+  autoCharge: boolean
+  category: string
+  countryName: string
+  name: string
+  paymentType: string
+}
+export enum GatewayType {
+  BANK_CARD = 1,
+  CRYPTO = 2,
+  WIRE_TRANSFER = 3
+}
 type TGateway = {
   IsSetupFinished: boolean // true: this gateway is ready for use
   archive: boolean
   gatewayId: number // == 0: totally new gateway, admin hasn't configured anything yet.
   // as long as admin has configured something, even just the displayName or icons, gatewayId will become non-zero, but this doesn't mean this gateway is ready for use.
-  id?: string // to make configItem sortable, SortableItem component needs an unique id field. gatewayConfig has gatewayId, but it's 0 if not configured,
+  id?: string // to make configItem sortable, SortableItem component needs an unique id field. gatewayConfig has gatewayId, but it's 0 if not configured. This 'id' is totally local.
   name: string // e.g., Stripe
   description: string
   gatewayKey: string // public key(desensitized)
   gatewaySecret: string // private key(desensitized)
-  subGateway: string
-  subGatewayName: string
   gatewayName: string // e.g., stripe.
   displayName: string // e.g., Bank Cards
   publicKeyName: string
   privateSecretName: string
+  setupGatewayPaymentTypes?: GatewayPaymentType[] // some gateways are just a container(e.g., Payssion), the actual gateways are defined in setupGatewayPaymentTypes. This is the list of all possible subgateays types.
+  gatewayPaymentTypes?: GatewayPaymentType[] // this is the list of payment types that are actually configured for this container gateway. It's only useful when setupGatewayPaymentTypes is not empty.
   gatewayLogo: string
   gatewayIcons: string[]
-  gatewayType: number
+  gatewayType: GatewayType
   gatewayWebsiteLink: string
   webhookEndpointUrl: string
   gatewayWebhookIntegrationLink: string
