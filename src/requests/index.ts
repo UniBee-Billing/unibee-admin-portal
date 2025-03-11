@@ -6,7 +6,6 @@ import {
   CreditType,
   DiscountCode,
   ExpiredError,
-  GatewayPaymentType,
   IPlan,
   IProfile,
   PlanPublishStatus,
@@ -839,6 +838,7 @@ export interface UserData {
 type TCreateSubReq = {
   planId: number
   gatewayId: number
+  gatewayPaymentType?: string
   userId: number
   trialEnd?: number
   addonParams?: { quantity: number; addonPlanId: number }[]
@@ -856,6 +856,7 @@ type TCreateSubReq = {
 export const createSubscriptionReq = async ({
   planId,
   gatewayId,
+  gatewayPaymentType,
   userId,
   trialEnd,
   addonParams,
@@ -873,6 +874,7 @@ export const createSubscriptionReq = async ({
     const res = await request.post(`/merchant/subscription/create_submit`, {
       planId,
       gatewayId,
+      gatewayPaymentType,
       userId,
       trialEnd,
       quantity: 1,
