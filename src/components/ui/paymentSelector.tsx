@@ -2,7 +2,7 @@ import { GatewayPaymentType, TGateway } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import { CheckOutlined } from '@ant-design/icons'
 import { Divider } from 'antd'
-import React, { ChangeEventHandler, useEffect, useState } from 'react'
+import React, { ChangeEventHandler, useEffect } from 'react'
 
 const Index = ({
   selected,

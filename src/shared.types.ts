@@ -723,6 +723,7 @@ type TGateway = {
   archive: boolean
   gatewayId: number // == 0: totally new gateway, admin hasn't configured anything yet.
   // as long as admin has configured something, even just the displayName or icons, gatewayId will become non-zero, but this doesn't mean this gateway is ready for use.
+  gatewayPaymentTypes?: GatewayPaymentType[] // this is the list of payment types that are actually configured for this container gateway. It's only useful when setupGatewayPaymentTypes is not empty.
   id?: string // to make configItem sortable, SortableItem component needs an unique id field. gatewayConfig has gatewayId, but it's 0 if not configured. This 'id' is totally local.
   name: string // e.g., Stripe
   description: string
@@ -733,7 +734,6 @@ type TGateway = {
   publicKeyName: string
   privateSecretName: string
   setupGatewayPaymentTypes?: GatewayPaymentType[] // some gateways are just a container(e.g., Payssion), the actual gateways are defined in setupGatewayPaymentTypes. This is the list of all possible subgateays types.
-  gatewayPaymentTypes?: GatewayPaymentType[] // this is the list of payment types that are actually configured for this container gateway. It's only useful when setupGatewayPaymentTypes is not empty.
   subGateway: string
   subGatewayName: string
   gatewayLogo: string
