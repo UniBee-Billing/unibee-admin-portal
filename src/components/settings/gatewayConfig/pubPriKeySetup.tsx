@@ -35,9 +35,14 @@ const PubPriKeySetup = ({
   const onSave = async () => {
     const pubKey = form.getFieldValue('gatewayKey')
     const privateKey = form.getFieldValue('gatewaySecret')
-    const body: TGatewayConfigBody = {
-      gatewayKey: pubKey,
-      gatewaySecret: privateKey
+    const body: TGatewayConfigBody = {}
+    if (!pubKey.includes('**')) {
+      // after submit, the key will be desensitized with many '***' inside it,
+      // there are many other fields in this form, if key/secret are desensitized, we don't submit them.
+      body.gatewayKey = pubKey
+    }
+    if (!privateKey.includes('**')) {
+      body.gatewaySecret = privateKey
     }
 
     if (paymentTypesNeeded) {
@@ -155,7 +160,7 @@ const PubPriKeySetup = ({
             },
             () => ({
               validator(_, value) {
-                if (value.trim() == '' || value.includes('**')) {
+                if (value == undefined || value.trim() == '') {
                   return Promise.reject(
                     `Invalid ${gatewayConfig.publicKeyName}.`
                   )
@@ -179,7 +184,7 @@ const PubPriKeySetup = ({
             },
             () => ({
               validator(_, value) {
-                if (value.trim() == '' || value.includes('**')) {
+                if (value == undefined || value.trim() == '') {
                   return Promise.reject(
                     `Invalid ${gatewayConfig.privateSecretName}.`
                   )

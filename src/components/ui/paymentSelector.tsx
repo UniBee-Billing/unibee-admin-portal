@@ -2,23 +2,25 @@ import { GatewayPaymentType, TGateway } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import { CheckOutlined } from '@ant-design/icons'
 import { Divider } from 'antd'
-import React, { ChangeEventHandler, useState } from 'react'
+import React, { ChangeEventHandler, useEffect, useState } from 'react'
 
 const Index = ({
   selected,
+  selectedPaymentType,
   onSelect,
+  onSelectPaymentType,
   disabled
 }: {
   selected: number | undefined
+  selectedPaymentType: string | undefined
   onSelect: (v: number) => void
+  onSelectPaymentType: (v: string) => void
   disabled?: boolean
 }) => {
   const appConfig = useAppConfigStore()
   const gateways = appConfig.gateway.sort(
     (a: TGateway, b: TGateway) => a.sort - b.sort
   )
-
-  // console.log('gateways', gateways)
 
   const onLabelClick: React.MouseEventHandler<HTMLLabelElement> = (e) => {
     if (disabled) {
@@ -36,6 +38,17 @@ const Index = ({
     }
     onSelect(Number(e.target.value))
   }
+
+  useEffect(() => {
+    // some gateways like Payssion has subgateways(paymentTypes), others don't,
+    // if we select payssion, then select a paymentType, then select PayPal, which doesn't have paymentTypes, we need to deselect Paysson's paymentType.
+    if (selected != undefined) {
+      const gateway = gateways.find((g) => g.gatewayId == selected)
+      if (gateway?.gatewayPaymentTypes == undefined) {
+        onSelectPaymentType('')
+      }
+    }
+  }, [selected])
 
   return (
     <div className="flex max-h-64 w-full flex-col gap-3 overflow-y-auto pr-4">
@@ -90,8 +103,11 @@ const Index = ({
             </label>
             {gatewayPaymentTypes != null && gatewayPaymentTypes.length > 0 && (
               <PaymentTypesSelector
+                gatewayId={gatewayId}
                 selected={selected}
+                selectedPaymentType={selectedPaymentType}
                 onSelect={onSelect}
+                onSelectPaymentType={onSelectPaymentType}
                 list={gatewayPaymentTypes}
               />
             )}
@@ -106,15 +122,24 @@ export default Index
 
 // if Payssion is not selected, then subtypes should not be selected either.
 const PaymentTypesSelector = ({
+  gatewayId,
   selected,
+  selectedPaymentType,
   onSelect,
+  onSelectPaymentType,
   list
 }: {
+  gatewayId: number
   selected: number | undefined
+  selectedPaymentType: string | undefined
   onSelect: (v: number) => void
+  onSelectPaymentType: (v: string) => void
   list: GatewayPaymentType[]
 }) => {
-  const [selectedPaymentType, setSelectedPaymentType] = useState('')
+  const onPaymentTypeSelect = (paymentType: string) => {
+    onSelectPaymentType(paymentType)
+    onSelect(gatewayId)
+  }
 
   return (
     <div className="mb-2 flex w-full flex-wrap gap-3 px-2">
@@ -122,8 +147,8 @@ const PaymentTypesSelector = ({
       {list.map((p) => (
         <div
           key={p.paymentType}
-          className={`flex w-[48%] rounded-sm bg-gray-100 p-2 hover:cursor-pointer ${selectedPaymentType == p.paymentType ? 'bg-blue-100' : ''}`}
-          onClick={() => setSelectedPaymentType(p.paymentType)}
+          className={`flex w-[48%] rounded-sm bg-gray-100 p-2 hover:cursor-pointer ${selectedPaymentType == p.paymentType && selected == gatewayId ? 'bg-blue-100' : ''}`}
+          onClick={() => onPaymentTypeSelect(p.paymentType)}
         >
           <div className="flex w-3/4 flex-col gap-1">
             <div>{p.name} </div>
@@ -131,9 +156,10 @@ const PaymentTypesSelector = ({
           </div>
           <div className="flex w-1/4 items-center justify-center">
             <div>
-              {selectedPaymentType == p.paymentType && (
-                <CheckOutlined className="text-blue-500" />
-              )}
+              {selectedPaymentType == p.paymentType &&
+                selected == gatewayId && (
+                  <CheckOutlined className="text-blue-500" />
+                )}
             </div>
           </div>
         </div>

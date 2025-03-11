@@ -63,6 +63,7 @@ type TSelectedAddon = {
 interface CreateSubScriptionBody {
   planId: number
   gatewayId: number
+  gatewayPaymentType?: string
   userId: number
   startIncomplete: boolean
   trialEnd?: number
@@ -133,6 +134,9 @@ export const AssignSubscriptionModal = ({
   const [gatewayId, setGatewayId] = useState<undefined | number>(
     appConfig.gateway.find((g) => g.gatewayName === 'stripe')?.gatewayId
   )
+  const [gatewayPaymentType, setGatewayPaymentType] = useState<
+    string | undefined
+  >()
   const [selectedPlan, setSelectedPlan] = useState<IPlan | undefined>()
   const [requirePayment, setRequirePayment] = useState(true)
   const [accountType, setAccountType] = useState(user.type)
@@ -230,6 +234,7 @@ export const AssignSubscriptionModal = ({
     const submitData = {
       planId: selectedPlan?.id,
       gatewayId: gatewayId,
+      gatewayPaymentType: gatewayPaymentType,
       userId: user.id!,
       startIncomplete: false,
       user: userData,
@@ -439,7 +444,7 @@ export const AssignSubscriptionModal = ({
       return
     }
     updatePrice()
-  }, [selectedPlan, requirePayment, gatewayId]) // different gateway has different vat rate, so we need to update the price when gateway changed
+  }, [selectedPlan, requirePayment, gatewayId, gatewayPaymentType]) // different gateway has different vat rate, so we need to update the price when gateway changed
 
   const onDiscountCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDiscountCode(e.target.value)
@@ -543,7 +548,9 @@ export const AssignSubscriptionModal = ({
             <div className="mr-16 w-full flex-1">
               <PaymentMethodSelector
                 selected={gatewayId}
+                selectedPaymentType={gatewayPaymentType}
                 onSelect={setGatewayId}
+                onSelectPaymentType={setGatewayPaymentType}
                 disabled={isLoading || !requirePayment}
               />
             </div>

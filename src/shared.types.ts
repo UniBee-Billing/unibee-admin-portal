@@ -61,6 +61,7 @@ interface IProfile {
   gatewayId?: number // after a successful payment, the payment gateway is saved as default. This is null for newly registered user.
   gateway?: TGateway // ditto.
   paymentMethod: string // for card payment, this is the stripe paymentId, used for auto recurring payment
+  gatewayPaymentType: string // some gateways like Payssion has subgateways(named paymentTypes in BE).
   zipCode: string
   address: string
   city: string
