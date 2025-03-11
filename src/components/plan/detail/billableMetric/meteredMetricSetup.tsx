@@ -112,6 +112,15 @@ const Index = ({
     <div className="my-4 rounded-md bg-gray-100 p-4">
       <Typography.Title level={5}>
         Charge metered{isRecurring ? ' (recurring)' : ''}
+        <Popover
+          content={
+            <div className="max-w-96">
+              {`${isRecurring ? 'Calculated value is cumulative, NOT reset to 0 at each sub-period start.' : 'Calculated value is reset to 0 at each sub-period start.'}`}
+            </div>
+          }
+        >
+          <InfoCircleOutlined className="ml-2 text-gray-400" />
+        </Popover>
       </Typography.Title>
       <Row>
         {header.map((h, i) => (

@@ -44,7 +44,7 @@ const Index = ({
   watchOnetimeAddons,
   trialSummary
 }: SummaryItem) => {
-  // const { metricData, setMetricData } = useContext(MetricDataContext)
+  const { metricData } = useContext(MetricDataContext)
   // console.log('metricData from context in summary: ', metricData)
   const formatAddonList = (addonType: 'addon' | 'onetimeAddon') => {
     const list = addonType == 'addon' ? selectAddons : selectOnetime
@@ -58,11 +58,11 @@ const Index = ({
   }
   const items = [
     {
-      label: 'Name',
+      label: 'Plan Name',
       renderContent: name || <NotSetPlaceholder />
     },
     {
-      label: 'Description',
+      label: 'Plan Description',
       renderContent: description || <NotSetPlaceholder />
     },
     {
@@ -86,128 +86,81 @@ const Index = ({
       label: 'Published to user portal',
       renderContent: publishStatus == PlanPublishStatus.PUBLISHED ? 'Yes' : 'No'
     }
-    /* {
-      label: 'Status',
-      renderContent: getDiscountCodeStatusTagById(
-        status ?? DiscountCodeStatus.EDITING
-      )
-    },
-    {
-      label: 'Quantity',
-      renderContent:
-        quantity === 0 ? (
-          'Unlimited'
-        ) : quantity == null ? (
-          <NotSetPlaceholder />
-        ) : (
-          quantity
-        )
-    },
-    {
-      label: 'Discount Type',
-      renderContent:
-        discountType == DiscountType.AMOUNT ? 'Fixed amount' : 'Percentage'
-    },
-    {
-      label: 'Discount',
-      renderContent: getDiscountedValue()
-    },
-    {
-      label: 'One time or recurring',
-      renderContent:
-        billingType == DiscountCodeBillingType.ONE_TIME
-          ? 'One time'
-          : 'Recurring'
-    },
-    {
-      label: 'Cycle Limit',
-      renderContent:
-        cycleLimit === 0 ? (
-          'No limit'
-        ) : cycleLimit === '' || isNaN(Number(cycleLimit)) ? (
-          <NotSetPlaceholder />
-        ) : (
-          cycleLimit
-        )
-    },
-    {
-      label: 'Code Apply Date Range',
-      renderContent:
-        validityRange == null ||
-        validityRange[0] == null ||
-        validityRange[1] == null ? (
-          <NotSetPlaceholder />
-        ) : (
-          `${dayjs(validityRange[0]).format('YYYY-MMM-DD')} ~ ${dayjs(validityRange[1]).format('YYYY-MMM-DD')}`
-        )
-    },
-    {
-      label: 'Apply Discount Code to',
-      renderContent:
-        applyType == DiscountCodeApplyType.ALL ? (
-          'All plans'
-        ) : applyType == DiscountCodeApplyType.SELECTED ? (
-          planIds == null || planIds.length == 0 ? (
-            <NotSetPlaceholder />
-          ) : (
-            <p className="long-content">
-              {planIds?.map((id) => getPlanLabel(id)).join(', ')}
-            </p>
-          )
-        ) : planIds == null || planIds.length == 0 ? (
-          <NotSetPlaceholder />
-        ) : (
-          <div className="flex flex-col items-end">
-            <div className="text-right text-red-500">All plans except:</div>
-            <p className="long-content">
-              {planIds?.map((id) => getPlanLabel(id)).join(', ')}
-            </p>
-          </div>
-        )
-    } */
   ]
 
   const advancedItems = [
     {
-      label: 'Addons',
-      renderContent: <p className="long-content">{formatAddonList('addon')}</p>,
-      hidden: watchAddons == null || watchAddons.length == 0
+      group: 'Add-on',
+      items: [
+        {
+          label: 'Addons',
+          renderContent: (
+            <p className="long-content">{formatAddonList('addon')}</p>
+          ),
+          hidden: watchAddons == null || watchAddons.length == 0
+        },
+        {
+          label: 'One time addons',
+          renderContent: (
+            <p className="long-content">{formatAddonList('onetimeAddon')}</p>
+          ),
+          hidden: watchOnetimeAddons == null || watchOnetimeAddons.length == 0
+        }
+      ]
     },
     {
-      label: 'One time addons',
-      renderContent: (
-        <p className="long-content">{formatAddonList('onetimeAddon')}</p>
-      ),
-      hidden: watchOnetimeAddons == null || watchOnetimeAddons.length == 0
+      group: 'Trial',
+      items: [
+        {
+          label: 'Allow trial',
+          renderContent: trialSummary.trialEnabled ? 'Yes' : 'No'
+        },
+        {
+          label: 'Trial price',
+          hidden: !trialSummary.trialEnabled,
+          renderContent: trialSummary.price || <NotSetPlaceholder />
+        },
+        {
+          label: 'Trial length',
+          hidden: !trialSummary.trialEnabled,
+          renderContent:
+            trialSummary.durationTime == undefined ? (
+              <NotSetPlaceholder />
+            ) : (
+              trialSummary.durationTime
+            )
+        },
+        {
+          label: 'Require bank bank',
+          hidden: !trialSummary.trialEnabled,
+          renderContent: trialSummary.requireBankInfo ? 'Yes' : 'No'
+        },
+        {
+          label: 'Auto renew',
+          hidden: !trialSummary.trialEnabled,
+          renderContent: trialSummary.AutoRenew ? 'Yes' : 'No'
+        }
+      ]
     },
     {
-      label: 'Allow trial',
-      renderContent: trialSummary.trialEnabled ? 'Yes' : 'No'
-    },
-    {
-      label: 'Trial price',
-      hidden: !trialSummary.trialEnabled,
-      renderContent: trialSummary.price || <NotSetPlaceholder />
-    },
-    {
-      label: 'Trial length',
-      hidden: !trialSummary.trialEnabled,
-      renderContent:
-        trialSummary.durationTime == undefined ? (
-          <NotSetPlaceholder />
-        ) : (
-          trialSummary.durationTime
-        )
-    },
-    {
-      label: 'Require bank bank',
-      hidden: !trialSummary.trialEnabled,
-      renderContent: trialSummary.requireBankInfo ? 'Yes' : 'No'
-    },
-    {
-      label: 'Auto renew',
-      hidden: !trialSummary.trialEnabled,
-      renderContent: trialSummary.AutoRenew ? 'Yes' : 'No'
+      group: 'Usage-based Billing Model',
+      items: [
+        {
+          label: 'Limit Metered',
+          renderContent:
+            metricData?.metricLimits.length > 0 ? 'Added' : 'Not Added'
+        },
+        {
+          label: 'Charge Metered',
+          renderContent:
+            metricData?.metricMeteredCharge.length > 0 ? 'Added' : 'Not Added'
+        },
+        {
+          label: 'Charge Metered (Recurring)',
+          renderContent:
+            metricData?.metricRecurringCharge.length > 0 ? 'Added' : 'Not Added'
+        }
+      ]
     }
   ]
   return (
@@ -233,22 +186,26 @@ const Index = ({
         <Divider type="vertical" className="ml-0 h-7 w-0.5 bg-[#1677FF]" />
         <div className="text-lg">Advanced Setup</div>
       </div>
-      {advancedItems
-        .filter((item) => !item.hidden)
-        .map((item) => (
-          <div key={item.label}>
-            <Row className="flex items-baseline">
-              <Col span={10} className={labelStyle2}>
-                {item.label}
-              </Col>{' '}
-              <Col span={14} className={contentStyle}>
-                {item.renderContent}
-              </Col>
-            </Row>
-
-            {/* {idx != advancedItems.length - 1 && <Divider className="my-3" />} */}
+      {advancedItems.map((grp, idx) => (
+        <div key={grp.group}>
+          <div>
+            <div className="my-4">{grp.group}</div>
+            {grp.items.map((item) => (
+              <div key={item.label}>
+                <Row className="flex items-baseline">
+                  <Col span={10} className={labelStyle2}>
+                    {item.label}
+                  </Col>{' '}
+                  <Col span={14} className={contentStyle}>
+                    {item.renderContent}
+                  </Col>
+                </Row>
+              </div>
+            ))}
           </div>
-        ))}
+          {idx != advancedItems.length - 1 && <Divider className="my-1" />}
+        </div>
+      ))}
     </div>
   )
 }

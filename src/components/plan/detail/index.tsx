@@ -566,6 +566,7 @@ const Index = () => {
             labelCol={{ flex: '186px' }}
             wrapperCol={{ flex: 1 }}
             colon={false}
+            style={{ height: 'calc(100vh - 272px)', overflowY: 'auto' }}
             disabled={formDisabled}
             initialValues={plan}
           >
@@ -631,8 +632,11 @@ const Index = () => {
               </div>
             </div>
           </Form>
-          <div className="my-6 flex justify-between gap-5">
-            <div className="flex w-full justify-between">
+          <div
+            className="h-15 relative flex h-16 items-center justify-center gap-5"
+            style={{ boxShadow: '0 -5px 5px -5px #DDD', bottom: '-24px' }}
+          >
+            <div className="flex w-2/3 justify-between">
               {!isNew && plan.status == PlanStatus.EDITING ? (
                 <Popconfirm
                   title="Deletion Confirm"
