@@ -75,6 +75,10 @@
     "payssion",
     "Submitable",
     "lightgray",
-    "sortorder"
+    "sortorder",
+    "lucide",
+    "lucide-react",
+    "Paysson",
+    "subgateways"
   ]
 }
