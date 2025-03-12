@@ -1,3 +1,4 @@
+import { PLAN_TYPE } from '@/constants'
 import {
   Button,
   Divider,
@@ -5,6 +6,7 @@ import {
   InputNumber,
   message,
   Modal,
+  Select,
   Switch
 } from 'antd'
 import { Currency } from 'dinero.js'
@@ -31,6 +33,7 @@ import {
   IPlan,
   IProfile,
   PlanStatus,
+  PlanType,
   TPromoAccount,
   WithDoubleConfirmFields
 } from '../../../shared.types'
@@ -138,6 +141,14 @@ export const AssignSubscriptionModal = ({
     string | undefined
   >()
   const [selectedPlan, setSelectedPlan] = useState<IPlan | undefined>()
+  const [selectedPlanType, setSelectedPlanType] = useState<PlanType>(
+    PlanType.MAIN
+  )
+
+  useEffect(() => {
+    setSelectedPlan(undefined)
+  }, [selectedPlanType])
+
   const [requirePayment, setRequirePayment] = useState(true)
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
@@ -461,7 +472,7 @@ export const AssignSubscriptionModal = ({
     <Modal
       title="Choose a Subscription Plan"
       open={true}
-      width={'760px'}
+      width={'800px'}
       footer={[
         <Button key="cancel" onClick={closeModal} disabled={loading}>
           Cancel
@@ -487,6 +498,25 @@ export const AssignSubscriptionModal = ({
         <Divider orientation="left" style={{ margin: '16px 0' }} />
         <div className="flex gap-8">
           <div className="w-1/2">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-lg text-gray-800">Choose plan type</div>
+              <Select
+                style={{ width: 180 }}
+                options={[
+                  {
+                    label: PLAN_TYPE[PlanType.MAIN].label,
+                    value: PlanType.MAIN
+                  },
+                  {
+                    label: PLAN_TYPE[PlanType.ONE_TIME_ADD_ON].label,
+                    value: PlanType.ONE_TIME_ADD_ON
+                  }
+                ]}
+                onChange={(value) => setSelectedPlanType(value)}
+                value={selectedPlanType}
+              />
+            </div>
+
             <div className="mb-2 text-lg text-gray-800">Choose plan</div>
             <PlanSelector
               onPlanSelected={setSelectedPlan}
@@ -498,6 +528,7 @@ export const AssignSubscriptionModal = ({
                 p?.status != PlanStatus.SOFT_ARCHIVED &&
                 p?.status != PlanStatus.HARD_ARCHIVED
               }
+              planType={selectedPlanType}
             />
 
             {selectedPlan && (

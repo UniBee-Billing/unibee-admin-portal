@@ -307,7 +307,10 @@ const Index = () => {
     if (metricError != null) {
       setMetricError(metricError)
       return
+    } else {
+      setMetricError(null)
     }
+
     const metric = transformMetricData(metricData, getCurrency(), 'upward')
     f.metricLimits = metric.metricLimitsLocal
     f.metricMeteredCharge = metric.metricMeteredChargeLocal

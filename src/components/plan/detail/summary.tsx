@@ -1,5 +1,6 @@
 import '@/components/discountCode/detail/summary.css'
 // import LongTextPopover from '@/components/ui/longTextPopover'
+import LongTextPopover from '@/components/ui/longTextPopover'
 import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
@@ -45,7 +46,6 @@ const Index = ({
   trialSummary
 }: SummaryItem) => {
   const { metricData } = useContext(MetricDataContext)
-  // console.log('metricData from context in summary: ', metricData)
   const formatAddonList = (addonType: 'addon' | 'onetimeAddon') => {
     const list = addonType == 'addon' ? selectAddons : selectOnetime
     const selectedList = addonType == 'addon' ? watchAddons : watchOnetimeAddons
@@ -59,11 +59,25 @@ const Index = ({
   const items = [
     {
       label: 'Plan Name',
-      renderContent: name || <NotSetPlaceholder />
+      renderContent:
+        name != '' && name != undefined ? (
+          <div className="w-full">
+            <LongTextPopover text={name} placement="left" />
+          </div>
+        ) : (
+          <NotSetPlaceholder />
+        )
     },
     {
       label: 'Plan Description',
-      renderContent: description || <NotSetPlaceholder />
+      renderContent:
+        description != '' && description != undefined ? (
+          <div className="w-full">
+            <LongTextPopover text={description} placement="left" />
+          </div>
+        ) : (
+          <NotSetPlaceholder />
+        )
     },
     {
       label: 'Plan Type',
@@ -95,14 +109,24 @@ const Index = ({
         {
           label: 'Addons',
           renderContent: (
-            <p className="long-content">{formatAddonList('addon')}</p>
+            <div className="w-full">
+              <LongTextPopover
+                text={formatAddonList('addon')}
+                placement="left"
+              />
+            </div>
           ),
           hidden: watchAddons == null || watchAddons.length == 0
         },
         {
           label: 'One time addons',
           renderContent: (
-            <p className="long-content">{formatAddonList('onetimeAddon')}</p>
+            <div className="w-full">
+              <LongTextPopover
+                text={formatAddonList('onetimeAddon')}
+                placement="left"
+              />
+            </div>
           ),
           hidden: watchOnetimeAddons == null || watchOnetimeAddons.length == 0
         }
