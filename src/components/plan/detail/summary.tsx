@@ -1,29 +1,26 @@
 import '@/components/discountCode/detail/summary.css'
-import LongTextPopover from '@/components/ui/longTextPopover'
 import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
-import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
+import { IPlan, PlanStatus, PlanType } from '@/shared.types'
 import { Col, Divider, Row } from 'antd'
 import { useContext } from 'react'
 import { MetricDataContext } from './metricDataContext'
 import { TrialSummary } from './types'
 
-export const NotSetPlaceholder = () => (
-  <span className="text-red-500">Not set</span>
+export const NotSetPlaceholder = (isError?: boolean) => (
+  <span className={isError ? 'text-red-500' : ''}>Not set</span>
 )
 
 const labelStyle = 'flex h-11 items-center text-gray-400'
 const contentStyle =
   'flex h-11 items-center justify-end overflow-hidden overflow-ellipsis whitespace-nowrap'
 const labelStyle2 = 'flex h-6 text-gray-400'
-// const contentStyle2 = 'flex h-6'
 type SummaryItem = {
   name: string
   description: string
   watchPlanType?: PlanType
   getPlanPrice: () => string | undefined
   planStatus: PlanStatus
-  publishStatus: PlanPublishStatus
   selectAddons: IPlan[]
   selectOnetime: IPlan[]
   watchAddons: number[]
@@ -37,7 +34,6 @@ const Index = ({
   watchPlanType,
   getPlanPrice,
   planStatus,
-  publishStatus,
   selectAddons,
   selectOnetime,
   watchAddons,
@@ -48,6 +44,9 @@ const Index = ({
   const formatAddonList = (addonType: 'addon' | 'onetimeAddon') => {
     const list = addonType == 'addon' ? selectAddons : selectOnetime
     const selectedList = addonType == 'addon' ? watchAddons : watchOnetimeAddons
+    if (selectedList == null || selectedList.length == 0) {
+      return NotSetPlaceholder()
+    }
     return list
       ?.filter((item) => selectedList?.includes(item.id))
       .map((item) => {
@@ -59,46 +58,30 @@ const Index = ({
     {
       label: 'Plan Name',
       renderContent:
-        name != '' && name != undefined ? (
-          <div className="w-full">
-            <LongTextPopover text={name} placement="left" />
-          </div>
-        ) : (
-          <NotSetPlaceholder />
-        )
+        name != '' && name != undefined ? name : NotSetPlaceholder(true)
     },
     {
       label: 'Plan Description',
       renderContent:
-        description != '' && description != undefined ? (
-          <div className="w-full">
-            <LongTextPopover text={description} placement="left" />
-          </div>
-        ) : (
-          <NotSetPlaceholder />
-        )
+        description != '' && description != undefined
+          ? description
+          : NotSetPlaceholder(true)
     },
     {
       label: 'Plan Type',
-      renderContent: watchPlanType ? (
-        PLAN_TYPE[watchPlanType].label
-      ) : (
-        <NotSetPlaceholder />
-      )
+      renderContent: watchPlanType
+        ? PLAN_TYPE[watchPlanType].label
+        : NotSetPlaceholder(true)
     },
     {
       label: 'Price',
       renderContent:
-        getPlanPrice() == undefined ? <NotSetPlaceholder /> : getPlanPrice()
+        getPlanPrice() == undefined ? NotSetPlaceholder(true) : getPlanPrice()
     },
     {
       label: 'Status',
       renderContent: PlanStatusTag(planStatus)
     }
-    /* {
-      label: 'Published to user portal',
-      renderContent: publishStatus == PlanPublishStatus.PUBLISHED ? 'Yes' : 'No'
-    }*/
   ]
 
   const advancedItems = [
@@ -108,11 +91,8 @@ const Index = ({
         {
           label: 'Add-ons',
           renderContent: (
-            <div className="w-full">
-              <LongTextPopover
-                text={formatAddonList('addon')}
-                placement="left"
-              />
+            <div className="flex w-full justify-end overflow-hidden overflow-ellipsis whitespace-nowrap">
+              {formatAddonList('addon')}
             </div>
           ),
           hidden: watchAddons == null || watchAddons.length == 0
@@ -120,11 +100,8 @@ const Index = ({
         {
           label: 'One time add-ons',
           renderContent: (
-            <div className="w-full">
-              <LongTextPopover
-                text={formatAddonList('onetimeAddon')}
-                placement="left"
-              />
+            <div className="flex w-full justify-end overflow-hidden overflow-ellipsis whitespace-nowrap">
+              {formatAddonList('onetimeAddon')}
             </div>
           ),
           hidden: watchOnetimeAddons == null || watchOnetimeAddons.length == 0
@@ -141,17 +118,15 @@ const Index = ({
         {
           label: 'Trial Price',
           hidden: !trialSummary.trialEnabled,
-          renderContent: trialSummary.price || <NotSetPlaceholder />
+          renderContent: trialSummary.price || NotSetPlaceholder()
         },
         {
           label: 'Trial Length',
           hidden: !trialSummary.trialEnabled,
           renderContent:
-            trialSummary.durationTime == undefined ? (
-              <NotSetPlaceholder />
-            ) : (
-              trialSummary.durationTime
-            )
+            trialSummary.durationTime == undefined
+              ? NotSetPlaceholder()
+              : trialSummary.durationTime
         },
         {
           label: 'Require bank card',

@@ -117,7 +117,7 @@ const Index = () => {
           overflowY: 'auto',
           paddingRight: '18px',
           width: adminNotePushed ? '100%' : '69%',
-          transition: 'width 0.3s ease-in-out'
+          transition: 'width 0.2s ease-in-out'
         }}
       >
         <Divider orientation="left" style={{ margin: '16px 0' }}>
