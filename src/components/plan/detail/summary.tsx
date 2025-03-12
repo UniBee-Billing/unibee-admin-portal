@@ -11,10 +11,10 @@ export const NotSetPlaceholder = (isError?: boolean) => (
   <span className={isError ? 'text-red-500' : ''}>Not set</span>
 )
 
-const labelStyle = 'flex h-11 items-center text-gray-400'
+const labelStyle = 'flex max-h-22 items-center text-gray-400'
 const contentStyle =
-  'flex h-11 items-center justify-end overflow-hidden overflow-ellipsis whitespace-nowrap'
-const labelStyle2 = 'flex h-6 text-gray-400'
+  'flex max-h-22 items-center justify-end overflow-hidden overflow-ellipsis whitespace-nowrap'
+const labelStyle2 = 'flex max-h-22 text-gray-400'
 type SummaryItem = {
   name: string
   description: string
@@ -89,7 +89,7 @@ const Index = ({
       group: 'Add-ons',
       items: [
         {
-          label: 'Add-ons',
+          label: 'Recurring Add-ons',
           renderContent: (
             <div className="flex w-full justify-end overflow-hidden overflow-ellipsis whitespace-nowrap">
               {formatAddonList('addon')}
@@ -98,7 +98,7 @@ const Index = ({
           hidden: watchAddons == null || watchAddons.length == 0
         },
         {
-          label: 'One time add-ons',
+          label: 'One-time-payment add-on',
           renderContent: (
             <div className="flex w-full justify-end overflow-hidden overflow-ellipsis whitespace-nowrap">
               {formatAddonList('onetimeAddon')}
@@ -129,12 +129,12 @@ const Index = ({
               : trialSummary.durationTime
         },
         {
-          label: 'Require bank card',
+          label: 'Requires Payment Info',
           hidden: !trialSummary.trialEnabled,
           renderContent: trialSummary.requireBankInfo ? 'Yes' : 'No'
         },
         {
-          label: 'Auto renew',
+          label: 'Auto renew after trial end',
           hidden: !trialSummary.trialEnabled,
           renderContent: trialSummary.AutoRenew ? 'Yes' : 'No'
         }
@@ -170,7 +170,7 @@ const Index = ({
         <div className="text-lg">Basic Setup</div>
       </div>
       {items.map((item) => (
-        <Row key={item.label} className="flex items-baseline">
+        <Row key={item.label} className="mb-4 flex items-baseline">
           <Col span={14} className={labelStyle}>
             {item.label}
           </Col>
@@ -190,7 +190,7 @@ const Index = ({
             <div className="my-4">{grp.group}</div>
             {grp.items.map((item) => (
               <div key={item.label}>
-                <Row className="flex items-baseline">
+                <Row className="mb-4 flex items-baseline">
                   <Col span={10} className={labelStyle2}>
                     {item.label}
                   </Col>{' '}
