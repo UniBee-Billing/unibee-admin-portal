@@ -581,7 +581,7 @@ const Index = () => {
                 items={[
                   {
                     key: 'basic',
-                    label: 'Basic Plan Setup',
+                    label: 'Basic Setup',
                     forceRender: true,
                     children: (
                       <BasicConfig

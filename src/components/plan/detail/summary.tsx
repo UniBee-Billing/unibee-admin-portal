@@ -139,12 +139,12 @@ const Index = ({
           renderContent: trialSummary.trialEnabled ? 'Yes' : 'No'
         },
         {
-          label: 'Trial price',
+          label: 'Trial Price',
           hidden: !trialSummary.trialEnabled,
           renderContent: trialSummary.price || <NotSetPlaceholder />
         },
         {
-          label: 'Trial length',
+          label: 'Trial Length',
           hidden: !trialSummary.trialEnabled,
           renderContent:
             trialSummary.durationTime == undefined ? (

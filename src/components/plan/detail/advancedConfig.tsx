@@ -248,7 +248,7 @@ const Index = ({
           </Form.Item>
 
           <Form.Item
-            label="Trial length"
+            label="Trial Length"
             name="trialDurationTime"
             dependencies={['enableTrial']}
             rules={[

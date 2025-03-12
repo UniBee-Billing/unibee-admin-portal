@@ -111,7 +111,7 @@ const Index = ({
   return (
     <div className="my-4 rounded-md bg-gray-100 p-4">
       <Typography.Title level={5}>
-        Charge metered{isRecurring ? ' (recurring)' : ''}
+        Charge Metered{isRecurring ? ' (recurring)' : ''}
         <Popover
           content={
             <div className="max-w-96">

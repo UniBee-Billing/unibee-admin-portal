@@ -60,7 +60,7 @@ const Index = ({
 
   return (
     <div className="my-4 rounded-md bg-gray-100 p-4">
-      <Typography.Title level={5}>Limit metered</Typography.Title>
+      <Typography.Title level={5}>Limit Metered</Typography.Title>
       <Row>
         {header.map((h, i) => (
           <Col key={i} span={colSpan[i]} className={rowHeaderStyle}>
