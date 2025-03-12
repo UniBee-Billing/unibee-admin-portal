@@ -301,7 +301,7 @@ const Index = ({
   const billableItem: CollapseProps['items'] = [
     {
       key: 'billable',
-      label: 'Usage-based billing model',
+      label: 'Usage-based billing',
       forceRender: true,
       style: { backgroundColor: '#F5F5F5' },
       children: (

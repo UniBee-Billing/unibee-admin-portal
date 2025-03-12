@@ -141,7 +141,7 @@ const Index = ({
       ]
     },
     {
-      group: 'Usage-based Billing Model',
+      group: 'Usage-based Billing',
       items: [
         {
           label: 'Limit Metered',
