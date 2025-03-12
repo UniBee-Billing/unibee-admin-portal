@@ -1,5 +1,4 @@
 import '@/components/discountCode/detail/summary.css'
-// import LongTextPopover from '@/components/ui/longTextPopover'
 import LongTextPopover from '@/components/ui/longTextPopover'
 import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
@@ -95,19 +94,19 @@ const Index = ({
     {
       label: 'Status',
       renderContent: PlanStatusTag(planStatus)
-    },
-    {
+    }
+    /* {
       label: 'Published to user portal',
       renderContent: publishStatus == PlanPublishStatus.PUBLISHED ? 'Yes' : 'No'
-    }
+    }*/
   ]
 
   const advancedItems = [
     {
-      group: 'Add-on',
+      group: 'Add-ons',
       items: [
         {
-          label: 'Addons',
+          label: 'Add-ons',
           renderContent: (
             <div className="w-full">
               <LongTextPopover
@@ -119,7 +118,7 @@ const Index = ({
           hidden: watchAddons == null || watchAddons.length == 0
         },
         {
-          label: 'One time addons',
+          label: 'One time add-ons',
           renderContent: (
             <div className="w-full">
               <LongTextPopover
@@ -155,7 +154,7 @@ const Index = ({
             )
         },
         {
-          label: 'Require bank bank',
+          label: 'Require bank card',
           hidden: !trialSummary.trialEnabled,
           renderContent: trialSummary.requireBankInfo ? 'Yes' : 'No'
         },
@@ -190,7 +189,7 @@ const Index = ({
   return (
     <div className="px-4">
       <div className="flex h-[46px] items-center text-lg">Summary</div>
-      <Divider className="my-4" />
+      <Divider className="mb-5 mt-0" />
       <div className="mb-4 flex items-center">
         <Divider type="vertical" className="ml-0 h-7 w-0.5 bg-[#1677FF]" />
         <div className="text-lg">Basic Setup</div>

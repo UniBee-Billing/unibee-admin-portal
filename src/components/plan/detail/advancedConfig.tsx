@@ -75,7 +75,7 @@ const Index = ({
   const addonsItem: CollapseProps['items'] = [
     {
       key: 'addons',
-      label: 'Addons',
+      label: 'Add-ons',
       style: { backgroundColor: '#F5F5F5' },
       forceRender: true,
       children: (
@@ -133,7 +133,7 @@ const Index = ({
 
           {
             <Form.Item
-              label="One-time-payment add-on"
+              label="One-time-payment add-ons"
               name="onetimeAddonIds"
               dependencies={['currency']}
               rules={[

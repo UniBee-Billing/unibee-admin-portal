@@ -68,7 +68,7 @@ const Index = ({
         </Form.Item>
       )}
 
-      <Form.Item label="Product name">
+      <Form.Item label="Product Name">
         <span>
           {productDetail != null ? (
             productDetail?.productName
