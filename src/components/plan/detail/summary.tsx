@@ -135,7 +135,7 @@ const Index = ({
       group: 'Trial',
       items: [
         {
-          label: 'Allow trial',
+          label: 'Allow Trial',
           renderContent: trialSummary.trialEnabled ? 'Yes' : 'No'
         },
         {
