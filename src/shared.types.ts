@@ -270,6 +270,26 @@ interface IBillableMetrics {
   createTime: string
 }
 
+export interface MetricUsage {
+  limitStats: {
+    metricLimit: IBillableMetrics & { TotalLimit: number }
+    CurrentUsedValue: number
+  }[]
+  meteredChargeStats: {
+    metricId: number
+    metricName: string
+    metricDescription: string
+    type: MetricType
+    aggregationType: MetricAggregationType
+  }[]
+  recurringChargeStats: {
+    metricId: number
+    metricName: string
+    metricDescription: string
+    type: MetricType
+    aggregationType: MetricAggregationType
+  }[]
+}
 export interface SubscriptionWrapper extends ISubscriptionType {
   subscription: ISubscriptionType
 }

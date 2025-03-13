@@ -7,13 +7,17 @@ import UserInfo from '../shared/userInfo'
 import InvoiceTab from '../subscription/invoicesTab'
 import TransactionTab from '../subscription/paymentTab'
 import UserAccountTab from '../subscription/userAccountTab'
+import MeteringUsage from './meteringUsage'
+import OneTimeHistory from './oneTimePurchaseHistory'
 import ProductList from './productList'
 import PromoCredit from './promoCreditTab'
+import SubHistory from './subHistory'
+import Subscription from './subscriptionTab'
 import UserNote from './userNote'
-
 const TAB_KEYS = [
   'account',
   'subscription',
+  'meteringUsage',
   'promoCredits',
   'invoice',
   'transaction'
@@ -77,23 +81,41 @@ const Index = () => {
       key: TAB_KEYS[1],
       label: 'Subscription',
       children: (
-        <ProductList // deep inside this component there is a <Subscription />, which will receive refreshSub props, when it's true in its useEffect cb, it'll re-fetch sub detail info
-          userId={userId} // setRefreshSub fn is triggered by the above <UserAccountTab /> which will pass this fn to <SuspendModal />
-          userProfile={userProfile}
-          refreshSub={refreshSub}
-          refreshUserProfile={fetchUserProfile}
-        />
+        <>
+          <ProductList // deep inside this component there is a <Subscription />, which will receive refreshSub props, when it's true in its useEffect cb, it'll re-fetch sub detail info
+            userId={userId} // setRefreshSub fn is triggered by the above <UserAccountTab /> which will pass this fn to <SuspendModal />
+            userProfile={userProfile}
+            refreshSub={refreshSub}
+            refreshUserProfile={fetchUserProfile}
+            TabContent={Subscription}
+          />
+          <SubHistory userId={userId} />
+          <OneTimeHistory userId={userId} />
+        </>
       )
     },
     {
       key: TAB_KEYS[2],
+      label: 'Metering Usage',
+      children: (
+        <ProductList
+          userId={userId}
+          userProfile={userProfile}
+          refreshSub={refreshSub}
+          refreshUserProfile={fetchUserProfile}
+          TabContent={MeteringUsage}
+        />
+      )
+    },
+    {
+      key: TAB_KEYS[3],
       label: 'Promo Credits',
       children: (
         <PromoCredit userDetail={userProfile} refreshUser={fetchUserProfile} />
       )
     },
     {
-      key: TAB_KEYS[3],
+      key: TAB_KEYS[4],
       label: 'Invoices',
       children: (
         <InvoiceTab
@@ -105,7 +127,7 @@ const Index = () => {
       )
     },
     {
-      key: TAB_KEYS[4],
+      key: TAB_KEYS[5],
       label: 'Transactions',
       children: <TransactionTab user={userProfile} embeddingMode={true} />
     }

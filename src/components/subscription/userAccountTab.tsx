@@ -1,5 +1,18 @@
-import { getCountryListReq, saveUserProfileReq } from '@/requests'
-import { AccountType, Country, IProfile, UserStatus } from '@/shared.types'
+import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
+import { randomString } from '@/helpers'
+import {
+  getCountryListReq,
+  getMetricsListReq,
+  saveUserProfileReq,
+  sendMetricEventReq
+} from '@/requests'
+import {
+  AccountType,
+  Country,
+  IBillableMetrics,
+  IProfile,
+  UserStatus
+} from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
@@ -35,6 +48,8 @@ const UserAccountTab = ({
   setRefreshSub?: (val: boolean) => void
 }) => {
   const appConfigStore = useAppConfigStore()
+  const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([])
+  const [selectedMetricCode, setSelectedMetricCode] = useState<string>('')
   const [form] = Form.useForm()
   const [countryList, setCountryList] = useState<Country[]>([])
   const [loading, setLoading] = useState(false)
@@ -45,6 +60,8 @@ const UserAccountTab = ({
   const [gatewayPaymentType, setGatewayPaymentType] = useState<
     string | undefined
   >(undefined)
+
+  const [externalEventId, setExternalEventId] = useState(randomString(8))
 
   const filterOption = (
     input: string,
@@ -58,7 +75,6 @@ const UserAccountTab = ({
       body.gatewayPaymentType = gatewayPaymentType
     }
 
-    // return
     setLoading(true)
     const [res, err] = await saveUserProfileReq(body)
     setLoading(false)
@@ -69,6 +85,23 @@ const UserAccountTab = ({
     const { user } = res
     message.success('User Info Saved')
     setUserProfile(user)
+  }
+
+  const sendMetricEvent = async () => {
+    const [res, err] = await sendMetricEventReq({
+      metricCode: 'metric-c',
+      userId: user?.id as number,
+      productId: 0,
+      externalEventId,
+      metricProperties: {
+        'metric-': 100
+      }
+    })
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success(`Metric event sent.`)
   }
 
   useEffect(() => {
@@ -87,7 +120,18 @@ const UserAccountTab = ({
         }))
       )
     }
+
+    const fetchMetricList = async () => {
+      const [res, err] = await getMetricsListReq({})
+      if (err != null) {
+        message.error(err.message)
+        return
+      }
+      const metricsList = res.merchantMetrics ?? []
+      setMetricsList(metricsList)
+    }
     fetchData()
+    fetchMetricList()
   }, [])
 
   useEffect(() => {
@@ -349,49 +393,30 @@ const UserAccountTab = ({
             <Divider orientation="left" style={{ margin: '16px 0' }}>
               Social Media Contact
             </Divider>
-            <Row>
-              <Col span={12}>
-                <Form.Item label="Telegram" name="telegram">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="WhatsApp" name="whatsAPP">
-                  <Input />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row>
-              <Col span={12}>
-                <Form.Item label="WeChat" name="weChat">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="LinkedIn" name="linkedIn">
-                  <Input />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row>
-              <Col span={12}>
-                <Form.Item label="Facebook" name="facebook">
-                  <Input />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="TikTok" name="tikTok">
-                  <Input />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row>
-              <Col span={12}>
-                <Form.Item label="Other social info" name="otherSocialInfo">
-                  <Input />
-                </Form.Item>
-              </Col>
-            </Row>
+            {SocialMediaContact.map((item, idx) => (
+              <Row key={item.label}>
+                <Col span={12}>
+                  {idx * 2 < SocialMediaContact.length && (
+                    <Form.Item
+                      label={SocialMediaContact[idx * 2].label}
+                      name={SocialMediaContact[idx * 2].name}
+                    >
+                      <Input />
+                    </Form.Item>
+                  )}
+                </Col>
+                <Col span={12}>
+                  {idx * 2 + 1 < SocialMediaContact.length && (
+                    <Form.Item
+                      label={SocialMediaContact[idx * 2 + 1].label}
+                      name={SocialMediaContact[idx * 2 + 1].name}
+                    >
+                      <Input />
+                    </Form.Item>
+                  )}
+                </Col>
+              </Row>
+            ))}
           </Form>
           <div className="mx-9 my-9 flex justify-around gap-6">
             <Button
@@ -418,9 +443,83 @@ const UserAccountTab = ({
             </div>
           </div>
         </Spin>
+        <div className="fixed bottom-14 right-4 flex-col gap-4">
+          <div>
+            <Select
+              style={{ width: 280 }}
+              value={selectedMetricCode}
+              onChange={(val) => setSelectedMetricCode(val)}
+              options={metricsList.map((m) => ({
+                label: (
+                  <div>
+                    {m.metricName}&nbsp;
+                    <span className="text-xs text-gray-500">({m.code})</span>
+                  </div>
+                ),
+                value: m.code
+              }))}
+            />
+            <Button onClick={sendMetricEvent}>Send metric event</Button>
+            <Button onClick={() => setExternalEventId(randomString(8))}>
+              reset external eventId
+            </Button>
+          </div>
+          <div>
+            metric type:{' '}
+            {selectedMetricCode != '' &&
+              METRICS_TYPE[
+                metricsList.find((m) => m.code == selectedMetricCode)!.type!
+              ]?.label}
+          </div>
+          <div>
+            aggre property:{' '}
+            {selectedMetricCode != '' &&
+              METRICS_AGGREGATE_TYPE[
+                metricsList.find((m) => m.code == selectedMetricCode)!
+                  .aggregationType
+              ].label}
+          </div>
+          <div>
+            aggre props:{' '}
+            {selectedMetricCode != '' &&
+              metricsList.find((m) => m.code == selectedMetricCode)!
+                .aggregationProperty}
+          </div>
+        </div>
       </>
     )
   )
 }
 
 export default UserAccountTab
+
+const SocialMediaContact = [
+  {
+    label: 'Telegram',
+    name: 'telegram'
+  },
+  {
+    label: 'WhatsApp',
+    name: 'whatsAPP'
+  },
+  {
+    label: 'WeChat',
+    name: 'weChat'
+  },
+  {
+    label: 'LinkedIn',
+    name: 'linkedIn'
+  },
+  {
+    label: 'Facebook',
+    name: 'facebook'
+  },
+  {
+    label: 'TikTok',
+    name: 'tikTok'
+  },
+  {
+    label: 'Other social info',
+    name: 'otherSocialInfo'
+  }
+]

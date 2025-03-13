@@ -583,6 +583,26 @@ export const getMetricDetailReq = async (
   }
 }
 
+// test use only
+export const sendMetricEventReq = async (body: {
+  metricCode: string
+  userId: number
+  productId: 0
+  externalEventId: string
+  metricProperties: {
+    [key: string]: number | string
+  }
+}) => {
+  try {
+    const res = await request.post(`/merchant/metric/event/new`, body)
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // ----------
 type TSubListReq = {
   status: number[]
