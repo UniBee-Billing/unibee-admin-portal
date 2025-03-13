@@ -11,6 +11,7 @@ import {
   Country,
   IBillableMetrics,
   IProfile,
+  MetricAggregationType,
   UserStatus
 } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
@@ -21,6 +22,7 @@ import {
   Divider,
   Form,
   Input,
+  InputNumber,
   Radio,
   Row,
   Select,
@@ -62,6 +64,7 @@ const UserAccountTab = ({
   >(undefined)
 
   const [externalEventId, setExternalEventId] = useState(randomString(8))
+  const [aggregationValue, setAggregationValue] = useState<number | null>(100)
 
   const filterOption = (
     input: string,
@@ -88,15 +91,27 @@ const UserAccountTab = ({
   }
 
   const sendMetricEvent = async () => {
-    const [res, err] = await sendMetricEventReq({
-      metricCode: 'metric-c',
-      userId: user?.id as number,
+    const metric = metricsList.find((m) => m.code == selectedMetricCode)
+    const body: any = {
+      metricCode: selectedMetricCode,
+      userId: user!.id as number,
       productId: 0,
-      externalEventId,
-      metricProperties: {
-        'metric-': 100
+      externalEventId
+    }
+    if (
+      metric?.aggregationProperty != '' &&
+      metric?.aggregationProperty != null
+    ) {
+      body.metricProperties = {
+        [metric.aggregationProperty]: 100
       }
-    })
+    }
+
+    if (metric?.aggregationType != MetricAggregationType.COUNT) {
+      body.aggregationValue = aggregationValue
+    }
+
+    const [res, err] = await sendMetricEventReq(body)
     if (err != null) {
       message.error(err.message)
       return
@@ -443,10 +458,10 @@ const UserAccountTab = ({
             </div>
           </div>
         </Spin>
-        <div className="fixed bottom-14 right-4 flex-col gap-4">
-          <div>
+        <div className="fixed bottom-14 mr-10 flex-col gap-4 rounded-md bg-gray-100 p-4">
+          <div className="flex gap-4">
             <Select
-              style={{ width: 280 }}
+              style={{ width: 300 }}
               value={selectedMetricCode}
               onChange={(val) => setSelectedMetricCode(val)}
               options={metricsList.map((m) => ({
@@ -458,6 +473,11 @@ const UserAccountTab = ({
                 ),
                 value: m.code
               }))}
+            />
+            <InputNumber
+              style={{ width: 100 }}
+              value={aggregationValue}
+              onChange={(val) => setAggregationValue(val)}
             />
             <Button onClick={sendMetricEvent}>Send metric event</Button>
             <Button onClick={() => setExternalEventId(randomString(8))}>

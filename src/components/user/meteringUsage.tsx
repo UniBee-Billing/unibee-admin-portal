@@ -1,11 +1,24 @@
 import { normalizeSub } from '@/helpers'
 import { getMetricUsageBySubIdReq, getSubDetailInProductReq } from '@/requests'
-import { MetricUsage } from '@/shared.types'
-import { message } from 'antd'
-import { useState } from 'react'
+import { IProfile, MetricUsage } from '@/shared.types'
+import { Button, message } from 'antd'
+import { useEffect, useState } from 'react'
 
-const Index = () => {
+const Index = ({
+  userId,
+  userProfile,
+  productId,
+  refreshSub,
+  refreshUserProfile
+}: {
+  userId: number
+  userProfile: IProfile | undefined
+  productId: number
+  refreshSub: boolean
+  refreshUserProfile: () => void
+}) => {
   const [loading, setLoading] = useState(false)
+  const [subId, setSubId] = useState('')
   const [metricUsage, setMetricUsage] = useState<MetricUsage[]>([])
 
   const getSubInProduct = async () => {
@@ -15,23 +28,33 @@ const Index = () => {
     setLoading(true)
     const [res, err] = await getSubDetailInProductReq({
       userId,
-      productId
+      productId,
+      refreshCb: getSubInProduct
     })
     setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
-    //const sub = normalizeSub(res)
-    // setSubInfo(sub)
+    // console.log('get sub in product', res)
+    // setSubId(res.subscription.subscriptionId)
+    const [res2, err2] = await getMetricUsageBySubIdReq(
+      res.subscription.subscriptionId
+    )
+    if (err2 != null) {
+      message.error(err.message)
+      return
+    }
+    console.log('get metric usage by subId', res2)
   }
 
-  const fetchMetricUsage = async () => {
-    // const [res, err] = await getMetricUsageBySubIdReq(subId)
-  }
+  useEffect(() => {
+    getSubInProduct()
+  }, [userId, productId])
+
   return (
     <div>
-      <h1>Metering Usage</h1>
+      <Button onClick={getSubInProduct}>Refresh</Button>
     </div>
   )
 }
