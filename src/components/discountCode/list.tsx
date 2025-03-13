@@ -29,7 +29,8 @@ import {
   DeleteOutlined,
   EditOutlined,
   LoadingOutlined,
-  ProfileOutlined
+  ProfileOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons'
 import { Modal, Space, Table, message } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
@@ -134,47 +135,67 @@ export const DiscountCodeList = () => {
       filters: CODE_STATUS_FILTER
     },
     {
-      title: 'Type',
-      dataIndex: 'billingType',
-      key: 'billingType',
-      render: (s) => DISCOUNT_CODE_BILLING_TYPE[s as DiscountCodeBillingType],
-      filters: BILLING_TYPE_FILTER
-    },
-    {
-      title: 'Discount Type',
-      dataIndex: 'discountType',
-      key: 'discountType',
-      render: (s) => DISCOUNT_CODE_TYPE[s as DiscountType],
-      filters: DISCOUNT_TYPE_FILTER
-    },
-    {
-      title: 'Amount',
-      dataIndex: 'discountAmount',
-      key: 'discountAmount',
-      render: (amt, code) =>
-        code.discountType == DiscountType.PERCENTAGE
-          ? ''
-          : showAmount(amt, code.currency)
-    },
-    {
-      title: 'Percentage',
-      dataIndex: 'discountPercentage',
-      key: 'discountPercentage',
-      render: (percent, code) =>
-        code.discountType == DiscountType.PERCENTAGE ? `${percent / 100} %` : ''
-    },
-    {
-      title: 'Cycle Limit',
-      dataIndex: 'cycleLimit',
-      key: 'cycleLimit',
-      render: (lim, code) => {
-        if (code.billingType == DiscountCodeBillingType.ONE_TIME) {
-          return '1'
-        } else if (code.billingType == DiscountCodeBillingType.RECURRING) {
-          return formatNumberByZeroUnLimitedRule(lim)
-        } else {
-          return lim
+      title: 'Discount Info',
+      key: 'discountInfo',
+      align: 'center',
+      render: (_, code) => {
+        if (code.discountType === DiscountType.PERCENTAGE) {
+          const percentage = code.discountPercentage / 100;
+          return <div style={{ textAlign: 'center' }}>{`${percentage} %`}</div>
         }
+        return <div style={{ textAlign: 'center' }}>{showAmount(code.discountAmount, code.currency)}</div>
+      },
+      filters: [
+        { text: 'Percentage', value: DiscountType.PERCENTAGE },
+        { text: 'Fixed-amount', value: DiscountType.AMOUNT }
+      ],
+      onFilter: (value, record) => record.discountType === Number(value)
+    },
+    {
+      title: 'Recurring Cycle',
+      key: 'recurringCycle',
+      align: 'center',
+      render: (_, code) => {
+        const cycleLimit = code.cycleLimit;
+        const value = code.billingType === DiscountCodeBillingType.ONE_TIME ? '1' : 
+          (cycleLimit === 0 ? '♾️' : cycleLimit.toString());
+        const isRecurring = code.billingType === DiscountCodeBillingType.RECURRING;
+        
+        return (
+          <div style={{ 
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid #d9d9d9',
+            borderRadius: '8px',
+            width: '44px',
+            height: '44px',
+            position: 'relative',
+            background: '#fff',
+            margin: '0 auto'
+          }}>
+            <span style={{ 
+              fontSize: '16px',
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              marginTop: '-2px'
+            }}>{value}</span>
+            {isRecurring && (
+              <ClockCircleOutlined 
+                style={{ 
+                  position: 'absolute',
+                  right: '4px',
+                  bottom: '4px',
+                  fontSize: '14px',
+                  color: '#000',
+                  fontWeight: 'bold'
+                }}
+              />
+            )}
+          </div>
+        )
       }
     },
     {
@@ -308,11 +329,21 @@ export const DiscountCodeList = () => {
     filters
   ) => {
     onPageChange(pagination.current!, pagination.pageSize!)
+    const dateFilters = formatDateRange(filters, 'createTime', {
+      start: 'createTimeStart',
+      end: 'createTimeEnd'
+    })
+    
+    // Add discountType filter
+    const discountTypeFilter = filters.discountInfo?.[0]
+      ? { discountType: Number(filters.discountInfo[0]) }
+      : {}
+
     fetchData(
-      formatDateRange(filters, 'createTime', {
-        start: 'createTimeStart',
-        end: 'createTimeEnd'
-      }),
+      {
+        ...dateFilters,
+        ...discountTypeFilter
+      },
       pagination.current! - 1
     )
   }
