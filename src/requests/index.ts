@@ -613,7 +613,7 @@ export const getMetricUsageBySubIdReq = async (
       `/merchant/metric/user/sub/metric?subscriptionId=${subId}`
     )
     handleStatusCode(res.data.code, refreshCb)
-    return [res.data.data, null]
+    return [res.data.data.userMetric, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2258,7 +2258,7 @@ export const getProductListReq = async ({
 } & PagedReq) => {
   try {
     const res = await request.post(`/merchant/product/list`, {
-      count: count ?? 60,
+      count: count ?? 100,
       page: page ?? 0
     })
     handleStatusCode(res.data.code, refreshCb)

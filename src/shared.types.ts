@@ -259,6 +259,7 @@ export const enum MetricAggregationType {
 }
 interface IBillableMetrics {
   id: number
+  MetricId: number // same as id, they are the same.
   merchantId: number
   code: string
   metricName: string
@@ -270,26 +271,21 @@ interface IBillableMetrics {
   createTime: string
 }
 
-export interface MetricUsage {
-  limitStats: {
-    metricLimit: IBillableMetrics & { TotalLimit: number }
-    CurrentUsedValue: number
-  }[]
-  meteredChargeStats: {
-    metricId: number
-    metricName: string
-    metricDescription: string
-    type: MetricType
-    aggregationType: MetricAggregationType
-  }[]
-  recurringChargeStats: {
-    metricId: number
-    metricName: string
-    metricDescription: string
-    type: MetricType
-    aggregationType: MetricAggregationType
-  }[]
+export interface LimitMetricUsage {
+  metricLimit: IBillableMetrics & { TotalLimit: number }
+  CurrentUsedValue: number
 }
+
+export interface ChargedMetricUsage {
+  isRecurring: boolean
+  // metricLimit: IBillableMetrics & { TotalLimit: number }
+  merchantMetric: IBillableMetrics
+  CurrentUsedValue: number
+  totalChargeAmount: number
+  // graduatedStep
+  chargePricing: MetricMeteredCharge
+}
+
 export interface SubscriptionWrapper extends ISubscriptionType {
   subscription: ISubscriptionType
 }

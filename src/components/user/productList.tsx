@@ -5,13 +5,20 @@ import { LoadingOutlined } from '@ant-design/icons'
 import { Spin, Tabs, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 
+interface TabContentProps {
+  userId: number
+  productId: number
+  userProfile: IProfile | undefined
+  refreshSub: boolean
+  refreshUserProfile: () => void
+}
+
 type ProductListProps = {
   userId: number
   userProfile: IProfile | undefined
   refreshSub: boolean
   refreshUserProfile: () => void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TabContent: React.FC<any>
+  TabContent: React.FC<TabContentProps>
 }
 
 const Index = ({
