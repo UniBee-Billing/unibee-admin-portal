@@ -59,7 +59,6 @@ const Index = ({
       message.error(err.message)
       return
     }
-    console.log('get metric usage by subId', res2)
     subCurrencyRef.current = res2.subscription.currency
     setLimitMetricUsage(res2.limitStats ?? [])
 
@@ -160,7 +159,7 @@ const Index = ({
               overlayStyle={{ width: '360px' }}
               // open={true}
               content={
-                <GraudatedPricingInfo
+                <GraduatedPricingInfo
                   amt={record.chargePricing.graduatedAmounts}
                   currency={subCurrencyRef.current}
                 />
@@ -253,7 +252,7 @@ const Index = ({
 export default Index
 
 const headerStyle = 'text-gray-500'
-const GraudatedPricingInfo = ({
+const GraduatedPricingInfo = ({
   amt,
   currency
 }: {
