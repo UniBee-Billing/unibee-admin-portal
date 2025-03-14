@@ -161,10 +161,6 @@ export const DiscountCodeList = () => {
           (cycleLimit === 0 ? '♾️' : cycleLimit.toString());
         const isRecurring = code.billingType === DiscountCodeBillingType.RECURRING;
         
-<<<<<<< Updated upstream
-        return (
-          <div style={{ 
-=======
         if (!isRecurring) {
           return (
             <div style={{ 
@@ -184,7 +180,6 @@ export const DiscountCodeList = () => {
 
         return (
           <div style={{
->>>>>>> Stashed changes
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -192,34 +187,6 @@ export const DiscountCodeList = () => {
             borderRadius: '8px',
             width: '44px',
             height: '44px',
-<<<<<<< Updated upstream
-            position: 'relative',
-            background: '#fff',
-            margin: '0 auto'
-          }}>
-            <span style={{ 
-              fontSize: '16px',
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              marginTop: '-2px'
-            }}>{value}</span>
-            {isRecurring && (
-              <ClockCircleOutlined 
-                style={{ 
-                  position: 'absolute',
-                  right: '4px',
-                  bottom: '4px',
-                  fontSize: '14px',
-                  color: '#000',
-                  fontWeight: 'bold'
-                }}
-              />
-            )}
-          </div>
-        )
-=======
             background: '#fff',
           }}>
             <svg 
@@ -246,7 +213,6 @@ export const DiscountCodeList = () => {
             </svg>
           </div>
         );
->>>>>>> Stashed changes
       }
     },
     {
@@ -367,13 +333,6 @@ export const DiscountCodeList = () => {
     filters
   ) => {
     onPageChange(pagination.current!, pagination.pageSize!)
-<<<<<<< Updated upstream
-    const dateFilters = formatDateRange(filters, 'createTime', {
-      start: 'createTimeStart',
-      end: 'createTimeEnd'
-    })
-=======
->>>>>>> Stashed changes
     
     // Add discountType filter
     const discountTypeFilter = filters.discountInfo?.[0]
@@ -382,10 +341,6 @@ export const DiscountCodeList = () => {
 
     fetchData(
       {
-<<<<<<< Updated upstream
-        ...dateFilters,
-=======
->>>>>>> Stashed changes
         ...discountTypeFilter
       },
       pagination.current! - 1
