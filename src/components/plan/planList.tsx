@@ -39,7 +39,7 @@ import {
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 
@@ -66,6 +66,7 @@ const PLAN_TYPE_FILTER = Object.entries(PLAN_TYPE)
 type TFilters = {
   type: PlanType[] | null
   status: PlanStatus[] | null
+  planName?: string[] | null
 }
 
 const Index = ({
@@ -87,10 +88,12 @@ const Index = ({
     undefined
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
+  const [planNameFilters, setPlanNameFilters] = useState<{ value: string; text: string }[]>([])
 
   const [filters, setFilters] = useState<TFilters>({
     ...initializeFilters('type', Number, PlanType),
-    ...initializeFilters('status', Number, PlanStatus)
+    ...initializeFilters('status', Number, PlanStatus),
+    planName: searchParams.get('planName') ? searchParams.get('planName')?.split('-') : null
   } as TFilters)
 
   const [sortFilter, setSortFilter] = useState<Sorts>(
@@ -124,15 +127,21 @@ const Index = ({
 
   const fetchPlan = async () => {
     const body: TPlanListBody = {
-      ...filters,
       productIds: [productId],
       page: page,
-      count: PAGE_SIZE
+      count: PAGE_SIZE,
+      type: filters.type,
+      status: filters.status
     }
     if (sortFilter.columnKey != null) {
       body.sortField =
         sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
       body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
+    }
+
+    // Add planName filter if it exists
+    if (filters.planName && filters.planName.length > 0) {
+      body.planName = filters.planName[0];
     }
 
     setLoading(true)
@@ -144,6 +153,7 @@ const Index = ({
     }
     const { plans, total } = planList
     setTotal(total)
+    
     setPlan(
       plans == null
         ? []
@@ -152,6 +162,45 @@ const Index = ({
             metricPlanLimits: p.metricPlanLimits
           }))
     )
+  }
+
+  // 单独获取所有计划名称用于筛选
+  const fetchAllPlanNames = async () => {
+    console.log('Fetching all plan names...');
+    const [planList, err] = await getPlanList(
+      {
+        productIds: [productId],
+        page: 0,
+        count: 1000 // 获取足够多的计划以包含所有名称
+      },
+      fetchPlan
+    )
+    
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    
+    const { plans } = planList
+    
+    if (plans && plans.length > 0) {
+      const uniquePlanNames = new Set<string>();
+      const newPlanNameFilters: { value: string; text: string }[] = [];
+      
+      plans.forEach((p: IPlan) => {
+        const planName = p.plan?.planName;
+        if (planName && !uniquePlanNames.has(planName)) {
+          uniquePlanNames.add(planName);
+          newPlanNameFilters.push({
+            value: planName,
+            text: planName
+          });
+        }
+      });
+      
+      setPlanNameFilters(newPlanNameFilters);
+      console.log('Plan name filters updated:', newPlanNameFilters);
+    }
   }
 
   const columns: ColumnsType<IPlan> = [
@@ -165,8 +214,11 @@ const Index = ({
       dataIndex: 'planName',
       key: 'planName',
       width: 120,
-      sorter: (a, b) => a.planName.localeCompare(b.planName),
-      sortOrder: sortFilter?.columnKey == 'planName' ? sortFilter.order : null,
+      filters: planNameFilters,
+      filteredValue: filters.planName,
+      filterMode: 'tree',
+      filterSearch: true,
+      onFilter: (value, record) => record.planName === value,
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
@@ -323,6 +375,10 @@ const Index = ({
     filters.status == null
       ? searchParams.delete('status')
       : searchParams.set('status', filters.status.join('-'))
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    filters.planName == null || filters.planName.length === 0
+      ? searchParams.delete('planName')
+      : searchParams.set('planName', filters.planName.join('-'))
 
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
@@ -345,6 +401,12 @@ const Index = ({
       fetchPlan()
     }
   }, [filters, page, sortFilter])
+
+  useEffect(() => {
+    if (isProductValid) {
+      fetchAllPlanNames()
+    }
+  }, [productId, isProductValid])
 
   return (
     <>
