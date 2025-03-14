@@ -583,6 +583,43 @@ export const getMetricDetailReq = async (
   }
 }
 
+// test use only
+export const sendMetricEventReq = async (body: {
+  metricCode: string
+  externalEventId: string
+  userId: number
+  productId: number
+  aggregationValue?: number
+  metricProperties: {
+    [key: string]: number | string
+  }
+}) => {
+  try {
+    const res = await request.post(`/merchant/metric/event/new`, body)
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getMetricUsageBySubIdReq = async (
+  subId: number,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/sub/metric?subscriptionId=${subId}`
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data.userMetric, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // ----------
 type TSubListReq = {
   status: number[]
@@ -648,10 +685,12 @@ export const getSubDetailWithMore = async (
 
 export const getSubDetailInProductReq = async ({
   userId,
-  productId
+  productId,
+  refreshCb
 }: {
   userId: number
   productId: number
+  refreshCb?: () => void
 }) => {
   try {
     const res = await request.post(
@@ -661,7 +700,7 @@ export const getSubDetailInProductReq = async ({
         productId
       }
     )
-    handleStatusCode(res.data.code)
+    handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2219,7 +2258,7 @@ export const getProductListReq = async ({
 } & PagedReq) => {
   try {
     const res = await request.post(`/merchant/product/list`, {
-      count: count ?? 60,
+      count: count ?? 100,
       page: page ?? 0
     })
     handleStatusCode(res.data.code, refreshCb)
