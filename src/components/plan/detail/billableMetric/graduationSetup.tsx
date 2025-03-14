@@ -5,8 +5,8 @@ import {
   showAmount
 } from '@/helpers'
 import { CURRENCY, MetricGraduatedAmount } from '@/shared.types'
-import { MinusOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, Col, InputNumber, Row, Tooltip } from 'antd'
+import { MinusOutlined, PlusOutlined, /* ReloadOutlined */ } from '@ant-design/icons'
+import { Button, Col, InputNumber, Row, /* Tooltip */ } from 'antd'
 
 import update from 'immutability-helper'
 import { useContext, useEffect, useState } from 'react'
@@ -27,7 +27,7 @@ const Index = ({
   getCurrency: () => CURRENCY
   formDisabled: boolean
 }) => {
-  const { metricData, setMetricData, resetMetricData } =
+  const { metricData, setMetricData, /* resetMetricData */ } =
     useContext(MetricDataContext)
   const dataIdx = metricData[metricDataType].findIndex(
     (m) => m.localId == metricLocalId

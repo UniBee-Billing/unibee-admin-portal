@@ -18,7 +18,7 @@ import { useAppConfigStore } from '@/stores'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Form, Popconfirm, Spin, Tabs, message } from 'antd'
 import { Currency } from 'dinero.js'
-import update from 'immutability-helper'
+// import update from 'immutability-helper'
 import React, { useEffect, useRef, useState } from 'react'
 import {
   useLocation,
@@ -603,7 +603,7 @@ const Index = () => {
         setMetricData,
         metricError,
         setMetricError,
-        resetMetricData: (metricType: MetricType, localId: string) => {}
+        resetMetricData: (_metricType: MetricType, _localId: string) => {}
       }}
     >
       <Spin

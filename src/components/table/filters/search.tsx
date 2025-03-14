@@ -6,7 +6,7 @@ import Highlighter from 'react-highlight-words'
 import { nextTick } from '../../../utils'
 import { parseFilters } from './common'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useTableSearchBox = <D extends Record<string, any>>() => {
   type DataIndex = keyof D
 

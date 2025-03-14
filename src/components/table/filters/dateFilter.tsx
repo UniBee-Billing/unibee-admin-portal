@@ -9,7 +9,7 @@ const convertDateString2Dayjs = (dateStrings: [start: number, end: number]) =>
     ? dateStrings.map((dateString) => dayjs.unix(dateString))
     : null) as [start: Dayjs, end: Dayjs] | null
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useTableDateFilter = <D extends Record<string, any>>() => {
   return (): TableColumnType<D> => ({
     filterDropdown: ({

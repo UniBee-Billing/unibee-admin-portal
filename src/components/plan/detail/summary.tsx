@@ -3,8 +3,8 @@ import { PlanStatusTag } from '@/components/ui/statusTag'
 import { PLAN_TYPE } from '@/constants'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import { Col, Divider, Row } from 'antd'
-import { useContext } from 'react'
-import { MetricDataContext } from './metricDataContext'
+// import { useContext } from 'react'
+// import { MetricDataContext } from './metricDataContext'
 import { TrialSummary } from './types'
 
 export const NotSetPlaceholder = () => (

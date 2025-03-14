@@ -59,7 +59,7 @@ const Index = ({
       message.error(err.message)
       return
     }
-    console.log('get metric usage by subId', res2)
+    // console.log('get metric usage by subId', res2)
     subCurrencyRef.current = res2.subscription.currency
     setLimitMetricUsage(res2.limitStats ?? [])
 
