@@ -4,27 +4,34 @@ import { IProduct, IProfile } from '@/shared.types'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Spin, Tabs, message } from 'antd'
 import React, { useEffect, useState } from 'react'
-import OneTimeHistory from './oneTimePurchaseHistory'
-import SubHistory from './subHistory'
-import Subscription from './subscriptionTab'
+
+interface TabContentProps {
+  userId: number
+  productId: number
+  userProfile: IProfile | undefined
+  refreshSub: boolean
+  refreshUserProfile: () => void
+}
+
+type ProductListProps = {
+  userId: number
+  userProfile: IProfile | undefined
+  refreshSub: boolean
+  refreshUserProfile: () => void
+  TabContent: React.FC<TabContentProps>
+}
 
 const Index = ({
   userId,
   userProfile,
   refreshSub,
-  refreshUserProfile
-}: {
-  userId: number
-  userProfile: IProfile | undefined
-  refreshSub: boolean
-  refreshUserProfile: () => void
-}) => {
+  refreshUserProfile,
+  TabContent
+}: ProductListProps) => {
   const [productId, setProductId] = useState('0') // set default tab
   const [loading, setLoading] = useState(false)
   const [productList, setProductList] = useState<IProduct[]>([])
-  const onTabChange = (newActiveKey: string) => {
-    setProductId(newActiveKey)
-  }
+  const onTabChange = (newActiveKey: string) => setProductId(newActiveKey)
 
   const getProductList = async () => {
     setLoading(true)
@@ -34,9 +41,7 @@ const Index = ({
       message.error(err.message)
       return
     }
-
-    const productList = res.products ?? []
-    setProductList(productList)
+    setProductList(res.products ?? [])
   }
 
   useEffect(() => {
@@ -44,32 +49,28 @@ const Index = ({
   }, [userId])
 
   return (
-    <>
-      <Spin
-        spinning={loading}
-        indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}
-      >
-        <Tabs
-          onChange={onTabChange}
-          activeKey={productId}
-          items={productList.map((p) => ({
-            label: p.productName,
-            key: p.id.toString(),
-            children: (
-              <Subscription
-                userId={userId}
-                productId={p.id}
-                userProfile={userProfile}
-                refreshSub={refreshSub}
-                refreshUserProfile={refreshUserProfile}
-              />
-            )
-          }))}
-        />
-        <SubHistory userId={userId} />
-        <OneTimeHistory userId={userId} />
-      </Spin>
-    </>
+    <Spin
+      spinning={loading}
+      indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}
+    >
+      <Tabs
+        onChange={onTabChange}
+        activeKey={productId}
+        items={productList.map((p) => ({
+          label: p.productName,
+          key: p.id.toString(),
+          children: (
+            <TabContent
+              userId={userId}
+              productId={p.id}
+              userProfile={userProfile}
+              refreshSub={refreshSub}
+              refreshUserProfile={refreshUserProfile}
+            />
+          )
+        }))}
+      />
+    </Spin>
   )
 }
 

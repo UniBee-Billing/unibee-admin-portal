@@ -1,7 +1,14 @@
-import RecurringCycleSvg from '@/assets/recurringCycle.svg?react'
+import {
+  formatDateRange,
+  useTableDateFilter
+} from '@/components/table/filters/dateFilter'
 import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
-import { DISCOUNT_CODE_STATUS } from '@/constants'
-import { showAmount } from '@/helpers'
+import {
+  DISCOUNT_CODE_BILLING_TYPE,
+  DISCOUNT_CODE_STATUS,
+  DISCOUNT_CODE_TYPE
+} from '@/constants'
+import { formatDate, showAmount } from '@/helpers'
 import { useLoading, usePagination } from '@/hooks'
 import {
   deleteDiscountCodeReq,
@@ -16,7 +23,8 @@ import {
   DiscountCodeStatus,
   DiscountType
 } from '@/shared.types'
-import Icon, {
+import { title } from '@/utils'
+import {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -30,7 +38,11 @@ import { Key, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
-import { useWithExportAction } from './helpers'
+import {
+  formatNumberByZeroUnLimitedRule,
+  formatQuantity,
+  useWithExportAction
+} from './helpers'
 
 const PAGE_SIZE = 10
 
@@ -38,14 +50,19 @@ const CODE_STATUS_FILTER = Object.entries(DISCOUNT_CODE_STATUS).map((s) => {
   const [value, { label }] = s
   return { value: Number(value), text: label }
 })
+const BILLING_TYPE_FILTER = Object.entries(DISCOUNT_CODE_BILLING_TYPE).map(
+  (s) => {
+    const [value, text] = s
+    return { value: Number(value), text: title(text) }
+  }
+)
+const DISCOUNT_TYPE_FILTER = Object.entries(DISCOUNT_CODE_TYPE).map((s) => {
+  const [value, text] = s
+  return { value: Number(value), text: title(text) }
+})
 
 type TableRowSelection<T extends object = object> =
   TableProps<T>['rowSelection']
-
-interface ExtendedDiscountCode extends DiscountCode {
-  quantityUsed?: number
-  liveQuantity?: number
-}
 
 export const DiscountCodeList = () => {
   const { page, onPageChange } = usePagination()
@@ -62,6 +79,7 @@ export const DiscountCodeList = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
   const [isShowRowSelectCheckBox, setIsShowRowSelectCheckBox] = useState(false)
   const withExportAction = useWithExportAction()
+  const createTableDateFilter = useTableDateFilter<DiscountCode>()
 
   const rowSelection: TableRowSelection<DiscountCode> = {
     selectedRowKeys,
@@ -116,112 +134,74 @@ export const DiscountCodeList = () => {
       filters: CODE_STATUS_FILTER
     },
     {
-      title: 'Discount Info',
-      key: 'discountInfo',
-      align: 'center',
-      render: (_, code) => {
-        if (code.discountType === DiscountType.PERCENTAGE) {
-          const percentage = code.discountPercentage / 100
-          return <div style={{ textAlign: 'center' }}>{`${percentage} %`}</div>
-        }
-        return (
-          <div style={{ textAlign: 'center' }}>
-            {showAmount(code.discountAmount, code.currency)}
-          </div>
-        )
-      },
-      filters: [
-        { text: 'Percentage', value: DiscountType.PERCENTAGE },
-        { text: 'Fixed-amount', value: DiscountType.AMOUNT }
-      ],
-      onFilter: (value, record) => record.discountType === Number(value)
+      title: 'Type',
+      dataIndex: 'billingType',
+      key: 'billingType',
+      render: (s) => DISCOUNT_CODE_BILLING_TYPE[s as DiscountCodeBillingType],
+      filters: BILLING_TYPE_FILTER
     },
     {
-      title: 'Recurring Cycle',
-      key: 'recurringCycle',
-      align: 'center',
-      render: (_, code) => {
-        const cycleLimit = code.cycleLimit
-        const value =
-          code.billingType === DiscountCodeBillingType.ONE_TIME
-            ? '1'
-            : cycleLimit === 0
-              ? '♾️'
-              : cycleLimit.toString()
-        const isRecurring =
-          code.billingType === DiscountCodeBillingType.RECURRING
-
-        if (!isRecurring) {
-          return (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid #d9d9d9',
-                borderRadius: '8px',
-                width: '44px',
-                height: '44px',
-                background: '#fff'
-              }}
-            >
-              <span style={{ fontSize: '16px' }}>{value}</span>
-            </div>
-          )
+      title: 'Discount Type',
+      dataIndex: 'discountType',
+      key: 'discountType',
+      render: (s) => DISCOUNT_CODE_TYPE[s as DiscountType],
+      filters: DISCOUNT_TYPE_FILTER
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'discountAmount',
+      key: 'discountAmount',
+      render: (amt, code) =>
+        code.discountType == DiscountType.PERCENTAGE
+          ? ''
+          : showAmount(amt, code.currency)
+    },
+    {
+      title: 'Percentage',
+      dataIndex: 'discountPercentage',
+      key: 'discountPercentage',
+      render: (percent, code) =>
+        code.discountType == DiscountType.PERCENTAGE ? `${percent / 100} %` : ''
+    },
+    {
+      title: 'Cycle Limit',
+      dataIndex: 'cycleLimit',
+      key: 'cycleLimit',
+      render: (lim, code) => {
+        if (code.billingType == DiscountCodeBillingType.ONE_TIME) {
+          return '1'
+        } else if (code.billingType == DiscountCodeBillingType.RECURRING) {
+          return formatNumberByZeroUnLimitedRule(lim)
+        } else {
+          return lim
         }
-
-        return (
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '1px solid #d9d9d9',
-              borderRadius: '8px',
-              width: '44px',
-              height: '44px',
-              background: '#fff',
-              position: 'relative'
-            }}
-          >
-            <Icon
-              component={RecurringCycleSvg}
-              style={{
-                fontSize: '28px',
-                position: 'relative',
-                top: '-3px'
-              }}
-            />
-            <span
-              style={{
-                position: 'absolute',
-                fontSize: '11px',
-                fontWeight: 500,
-                color: '#333333',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                zIndex: 1
-              }}
-            >
-              {value}
-            </span>
-          </div>
-        )
       }
     },
     {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
-      render: (quantity: number, record: ExtendedDiscountCode) => {
-        if (quantity === 0) {
-          return 'Unlimited'
-        }
-        const used = record.quantityUsed ?? 0
-        const remaining = record.liveQuantity ?? quantity
-        return `${quantity} times (${remaining} left, ${used} used)`
-      }
+      render: (quantity: number) => formatQuantity(quantity)
+    },
+    {
+      title: 'Remaining Quantity',
+      dataIndex: 'liveQuantity',
+      key: 'liveQuantity',
+      render: (remainingQuantity, code) =>
+        // If quantity is 0, the remaining quantity should display unlimited.
+        code.quantity === 0 ? 'Unlimited' : remainingQuantity
+    },
+    {
+      title: 'Usage Count',
+      dataIndex: 'quantityUsed',
+      key: 'quantityUsed'
+    },
+    {
+      title: 'Created at',
+      dataIndex: 'createTime',
+      key: 'createTime',
+      render: (createTime) => formatDate(createTime),
+      ...createTableDateFilter()
     },
     {
       title: 'Validity Range',
@@ -328,16 +308,11 @@ export const DiscountCodeList = () => {
     filters
   ) => {
     onPageChange(pagination.current!, pagination.pageSize!)
-
-    // Add discountType filter
-    const discountTypeFilter = filters.discountInfo?.[0]
-      ? { discountType: Number(filters.discountInfo[0]) }
-      : {}
-
     fetchData(
-      {
-        ...discountTypeFilter
-      },
+      formatDateRange(filters, 'createTime', {
+        start: 'createTimeStart',
+        end: 'createTimeEnd'
+      }),
       pagination.current! - 1
     )
   }
