@@ -66,7 +66,7 @@ const PLAN_TYPE_FILTER = Object.entries(PLAN_TYPE)
 type TFilters = {
   type: PlanType[] | null
   status: PlanStatus[] | null
-  planName?: string[] | null
+  planName?: number[] | null
 }
 
 const Index = ({
@@ -88,14 +88,38 @@ const Index = ({
     undefined
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
-  const [planNameFilters, setPlanNameFilters] = useState<{ value: string; text: string }[]>([])
+  const [planNameFilters, setPlanNameFilters] = useState<{ value: number; text: string }[]>([])
 
+  // 注意：我们在URL中使用'planIds'参数，但在Ant Design Table的筛选器中，字段名是'planName'
+  // 这是因为Table组件的onChange事件返回的filters对象使用列的key作为字段名
+  // 我们的列key是'planName'，但我们存储的是plan ID，所以URL参数用'planIds'更准确
+  const planIdsParam = searchParams.get('planIds');
+  // console.log('URL planIds param:', planIdsParam);
+  
+  // 检查initializeFilters函数的结果
+  const typeFilters = initializeFilters('type', Number, PlanType);
+  const statusFilters = initializeFilters('status', Number, PlanStatus);
+  // console.log('initializeFilters results:', { typeFilters, statusFilters });
+  
+  // 手动处理planIds参数
+  let planNameFilter = null;
+  if (planIdsParam) {
+    try {
+      planNameFilter = planIdsParam.split('-').map(Number).filter(id => !isNaN(id));
+      // console.log('Parsed planIds from URL:', planNameFilter);
+    } catch (_e) {
+      // console.error('Error parsing planIds:', _e);
+    }
+  }
+  
   const [filters, setFilters] = useState<TFilters>({
-    ...initializeFilters('type', Number, PlanType),
-    ...initializeFilters('status', Number, PlanStatus),
-    planName: searchParams.get('planName') ? searchParams.get('planName')?.split('-') : null
+    ...typeFilters,
+    ...statusFilters,
+    planName: planNameFilter
   } as TFilters)
 
+  // console.log('Initial filters:', filters);
+  
   const [sortFilter, setSortFilter] = useState<Sorts>(
     initializeSort<IPlan>(['planName', 'createTime']) // pass all the sortable column.key in array
   )
@@ -126,6 +150,9 @@ const Index = ({
   }
 
   const fetchPlan = async () => {
+    // console.log('fetchPlan called with filters:', filters);
+    // console.log('planNameFilters available:', planNameFilters);
+    
     const body: TPlanListBody = {
       productIds: [productId],
       page: page,
@@ -139,11 +166,29 @@ const Index = ({
       body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
     }
 
-    // Add planName filter if it exists
+    // Add planName filter if it exists - we need to find the plan name from the ID
     if (filters.planName && filters.planName.length > 0) {
-      body.planName = filters.planName[0];
+      // console.log('Filtering by planName:', filters.planName);
+      
+      // 确保planNameFilters已经加载
+      if (planNameFilters.length === 0) {
+        // console.log('planNameFilters not loaded yet, skipping planName filter');
+      } else {
+        // Find the plan name from the plan ID
+        const selectedPlan = planNameFilters.find(p => p.value === filters.planName![0]);
+        // console.log('Selected plan from filter:', selectedPlan);
+        if (selectedPlan) {
+          body.planName = selectedPlan.text;
+          // console.log('Setting API planName filter to:', selectedPlan.text);
+        } else {
+          // console.log('Could not find plan with ID:', filters.planName[0]);
+          // console.log('Available plan IDs:', planNameFilters.map(p => p.value));
+        }
+      }
     }
 
+    // console.log('API request body:', body);
+    
     setLoading(true)
     const [planList, err] = await getPlanList(body, fetchPlan)
     setLoading(false)
@@ -153,6 +198,8 @@ const Index = ({
     }
     const { plans, total } = planList
     setTotal(total)
+    
+    // console.log('API response plans:', plans);
     
     setPlan(
       plans == null
@@ -184,19 +231,21 @@ const Index = ({
     
     if (plans && plans.length > 0) {
       const uniquePlanNames = new Set<string>();
-      const newPlanNameFilters: { value: string; text: string }[] = [];
+      const newPlanNameFilters: { value: number; text: string }[] = [];
       
       plans.forEach((p: IPlan) => {
         const planName = p.plan?.planName;
-        if (planName && !uniquePlanNames.has(planName)) {
+        const planId = p.plan?.id;
+        if (planName && planId && !uniquePlanNames.has(planName)) {
           uniquePlanNames.add(planName);
           newPlanNameFilters.push({
-            value: planName,
+            value: planId,
             text: planName
           });
         }
       });
       
+      // console.log('Plan name filters:', newPlanNameFilters);
       setPlanNameFilters(newPlanNameFilters);
     }
   }
@@ -216,7 +265,11 @@ const Index = ({
       filteredValue: filters.planName,
       filterMode: 'tree',
       filterSearch: true,
-      onFilter: (value, record) => record.planName === value,
+      onFilter: (value, record) => {
+        // console.log('onFilter comparing:', { value, recordId: record.id, valueType: typeof value, recordIdType: typeof record.id });
+        // 确保类型匹配，将value转换为数字进行比较
+        return record.id === Number(value);
+      },
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
@@ -363,6 +416,16 @@ const Index = ({
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
     // onPageChange(1, PAGE_SIZE)
+    // console.log('Table filter change:', filters);
+    
+    // 检查filters.planName的类型和值
+    // 注意：虽然字段名是planName，但实际上存储的是plan ID
+    // console.log('planName filter:', {
+    //   value: filters.planName,
+    //   type: typeof filters.planName,
+    //   isArray: Array.isArray(filters.planName)
+    // });
+    
     setFilters(filters as TFilters)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -373,10 +436,19 @@ const Index = ({
     filters.status == null
       ? searchParams.delete('status')
       : searchParams.set('status', filters.status.join('-'))
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    filters.planName == null || filters.planName.length === 0
-      ? searchParams.delete('planName')
-      : searchParams.set('planName', filters.planName.join('-'))
+    
+    // 处理planIds参数 - 虽然filters中的字段名是planName，但我们在URL中使用planIds
+    // 因为这些值实际上是plan ID而不是plan名称
+    if (filters.planName == null || filters.planName.length === 0) {
+      // console.log('Removing planIds from URL');
+      searchParams.delete('planIds');
+    } else {
+      const planIdsStr = filters.planName.join('-');
+      // console.log('Setting planIds in URL:', planIdsStr);
+      searchParams.set('planIds', planIdsStr);
+    }
+
+    // console.log('Updated search params:', Object.fromEntries(searchParams.entries()));
 
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
@@ -405,6 +477,15 @@ const Index = ({
       fetchAllPlanNames()
     }
   }, [productId, isProductValid])
+
+  // 添加日志，检查表格筛选器的状态
+  useEffect(() => {
+    // console.log('Render state:', {
+    //   filters,
+    //   planNameFilters,
+    //   planIdsInURL: searchParams.get('planIds')
+    // });
+  }, [filters, planNameFilters, searchParams]);
 
   return (
     <>
