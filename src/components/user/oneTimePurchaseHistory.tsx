@@ -105,7 +105,7 @@ const Index = ({ userId }: { userId: number }) => {
 
   useEffect(() => {
     getOneTimeHistory()
-  }, [page])
+  }, [page, userId])
 
   return (
     <>

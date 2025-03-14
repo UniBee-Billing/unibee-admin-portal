@@ -62,7 +62,7 @@ const Index = ({ userId }: { userId: number }) => {
 
   useEffect(() => {
     getSubHistory()
-  }, [page])
+  }, [page, userId])
 
   useEffect(() => {
     getProductList()
