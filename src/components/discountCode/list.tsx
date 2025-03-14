@@ -1,14 +1,7 @@
-import {
-  formatDateRange,
-  useTableDateFilter
-} from '@/components/table/filters/dateFilter'
+import RecurringCycleSvg from '@/assets/recurringCycle.svg?react'
 import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
-import {
-  DISCOUNT_CODE_BILLING_TYPE,
-  DISCOUNT_CODE_STATUS,
-  DISCOUNT_CODE_TYPE
-} from '@/constants'
-import { formatDate, showAmount } from '@/helpers'
+import { DISCOUNT_CODE_STATUS } from '@/constants'
+import { showAmount } from '@/helpers'
 import { useLoading, usePagination } from '@/hooks'
 import {
   deleteDiscountCodeReq,
@@ -23,14 +16,12 @@ import {
   DiscountCodeStatus,
   DiscountType
 } from '@/shared.types'
-import { title } from '@/utils'
-import {
+import Icon, {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   LoadingOutlined,
-  ProfileOutlined,
-  ClockCircleOutlined
+  ProfileOutlined
 } from '@ant-design/icons'
 import { Modal, Space, Table, message } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
@@ -39,11 +30,7 @@ import { Key, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
-import {
-  formatNumberByZeroUnLimitedRule,
-  formatQuantity,
-  useWithExportAction
-} from './helpers'
+import { useWithExportAction } from './helpers'
 
 const PAGE_SIZE = 10
 
@@ -51,19 +38,14 @@ const CODE_STATUS_FILTER = Object.entries(DISCOUNT_CODE_STATUS).map((s) => {
   const [value, { label }] = s
   return { value: Number(value), text: label }
 })
-const BILLING_TYPE_FILTER = Object.entries(DISCOUNT_CODE_BILLING_TYPE).map(
-  (s) => {
-    const [value, text] = s
-    return { value: Number(value), text: title(text) }
-  }
-)
-const DISCOUNT_TYPE_FILTER = Object.entries(DISCOUNT_CODE_TYPE).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text: title(text) }
-})
 
 type TableRowSelection<T extends object = object> =
   TableProps<T>['rowSelection']
+
+interface ExtendedDiscountCode extends DiscountCode {
+  quantityUsed?: number
+  liveQuantity?: number
+}
 
 export const DiscountCodeList = () => {
   const { page, onPageChange } = usePagination()
@@ -80,7 +62,6 @@ export const DiscountCodeList = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
   const [isShowRowSelectCheckBox, setIsShowRowSelectCheckBox] = useState(false)
   const withExportAction = useWithExportAction()
-  const createTableDateFilter = useTableDateFilter<DiscountCode>()
 
   const rowSelection: TableRowSelection<DiscountCode> = {
     selectedRowKeys,
@@ -140,10 +121,14 @@ export const DiscountCodeList = () => {
       align: 'center',
       render: (_, code) => {
         if (code.discountType === DiscountType.PERCENTAGE) {
-          const percentage = code.discountPercentage / 100;
+          const percentage = code.discountPercentage / 100
           return <div style={{ textAlign: 'center' }}>{`${percentage} %`}</div>
         }
-        return <div style={{ textAlign: 'center' }}>{showAmount(code.discountAmount, code.currency)}</div>
+        return (
+          <div style={{ textAlign: 'center' }}>
+            {showAmount(code.discountAmount, code.currency)}
+          </div>
+        )
       },
       filters: [
         { text: 'Percentage', value: DiscountType.PERCENTAGE },
@@ -156,44 +141,71 @@ export const DiscountCodeList = () => {
       key: 'recurringCycle',
       align: 'center',
       render: (_, code) => {
-        const cycleLimit = code.cycleLimit;
-        const value = code.billingType === DiscountCodeBillingType.ONE_TIME ? '1' : 
-          (cycleLimit === 0 ? '♾️' : cycleLimit.toString());
-        const isRecurring = code.billingType === DiscountCodeBillingType.RECURRING;
-        
+        const cycleLimit = code.cycleLimit
+        const value =
+          code.billingType === DiscountCodeBillingType.ONE_TIME
+            ? '1'
+            : cycleLimit === 0
+              ? '♾️'
+              : cycleLimit.toString()
+        const isRecurring =
+          code.billingType === DiscountCodeBillingType.RECURRING
+
+        if (!isRecurring) {
+          return (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid #d9d9d9',
+                borderRadius: '8px',
+                width: '44px',
+                height: '44px',
+                background: '#fff'
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>{value}</span>
+            </div>
+          )
+        }
+
         return (
-          <div style={{ 
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid #d9d9d9',
-            borderRadius: '8px',
-            width: '44px',
-            height: '44px',
-            position: 'relative',
-            background: '#fff',
-            margin: '0 auto'
-          }}>
-            <span style={{ 
-              fontSize: '16px',
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              marginTop: '-2px'
-            }}>{value}</span>
-            {isRecurring && (
-              <ClockCircleOutlined 
-                style={{ 
-                  position: 'absolute',
-                  right: '4px',
-                  bottom: '4px',
-                  fontSize: '14px',
-                  color: '#000',
-                  fontWeight: 'bold'
-                }}
-              />
-            )}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #d9d9d9',
+              borderRadius: '8px',
+              width: '44px',
+              height: '44px',
+              background: '#fff',
+              position: 'relative'
+            }}
+          >
+            <Icon
+              component={RecurringCycleSvg}
+              style={{
+                fontSize: '28px',
+                position: 'relative',
+                top: '-3px'
+              }}
+            />
+            <span
+              style={{
+                position: 'absolute',
+                fontSize: '11px',
+                fontWeight: 500,
+                color: '#333333',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1
+              }}
+            >
+              {value}
+            </span>
           </div>
         )
       }
@@ -202,27 +214,14 @@ export const DiscountCodeList = () => {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
-      render: (quantity: number) => formatQuantity(quantity)
-    },
-    {
-      title: 'Remaining Quantity',
-      dataIndex: 'liveQuantity',
-      key: 'liveQuantity',
-      render: (remainingQuantity, code) =>
-        // If quantity is 0, the remaining quantity should display unlimited.
-        code.quantity === 0 ? 'Unlimited' : remainingQuantity
-    },
-    {
-      title: 'Usage Count',
-      dataIndex: 'quantityUsed',
-      key: 'quantityUsed'
-    },
-    {
-      title: 'Created at',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      render: (createTime) => formatDate(createTime),
-      ...createTableDateFilter()
+      render: (quantity: number, record: ExtendedDiscountCode) => {
+        if (quantity === 0) {
+          return 'Unlimited'
+        }
+        const used = record.quantityUsed ?? 0
+        const remaining = record.liveQuantity ?? quantity
+        return `${quantity} times (${remaining} left, ${used} used)`
+      }
     },
     {
       title: 'Validity Range',
@@ -329,11 +328,7 @@ export const DiscountCodeList = () => {
     filters
   ) => {
     onPageChange(pagination.current!, pagination.pageSize!)
-    const dateFilters = formatDateRange(filters, 'createTime', {
-      start: 'createTimeStart',
-      end: 'createTimeEnd'
-    })
-    
+
     // Add discountType filter
     const discountTypeFilter = filters.discountInfo?.[0]
       ? { discountType: Number(filters.discountInfo[0]) }
@@ -341,7 +336,6 @@ export const DiscountCodeList = () => {
 
     fetchData(
       {
-        ...dateFilters,
         ...discountTypeFilter
       },
       pagination.current! - 1

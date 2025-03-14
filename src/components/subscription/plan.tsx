@@ -1,5 +1,5 @@
 import { showAmount } from '@/helpers'
-import { IPlan, PlanType } from '@/shared.types'
+import { IPlan } from '@/shared.types'
 import { Checkbox, Divider, Input } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import React, { useEffect, useState } from 'react'
@@ -124,16 +124,18 @@ const Index = ({
         <div style={{ fontSize: '28px' }}>
           <LongTextPopover text={plan.planName} width="250px" />
         </div>
-        <div style={{ fontSize: '14px' }}>
-          {`${showAmount(plan.amount, plan.currency)}`}{' '}
-          {plan.type == PlanType.MAIN &&
-            `/${plan.intervalCount == 1 ? '' : plan.intervalCount}${
-              plan.intervalUnit
-            }`}
-        </div>
+        <div style={{ fontSize: '14px' }}>{`${showAmount(
+          plan.amount,
+          plan.currency
+        )}/${plan.intervalCount == 1 ? '' : plan.intervalCount}${
+          plan.intervalUnit
+        }`}</div>
 
         {plan.addons && (
-          <div style={{ maxHeight: '74px', overflowY: 'auto' }}>
+          <div
+            // className="flex flex-col gap-2"
+            style={{ maxHeight: '74px', overflowY: 'auto' }}
+          >
             {plan.addons.map((a) => (
               <div
                 className="flex w-full items-center justify-between"
@@ -181,11 +183,9 @@ const Index = ({
         <div className="flex w-full justify-around text-lg">
           <div>Total</div>
           <div>
-            {`${showAmount(totalAmount, plan.currency)}`}{' '}
-            {plan.type == PlanType.MAIN &&
-              `/${
-                plan.intervalCount == 1 ? '' : plan.intervalCount
-              }${plan.intervalUnit}`}
+            {`${showAmount(totalAmount, plan.currency)}/${
+              plan.intervalCount == 1 ? '' : plan.intervalCount
+            }${plan.intervalUnit}`}
           </div>
         </div>
       </div>
