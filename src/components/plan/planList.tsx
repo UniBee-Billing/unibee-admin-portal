@@ -39,7 +39,7 @@ import {
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 
@@ -164,14 +164,13 @@ const Index = ({
     )
   }
 
-  // 单独获取所有计划名称用于筛选
+  //Get all plan names individually for filtering
   const fetchAllPlanNames = async () => {
-    console.log('Fetching all plan names...');
     const [planList, err] = await getPlanList(
       {
         productIds: [productId],
         page: 0,
-        count: 1000 // 获取足够多的计划以包含所有名称
+        count: 1000 // Get enough plans to include all names
       },
       fetchPlan
     )
@@ -199,7 +198,6 @@ const Index = ({
       });
       
       setPlanNameFilters(newPlanNameFilters);
-      console.log('Plan name filters updated:', newPlanNameFilters);
     }
   }
 
