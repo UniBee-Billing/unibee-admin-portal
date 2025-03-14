@@ -99,16 +99,15 @@ const Index = ({
 
   const onTableChange: TableProps<TCreditTx>['onChange'] = (
     _,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    filters,
+    _filters,
     sorter
   ) => {
     // user search for 'abc' first, go to page 10, then search for 'xyz', I need to reset page = 1
     // otherwise, it'll show xyz in page 10 which might contain no records.
     if (
-      filters != null &&
-      filters.user != null &&
-      filters.user[0] != searchText // if search text not changed, don't reset page. This means: admin is just sorting.
+      _filters != null &&
+      _filters.user != null &&
+      _filters.user[0] != searchText // if search text not changed, don't reset page. This means: admin is just sorting.
     ) {
       onPageChange(1, PAGE_SIZE)
       return

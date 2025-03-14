@@ -10,7 +10,7 @@ type MetricDataContextType = {
   setMetricError: React.Dispatch<
     React.SetStateAction<MetricValidationError | null>
   >
-  resetMetricData: (metricType: MetricType, localId: string) => void
+  resetMetricData: (_metricType: MetricType, _localId: string) => void
 }
 
 const MetricDataContext = createContext<MetricDataContextType>({
@@ -34,7 +34,7 @@ const MetricDataProvider = ({ children }: { children: React.ReactNode }) => {
   const [metricError, setMetricError] = useState<MetricValidationError | null>(
     null
   )
-  const resetMetricData = (metricType: MetricType, localId: string) => {}
+  const resetMetricData = (_metricType: MetricType, _localId: string) => {}
   return (
     <MetricDataContext.Provider
       value={{

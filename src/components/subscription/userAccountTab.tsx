@@ -108,7 +108,7 @@ const UserAccountTab = ({
       body.aggregationValue = aggregationValue
     }
 
-    const [res, err] = await sendMetricEventReq(body)
+    const [_res, err] = await sendMetricEventReq(body)
     if (err != null) {
       message.error(err.message)
       return
