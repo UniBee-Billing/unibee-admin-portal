@@ -450,6 +450,8 @@ type DiscountCode = {
   planApplyType: DiscountCodeApplyType
   planIds?: number[] // this code applies to these plan only
   quantity: number
+  liveQuantity: number // remaining quantity
+  quantityUsed: number // used quantity
   metadata?: {
     [key: string]: string
   }
