@@ -17,6 +17,7 @@ interface PlanSelectorProps {
   selectedPlanId: number | null
   filterPredicate?: (plan: IPlan | undefined) => boolean
   onPlanSelected?: (plan: IPlan) => void
+  planType?: PlanType
 }
 
 export const PlanSelector = ({
@@ -24,16 +25,16 @@ export const PlanSelector = ({
   currentPlanId,
   selectedPlanId,
   onPlanSelected,
-  filterPredicate
+  filterPredicate,
+  planType
 }: PlanSelectorProps) => {
-  // todo: planList can be passed from parent, if null, run getPlanList.
   const [plans, setPlans] = useState<IPlan[]>([])
   const [loading, setLoading] = useState(false)
   const fetchPlan = async () => {
     setLoading(true)
     const [planList, err] = await getPlanList(
       {
-        type: [PlanType.MAIN],
+        type: [planType ?? PlanType.MAIN],
         productIds: [productId],
         status: [
           PlanStatus.ACTIVE,
@@ -41,7 +42,7 @@ export const PlanSelector = ({
           PlanStatus.SOFT_ARCHIVED
         ],
         page: 0,
-        count: 200
+        count: 250
       },
       fetchPlan
     )
@@ -63,7 +64,7 @@ export const PlanSelector = ({
 
   useEffect(() => {
     fetchPlan()
-  }, [])
+  }, [planType])
 
   const innerPlans = useMemo(
     () =>

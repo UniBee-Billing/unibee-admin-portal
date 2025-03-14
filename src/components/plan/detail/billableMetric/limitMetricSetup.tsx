@@ -16,7 +16,6 @@ const Index = ({
   metricData,
   metricsList,
   onMetricFieldChange,
-  onMetricIdSelectChange,
   addLimitData,
   removeLimitData
 }: {
@@ -27,11 +26,6 @@ const Index = ({
     localId: string,
     field: keyof MetricLimits
   ) => (val: number | null) => void
-  onMetricIdSelectChange: (
-    type: keyof MetricData,
-    localId: string
-  ) => (val: number | null) => void
-  // getCurrency: () => CURRENCY
   addLimitData: (type: keyof MetricData) => void
   removeLimitData: (type: keyof MetricData, localId: string) => void
 }) => {
@@ -66,7 +60,7 @@ const Index = ({
 
   return (
     <div className="my-4 rounded-md bg-gray-100 p-4">
-      <Typography.Title level={5}>Limit metered</Typography.Title>
+      <Typography.Title level={5}>Limit Metered</Typography.Title>
       <Row>
         {header.map((h, i) => (
           <Col key={i} span={colSpan[i]} className={rowHeaderStyle}>
@@ -88,7 +82,11 @@ const Index = ({
               }
               style={{ width: '80%' }}
               value={m.metricId}
-              onChange={onMetricIdSelectChange('metricLimits', m.localId)}
+              onChange={onMetricFieldChange(
+                'metricLimits',
+                m.localId,
+                'metricId'
+              )}
               options={metricsList
                 .filter((m) => m.type == MetricType.LIMIT_METERED)
                 .map((m) => ({

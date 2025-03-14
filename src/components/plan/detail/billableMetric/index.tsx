@@ -10,7 +10,7 @@ import { Button, Dropdown, Empty, Space } from 'antd'
 
 import { currencyDecimalValidate } from '@/helpers'
 import update from 'immutability-helper'
-import { useContext } from 'react'
+import { MouseEventHandler, useContext } from 'react'
 import {
   defaultMetricLimit,
   defaultMetricMeteredCharge,
@@ -33,6 +33,7 @@ const Index = ({
   formDisabled
 }: BillableMetricSetupProps) => {
   const { metricData, setMetricData } = useContext(MetricDataContext)
+
   const addMetricData = <T extends keyof MetricData>(
     type: T, // T is MetricData key, MetricData value is an array of MetricLimits | MetricMeteredCharge
     defaultData: (typeof metricData)[T][number] // based on the key, defaultData type is this array's item type.
@@ -58,59 +59,35 @@ const Index = ({
         ? keyof MetricLimits
         : keyof MetricMeteredCharge
     ) =>
-    (val: number | null) => {
+    (val: number | null | MouseEventHandler<HTMLElement>) => {
+      // the elements using this function are <Select />(onChange handler arg is number|null), <InputNumber />(onChange handler arg is number|null),
+      // and a button(onClick handler arg is MouseEventHandler<HTMLElement>), so we need to declare all the types.
       if (
         val != null &&
         field == 'standardAmount' &&
-        !currencyDecimalValidate(val, getCurrency().Currency)
+        !currencyDecimalValidate(val as number, getCurrency().Currency)
       ) {
         return
       }
 
       const idx = metricData[type].findIndex((m) => m.localId == localId)
       if (idx != -1) {
-        setMetricData(
-          update(metricData, { [type]: { [idx]: { [field]: { $set: val } } } })
-        )
+        if (field !== 'expanded') {
+          setMetricData(
+            update(metricData, {
+              [type]: { [idx]: { [field]: { $set: val } } }
+            })
+          )
+        } else {
+          const expanded = metricData[type][idx].expanded
+          setMetricData(
+            update(metricData, {
+              [type]: { [idx]: { expanded: { $set: !expanded } } }
+            })
+          )
+        }
       }
     }
-
-  const onChargeTypeSelectChange =
-    (type: keyof MetricData, localId: string) => (val: number | null) => {
-      const idx = metricData[type].findIndex((m) => m.localId == localId)
-      if (idx != -1) {
-        setMetricData(
-          update(metricData, {
-            [type]: { [idx]: { chargeType: { $set: val } } }
-          })
-        )
-      }
-    }
-
-  const onMetricIdSelectChange =
-    (type: keyof MetricData, localId: string) => (val: number | null) => {
-      const idx = metricData[type].findIndex((m) => m.localId == localId)
-      if (idx != -1) {
-        setMetricData(
-          update(metricData, {
-            [type]: { [idx]: { metricId: { $set: val } } }
-          })
-        )
-      }
-    }
-
-  const toggleGraduationSetup = (type: keyof MetricData, localId: string) => {
-    const idx = metricData[type].findIndex((m) => m.localId == localId)
-    if (idx != -1) {
-      setMetricData(
-        update(metricData, {
-          [type]: {
-            [idx]: { expanded: { $set: !metricData[type][idx].expanded } }
-          }
-        })
-      )
-    }
-  }
 
   return (
     <div>
@@ -129,8 +106,6 @@ const Index = ({
             (m) => m.type == MetricType.LIMIT_METERED
           )}
           onMetricFieldChange={onMetricFieldChange}
-          onMetricIdSelectChange={onMetricIdSelectChange}
-          // getCurrency={getCurrency}
           addLimitData={(type) => addMetricData(type, defaultMetricLimit())}
           removeLimitData={removeMetricData}
         />
@@ -149,9 +124,6 @@ const Index = ({
           }
           removeMetricData={removeMetricData}
           onMetricFieldChange={onMetricFieldChange}
-          onChargeTypeSelectChange={onChargeTypeSelectChange}
-          onMetricIdSelectChange={onMetricIdSelectChange}
-          toggleGraduationSetup={toggleGraduationSetup}
           formDisabled={formDisabled}
         />
       )}
@@ -169,9 +141,6 @@ const Index = ({
           }
           removeMetricData={removeMetricData}
           onMetricFieldChange={onMetricFieldChange}
-          onChargeTypeSelectChange={onChargeTypeSelectChange}
-          onMetricIdSelectChange={onMetricIdSelectChange}
-          toggleGraduationSetup={toggleGraduationSetup}
           formDisabled={formDisabled}
         />
       )}

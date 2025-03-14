@@ -1,14 +1,19 @@
-import { TGateway } from '@/shared.types'
+import { GatewayPaymentType, TGateway } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
-import React, { ChangeEventHandler } from 'react'
+import { CheckOutlined } from '@ant-design/icons'
+import React, { ChangeEventHandler, useEffect } from 'react'
 
 const Index = ({
   selected,
+  selectedPaymentType,
   onSelect,
+  onSelectPaymentType,
   disabled
 }: {
   selected: number | undefined
+  selectedPaymentType: string | undefined
   onSelect: (v: number) => void
+  onSelectPaymentType: (v: string) => void
   disabled?: boolean
 }) => {
   const appConfig = useAppConfigStore()
@@ -33,46 +38,79 @@ const Index = ({
     onSelect(Number(e.target.value))
   }
 
+  useEffect(() => {
+    // some gateways like Payssion has subgateways(paymentTypes), others don't,
+    // if we select payssion, then select a paymentType, then select PayPal, which doesn't have paymentTypes, we need to deselect Paysson's paymentType.
+    if (selected != undefined) {
+      const gateway = gateways.find((g) => g.gatewayId == selected)
+      if (gateway?.gatewayPaymentTypes == undefined) {
+        onSelectPaymentType('')
+      }
+    }
+  }, [selected])
+
   return (
     <div className="flex max-h-64 w-full flex-col gap-3 overflow-y-auto pr-4">
       {gateways.map(
-        ({ gatewayId, gatewayName, displayName, gatewayIcons, archive }) => (
-          <label
-            onClick={onLabelClick}
+        ({
+          gatewayId,
+          gatewayName,
+          displayName,
+          gatewayIcons,
+          archive,
+          gatewayPaymentTypes
+        }) => (
+          <div
             key={gatewayId}
-            htmlFor={`payment-${gatewayName}`}
-            className={`flex h-12 w-full shrink-0 grow-0 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between rounded border border-solid ${selected == gatewayId ? 'border-blue-500' : 'border-gray-200'} px-2`}
+            className={`rounded border border-solid ${selected == gatewayId ? 'border-blue-500' : 'border-gray-200'}`}
           >
-            <div className="flex items-center">
-              <input
-                type="radio"
-                name={`payment-${gatewayName}`}
-                id={`payment-${gatewayName}`}
-                value={gatewayId}
-                checked={gatewayId === selected}
-                onChange={onChange}
-                disabled={disabled}
-              />
-              <div className="ml-2 flex items-center justify-between">
-                {displayName}
-                {archive && (
-                  <span className="text-xs font-bold text-gray-400">
-                    &nbsp; ARV
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="ml-3 flex items-center justify-end gap-2">
-              {gatewayIcons.map((i) => (
-                <div
-                  key={i}
-                  className="flex h-7 max-w-14 items-center justify-center"
-                >
-                  <img src={i} className="h-full w-full object-contain" />
+            <label
+              onClick={onLabelClick}
+              // key={gatewayId}
+              htmlFor={`payment-${gatewayName}`}
+              className={`flex h-12 w-full shrink-0 grow-0 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} items-center justify-between px-2`}
+            >
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  name={`payment-${gatewayName}`}
+                  id={`payment-${gatewayName}`}
+                  value={gatewayId}
+                  checked={gatewayId === selected}
+                  onChange={onChange}
+                  disabled={disabled}
+                />
+                <div className="ml-2 flex items-center justify-between">
+                  {displayName}
+                  {archive && (
+                    <span className="text-xs font-bold text-gray-400">
+                      &nbsp; ARV
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          </label>
+              </div>
+              <div className="ml-3 flex items-center justify-end gap-2">
+                {gatewayIcons.map((i) => (
+                  <div
+                    key={i}
+                    className="flex h-7 max-w-14 items-center justify-center"
+                  >
+                    <img src={i} className="h-full w-full object-contain" />
+                  </div>
+                ))}
+              </div>
+            </label>
+            {gatewayPaymentTypes != null && gatewayPaymentTypes.length > 0 && (
+              <PaymentTypesSelector
+                gatewayId={gatewayId}
+                selected={selected}
+                selectedPaymentType={selectedPaymentType}
+                onSelect={onSelect}
+                onSelectPaymentType={onSelectPaymentType}
+                list={gatewayPaymentTypes}
+              />
+            )}
+          </div>
         )
       )}
     </div>
@@ -80,3 +118,60 @@ const Index = ({
 }
 
 export default Index
+
+// if Payssion is not selected, then subtypes should not be selected either.
+const PaymentTypesSelector = ({
+  gatewayId,
+  selected,
+  selectedPaymentType,
+  onSelect,
+  onSelectPaymentType,
+  list
+}: {
+  gatewayId: number
+  selected: number | undefined
+  selectedPaymentType: string | undefined
+  onSelect: (v: number) => void
+  onSelectPaymentType: (v: string) => void
+  list: GatewayPaymentType[]
+}) => {
+  const onPaymentTypeSelect = (paymentType: string) => {
+    onSelectPaymentType(paymentType)
+    onSelect(gatewayId)
+  }
+
+  return (
+    <div
+      className="w-full"
+      style={{ borderTop: '1px solid #eee', paddingTop: '12px' }}
+    >
+      <div className="mb-2 flex w-full flex-wrap gap-2 px-2">
+        {list.map((p) => (
+          <div
+            key={p.paymentType}
+            // "sm:***, lg:***" is generated by Cursor(I have no idea how it does), the effect is to have 1, 2 or 3 child divs per row based on how wide the parent div is.
+            className={`relative flex basis-full rounded-sm bg-gray-100 p-2 hover:cursor-pointer sm:basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-0.667rem)] ${
+              selectedPaymentType == p.paymentType && selected == gatewayId
+                ? 'bg-blue-200'
+                : ''
+            }`}
+            onClick={() => onPaymentTypeSelect(p.paymentType)}
+          >
+            <div className="flex w-full flex-col gap-1">
+              <div className="text-xs">{p.name} </div>
+              <div className="text-xs text-gray-500">{p.countryName}</div>
+            </div>
+            <div className="absolute right-1 top-[-2px]">
+              <div>
+                {selectedPaymentType == p.paymentType &&
+                  selected == gatewayId && (
+                    <CheckOutlined className="text-blue-500" />
+                  )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

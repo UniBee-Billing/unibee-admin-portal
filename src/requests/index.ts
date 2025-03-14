@@ -259,33 +259,16 @@ export const generateApiKeyReq = async () => {
 }
 
 export type TGatewayConfigBody = {
-  gatewayId?: number //
+  gatewayId?: number
   gatewayName?: string
   gatewayKey?: string
   gatewaySecret?: string
-  subGateway?: string
+  gatewayPaymentTypes?: string[]
   displayName?: string
   gatewayLogo?: string[]
   sort?: number
   currencyExchange?: TGatewayExRate[]
 }
-// to be depreciated
-/*
-export const saveGatewayKeyReq = async (
-  body: TGatewayConfigBody,
-  isNew: boolean
-) => {
-  const url = isNew ? '/merchant/gateway/setup' : '/merchant/gateway/edit'
-  try {
-    const res = await request.post(url, body)
-    handleStatusCode(res.data.code)
-    return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-*/
 
 export const saveGatewayConfigReq = async (
   body: TGatewayConfigBody,
@@ -301,26 +284,6 @@ export const saveGatewayConfigReq = async (
     return [null, e]
   }
 }
-
-// to be depreciated
-/*
-export const saveChangellyPubKeyReq = async (
-  gatewayId: number,
-  webhookSecret: string
-) => {
-  try {
-    const res = await request.post('/merchant/gateway/setup_webhook', {
-      gatewayId,
-      webhookSecret
-    })
-    handleStatusCode(res.data.code)
-    return [res.data.data, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
-*/
 
 export const saveWebhookKeyReq = async (
   gatewayId: number,
@@ -875,6 +838,7 @@ export interface UserData {
 type TCreateSubReq = {
   planId: number
   gatewayId: number
+  gatewayPaymentType?: string
   userId: number
   trialEnd?: number
   addonParams?: { quantity: number; addonPlanId: number }[]
@@ -892,6 +856,7 @@ type TCreateSubReq = {
 export const createSubscriptionReq = async ({
   planId,
   gatewayId,
+  gatewayPaymentType,
   userId,
   trialEnd,
   addonParams,
@@ -909,6 +874,7 @@ export const createSubscriptionReq = async ({
     const res = await request.post(`/merchant/subscription/create_submit`, {
       planId,
       gatewayId,
+      gatewayPaymentType,
       userId,
       trialEnd,
       quantity: 1,

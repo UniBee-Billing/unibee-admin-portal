@@ -9,7 +9,7 @@ import { MinusOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Col, InputNumber, Row, Tooltip } from 'antd'
 
 import update from 'immutability-helper'
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { MetricDataContext } from '../metricDataContext'
 import { MetricData } from './types'
 
@@ -27,16 +27,24 @@ const Index = ({
   getCurrency: () => CURRENCY
   formDisabled: boolean
 }) => {
-  const { metricData, setMetricData, resetMetricData } =
-    useContext(MetricDataContext)
+  // const { metricData, setMetricData, metricError } =
+  //   useContext(MetricDataContext)
+  const { metricData, setMetricData } = useContext(MetricDataContext)
   const dataIdx = metricData[metricDataType].findIndex(
     (m) => m.localId == metricLocalId
   )
 
+  // this ref is to backup the initial data, used for reset.
+  const graduationDataRef = useRef(
+    metricData[metricDataType][dataIdx].graduatedAmounts
+  )
+  const resetGraduationData = () =>
+    setGraduationData(
+      update(graduationData, { $set: graduationDataRef.current ?? [] })
+    )
+
   const [graduationData, setGraduationData] = useState<MetricGraduatedAmount[]>(
-    data == undefined
-      ? []
-      : data.map((d) => ({ ...d, localId: randomString(8) }))
+    data ?? []
   )
 
   useEffect(() => {
@@ -51,7 +59,7 @@ const Index = ({
     }
   }, [graduationData])
 
-  // If array is initally empty, add 2 records.
+  // If array is initially empty, add 2 records.
   const addGraduationData = () => {
     if (graduationData.length == 0) {
       setGraduationData(
@@ -168,7 +176,7 @@ const Index = ({
 
       const cascadeUpdate =
         field == 'endValue' &&
-        typeof val == 'number' && // when input field is clared, its value is null(typeof is object).
+        typeof val == 'number' && // when input field is cleared, its value is null(typeof is object).
         Number.isInteger(val) &&
         val > graduationData[idx].startValue!
 
@@ -213,7 +221,7 @@ const Index = ({
       return returnNumber ? 0 : showAmount(0, currency.Currency, true)
     // for first record, its startValue is always 0, the range should not '-1'
     // for last record, its endValue is always infinity, the range should always be [1,1]
-    let range = endValue - startValue + 1 //  + (startValue == 0 ? 0 : 1)
+    let range = endValue - startValue + 1
     if (startValue == 0) {
       range -= 1
     }
@@ -269,8 +277,6 @@ const Index = ({
                   disabled={idx == graduationData.length - 1}
                   style={{ width: '80%' }}
                   value="∞"
-                  // value={m.endValue}
-                  // onChange={onGraduationDataChange(m.localId, 'endValue')}
                 />
               ) : (
                 <InputNumber
@@ -320,35 +326,30 @@ const Index = ({
       </div>
       <Row>
         <Col span={16}></Col>
-        {graduationData.length > 0 && (
-          <Col span={7} className="flex items-center font-bold text-gray-600">
-            {`${graduationData[graduationData.length - 1].startValue} units would cost ${showAmount(
+
+        <Col span={7} className="flex items-center font-bold text-gray-600">
+          {graduationData.length > 0 &&
+            `${graduationData[graduationData.length - 1].startValue} units would cost ${showAmount(
               calculateTotalCost(),
               getCurrency()?.Currency,
               true
             )}`}
-          </Col>
-        )}
-        {/* <Col span={1}>
+        </Col>
+
+        <Col span={1}>
           <Tooltip title="Reset">
             <Button
-              disabled={formDisabled}
+              disabled={graduationData.length == 0 || formDisabled}
               size="small"
               style={{ border: 'none' }}
               icon={<ReloadOutlined />}
-              // onClick={resetMetricData}
+              onClick={resetGraduationData}
             />
           </Tooltip>
-        </Col> */}
+        </Col>
       </Row>
     </div>
   )
-} //     <Modal title="Graduation setup" width={720} open={true} footer={false}>
-{
-  /* <div className="flex justify-end gap-3">
-          <Button onClick={onCancel}>Cancel</Button>
-          <Button onClick={() => onOK(graduationData)}>OK</Button>
-        </div> */
 }
 
 export default Index

@@ -1,4 +1,3 @@
-import { MetricType } from '@/shared.types'
 import React, { createContext, useState } from 'react'
 import { MetricData } from './billableMetric/types'
 import { MetricValidationError } from './helpers'
@@ -10,7 +9,6 @@ type MetricDataContextType = {
   setMetricError: React.Dispatch<
     React.SetStateAction<MetricValidationError | null>
   >
-  resetMetricData: (metricType: MetricType, localId: string) => void
 }
 
 const MetricDataContext = createContext<MetricDataContextType>({
@@ -21,8 +19,7 @@ const MetricDataContext = createContext<MetricDataContextType>({
   },
   metricError: null,
   setMetricData: () => {},
-  setMetricError: () => {},
-  resetMetricData: () => {}
+  setMetricError: () => {}
 })
 
 const MetricDataProvider = ({ children }: { children: React.ReactNode }) => {
@@ -34,15 +31,13 @@ const MetricDataProvider = ({ children }: { children: React.ReactNode }) => {
   const [metricError, setMetricError] = useState<MetricValidationError | null>(
     null
   )
-  const resetMetricData = (metricType: MetricType, localId: string) => {}
   return (
     <MetricDataContext.Provider
       value={{
         metricData,
         setMetricData,
         metricError,
-        setMetricError,
-        resetMetricData
+        setMetricError
       }}
     >
       {children}

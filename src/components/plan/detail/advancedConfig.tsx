@@ -75,14 +75,14 @@ const Index = ({
   const addonsItem: CollapseProps['items'] = [
     {
       key: 'addons',
-      label: 'Addons',
+      label: 'Add-ons',
       style: { backgroundColor: '#F5F5F5' },
       forceRender: true,
       children: (
         <>
           {
             <Form.Item
-              label="Add-ons"
+              label="Recurring Add-ons"
               name="addonIds"
               dependencies={['currency', 'intervalCount', 'intervalUnit']}
               rules={[
@@ -248,7 +248,7 @@ const Index = ({
           </Form.Item>
 
           <Form.Item
-            label="Trial length"
+            label="Trial Length"
             name="trialDurationTime"
             dependencies={['enableTrial']}
             rules={[
@@ -277,15 +277,18 @@ const Index = ({
             />
           </Form.Item>
 
-          <div className="relative flex items-center">
-            <Form.Item label="Trial requires bank card info" name="trialDemand">
-              <Switch disabled={!enableTrialWatch || formDisabled} />
-            </Form.Item>
-            <div className="absolute mb-6 ml-60 text-xs text-gray-400">
-              When enabled, users can only use bank card payment (no Crypto or
-              wire transfer) for their first purchase.
-            </div>
-          </div>
+          <Form.Item
+            label="Requires Payment Info"
+            name="trialDemand"
+            extra={
+              <span className="text-xs text-gray-400">
+                When enabled, users can only use bank card payment (no Crypto or
+                wire transfer) for their first purchase.
+              </span>
+            }
+          >
+            <Switch disabled={!enableTrialWatch || formDisabled} />
+          </Form.Item>
 
           <Form.Item label="Auto renew after trial end" name="cancelAtTrialEnd">
             <Switch disabled={!enableTrialWatch || formDisabled} />
@@ -298,7 +301,7 @@ const Index = ({
   const billableItem: CollapseProps['items'] = [
     {
       key: 'billable',
-      label: 'Usage-based billing model',
+      label: 'Usage-based billing',
       forceRender: true,
       style: { backgroundColor: '#F5F5F5' },
       children: (
