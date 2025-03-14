@@ -1,3 +1,4 @@
+import RecurringCycleSvg from '@/assets/recurringCycle.svg?react'
 import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
 import { DISCOUNT_CODE_STATUS } from '@/constants'
 import { showAmount } from '@/helpers'
@@ -15,7 +16,7 @@ import {
   DiscountCodeStatus,
   DiscountType
 } from '@/shared.types'
-import {
+import Icon, {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -29,11 +30,7 @@ import { Key, useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
-import {
-  useWithExportAction
-} from './helpers'
-import RecurringCycleSvg from '@/assets/recurringCycle.svg?react'
-import Icon from '@ant-design/icons'
+import { useWithExportAction } from './helpers'
 
 const PAGE_SIZE = 10
 
@@ -46,8 +43,8 @@ type TableRowSelection<T extends object = object> =
   TableProps<T>['rowSelection']
 
 interface ExtendedDiscountCode extends DiscountCode {
-  quantityUsed?: number;
-  liveQuantity?: number;
+  quantityUsed?: number
+  liveQuantity?: number
 }
 
 export const DiscountCodeList = () => {
@@ -124,10 +121,14 @@ export const DiscountCodeList = () => {
       align: 'center',
       render: (_, code) => {
         if (code.discountType === DiscountType.PERCENTAGE) {
-          const percentage = code.discountPercentage / 100;
+          const percentage = code.discountPercentage / 100
           return <div style={{ textAlign: 'center' }}>{`${percentage} %`}</div>
         }
-        return <div style={{ textAlign: 'center' }}>{showAmount(code.discountAmount, code.currency)}</div>
+        return (
+          <div style={{ textAlign: 'center' }}>
+            {showAmount(code.discountAmount, code.currency)}
+          </div>
+        )
       },
       filters: [
         { text: 'Percentage', value: DiscountType.PERCENTAGE },
@@ -140,14 +141,38 @@ export const DiscountCodeList = () => {
       key: 'recurringCycle',
       align: 'center',
       render: (_, code) => {
-        const cycleLimit = code.cycleLimit;
-        const value = code.billingType === DiscountCodeBillingType.ONE_TIME ? '1' : 
-          (cycleLimit === 0 ? '♾️' : cycleLimit.toString());
-        const isRecurring = code.billingType === DiscountCodeBillingType.RECURRING;
-        
+        const cycleLimit = code.cycleLimit
+        const value =
+          code.billingType === DiscountCodeBillingType.ONE_TIME
+            ? '1'
+            : cycleLimit === 0
+              ? '♾️'
+              : cycleLimit.toString()
+        const isRecurring =
+          code.billingType === DiscountCodeBillingType.RECURRING
+
         if (!isRecurring) {
           return (
-            <div style={{ 
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid #d9d9d9',
+                borderRadius: '8px',
+                width: '44px',
+                height: '44px',
+                background: '#fff'
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>{value}</span>
+            </div>
+          )
+        }
+
+        return (
+          <div
+            style={{
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -156,30 +181,15 @@ export const DiscountCodeList = () => {
               width: '44px',
               height: '44px',
               background: '#fff',
-            }}>
-              <span style={{ fontSize: '16px' }}>{value}</span>
-            </div>
-          );
-        }
-
-        return (
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid #d9d9d9',
-            borderRadius: '8px',
-            width: '44px',
-            height: '44px',
-            background: '#fff',
-            position: 'relative',
-          }}>
-            <Icon 
-              component={RecurringCycleSvg} 
-              style={{ 
+              position: 'relative'
+            }}
+          >
+            <Icon
+              component={RecurringCycleSvg}
+              style={{
                 fontSize: '28px',
                 position: 'relative',
-                top: '-3px' 
+                top: '-3px'
               }}
             />
             <span
@@ -197,7 +207,7 @@ export const DiscountCodeList = () => {
               {value}
             </span>
           </div>
-        );
+        )
       }
     },
     {
@@ -206,11 +216,11 @@ export const DiscountCodeList = () => {
       key: 'quantity',
       render: (quantity: number, record: ExtendedDiscountCode) => {
         if (quantity === 0) {
-          return 'Unlimited';
+          return 'Unlimited'
         }
-        const used = record.quantityUsed ?? 0;
-        const remaining = record.liveQuantity ?? quantity;
-        return `${quantity} times (${remaining} left, ${used} used)`;
+        const used = record.quantityUsed ?? 0
+        const remaining = record.liveQuantity ?? quantity
+        return `${quantity} times (${remaining} left, ${used} used)`
       }
     },
     {
@@ -318,7 +328,7 @@ export const DiscountCodeList = () => {
     filters
   ) => {
     onPageChange(pagination.current!, pagination.pageSize!)
-    
+
     // Add discountType filter
     const discountTypeFilter = filters.discountInfo?.[0]
       ? { discountType: Number(filters.discountInfo[0]) }
