@@ -147,7 +147,7 @@ const Index = () => {
           marginTop: '24px',
           overflowY: 'auto',
           width: userNotePushed ? '100%' : '69%',
-          transition: 'width 0.2s ease-in-out',
+          transition: 'width 0.3s ease-in-out',
           paddingRight: '18px'
         }}
       >

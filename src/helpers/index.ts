@@ -51,10 +51,7 @@ export const showAmount = (
   if (c == undefined) {
     return ''
   }
-  const formattedAmount = Intl.NumberFormat('en-US').format(
-    amount / (ignoreFactor ? 1 : c.Scale)
-  )
-  return `${isNegative ? '-' : ''}${c.Symbol}${formattedAmount}`
+  return `${isNegative ? '-' : ''}${c.Symbol}${amount / (ignoreFactor ? 1 : c.Scale)}`
 }
 
 export const daysBetweenDate = (

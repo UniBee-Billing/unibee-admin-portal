@@ -68,7 +68,7 @@ const Index = ({
         </Form.Item>
       )}
 
-      <Form.Item label="Product Name">
+      <Form.Item label="Product name">
         <span>
           {productDetail != null ? (
             productDetail?.productName
@@ -199,6 +199,10 @@ const Index = ({
           ({ getFieldValue }) => ({
             validator(_, value) {
               const num = Number(value)
+
+              if (isNaN(num) || num <= 0) {
+                return Promise.reject(`Please input a valid price (> 0).`)
+              }
               if (!currencyDecimalValidate(num, getFieldValue('currency'))) {
                 return Promise.reject('Please input a valid price')
               }

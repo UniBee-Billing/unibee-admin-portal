@@ -21,7 +21,7 @@ import {
   Select,
   Typography
 } from 'antd'
-import { MouseEventHandler, PropsWithChildren } from 'react'
+import { PropsWithChildren } from 'react'
 import GraduationSetup from './graduationSetup'
 import { MetricData } from './types'
 
@@ -37,7 +37,16 @@ type ChargeSetupProps = {
     type: keyof MetricData,
     localId: string,
     field: keyof MetricMeteredCharge
-  ) => (val: number | null | MouseEventHandler<HTMLElement>) => void
+  ) => (val: number | null) => void
+  onChargeTypeSelectChange: (
+    type: keyof MetricData,
+    localId: string
+  ) => (val: number | null) => void
+  onMetricIdSelectChange: (
+    type: keyof MetricData,
+    localId: string
+  ) => (val: number | null) => void
+  toggleGraduationSetup: (type: keyof MetricData, localId: string) => void
   formDisabled: boolean
 }
 const rowHeaderStyle = 'text-gray-400'
@@ -52,6 +61,9 @@ const Index = ({
   addMetricData,
   removeMetricData,
   onMetricFieldChange,
+  onChargeTypeSelectChange,
+  onMetricIdSelectChange,
+  toggleGraduationSetup,
   formDisabled
 }: ChargeSetupProps) => {
   const metricSelected = (metricId: number) =>
@@ -111,16 +123,7 @@ const Index = ({
   return (
     <div className="my-4 rounded-md bg-gray-100 p-4">
       <Typography.Title level={5}>
-        Charge Metered{isRecurring ? ' (recurring)' : ''}
-        <Popover
-          content={
-            <div className="max-w-96">
-              {`${isRecurring ? 'Calculated value is cumulative, NOT reset to 0 at each sub-period start.' : 'Calculated value is reset to 0 at each sub-period start.'}`}
-            </div>
-          }
-        >
-          <InfoCircleOutlined className="ml-2 text-gray-400" />
-        </Popover>
+        Charge metered{isRecurring ? ' (recurring)' : ''}
       </Typography.Title>
       <Row>
         {header.map((h, i) => (
@@ -137,11 +140,7 @@ const Index = ({
                 <Select
                   style={{ width: '80%' }}
                   value={m.metricId}
-                  onChange={onMetricFieldChange(
-                    metricDataType,
-                    m.localId,
-                    'metricId'
-                  )}
+                  onChange={onMetricIdSelectChange(metricDataType, m.localId)}
                   options={metricsList.map((m) => ({
                     label: m.metricName,
                     value: m.id,
@@ -164,11 +163,7 @@ const Index = ({
                 <Select
                   style={{ width: '80%' }}
                   value={m.chargeType}
-                  onChange={onMetricFieldChange(
-                    metricDataType,
-                    m.localId,
-                    'chargeType'
-                  )}
+                  onChange={onChargeTypeSelectChange(metricDataType, m.localId)}
                   options={[
                     {
                       label:
@@ -189,14 +184,10 @@ const Index = ({
                     count={m.graduatedAmounts.length}
                   >
                     <Button
-                      onClick={(evt) =>
-                        onMetricFieldChange(
-                          metricDataType,
-                          m.localId,
-                          'expanded'
-                        )(evt as unknown as MouseEventHandler<HTMLElement>)
+                      onClick={() =>
+                        toggleGraduationSetup(metricDataType, m.localId)
                       }
-                      disabled={false} // this button is to toggle the show/hide of graduated amounts, no need to be disabled after plan activated
+                      disabled={false} // this button is to toggle the show/hide of graduated amounts, no need to disable after plan activated
                       size="small"
                       style={{ border: 'none' }}
                       icon={
@@ -253,7 +244,7 @@ const Index = ({
                 marginRight: '8%',
                 scrollbarGutter: 'stable both-edges'
               }}
-              className={`relative overflow-hidden rounded-md bg-white transition-all duration-200 ${m.expanded && m.chargeType == MetricChargeType.GRADUATED ? 'max-h-96' : 'max-h-0'}`}
+              className={`relative overflow-hidden rounded-md bg-white transition-all duration-300 ${m.expanded && m.chargeType == MetricChargeType.GRADUATED ? 'max-h-96' : 'max-h-0'}`}
             >
               <GraduationSetup
                 data={m.graduatedAmounts}
