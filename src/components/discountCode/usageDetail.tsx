@@ -90,6 +90,13 @@ const Index = () => {
       )
     },
     {
+      title: 'Created at',
+      dataIndex: 'createTime',
+      key: 'createTime',
+      render: (createTime) => formatDate(createTime),
+      ...createTableDateFilter()
+    },
+    {
       title: 'Used at',
       dataIndex: 'createTime',
       key: 'createTime',
