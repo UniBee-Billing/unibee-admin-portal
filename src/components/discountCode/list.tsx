@@ -4,11 +4,11 @@ import {
 } from '@/components/table/filters/dateFilter'
 import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
 import {
-  DISCOUNT_CODE_BILLING_TYPE,
+  DISCOUNT_CODE_BILLING_TYPE as _DISCOUNT_CODE_BILLING_TYPE,
   DISCOUNT_CODE_STATUS,
-  DISCOUNT_CODE_TYPE
+  DISCOUNT_CODE_TYPE as _DISCOUNT_CODE_TYPE
 } from '@/constants'
-import { formatDate, showAmount } from '@/helpers'
+import { showAmount } from '@/helpers'
 import { useLoading, usePagination } from '@/hooks'
 import {
   deleteDiscountCodeReq,
@@ -23,16 +23,16 @@ import {
   DiscountCodeStatus,
   DiscountType
 } from '@/shared.types'
-import { title } from '@/utils'
+import { title as _title } from '@/utils'
 import {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   LoadingOutlined,
   ProfileOutlined,
-  ClockCircleOutlined
 } from '@ant-design/icons'
 import { Modal, Space, Table, message } from 'antd'
+import Icon from '@ant-design/icons'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { Key, useCallback, useEffect, useState } from 'react'
@@ -40,26 +40,15 @@ import { useNavigate } from 'react-router-dom'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
 import {
-  formatNumberByZeroUnLimitedRule,
-  formatQuantity,
   useWithExportAction
 } from './helpers'
+import RecurringCycleSvg from '@/assets/recurringCycle.svg?react'
 
 const PAGE_SIZE = 10
 
 const CODE_STATUS_FILTER = Object.entries(DISCOUNT_CODE_STATUS).map((s) => {
   const [value, { label }] = s
   return { value: Number(value), text: label }
-})
-const BILLING_TYPE_FILTER = Object.entries(DISCOUNT_CODE_BILLING_TYPE).map(
-  (s) => {
-    const [value, text] = s
-    return { value: Number(value), text: title(text) }
-  }
-)
-const DISCOUNT_TYPE_FILTER = Object.entries(DISCOUNT_CODE_TYPE).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text: title(text) }
 })
 
 type TableRowSelection<T extends object = object> =
@@ -80,7 +69,7 @@ export const DiscountCodeList = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
   const [isShowRowSelectCheckBox, setIsShowRowSelectCheckBox] = useState(false)
   const withExportAction = useWithExportAction()
-  const createTableDateFilter = useTableDateFilter<DiscountCode>()
+  const _createTableDateFilter = useTableDateFilter<DiscountCode>()
 
   const rowSelection: TableRowSelection<DiscountCode> = {
     selectedRowKeys,
@@ -159,41 +148,55 @@ export const DiscountCodeList = () => {
         const cycleLimit = code.cycleLimit;
         const value = code.billingType === DiscountCodeBillingType.ONE_TIME ? '1' : 
           (cycleLimit === 0 ? '♾️' : cycleLimit.toString());
-        const isRecurring = code.billingType === DiscountCodeBillingType.RECURRING;
         
         return (
           <div style={{ 
-            display: 'inline-flex',
-            alignItems: 'center',
+            textAlign: 'center', 
+            display: 'flex',
             justifyContent: 'center',
-            border: '1px solid #d9d9d9',
-            borderRadius: '8px',
-            width: '44px',
-            height: '44px',
-            position: 'relative',
-            background: '#fff',
-            margin: '0 auto'
+            padding: '4px 0'
           }}>
-            <span style={{ 
-              fontSize: '16px',
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              marginTop: '-2px'
-            }}>{value}</span>
-            {isRecurring && (
-              <ClockCircleOutlined 
-                style={{ 
+            <div style={{
+              position: 'relative',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              border: '1px solid #d9d9d9',
+              borderRadius: '4px',
+              background: '#fff'
+            }}>
+              <div style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '32px',
+                height: '32px'
+              }}>
+                {code.billingType !== DiscountCodeBillingType.ONE_TIME && (
+                  <Icon 
+                    component={RecurringCycleSvg} 
+                    style={{ 
+                      fontSize: '32px',
+                      color: '#333',
+                      position: 'absolute',
+                      transform: 'translateY(-3px)'
+                    }} 
+                  />
+                )}
+                <span style={{
                   position: 'absolute',
-                  right: '4px',
-                  bottom: '4px',
-                  fontSize: '14px',
-                  color: '#000',
-                  fontWeight: 'bold'
-                }}
-              />
-            )}
+                  fontSize: '12px',
+                  color: '#333',
+                  lineHeight: 1,
+                  zIndex: 1
+                }}>
+                  {value}
+                </span>
+              </div>
+            </div>
           </div>
         )
       }
@@ -202,27 +205,12 @@ export const DiscountCodeList = () => {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
-      render: (quantity: number) => formatQuantity(quantity)
-    },
-    {
-      title: 'Remaining Quantity',
-      dataIndex: 'liveQuantity',
-      key: 'liveQuantity',
-      render: (remainingQuantity, code) =>
-        // If quantity is 0, the remaining quantity should display unlimited.
-        code.quantity === 0 ? 'Unlimited' : remainingQuantity
-    },
-    {
-      title: 'Usage Count',
-      dataIndex: 'quantityUsed',
-      key: 'quantityUsed'
-    },
-    {
-      title: 'Created at',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      render: (createTime) => formatDate(createTime),
-      ...createTableDateFilter()
+      render: (quantity: number, code: DiscountCode) => {
+        if (quantity === 0) {
+          return 'Unlimited';
+        }
+        return `${quantity} times (${code.liveQuantity} left, ${code.quantityUsed} used)`;
+      }
     },
     {
       title: 'Validity Range',
