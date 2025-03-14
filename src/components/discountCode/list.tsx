@@ -1,14 +1,6 @@
-import {
-  formatDateRange,
-  useTableDateFilter
-} from '@/components/table/filters/dateFilter'
 import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
-import {
-  DISCOUNT_CODE_BILLING_TYPE,
-  DISCOUNT_CODE_STATUS,
-  DISCOUNT_CODE_TYPE
-} from '@/constants'
-import { formatDate, showAmount } from '@/helpers'
+import { DISCOUNT_CODE_STATUS } from '@/constants'
+import { showAmount } from '@/helpers'
 import { useLoading, usePagination } from '@/hooks'
 import {
   deleteDiscountCodeReq,
@@ -23,14 +15,12 @@ import {
   DiscountCodeStatus,
   DiscountType
 } from '@/shared.types'
-import { title } from '@/utils'
 import {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   LoadingOutlined,
-  ProfileOutlined,
-  ClockCircleOutlined
+  ProfileOutlined
 } from '@ant-design/icons'
 import { Modal, Space, Table, message } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
@@ -40,8 +30,6 @@ import { useNavigate } from 'react-router-dom'
 import { ListItemActionButton } from './action'
 import { Header } from './header'
 import {
-  formatNumberByZeroUnLimitedRule,
-  formatQuantity,
   useWithExportAction
 } from './helpers'
 
@@ -51,19 +39,14 @@ const CODE_STATUS_FILTER = Object.entries(DISCOUNT_CODE_STATUS).map((s) => {
   const [value, { label }] = s
   return { value: Number(value), text: label }
 })
-const BILLING_TYPE_FILTER = Object.entries(DISCOUNT_CODE_BILLING_TYPE).map(
-  (s) => {
-    const [value, text] = s
-    return { value: Number(value), text: title(text) }
-  }
-)
-const DISCOUNT_TYPE_FILTER = Object.entries(DISCOUNT_CODE_TYPE).map((s) => {
-  const [value, text] = s
-  return { value: Number(value), text: title(text) }
-})
 
 type TableRowSelection<T extends object = object> =
   TableProps<T>['rowSelection']
+
+interface ExtendedDiscountCode extends DiscountCode {
+  quantityUsed?: number;
+  liveQuantity?: number;
+}
 
 export const DiscountCodeList = () => {
   const { page, onPageChange } = usePagination()
@@ -80,7 +63,6 @@ export const DiscountCodeList = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
   const [isShowRowSelectCheckBox, setIsShowRowSelectCheckBox] = useState(false)
   const withExportAction = useWithExportAction()
-  const createTableDateFilter = useTableDateFilter<DiscountCode>()
 
   const rowSelection: TableRowSelection<DiscountCode> = {
     selectedRowKeys,
@@ -219,7 +201,7 @@ export const DiscountCodeList = () => {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
-      render: (quantity: number, record: any) => {
+      render: (quantity: number, record: ExtendedDiscountCode) => {
         if (quantity === 0) {
           return 'Unlimited';
         }
