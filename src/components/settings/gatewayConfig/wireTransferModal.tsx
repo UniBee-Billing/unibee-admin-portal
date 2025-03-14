@@ -3,7 +3,7 @@ import {
   createWireTransferAccountReq,
   updateWireTransferAccountReq
 } from '@/requests/index'
-import { GatewayType, TGateway } from '@/shared.types'
+import { TGateway } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import { Button, Form, Input, InputNumber, Modal, Select, message } from 'antd'
 import { Currency } from 'dinero.js'
@@ -20,13 +20,13 @@ export const NEW_WIRE_TRANSFER: TGateway = {
   gatewayName: 'wire_transfer',
   gatewayLogo: '',
   gatewayIcons: [],
-  gatewayType: GatewayType.WIRE_TRANSFER,
+  gatewayType: 3,
   gatewayKey: '',
   gatewaySecret: '',
-  publicKeyName: '',
-  privateSecretName: '',
   subGateway: '',
   subGatewayName: '',
+  publicKeyName: '',
+  privateSecretName: '',
   webhookSecret: '',
   webhookEndpointUrl: '',
   gatewayWebhookIntegrationLink: '',

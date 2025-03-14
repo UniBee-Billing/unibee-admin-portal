@@ -15,32 +15,24 @@ body {
 }
 */
 
-/* Apply scrollbar styles globally */
-:root {
+body {
   --sb-track-color: #232e33;
   --sb-thumb-color: #6baf8d;
-  --sb-size: 2px;
-}
+  --sb-size: 4px;
 
-/* For Webkit browsers (Chrome, Safari, etc) */
-::-webkit-scrollbar {
-  width: var(--sb-size);
-}
-
-::-webkit-scrollbar-track {
-  background: var(--sb-track-color);
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--sb-thumb-color);
-  border-radius: 2px;
-}
-
-/* For Firefox */
-* {
-  scrollbar-width: thin;
   scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
 }
 
-/* Remove the commented out body styles since we're handling this differently now */
+body::-webkit-scrollbar {
+  width: var(--sb-size);
+}
+
+body::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 4px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 4px;
+}

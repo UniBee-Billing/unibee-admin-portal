@@ -42,9 +42,6 @@ const UserAccountTab = ({
   const toggleSuspend = () => setSuspendModalOpen(!suspendModalOpen)
   const [gatewayId, setGatewayId] = useState<number | undefined>(undefined)
   const onGatewayChange = (gatewayId: number) => setGatewayId(gatewayId) // React.ChangeEventHandler<HTMLInputElement> = (evt) =>
-  const [gatewayPaymentType, setGatewayPaymentType] = useState<
-    string | undefined
-  >(undefined)
 
   const filterOption = (
     input: string,
@@ -55,7 +52,6 @@ const UserAccountTab = ({
     const body = JSON.parse(JSON.stringify(form.getFieldsValue()))
     if (gatewayId != undefined) {
       body.gatewayId = gatewayId
-      body.gatewayPaymentType = gatewayPaymentType
     }
 
     // return
@@ -94,7 +90,6 @@ const UserAccountTab = ({
     if (user != null) {
       form.setFieldsValue(user)
       setGatewayId(user.gatewayId)
-      setGatewayPaymentType(user.gatewayPaymentType)
     }
   }, [user])
 
@@ -290,9 +285,7 @@ const UserAccountTab = ({
                 <Form.Item label="Payment method">
                   <PaymentSelector
                     selected={gatewayId}
-                    selectedPaymentType={gatewayPaymentType}
                     onSelect={onGatewayChange}
-                    onSelectPaymentType={setGatewayPaymentType}
                     disabled={loading || user.status == UserStatus.SUSPENDED}
                   />
                 </Form.Item>

@@ -74,8 +74,7 @@ const App: React.FC = () => {
               style={{
                 padding: '16px',
                 height: 'calc(100vh - 180px)',
-                overflowY: 'auto',
-                position: 'relative'
+                overflowY: 'auto'
               }}
             >
               <div
