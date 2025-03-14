@@ -92,6 +92,7 @@ const UserAccountTab = ({
 
   const sendMetricEvent = async () => {
     const metric = metricsList.find((m) => m.code == selectedMetricCode)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body: any = {
       metricCode: selectedMetricCode,
       userId: user!.id as number,
@@ -117,6 +118,7 @@ const UserAccountTab = ({
       return
     }
     message.success(`Metric event sent.`)
+    setExternalEventId(randomString(8))
   }
 
   useEffect(() => {
@@ -480,9 +482,6 @@ const UserAccountTab = ({
               onChange={(val) => setAggregationValue(val)}
             />
             <Button onClick={sendMetricEvent}>Send metric event</Button>
-            <Button onClick={() => setExternalEventId(randomString(8))}>
-              reset external eventId
-            </Button>
           </div>
           <div>
             metric type:{' '}
