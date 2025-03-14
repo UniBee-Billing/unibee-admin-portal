@@ -356,6 +356,7 @@ export type TPlanListBody = {
   publishStatus?: PlanPublishStatus // UnPublished, Published
   sortField?: 'plan_name' | 'gmt_create' | 'gmt_modify'
   sortType?: 'asc' | 'desc'
+  planName?: string | null
 } & PagedReq
 export const getPlanList = async (
   body: TPlanListBody,
