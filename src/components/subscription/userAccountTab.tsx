@@ -59,6 +59,9 @@ const UserAccountTab = ({
   const toggleSuspend = () => setSuspendModalOpen(!suspendModalOpen)
   const [gatewayId, setGatewayId] = useState<number | undefined>(undefined)
   const onGatewayChange = (gatewayId: number) => setGatewayId(gatewayId) // React.ChangeEventHandler<HTMLInputElement> = (evt) =>
+  const [gatewayPaymentType, setGatewayPaymentType] = useState<
+    string | undefined
+  >(undefined)
 
   const [externalEventId, setExternalEventId] = useState(randomString(8))
   const [aggregationValue, setAggregationValue] = useState<number | null>(100)
@@ -72,6 +75,7 @@ const UserAccountTab = ({
     const body = JSON.parse(JSON.stringify(form.getFieldsValue()))
     if (gatewayId != undefined) {
       body.gatewayId = gatewayId
+      body.gatewayPaymentType = gatewayPaymentType
     }
 
     setLoading(true)
@@ -108,7 +112,7 @@ const UserAccountTab = ({
       body.aggregationValue = aggregationValue
     }
 
-    const [_res, err] = await sendMetricEventReq(body)
+    const [res, err] = await sendMetricEventReq(body)
     if (err != null) {
       message.error(err.message)
       return
@@ -151,6 +155,7 @@ const UserAccountTab = ({
     if (user != null) {
       form.setFieldsValue(user)
       setGatewayId(user.gatewayId)
+      setGatewayPaymentType(user.gatewayPaymentType)
     }
   }, [user])
 
@@ -346,7 +351,9 @@ const UserAccountTab = ({
                 <Form.Item label="Payment method">
                   <PaymentSelector
                     selected={gatewayId}
+                    selectedPaymentType={gatewayPaymentType}
                     onSelect={onGatewayChange}
+                    onSelectPaymentType={setGatewayPaymentType}
                     disabled={loading || user.status == UserStatus.SUSPENDED}
                   />
                 </Form.Item>
