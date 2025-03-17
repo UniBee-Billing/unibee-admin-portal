@@ -39,7 +39,7 @@ import {
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 
@@ -88,7 +88,7 @@ const Index = ({
     undefined
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
-  const [planNameFilters, setPlanNameFilters] = useState<{ value: number; text: string }[]>([])
+  const planFilterRef = useRef<{ value: number; text: string }[]>([])
 
   // 注意：我们在URL中使用'planIds'参数，但在Ant Design Table的筛选器中，字段名是'planName'
   // 这是因为Table组件的onChange事件返回的filters对象使用列的key作为字段名
@@ -166,29 +166,8 @@ const Index = ({
       body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
     }
 
-    // Add planName filter if it exists - we need to find the plan name from the ID
-    if (filters.planName && filters.planName.length > 0) {
-      // console.log('Filtering by planName:', filters.planName);
-      
-      // 确保planNameFilters已经加载
-      if (planNameFilters.length === 0) {
-        // console.log('planNameFilters not loaded yet, skipping planName filter');
-      } else {
-        // Find the plan name from the plan ID
-        const selectedPlan = planNameFilters.find(p => p.value === filters.planName![0]);
-        // console.log('Selected plan from filter:', selectedPlan);
-        if (selectedPlan) {
-          body.planName = selectedPlan.text;
-          // console.log('Setting API planName filter to:', selectedPlan.text);
-        } else {
-          // console.log('Could not find plan with ID:', filters.planName[0]);
-          // console.log('Available plan IDs:', planNameFilters.map(p => p.value));
-        }
-      }
-    }
+    // Remove the planName filter logic - we'll handle filtering client-side
 
-    // console.log('API request body:', body);
-    
     setLoading(true)
     const [planList, err] = await getPlanList(body, fetchPlan)
     setLoading(false)
@@ -199,55 +178,28 @@ const Index = ({
     const { plans, total } = planList
     setTotal(total)
     
-    // console.log('API response plans:', plans);
+    const planData = plans == null
+      ? []
+      : plans.map((p: IPlan) => ({
+          ...p.plan,
+          metricPlanLimits: p.metricPlanLimits
+        }))
     
-    setPlan(
-      plans == null
-        ? []
-        : plans.map((p: IPlan) => ({
-            ...p.plan,
-            metricPlanLimits: p.metricPlanLimits
-          }))
-    )
-  }
-
-  //Get all plan names individually for filtering
-  const fetchAllPlanNames = async () => {
-    const [planList, err] = await getPlanList(
-      {
-        productIds: [productId],
-        page: 0,
-        count: 1000 // Get enough plans to include all names
-      },
-      fetchPlan
-    )
+    // Update planFilterRef with plan names for filtering
+    planFilterRef.current = planData.map((plan: IPlan) => ({
+      value: plan.id,
+      text: plan.planName
+    }))
     
-    if (err != null) {
-      message.error(err.message)
-      return
+    // Apply client-side filtering if planName filter is active
+    let filteredPlans = planData
+    if (filters.planName && filters.planName.length > 0) {
+      filteredPlans = planData.filter((plan: IPlan) => 
+        filters.planName!.includes(plan.id)
+      )
     }
     
-    const { plans } = planList
-    
-    if (plans && plans.length > 0) {
-      const uniquePlanNames = new Set<string>();
-      const newPlanNameFilters: { value: number; text: string }[] = [];
-      
-      plans.forEach((p: IPlan) => {
-        const planName = p.plan?.planName;
-        const planId = p.plan?.id;
-        if (planName && planId && !uniquePlanNames.has(planName)) {
-          uniquePlanNames.add(planName);
-          newPlanNameFilters.push({
-            value: planId,
-            text: planName
-          });
-        }
-      });
-      
-      // console.log('Plan name filters:', newPlanNameFilters);
-      setPlanNameFilters(newPlanNameFilters);
-    }
+    setPlan(filteredPlans)
   }
 
   const columns: ColumnsType<IPlan> = [
@@ -261,7 +213,7 @@ const Index = ({
       dataIndex: 'planName',
       key: 'planName',
       width: 120,
-      filters: planNameFilters,
+      filters: planFilterRef.current,
       filteredValue: filters.planName,
       filterMode: 'tree',
       filterSearch: true,
@@ -471,21 +423,6 @@ const Index = ({
       fetchPlan()
     }
   }, [filters, page, sortFilter])
-
-  useEffect(() => {
-    if (isProductValid) {
-      fetchAllPlanNames()
-    }
-  }, [productId, isProductValid])
-
-  // 添加日志，检查表格筛选器的状态
-  useEffect(() => {
-    // console.log('Render state:', {
-    //   filters,
-    //   planNameFilters,
-    //   planIdsInURL: searchParams.get('planIds')
-    // });
-  }, [filters, planNameFilters, searchParams]);
 
   return (
     <>
