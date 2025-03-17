@@ -49,6 +49,8 @@ const DEFAULT_NEW_CODE: DiscountCode = {
   planApplyType: DiscountCodeApplyType.ALL,
   planIds: [],
   quantity: 0,
+  liveQuantity: 0,
+  quantityUsed: 0,
   advance: false,
   userScope: 0,
   userLimit: true,

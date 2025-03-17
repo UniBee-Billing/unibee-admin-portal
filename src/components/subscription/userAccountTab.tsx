@@ -79,13 +79,13 @@ const UserAccountTab = ({
     }
 
     setLoading(true)
-    const [res, err] = await saveUserProfileReq(body)
+    const [_res, err] = await saveUserProfileReq(body)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
       return
     }
-    const { user } = res
+    const { user } = _res
     message.success('User Info Saved')
     setUserProfile(user)
   }
@@ -112,7 +112,7 @@ const UserAccountTab = ({
       body.aggregationValue = aggregationValue
     }
 
-    const [res, err] = await sendMetricEventReq(body)
+    const [_res, err] = await sendMetricEventReq(body)
     if (err != null) {
       message.error(err.message)
       return
