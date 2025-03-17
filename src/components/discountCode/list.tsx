@@ -182,15 +182,21 @@ export const DiscountCodeList = () => {
                       fontSize: '32px',
                       color: '#333',
                       position: 'absolute',
-                      transform: 'translateY(-3px)'
+                      top: '40%',
+                      left: '50%',
+                      transform: 'translate(-50%, -53%)'
                     }} 
                   />
                 )}
                 <span style={{
                   position: 'absolute',
-                  fontSize: '12px',
+                  fontSize: '14px',
+                  fontWeight: 800,
                   color: '#333',
                   lineHeight: 1,
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
                   zIndex: 1
                 }}>
                   {value}
