@@ -217,6 +217,7 @@ const Index = () => {
       width: 160,
       filters: PLAN_TYPE_FILTER,
       filteredValue: filters.planType,
+      onFilter: (value, record) => record.plan?.type === value,
       render: (_, sub) => (
         <span className="whitespace-nowrap">
           {sub.plan?.type === PlanType.ONE_TIME_ADD_ON ? 'One-time Payment' : 'Main Plan'}
@@ -448,7 +449,7 @@ const Index = () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     filters.planType == null
       ? searchParams.delete('planType')
-      : searchParams.set('planType', filters.planType.join('-'))
+      : searchParams.set('planType', (filters.planType as number[]).join('-'))
 
     setSearchParams(searchParams)
   }
