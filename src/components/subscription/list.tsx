@@ -62,9 +62,15 @@ const SUB_STATUS_FILTER = Object.entries(SUBSCRIPTION_STATUS)
   .filter(({ value }) => value != SubscriptionStatus.INITIATING) // INITIATING status is used as a placeholder in this component when user has no active subscription, no need to show it in filter.
   .sort((a, b) => (a.value < b.value ? -1 : 1))
 
+const PLAN_TYPE_FILTER = [
+  { text: 'Main Plan', value: PlanType.MAIN },
+  { text: 'One-time Payment', value: PlanType.ONE_TIME_ADD_ON }
+]
+
 type TFilters = {
   status: number[] | null
   planIds: number[] | null
+  planType: number[] | null
 }
 
 const Index = () => {
@@ -84,7 +90,8 @@ const Index = () => {
 
   const [filters, setFilters] = useState<TFilters>({
     ...initializeFilters('status', Number, SubscriptionStatus),
-    planIds: null // when the page is loading, we don't know how many plans we have, so we set planIds to null, in fetchPlan call, we will initialize this filter.
+    planIds: null, // when the page is loading, we don't know how many plans we have, so we set planIds to null, in fetchPlan call, we will initialize this filter.
+    planType: null
   } as TFilters)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
 
@@ -202,6 +209,19 @@ const Index = () => {
             width="160px"
           />
         )
+    },
+    {
+      title: 'Plan Type',
+      dataIndex: 'planType',
+      key: 'planType',
+      width: 160,
+      filters: PLAN_TYPE_FILTER,
+      filteredValue: filters.planType,
+      render: (_, sub) => (
+        <span className="whitespace-nowrap">
+          {sub.plan?.type === PlanType.ONE_TIME_ADD_ON ? 'One-time Payment' : 'Main Plan'}
+        </span>
+      )
     },
     /* {
       title: 'Amount',
@@ -392,14 +412,22 @@ const Index = () => {
     // initializeFilters's 3rd param is a Enum type or objects of all the plans, with k/v both being planId.
     // we need to convert the planFilterRef.current to {1: 1, 2: 2, 3: 3, ...}
     const planIds = searchParams.get('planIds')
+    const planType = searchParams.get('planType')
+    const newFilters = { ...filters }
+
     if (planIds != null && planFilterRef.current.length > 0) {
       const planIdsMap: { [key: number]: number } = {}
       planFilterRef.current.forEach((p) => (planIdsMap[p.value] = p.value))
-      setFilters({
-        ...filters,
-        ...initializeFilters('planIds', Number, planIdsMap)
-      })
+      newFilters.planIds = initializeFilters('planIds', Number, planIdsMap).planIds
     }
+
+    if (planType != null) {
+      const planTypeMap: { [key: number]: number } = {}
+      PLAN_TYPE_FILTER.forEach((p) => (planTypeMap[p.value] = p.value))
+      newFilters.planType = initializeFilters('planType', Number, planTypeMap).planType
+    }
+
+    setFilters(newFilters)
   }
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
@@ -417,6 +445,10 @@ const Index = () => {
     filters.status == null
       ? searchParams.delete('status')
       : searchParams.set('status', filters.status.join('-'))
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    filters.planType == null
+      ? searchParams.delete('planType')
+      : searchParams.set('planType', filters.planType.join('-'))
 
     setSearchParams(searchParams)
   }
@@ -471,7 +503,7 @@ const Index = () => {
     return searchTerm
   }
 
-  const clearFilters = () => setFilters({ status: null, planIds: null })
+  const clearFilters = () => setFilters({ status: null, planIds: null, planType: null })
 
   const goSearch = () => {
     if (page == 0) {
