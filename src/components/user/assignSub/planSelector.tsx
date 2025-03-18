@@ -34,7 +34,10 @@ export const PlanSelector = ({
     setLoading(true)
     const [planList, err] = await getPlanList(
       {
-        type: [planType ?? PlanType.MAIN],
+        type:
+          planType == undefined
+            ? [PlanType.MAIN, PlanType.ONE_TIME_ADD_ON]
+            : [planType],
         productIds: [productId],
         status: [
           PlanStatus.ACTIVE,
