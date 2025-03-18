@@ -215,64 +215,111 @@ const Index = ({
         />
       </Form.Item>
 
-      <div>
-        <Form.Item
-          label="Interval Unit"
-          name="intervalUnit"
-          rules={[
-            {
-              required: watchPlanType != PlanType.ONE_TIME_ADD_ON,
-              message: 'Please select interval unit!'
-            }
-          ]}
-        >
-          <Select
-            style={{ width: 180 }}
-            disabled={
-              watchPlanType == PlanType.ONE_TIME_ADD_ON ||
-              disableAfterActive.current ||
-              formDisabled
-            } // one-time payment has no interval unit/count
-            options={[
-              { value: 'day', label: 'day' },
-              { value: 'week', label: 'week' },
-              { value: 'month', label: 'month' },
-              { value: 'year', label: 'year' }
-            ]}
-          />
-        </Form.Item>
-      </div>
-
       <Form.Item
-        label="Interval Count"
-        name="intervalCount"
-        rules={[
-          {
-            required: true,
-            message: 'Please input interval count!'
-          },
-          () => ({
-            validator(_, value) {
-              if (!Number.isInteger(value)) {
-                return Promise.reject(
-                  `Please input a valid interval count (> 1).`
-                )
-              }
-              return Promise.resolve()
-            }
-          })
-        ]}
+        label={<span><span style={{ color: '#ff4d4f' }}>*</span>Billing Period</span>}
+        style={{ marginBottom: '24px' }}
       >
-        <InputNumber
-          disabled={
-            watchPlanType == PlanType.ONE_TIME_ADD_ON ||
-            disableAfterActive.current ||
-            formDisabled
-          }
-          style={{ width: 180 }}
-          min={1}
-        />
-        {/* one-time payment has no interval unit/count */}
+        <div style={{ 
+          display: 'flex',
+          alignItems: 'center',
+          border: '1px solid #e8e8e8',
+          borderRadius: '8px',
+          background: 'white',
+          width: '100%',
+          maxWidth: '440px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            display: 'flex',
+            padding: '0 20px',
+            alignItems: 'center',
+            height: '15px',
+            background: '#fafafa',
+            borderRight: '1px solid #f0f0f0'
+          }}>
+            <span style={{ 
+              fontSize: '15px', 
+              color: '#595959',
+              textTransform: 'capitalize'
+            }}>
+              {watchPlanType === PlanType.ONE_TIME_ADD_ON ? 'For' : 'Every'}
+            </span>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px' }}>
+            <Form.Item
+              name="intervalCount"
+              noStyle
+              rules={[
+                {
+                  required: true,
+                  message: 'Please input interval count!'
+                },
+                () => ({
+                  validator(_, value) {
+                    if (!Number.isInteger(value)) {
+                      return Promise.reject(
+                        `Please input a valid interval count (> 0).`
+                      )
+                    }
+                    return Promise.resolve()
+                  }
+                })
+              ]}
+            >
+              <InputNumber
+                disabled={disableAfterActive.current || formDisabled}
+                style={{ 
+                  width: '120px',
+                  height: '35px',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: '6px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  marginRight: '16px',
+                  textAlign: 'center'
+                }}
+                controls={{
+                  upIcon: <span style={{ fontSize: '10px', color: '#8c8c8c' }}>▲</span>,
+                  downIcon: <span style={{ fontSize: '10px', color: '#8c8c8c' }}>▼</span>
+                }}
+                min={1}
+                className="text-center"
+              />
+            </Form.Item>
+            
+            <Form.Item
+              name="intervalUnit"
+              noStyle
+              rules={[
+                {
+                  required: true,
+                  message: 'Please select interval unit!'
+                }
+              ]}
+            >
+              <Select
+                disabled={disableAfterActive.current || formDisabled}
+                style={{ 
+                  width: '196px',
+                  height: '35px',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+                options={[
+                  { value: 'day', label: 'day' },
+                  { value: 'week', label: 'week' },
+                  { value: 'month', label: 'month' },
+                  { value: 'year', label: 'year' }
+                ]}
+                placeholder="month"
+                suffixIcon={<span style={{ fontSize: '12px', color: '#8c8c8c' }}>▾</span>}
+                dropdownStyle={{ borderRadius: '6px', boxShadow: '0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05)' }}
+              />
+            </Form.Item>
+          </div>
+        </div>
       </Form.Item>
     </div>
   )
