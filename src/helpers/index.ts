@@ -109,8 +109,8 @@ export const formatPlanPrice = (plan: IPlan) => {
   if (plan.currency == 'RUB') {
     amount = `${currency.Symbol}${plan.amount / currency.Scale}`
   }
-  if (plan.type == PlanType.MAIN || plan.type == PlanType.ADD_ON) {
-    // main plan and add-on have intervalCount/Unit, one-time addon has no such props
+  if (plan.type == PlanType.MAIN || plan.type == PlanType.ADD_ON || (plan.type == PlanType.ONE_TIME_ADD_ON && plan.intervalCount && plan.intervalUnit)) {
+    // main plan and add-on have intervalCount/Unit, one-time addon can also have these props
     const itv = `/${plan.intervalCount == 1 ? '' : plan.intervalCount}${plan.intervalUnit}`
     return `${amount}${itv}`
   } else {

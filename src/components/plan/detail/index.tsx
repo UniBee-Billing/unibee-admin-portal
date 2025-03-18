@@ -275,8 +275,6 @@ const Index = () => {
     }
     if (watchPlanType == PlanType.ONE_TIME_ADD_ON) {
       // one-time payment plans don't have these props
-      delete f.intervalCount
-      delete f.intervalUnit
       delete f.metricLimits
       delete f.onetimeAddonIds
     }
