@@ -663,14 +663,14 @@ export const getSubDetailWithMore = async (
     await Promise.all([
       getSubDetail(subscriptionId),
       getPlanList({
-        type: [PlanType.MAIN],
+        type: [PlanType.MAIN, PlanType.ONE_TIME_ADD_ON], // in Assign-subscription modal, admin can assign a one-time add-on to a user.
         status: [
           PlanStatus.ACTIVE,
           PlanStatus.SOFT_ARCHIVED, // users might have subscribed to a plan, then this plan was archived.
           PlanStatus.HARD_ARCHIVED // on ChangePlan/AssignSub Modal, I still need to get these archived plans.
         ],
         page: 0,
-        count: 150
+        count: 200
       })
     ])
   const err = errSubDetail || errPlanList
