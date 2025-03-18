@@ -235,7 +235,6 @@ const Index = ({
             padding: '0 20px',
             alignItems: 'center',
             height: '15px',
-            background: '#fafafa',
             borderRight: '1px solid #f0f0f0'
           }}>
             <span style={{ 

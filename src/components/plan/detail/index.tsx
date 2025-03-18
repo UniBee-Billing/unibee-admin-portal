@@ -191,7 +191,8 @@ const Index = () => {
     }
     const result = showAmount(watchAmount, watchCurrency, true)
     if (watchPlanType == PlanType.ONE_TIME_ADD_ON) {
-      return result
+      const itv = `/${itvCountValue == 1 ? '' : itvCountValue + ' '}${itvCountValue == 1 ? itvCountUnit : itvCountUnit + 's'}`
+      return result + itv
     }
     const itv = `/${itvCountValue == 1 ? '' : itvCountValue + ' '}${itvCountValue == 1 ? itvCountUnit : itvCountUnit + 's'}`
     return result + itv
