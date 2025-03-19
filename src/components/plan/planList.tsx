@@ -89,6 +89,7 @@ const Index = ({
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
+  const [allPlans,setAllPlans] = useState<IPlan[]>([])
 
   // Note: We use 'planIds' parameter in URL, but 'planName' in Ant Design Table filters
   // This is because Table's onChange event returns filters object using column key as field name
@@ -148,6 +149,11 @@ const Index = ({
       productIds: [productId],
       page: 0,
       count: 150,
+      // status: [
+      //   PlanStatus.ACTIVE,
+      //   PlanStatus.SOFT_ARCHIVED,
+      //   PlanStatus.HARD_ARCHIVED
+      // ],
       type: filters.type
     }, fetchPlan)
 
@@ -156,6 +162,7 @@ const Index = ({
         ...p.plan,
         metricPlanLimits: p.metricPlanLimits
       }))
+      setAllPlans(plans)
       // 更新过滤选项
       planFilterRef.current = plans.map((plan: IPlan) => ({
         value: plan.id,
@@ -165,15 +172,44 @@ const Index = ({
   }
 
   const fetchPlan = async () => {
+    // 如果已经有所有计划的数据，直接从中过滤
+    if (allPlans.length > 0) {
+      let filteredPlans = allPlans;
+      
+      // 应用分页
+      const start = page * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+      
+      // 应用排序
+      if (sortFilter.columnKey != null) {
+        filteredPlans = [...filteredPlans].sort((a, b) => {
+          const field = sortFilter.columnKey === 'planName' ? 'planName' : 'createTime';
+          const order = sortFilter.order === 'descend' ? -1 : 1;
+          return a[field] > b[field] ? order : -order;
+        });
+      }
+      
+      // 应用过滤
+      if (filters.type?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.type!.includes(plan.type));
+      }
+      if (filters.status?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.status!.includes(plan.status));
+      }
+      if (filters.planName?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.planName!.includes(plan.id));
+      }
+      
+      setTotal(filteredPlans.length);
+      setPlan(filteredPlans.slice(start, end));
+      return;
+    }
+
+    // 如果没有缓存数据，则从服务器获取
     const body: TPlanListBody = {
       productIds: [productId],
       page: page,
       count: PAGE_SIZE,
-      // status: filters.status || [
-      //   // PlanStatus.ACTIVE,
-      //   // PlanStatus.SOFT_ARCHIVED,
-      //   // PlanStatus.HARD_ARCHIVED
-      // ],
       type: filters.type
     }
     if (sortFilter.columnKey != null) {
