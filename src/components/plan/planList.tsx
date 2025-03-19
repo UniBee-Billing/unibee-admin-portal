@@ -89,7 +89,6 @@ const Index = ({
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
-  const [allPlans, setAllPlans] = useState<IPlan[]>([])
 
   // Note: We use 'planIds' parameter in URL, but 'planName' in Ant Design Table filters
   // This is because Table's onChange event returns filters object using column key as field name
@@ -149,11 +148,6 @@ const Index = ({
       productIds: [productId],
       page: 0,
       count: 150,
-      // status: [
-      //   PlanStatus.ACTIVE,
-      //   PlanStatus.SOFT_ARCHIVED,
-      //   PlanStatus.HARD_ARCHIVED
-      // ],
       type: filters.type
     }, fetchPlan)
 
@@ -162,7 +156,6 @@ const Index = ({
         ...p.plan,
         metricPlanLimits: p.metricPlanLimits
       }))
-      setAllPlans(plans)
       // 更新过滤选项
       planFilterRef.current = plans.map((plan: IPlan) => ({
         value: plan.id,
