@@ -264,6 +264,7 @@ export type TGatewayConfigBody = {
   gatewayKey?: string
   gatewaySecret?: string
   gatewayPaymentTypes?: string[]
+  subGateway?: string
   displayName?: string
   gatewayLogo?: string[]
   sort?: number

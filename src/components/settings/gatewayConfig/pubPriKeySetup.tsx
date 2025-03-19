@@ -57,6 +57,10 @@ const PubPriKeySetup = ({
       body.gatewayId = gatewayConfig.gatewayId
     }
 
+    if (gatewayConfig.subGatewayName != '') {
+      body.subGateway = form.getFieldValue('subGateway')
+    }
+
     setLoading(true)
     const [_, err] = await saveGatewayConfigReq(body, isNew)
     setLoading(false)
