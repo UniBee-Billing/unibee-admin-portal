@@ -27,8 +27,7 @@ const Index = ({
   getCurrency: () => CURRENCY
   formDisabled: boolean
 }) => {
-  const { metricData, setMetricData } =
-    useContext(MetricDataContext)
+  const { metricData, setMetricData } = useContext(MetricDataContext)
   const dataIdx = metricData[metricDataType].findIndex(
     (m) => m.localId == metricLocalId
   )
