@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
 import { randomString } from '@/helpers'
 import {
@@ -22,6 +23,7 @@ import {
   Divider,
   Form,
   Input,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   InputNumber,
   Radio,
   Row,
@@ -51,6 +53,7 @@ const UserAccountTab = ({
 }) => {
   const appConfigStore = useAppConfigStore()
   const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedMetricCode, setSelectedMetricCode] = useState<string>('')
   const [form] = Form.useForm()
   const [countryList, setCountryList] = useState<Country[]>([])
@@ -64,6 +67,7 @@ const UserAccountTab = ({
   >(undefined)
 
   const [externalEventId, setExternalEventId] = useState(randomString(8))
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [aggregationValue, setAggregationValue] = useState<number | null>(100)
 
   const filterOption = (
@@ -90,6 +94,7 @@ const UserAccountTab = ({
     setUserProfile(user)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sendMetricEvent = async () => {
     const metric = metricsList.find((m) => m.code == selectedMetricCode)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -460,7 +465,7 @@ const UserAccountTab = ({
             </div>
           </div>
         </Spin>
-        <div className="fixed bottom-14 mr-10 flex-col gap-4 rounded-md bg-gray-100 p-4">
+        {/* <div className="fixed bottom-14 mr-10 flex-col gap-4 rounded-md bg-gray-100 p-4">
           <div className="flex gap-4">
             <Select
               style={{ width: 300 }}
@@ -504,7 +509,7 @@ const UserAccountTab = ({
               metricsList.find((m) => m.code == selectedMetricCode)!
                 .aggregationProperty}
           </div>
-        </div>
+        </div> */}
       </>
     )
   )
