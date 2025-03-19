@@ -216,37 +216,36 @@ const Index = ({
       </Form.Item>
 
       <Form.Item
-        label={<span><span style={{ color: '#ff4d4f' }}>*</span>Billing Period</span>}
-        style={{ marginBottom: '24px' }}
+        label={
+          <span>
+            <span className="text-red-500">*</span>
+            <span>Billing Period</span>
+          </span>
+        }
+        className="mb-6"
       >
-        <div style={{ 
-          display: 'flex',
-          alignItems: 'center',
-          border: '1px solid #e8e8e8',
-          borderRadius: '8px',
-          background: 'white',
-          width: '100%',
-          maxWidth: '440px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          overflow: 'hidden'
-        }}>
-          <div style={{ 
-            display: 'flex',
-            padding: '0 20px',
-            alignItems: 'center',
-            height: '15px',
-            borderRight: '1px solid #f0f0f0'
-          }}>
-            <span style={{ 
-              fontSize: '15px', 
-              color: '#595959',
-              textTransform: 'capitalize'
+        <div className="flex items-center gap-4">
+          <div className="flex items-center h-[38px] bg-white rounded-lg border border-solid border-gray-200 overflow-hidden !shadow-none [&]:shadow-none [&_*]:shadow-none" style={{ boxShadow: 'none !important', filter: 'none', WebkitBoxShadow: 'none', MozBoxShadow: 'none', WebkitAppearance: 'none' }}>
+            <div className="flex items-center h-[38px] px-4 bg-gray-50 border-r border-solid border-gray-200 !shadow-none [&_*]:shadow-none relative" style={{ 
+              boxShadow: 'none !important',
+              WebkitBoxShadow: 'none !important',
+              MozBoxShadow: 'none !important',
+              WebkitAppearance: 'none',
+              appearance: 'none',
+              marginLeft: '-1px',
+              paddingLeft: '17px',
+              borderLeft: '1px solid #f9fafb',
+              marginTop: '-1px',
+              marginBottom: '-1px',
+              height: 'calc(100% + 2px)',
+              borderTop: '1px solid #f9fafb',
+              borderBottom: '1px solid #f9fafb'
             }}>
-              {watchPlanType === PlanType.ONE_TIME_ADD_ON ? 'For' : 'Every'}
-            </span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px' }}>
+              <span className="text-[15px] text-gray-600 capitalize">
+                {watchPlanType === PlanType.ONE_TIME_ADD_ON ? 'For' : 'Every'}
+              </span>
+            </div>
+            
             <Form.Item
               name="intervalCount"
               noStyle
@@ -269,55 +268,49 @@ const Index = ({
             >
               <InputNumber
                 disabled={disableAfterActive.current || formDisabled}
-                style={{ 
-                  width: '120px',
-                  height: '35px',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  fontWeight: '500',
-                  marginRight: '16px',
-                  textAlign: 'center'
-                }}
+                className="w-[80px] h-[38px] text-center !border-0 [&.ant-input-number-outlined]:border-0 [&.ant-input-number]:border-0 [&_.ant-input-number-input-wrap]:border-0 [&_.ant-input-number-input]:border-0 [&]:hover:border-0 [&.ant-input-number-focused]:shadow-none [&.ant-input-number]:shadow-none [&.ant-input-number-outlined]:shadow-none [&_.ant-input-number-handler-wrap]:border-0 [&_.ant-input-number-handler]:border-0"
                 controls={{
-                  upIcon: <span style={{ fontSize: '10px', color: '#8c8c8c' }}>▲</span>,
-                  downIcon: <span style={{ fontSize: '10px', color: '#8c8c8c' }}>▼</span>
+                  upIcon: <span className="text-[10px] text-gray-500 block">▲</span>,
+                  downIcon: <span className="text-[10px] text-gray-500 block">▼</span>
                 }}
                 min={1}
-                className="text-center"
-              />
-            </Form.Item>
-            
-            <Form.Item
-              name="intervalUnit"
-              noStyle
-              rules={[
-                {
-                  required: true,
-                  message: 'Please select interval unit!'
-                }
-              ]}
-            >
-              <Select
-                disabled={disableAfterActive.current || formDisabled}
-                style={{ 
-                  width: '196px',
-                  height: '35px',
-                  borderRadius: '6px',
-                  fontSize: '14px'
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '38px'
                 }}
-                options={[
-                  { value: 'day', label: 'day' },
-                  { value: 'week', label: 'week' },
-                  { value: 'month', label: 'month' },
-                  { value: 'year', label: 'year' }
-                ]}
-                placeholder="month"
-                suffixIcon={<span style={{ fontSize: '12px', color: '#8c8c8c' }}>▾</span>}
-                dropdownStyle={{ borderRadius: '6px', boxShadow: '0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05)' }}
               />
             </Form.Item>
           </div>
+          
+          <Form.Item
+            name="intervalUnit"
+            noStyle
+            rules={[
+              {
+                required: true,
+                message: 'Please select interval unit!'
+              }
+            ]}
+          >
+            <Select
+              disabled={disableAfterActive.current || formDisabled}
+              className="w-[60px] !rounded-lg"
+              style={{ width: 180, height: 38 }}
+              options={[
+                { value: 'day', label: 'day' },
+                { value: 'week', label: 'week' },
+                { value: 'month', label: 'month' },
+                { value: 'year', label: 'year' }
+              ]}
+              placeholder="month"
+              dropdownStyle={{
+                borderRadius: '8px',
+                boxShadow: '0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05)'
+              }}
+            />
+          </Form.Item>
         </div>
       </Form.Item>
     </div>
