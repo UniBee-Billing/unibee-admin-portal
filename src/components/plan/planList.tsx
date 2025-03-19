@@ -39,7 +39,7 @@ import {
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 
@@ -66,6 +66,7 @@ const PLAN_TYPE_FILTER = Object.entries(PLAN_TYPE)
 type TFilters = {
   type: PlanType[] | null
   status: PlanStatus[] | null
+  planName?: number[] | null
 }
 
 const Index = ({
@@ -87,10 +88,31 @@ const Index = ({
     undefined
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
+  const planFilterRef = useRef<{ value: number; text: string }[]>([])
+  const [allPlans,setAllPlans] = useState<IPlan[]>([])
 
+  // Note: We use 'planIds' parameter in URL, but 'planName' in Ant Design Table filters
+  // This is because Table's onChange event returns filters object using column key as field name
+  // Our column key is 'planName', but we store plan IDs, so URL parameter 'planIds' is more accurate
+  const planIdsParam = searchParams.get('planIds');
+  
+  const typeFilters = initializeFilters('type', Number, PlanType);
+  const statusFilters = initializeFilters('status', Number, PlanStatus);
+  
+  // Handle planIds parameter manually
+  let planNameFilter = null;
+  if (planIdsParam) {
+    try {
+      planNameFilter = planIdsParam.split('-').map(Number).filter(id => !isNaN(id));
+    } catch (_e) {
+      // Silently handle parsing errors
+    }
+  }
+  
   const [filters, setFilters] = useState<TFilters>({
-    ...initializeFilters('type', Number, PlanType),
-    ...initializeFilters('status', Number, PlanStatus)
+    ...typeFilters,
+    ...statusFilters,
+    planName: planNameFilter
   } as TFilters)
 
   const [sortFilter, setSortFilter] = useState<Sorts>(
@@ -122,12 +144,73 @@ const Index = ({
     navigate(`/plan/new?productId=${productId}`)
   }
 
+  const fetchAllPlans = async () => {
+    const [planList, err] = await getPlanList({
+      productIds: [productId],
+      page: 0,
+      count: 150,
+      // status: [
+      //   PlanStatus.ACTIVE,
+      //   PlanStatus.SOFT_ARCHIVED,
+      //   PlanStatus.HARD_ARCHIVED
+      // ],
+      type: filters.type
+    }, fetchPlan)
+
+    if (err == null && planList.plans) {
+      const plans = planList.plans.map((p: IPlan) => ({
+        ...p.plan,
+        metricPlanLimits: p.metricPlanLimits
+      }))
+      setAllPlans(plans)
+      // 更新过滤选项
+      planFilterRef.current = plans.map((plan: IPlan) => ({
+        value: plan.id,
+        text: plan.planName
+      }))
+    }
+  }
+
   const fetchPlan = async () => {
+    // 如果已经有所有计划的数据，直接从中过滤
+    if (allPlans.length > 0) {
+      let filteredPlans = allPlans;
+      
+      // 应用分页
+      const start = page * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+      
+      // 应用排序
+      if (sortFilter.columnKey != null) {
+        filteredPlans = [...filteredPlans].sort((a, b) => {
+          const field = sortFilter.columnKey === 'planName' ? 'planName' : 'createTime';
+          const order = sortFilter.order === 'descend' ? -1 : 1;
+          return a[field] > b[field] ? order : -order;
+        });
+      }
+      
+      // 应用过滤
+      if (filters.type?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.type!.includes(plan.type));
+      }
+      if (filters.status?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.status!.includes(plan.status));
+      }
+      if (filters.planName?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.planName!.includes(plan.id));
+      }
+      
+      setTotal(filteredPlans.length);
+      setPlan(filteredPlans.slice(start, end));
+      return;
+    }
+
+    // 如果没有缓存数据，则从服务器获取
     const body: TPlanListBody = {
-      ...filters,
       productIds: [productId],
       page: page,
-      count: PAGE_SIZE
+      count: PAGE_SIZE,
+      type: filters.type
     }
     if (sortFilter.columnKey != null) {
       body.sortField =
@@ -144,14 +227,23 @@ const Index = ({
     }
     const { plans, total } = planList
     setTotal(total)
-    setPlan(
-      plans == null
-        ? []
-        : plans.map((p: IPlan) => ({
-            ...p.plan,
-            metricPlanLimits: p.metricPlanLimits
-          }))
-    )
+    
+    const planData = plans == null
+      ? []
+      : plans.map((p: IPlan) => ({
+          ...p.plan,
+          metricPlanLimits: p.metricPlanLimits
+        }))
+    
+    // 应用客户端过滤
+    let filteredPlans = planData
+    if (filters.planName && filters.planName.length > 0) {
+      filteredPlans = planData.filter((plan: IPlan) => 
+        filters.planName!.includes(plan.id)
+      )
+    }
+    
+    setPlan(filteredPlans)
   }
 
   const columns: ColumnsType<IPlan> = [
@@ -165,8 +257,15 @@ const Index = ({
       dataIndex: 'planName',
       key: 'planName',
       width: 120,
-      sorter: (a, b) => a.planName.localeCompare(b.planName),
-      sortOrder: sortFilter?.columnKey == 'planName' ? sortFilter.order : null,
+      filters: planFilterRef.current,
+      filteredValue: filters.planName,
+      filterMode: 'tree',
+      filterSearch: true,
+      onFilter: (value, record) => {
+        // console.log('onFilter comparing:', { value, recordId: record.id, valueType: typeof value, recordIdType: typeof record.id });
+        // 确保类型匹配，将value转换为数字进行比较
+        return record.id === Number(value);
+      },
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
@@ -312,7 +411,6 @@ const Index = ({
   ]
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
-    // onPageChange(1, PAGE_SIZE)
     setFilters(filters as TFilters)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -323,6 +421,15 @@ const Index = ({
     filters.status == null
       ? searchParams.delete('status')
       : searchParams.set('status', filters.status.join('-'))
+    
+    // Handle planIds parameter - although field name is planName in filters, we use planIds in URL
+    // because these values are actually plan IDs rather than plan names
+    if (filters.planName == null || filters.planName.length === 0) {
+      searchParams.delete('planIds');
+    } else {
+      const planIdsStr = filters.planName.join('-');
+      searchParams.set('planIds', planIdsStr);
+    }
 
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
@@ -339,6 +446,12 @@ const Index = ({
 
     setSearchParams(searchParams)
   }
+
+  useEffect(() => {
+    if (isProductValid) {
+      fetchAllPlans()
+    }
+  }, [isProductValid])
 
   useEffect(() => {
     if (isProductValid) {

@@ -215,64 +215,103 @@ const Index = ({
         />
       </Form.Item>
 
-      <div>
-        <Form.Item
-          label="Interval Unit"
-          name="intervalUnit"
-          rules={[
-            {
-              required: watchPlanType != PlanType.ONE_TIME_ADD_ON,
-              message: 'Please select interval unit!'
-            }
-          ]}
-        >
-          <Select
-            style={{ width: 180 }}
-            disabled={
-              watchPlanType == PlanType.ONE_TIME_ADD_ON ||
-              disableAfterActive.current ||
-              formDisabled
-            } // one-time payment has no interval unit/count
-            options={[
-              { value: 'day', label: 'day' },
-              { value: 'week', label: 'week' },
-              { value: 'month', label: 'month' },
-              { value: 'year', label: 'year' }
-            ]}
-          />
-        </Form.Item>
-      </div>
-
       <Form.Item
-        label="Interval Count"
-        name="intervalCount"
-        rules={[
-          {
-            required: true,
-            message: 'Please input interval count!'
-          },
-          () => ({
-            validator(_, value) {
-              if (!Number.isInteger(value)) {
-                return Promise.reject(
-                  `Please input a valid interval count (> 1).`
-                )
-              }
-              return Promise.resolve()
-            }
-          })
-        ]}
+        label={
+          <span>
+            <span className="text-red-500">*</span>
+            <span>Billing Period</span>
+          </span>
+        }
+        className="mb-6"
       >
-        <InputNumber
-          disabled={
-            watchPlanType == PlanType.ONE_TIME_ADD_ON ||
-            disableAfterActive.current ||
-            formDisabled
-          }
-          style={{ width: 180 }}
-          min={1}
-        />
-        {/* one-time payment has no interval unit/count */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center h-[38px] bg-white rounded-lg border border-solid border-gray-200 overflow-hidden !shadow-none [&]:shadow-none [&_*]:shadow-none" style={{ boxShadow: 'none !important', filter: 'none', WebkitBoxShadow: 'none', MozBoxShadow: 'none', WebkitAppearance: 'none' }}>
+            <div className="flex items-center h-[38px] px-4 bg-gray-50 border-r border-solid border-gray-200 !shadow-none [&_*]:shadow-none relative" style={{ 
+              boxShadow: 'none !important',
+              WebkitBoxShadow: 'none !important',
+              MozBoxShadow: 'none !important',
+              WebkitAppearance: 'none',
+              appearance: 'none',
+              marginLeft: '-1px',
+              paddingLeft: '17px',
+              borderLeft: '1px solid #f9fafb',
+              marginTop: '-1px',
+              marginBottom: '-1px',
+              height: 'calc(100% + 2px)',
+              borderTop: '1px solid #f9fafb',
+              borderBottom: '1px solid #f9fafb'
+            }}>
+              <span className="text-[15px] text-gray-600 capitalize">
+                {watchPlanType === PlanType.ONE_TIME_ADD_ON ? 'For' : 'Every'}
+              </span>
+            </div>
+            
+            <Form.Item
+              name="intervalCount"
+              noStyle
+              rules={[
+                {
+                  required: true,
+                  message: 'Please input interval count!'
+                },
+                () => ({
+                  validator(_, value) {
+                    if (!Number.isInteger(value)) {
+                      return Promise.reject(
+                        `Please input a valid interval count (> 0).`
+                      )
+                    }
+                    return Promise.resolve()
+                  }
+                })
+              ]}
+            >
+              <InputNumber
+                disabled={disableAfterActive.current || formDisabled}
+                className="w-[80px] h-[38px] text-center !border-0 [&.ant-input-number-outlined]:border-0 [&.ant-input-number]:border-0 [&_.ant-input-number-input-wrap]:border-0 [&_.ant-input-number-input]:border-0 [&]:hover:border-0 [&.ant-input-number-focused]:shadow-none [&.ant-input-number]:shadow-none [&.ant-input-number-outlined]:shadow-none [&_.ant-input-number-handler-wrap]:border-0 [&_.ant-input-number-handler]:border-0"
+                controls={{
+                  upIcon: <span className="text-[10px] text-gray-500 block">▲</span>,
+                  downIcon: <span className="text-[10px] text-gray-500 block">▼</span>
+                }}
+                min={1}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '38px'
+                }}
+              />
+            </Form.Item>
+          </div>
+          
+          <Form.Item
+            name="intervalUnit"
+            noStyle
+            rules={[
+              {
+                required: true,
+                message: 'Please select interval unit!'
+              }
+            ]}
+          >
+            <Select
+              disabled={disableAfterActive.current || formDisabled}
+              className="w-[60px] !rounded-lg"
+              style={{ width: 180, height: 38 }}
+              options={[
+                { value: 'day', label: 'day' },
+                { value: 'week', label: 'week' },
+                { value: 'month', label: 'month' },
+                { value: 'year', label: 'year' }
+              ]}
+              placeholder="month"
+              dropdownStyle={{
+                borderRadius: '8px',
+                boxShadow: '0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05)'
+              }}
+            />
+          </Form.Item>
+        </div>
       </Form.Item>
     </div>
   )

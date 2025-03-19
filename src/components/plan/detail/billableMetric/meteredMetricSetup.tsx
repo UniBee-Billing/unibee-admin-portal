@@ -1,3 +1,4 @@
+import GraduationIcon from '@/assets/graduation.svg?react'
 import { METRIC_CHARGE_TYPE, METRICS_AGGREGATE_TYPE } from '@/constants'
 import {
   CURRENCY,
@@ -22,7 +23,6 @@ import {
 } from 'antd'
 import { MouseEventHandler, PropsWithChildren } from 'react'
 import GraduationSetup from './graduationSetup'
-import GraduationIcon from './icons/graduation.svg?react'
 import { MetricData } from './types'
 
 type ChargeSetupProps = {
