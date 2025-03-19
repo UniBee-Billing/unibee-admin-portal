@@ -89,26 +89,23 @@ const Index = ({
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
+  const [allPlans, setAllPlans] = useState<IPlan[]>([])
 
-  // 注意：我们在URL中使用'planIds'参数，但在Ant Design Table的筛选器中，字段名是'planName'
-  // 这是因为Table组件的onChange事件返回的filters对象使用列的key作为字段名
-  // 我们的列key是'planName'，但我们存储的是plan ID，所以URL参数用'planIds'更准确
+  // Note: We use 'planIds' parameter in URL, but 'planName' in Ant Design Table filters
+  // This is because Table's onChange event returns filters object using column key as field name
+  // Our column key is 'planName', but we store plan IDs, so URL parameter 'planIds' is more accurate
   const planIdsParam = searchParams.get('planIds');
-  // console.log('URL planIds param:', planIdsParam);
   
-  // 检查initializeFilters函数的结果
   const typeFilters = initializeFilters('type', Number, PlanType);
   const statusFilters = initializeFilters('status', Number, PlanStatus);
-  // console.log('initializeFilters results:', { typeFilters, statusFilters });
   
-  // 手动处理planIds参数
+  // Handle planIds parameter manually
   let planNameFilter = null;
   if (planIdsParam) {
     try {
       planNameFilter = planIdsParam.split('-').map(Number).filter(id => !isNaN(id));
-      // console.log('Parsed planIds from URL:', planNameFilter);
     } catch (_e) {
-      // console.error('Error parsing planIds:', _e);
+      // Silently handle parsing errors
     }
   }
   
@@ -118,8 +115,6 @@ const Index = ({
     planName: planNameFilter
   } as TFilters)
 
-  // console.log('Initial filters:', filters);
-  
   const [sortFilter, setSortFilter] = useState<Sorts>(
     initializeSort<IPlan>(['planName', 'createTime']) // pass all the sortable column.key in array
   )
@@ -149,24 +144,50 @@ const Index = ({
     navigate(`/plan/new?productId=${productId}`)
   }
 
+  const fetchAllPlans = async () => {
+    const [planList, err] = await getPlanList({
+      productIds: [productId],
+      page: 0,
+      count: 150,
+      // status: [
+      //   PlanStatus.ACTIVE,
+      //   PlanStatus.SOFT_ARCHIVED,
+      //   PlanStatus.HARD_ARCHIVED
+      // ],
+      type: filters.type
+    }, fetchPlan)
+
+    if (err == null && planList.plans) {
+      const plans = planList.plans.map((p: IPlan) => ({
+        ...p.plan,
+        metricPlanLimits: p.metricPlanLimits
+      }))
+      setAllPlans(plans)
+      // 更新过滤选项
+      planFilterRef.current = plans.map((plan: IPlan) => ({
+        value: plan.id,
+        text: plan.planName
+      }))
+    }
+  }
+
   const fetchPlan = async () => {
-    // console.log('fetchPlan called with filters:', filters);
-    // console.log('planNameFilters available:', planNameFilters);
-    
     const body: TPlanListBody = {
       productIds: [productId],
       page: page,
       count: PAGE_SIZE,
-      type: filters.type,
-      status: filters.status
+      // status: filters.status || [
+      //   // PlanStatus.ACTIVE,
+      //   // PlanStatus.SOFT_ARCHIVED,
+      //   // PlanStatus.HARD_ARCHIVED
+      // ],
+      type: filters.type
     }
     if (sortFilter.columnKey != null) {
       body.sortField =
         sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
       body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
     }
-
-    // Remove the planName filter logic - we'll handle filtering client-side
 
     setLoading(true)
     const [planList, err] = await getPlanList(body, fetchPlan)
@@ -185,13 +206,7 @@ const Index = ({
           metricPlanLimits: p.metricPlanLimits
         }))
     
-    // Update planFilterRef with plan names for filtering
-    planFilterRef.current = planData.map((plan: IPlan) => ({
-      value: plan.id,
-      text: plan.planName
-    }))
-    
-    // Apply client-side filtering if planName filter is active
+    // 应用客户端过滤
     let filteredPlans = planData
     if (filters.planName && filters.planName.length > 0) {
       filteredPlans = planData.filter((plan: IPlan) => 
@@ -367,17 +382,6 @@ const Index = ({
   ]
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
-    // onPageChange(1, PAGE_SIZE)
-    // console.log('Table filter change:', filters);
-    
-    // 检查filters.planName的类型和值
-    // 注意：虽然字段名是planName，但实际上存储的是plan ID
-    // console.log('planName filter:', {
-    //   value: filters.planName,
-    //   type: typeof filters.planName,
-    //   isArray: Array.isArray(filters.planName)
-    // });
-    
     setFilters(filters as TFilters)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -389,18 +393,14 @@ const Index = ({
       ? searchParams.delete('status')
       : searchParams.set('status', filters.status.join('-'))
     
-    // 处理planIds参数 - 虽然filters中的字段名是planName，但我们在URL中使用planIds
-    // 因为这些值实际上是plan ID而不是plan名称
+    // Handle planIds parameter - although field name is planName in filters, we use planIds in URL
+    // because these values are actually plan IDs rather than plan names
     if (filters.planName == null || filters.planName.length === 0) {
-      // console.log('Removing planIds from URL');
       searchParams.delete('planIds');
     } else {
       const planIdsStr = filters.planName.join('-');
-      // console.log('Setting planIds in URL:', planIdsStr);
       searchParams.set('planIds', planIdsStr);
     }
-
-    // console.log('Updated search params:', Object.fromEntries(searchParams.entries()));
 
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
@@ -417,6 +417,12 @@ const Index = ({
 
     setSearchParams(searchParams)
   }
+
+  useEffect(() => {
+    if (isProductValid) {
+      fetchAllPlans()
+    }
+  }, [isProductValid])
 
   useEffect(() => {
     if (isProductValid) {
