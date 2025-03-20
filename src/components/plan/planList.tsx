@@ -11,8 +11,7 @@ import { usePagination } from '@/hooks/index'
 import {
   archivePlanReq,
   copyPlanReq,
-  getPlanList,
-  TPlanListBody
+  getPlanList
 } from '@/requests/index'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import {
