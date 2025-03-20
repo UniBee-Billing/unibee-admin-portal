@@ -145,15 +145,15 @@ const Index = ({
   }
 
   const fetchAllPlans = async () => {
+    // if it has data, no need to fetch again
+    if (allPlans.length > 0) {
+      return;
+    }
+
     const [planList, err] = await getPlanList({
       productIds: [productId],
       page: 0,
       count: 150,
-      // status: [
-      //   PlanStatus.ACTIVE,
-      //   PlanStatus.SOFT_ARCHIVED,
-      //   PlanStatus.HARD_ARCHIVED
-      // ],
       type: filters.type
     }, fetchPlan)
 
@@ -163,7 +163,6 @@ const Index = ({
         metricPlanLimits: p.metricPlanLimits
       }))
       setAllPlans(plans)
-      // 更新过滤选项
       planFilterRef.current = plans.map((plan: IPlan) => ({
         value: plan.id,
         text: plan.planName
@@ -172,78 +171,39 @@ const Index = ({
   }
 
   const fetchPlan = async () => {
-    // 如果已经有所有计划的数据，直接从中过滤
-    if (allPlans.length > 0) {
-      let filteredPlans = allPlans;
-      
-      // 应用分页
-      const start = page * PAGE_SIZE;
-      const end = start + PAGE_SIZE;
-      
-      // 应用排序
-      if (sortFilter.columnKey != null) {
-        filteredPlans = [...filteredPlans].sort((a, b) => {
-          const field = sortFilter.columnKey === 'planName' ? 'planName' : 'createTime';
-          const order = sortFilter.order === 'descend' ? -1 : 1;
-          return a[field] > b[field] ? order : -order;
-        });
-      }
-      
-      // 应用过滤
-      if (filters.type?.length) {
-        filteredPlans = filteredPlans.filter(plan => filters.type!.includes(plan.type));
-      }
-      if (filters.status?.length) {
-        filteredPlans = filteredPlans.filter(plan => filters.status!.includes(plan.status));
-      }
-      if (filters.planName?.length) {
-        filteredPlans = filteredPlans.filter(plan => filters.planName!.includes(plan.id));
-      }
-      
-      setTotal(filteredPlans.length);
-      setPlan(filteredPlans.slice(start, end));
+    // if it has data, no need to fetch again
+    if (allPlans.length === 0) {
       return;
     }
 
-    // 如果没有缓存数据，则从服务器获取
-    const body: TPlanListBody = {
-      productIds: [productId],
-      page: page,
-      count: PAGE_SIZE,
-      type: filters.type
+    let filteredPlans = allPlans;
+    
+    // apply filters
+    if (filters.type?.length) {
+      filteredPlans = filteredPlans.filter(plan => filters.type!.includes(plan.type));
     }
+    if (filters.status?.length) {
+      filteredPlans = filteredPlans.filter(plan => filters.status!.includes(plan.status));
+    }
+    if (filters.planName?.length) {
+      filteredPlans = filteredPlans.filter(plan => filters.planName!.includes(plan.id));
+    }
+    
+    // apply sort
     if (sortFilter.columnKey != null) {
-      body.sortField =
-        sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
-      body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
-    }
-
-    setLoading(true)
-    const [planList, err] = await getPlanList(body, fetchPlan)
-    setLoading(false)
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    const { plans, total } = planList
-    setTotal(total)
-    
-    const planData = plans == null
-      ? []
-      : plans.map((p: IPlan) => ({
-          ...p.plan,
-          metricPlanLimits: p.metricPlanLimits
-        }))
-    
-    // 应用客户端过滤
-    let filteredPlans = planData
-    if (filters.planName && filters.planName.length > 0) {
-      filteredPlans = planData.filter((plan: IPlan) => 
-        filters.planName!.includes(plan.id)
-      )
+      filteredPlans = [...filteredPlans].sort((a, b) => {
+        const field = sortFilter.columnKey === 'planName' ? 'planName' : 'createTime';
+        const order = sortFilter.order === 'descend' ? -1 : 1;
+        return a[field] > b[field] ? order : -order;
+      });
     }
     
-    setPlan(filteredPlans)
+    // apply pagination
+    const start = page * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    
+    setTotal(filteredPlans.length);
+    setPlan(filteredPlans.slice(start, end));
   }
 
   const columns: ColumnsType<IPlan> = [
@@ -263,7 +223,7 @@ const Index = ({
       filterSearch: true,
       onFilter: (value, record) => {
         // console.log('onFilter comparing:', { value, recordId: record.id, valueType: typeof value, recordIdType: typeof record.id });
-        // 确保类型匹配，将value转换为数字进行比较
+        // ensure type matching, convert value to number for comparison
         return record.id === Number(value);
       },
       render: (planName) => (
@@ -449,15 +409,19 @@ const Index = ({
 
   useEffect(() => {
     if (isProductValid) {
+      setLoading(true);
       fetchAllPlans()
+        .then(() => {
+          setLoading(false);
+        });
     }
-  }, [isProductValid])
+  }, [isProductValid]);
 
   useEffect(() => {
-    if (isProductValid) {
-      fetchPlan()
+    if (isProductValid && allPlans.length > 0) {
+      fetchPlan();
     }
-  }, [filters, page, sortFilter])
+  }, [filters, page, sortFilter, allPlans.length]);
 
   return (
     <>
