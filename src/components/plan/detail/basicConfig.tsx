@@ -92,6 +92,19 @@ const Index = ({
       </Form.Item>
 
       <Form.Item
+        label="Internal Plan Name"
+        name="internalName"
+        rules={[
+          {
+            required: true,
+            message: 'Please input internal plan name!'
+          }
+        ]}
+      >
+        <Input maxLength={200} showCount />
+      </Form.Item>
+
+      <Form.Item
         label="Plan Description"
         name="description"
         rules={[
