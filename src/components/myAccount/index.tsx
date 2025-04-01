@@ -1,8 +1,18 @@
-import { Divider } from 'antd'
+import { Button, Divider } from 'antd'
 import MerchantInfo from './merchantInfo'
 import MyProfile from './profile'
+import { useRef } from 'react'
 
 const Index = () => {
+  const merchantInfoRef = useRef<{ submitForm: () => void } | null>(null)
+  const profileRef = useRef<{ submitForm: () => void } | null>(null)
+
+  const handleSaveAll = () => {
+    // Submit both forms
+    merchantInfoRef.current?.submitForm()
+    profileRef.current?.submitForm()
+  }
+
   return (
     <>
       <Divider
@@ -11,14 +21,24 @@ const Index = () => {
       >
         Company profile
       </Divider>
-      <MerchantInfo />
+      <MerchantInfo ref={merchantInfoRef} />
       <Divider
         orientation="left"
         style={{ color: '#757575', fontSize: '14px' }}
       >
         My profile
       </Divider>
-      <MyProfile />
+      <MyProfile ref={profileRef} />
+      
+      <div className="flex justify-center mt-8">
+        <Button
+          type="primary"
+          onClick={handleSaveAll}
+          style={{ backgroundColor: '#286ede', color: '#FFFFFF' }}
+        >
+          Save
+        </Button>
+      </div>
     </>
   )
 }
