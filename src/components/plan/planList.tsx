@@ -11,7 +11,8 @@ import { usePagination } from '@/hooks/index'
 import {
   archivePlanReq,
   copyPlanReq,
-  getPlanList
+  getPlanList,
+  TPlanListBody
 } from '@/requests/index'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import {
@@ -66,6 +67,7 @@ type TFilters = {
   type: PlanType[] | null
   status: PlanStatus[] | null
   planName?: number[] | null
+  internalName?: number[] | null
 }
 
 const Index = ({
@@ -88,31 +90,45 @@ const Index = ({
   ) // undefined: modal is closed, otherwise: modal is open with this plan
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
+  const internalNameFilterRef = useRef<{ value: number; text: string }[]>([])
   const [allPlans,setAllPlans] = useState<IPlan[]>([])
 
-  // Note: We use 'planIds' parameter in URL, but 'planName' in Ant Design Table filters
-  // This is because Table's onChange event returns filters object using column key as field name
-  // Our column key is 'planName', but we store plan IDs, so URL parameter 'planIds' is more accurate
+  // Note: We use 'planIds' parameter in URL for both plan name and internal name filters
+  // since both are filtering by plan ID
   const planIdsParam = searchParams.get('planIds');
+  const internalNameIdsParam = searchParams.get('internalNameIds');
   
+  // Initialize filters from URL search params
   const typeFilters = initializeFilters('type', Number, PlanType);
   const statusFilters = initializeFilters('status', Number, PlanStatus);
   
-  // Handle planIds parameter manually
-  let planNameFilter = null;
+  // Handle planIds parameter manually for planName
+  let planIdFilter = null;
   if (planIdsParam) {
     try {
-      planNameFilter = planIdsParam.split('-').map(Number).filter(id => !isNaN(id));
+      planIdFilter = planIdsParam.split('-').map(Number).filter(id => !isNaN(id));
     } catch (_e) {
       // Silently handle parsing errors
     }
   }
   
+  // Handle internalNameIds parameter manually for internalName
+  let internalNameIdFilter = null;
+  if (internalNameIdsParam) {
+    try {
+      internalNameIdFilter = internalNameIdsParam.split('-').map(Number).filter(id => !isNaN(id));
+    } catch (_e) {
+      // Silently handle parsing errors
+    }
+  }
+  
+  // Setup initial filters
   const [filters, setFilters] = useState<TFilters>({
-    ...typeFilters,
-    ...statusFilters,
-    planName: planNameFilter
-  } as TFilters)
+    type: typeFilters.type,
+    status: statusFilters.status,
+    planName: planIdFilter,
+    internalName: internalNameIdFilter
+  });
 
   const [sortFilter, setSortFilter] = useState<Sorts>(
     initializeSort<IPlan>(['planName', 'createTime']) // pass all the sortable column.key in array
@@ -144,15 +160,15 @@ const Index = ({
   }
 
   const fetchAllPlans = async () => {
-    // if it has data, no need to fetch again
-    if (allPlans.length > 0) {
-      return;
-    }
-
     const [planList, err] = await getPlanList({
       productIds: [productId],
       page: 0,
       count: 150,
+      // status: [
+      //   PlanStatus.ACTIVE,
+      //   PlanStatus.SOFT_ARCHIVED,
+      //   PlanStatus.HARD_ARCHIVED
+      // ],
       type: filters.type
     }, fetchPlan)
 
@@ -162,47 +178,122 @@ const Index = ({
         metricPlanLimits: p.metricPlanLimits
       }))
       setAllPlans(plans)
+      
+      // Update filter options
       planFilterRef.current = plans.map((plan: IPlan) => ({
         value: plan.id,
         text: plan.planName
       }))
+      
+      // Update internal name filter options - using the same approach as plan name
+      internalNameFilterRef.current = plans
+        .filter((plan: IPlan) => plan.internalName && plan.internalName.trim() !== '')
+        .map((plan: IPlan) => ({
+          value: plan.id,
+          text: plan.internalName
+        }));
     }
   }
 
   const fetchPlan = async () => {
-    // if it has data, no need to fetch again
-    if (allPlans.length === 0) {
+    // 如果已经有所有计划的数据，直接从中过滤
+    if (allPlans.length > 0) {
+      let filteredPlans = allPlans;
+      
+      // 应用排序
+      if (sortFilter.columnKey != null) {
+        filteredPlans = [...filteredPlans].sort((a, b) => {
+          const field = sortFilter.columnKey === 'planName' ? 'planName' : 'createTime';
+          const order = sortFilter.order === 'descend' ? -1 : 1;
+          return a[field] > b[field] ? order : -order;
+        });
+      }
+      
+      // 应用过滤
+      if (filters.type?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.type!.includes(plan.type));
+      }
+      if (filters.status?.length) {
+        filteredPlans = filteredPlans.filter(plan => filters.status!.includes(plan.status));
+      }
+      
+      // Apply filtering for planName and internalName independently
+      const hasPlanNameFilter = filters.planName && filters.planName.length > 0;
+      const hasInternalNameFilter = filters.internalName && filters.internalName.length > 0;
+      
+      // Apply planName filter if it exists
+      if (hasPlanNameFilter) {
+        filteredPlans = filteredPlans.filter((plan: IPlan) => 
+          filters.planName!.includes(plan.id)
+        );
+      }
+      
+      // Apply internalName filter if it exists
+      if (hasInternalNameFilter) {
+        filteredPlans = filteredPlans.filter((plan: IPlan) => 
+          filters.internalName!.includes(plan.id)
+        );
+      }
+      
+      // 应用分页
+      const start = page * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+      
+      setTotal(filteredPlans.length);
+      setPlan(filteredPlans.slice(start, end));
       return;
     }
 
-    let filteredPlans = allPlans;
-    
-    // apply filters
-    if (filters.type?.length) {
-      filteredPlans = filteredPlans.filter(plan => filters.type!.includes(plan.type));
+    // 如果没有缓存数据，则从服务器获取
+    const body: TPlanListBody = {
+      productIds: [productId],
+      page: page,
+      count: PAGE_SIZE,
+      type: filters.type
     }
-    if (filters.status?.length) {
-      filteredPlans = filteredPlans.filter(plan => filters.status!.includes(plan.status));
-    }
-    if (filters.planName?.length) {
-      filteredPlans = filteredPlans.filter(plan => filters.planName!.includes(plan.id));
-    }
-    
-    // apply sort
     if (sortFilter.columnKey != null) {
-      filteredPlans = [...filteredPlans].sort((a, b) => {
-        const field = sortFilter.columnKey === 'planName' ? 'planName' : 'createTime';
-        const order = sortFilter.order === 'descend' ? -1 : 1;
-        return a[field] > b[field] ? order : -order;
-      });
+      body.sortField =
+        sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
+      body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
+    }
+
+    setLoading(true)
+    const [planList, err] = await getPlanList(body, fetchPlan)
+    setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    const { plans, total } = planList
+    setTotal(total)
+    
+    const planData = plans == null
+      ? []
+      : plans.map((p: IPlan) => ({
+          ...p.plan,
+          metricPlanLimits: p.metricPlanLimits
+        }))
+    
+    // Apply filtering for planName and internalName independently
+    let filteredPlans = planData;
+    const hasPlanNameFilter = filters.planName && filters.planName.length > 0;
+    const hasInternalNameFilter = filters.internalName && filters.internalName.length > 0;
+    
+    // Apply planName filter if it exists
+    if (hasPlanNameFilter) {
+      filteredPlans = filteredPlans.filter((plan: IPlan) => 
+        filters.planName!.includes(plan.id)
+      );
     }
     
-    // apply pagination
-    const start = page * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
+    // Apply internalName filter if it exists
+    if (hasInternalNameFilter) {
+      filteredPlans = filteredPlans.filter((plan: IPlan) => 
+        filters.internalName!.includes(plan.id)
+      );
+    }
     
-    setTotal(filteredPlans.length);
-    setPlan(filteredPlans.slice(start, end));
+    setPlan(filteredPlans)
   }
 
   const columns: ColumnsType<IPlan> = [
@@ -222,12 +313,30 @@ const Index = ({
       filterSearch: true,
       onFilter: (value, record) => {
         // console.log('onFilter comparing:', { value, recordId: record.id, valueType: typeof value, recordIdType: typeof record.id });
-        // ensure type matching, convert value to number for comparison
+        // 确保类型匹配，将value转换为数字进行比较
         return record.id === Number(value);
       },
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
+        </div>
+      )
+    },
+    {
+      title: 'Internal Name',
+      dataIndex: 'internalName',
+      key: 'internalName',
+      width: 120,
+      filters: internalNameFilterRef.current,
+      filterMode: 'tree',
+      filterSearch: true,
+      filteredValue: filters.internalName,
+      onFilter: (value, record) => {
+        return record.id === Number(value);
+      },
+      render: (internalName) => (
+        <div className="w-28 overflow-hidden whitespace-nowrap">
+          <LongTextPopover text={internalName || ''} placement="topLeft" width="120px" />
         </div>
       )
     },
@@ -370,8 +479,10 @@ const Index = ({
   ]
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
+    // Store the filters in state
     setFilters(filters as TFilters)
 
+    // Update URL parameters based on filter selections
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     filters.type == null
       ? searchParams.delete('type')
@@ -381,13 +492,17 @@ const Index = ({
       ? searchParams.delete('status')
       : searchParams.set('status', filters.status.join('-'))
     
-    // Handle planIds parameter - although field name is planName in filters, we use planIds in URL
-    // because these values are actually plan IDs rather than plan names
-    if (filters.planName == null || filters.planName.length === 0) {
+    // Handle planName and internalName filters separately
+    if (!filters.planName || filters.planName.length === 0) {
       searchParams.delete('planIds');
     } else {
-      const planIdsStr = filters.planName.join('-');
-      searchParams.set('planIds', planIdsStr);
+      searchParams.set('planIds', filters.planName.join('-'));
+    }
+    
+    if (!filters.internalName || filters.internalName.length === 0) {
+      searchParams.delete('internalNameIds');
+    } else {
+      searchParams.set('internalNameIds', filters.internalName.join('-'));
     }
 
     if (Array.isArray(sorter)) {
@@ -408,19 +523,15 @@ const Index = ({
 
   useEffect(() => {
     if (isProductValid) {
-      setLoading(true);
       fetchAllPlans()
-        .then(() => {
-          setLoading(false);
-        });
     }
-  }, [isProductValid]);
+  }, [isProductValid])
 
   useEffect(() => {
-    if (isProductValid && allPlans.length > 0) {
-      fetchPlan();
+    if (isProductValid) {
+      fetchPlan()
     }
-  }, [filters, page, sortFilter, allPlans.length]);
+  }, [filters, page, sortFilter])
 
   return (
     <>
