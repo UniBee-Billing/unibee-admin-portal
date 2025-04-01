@@ -13,7 +13,7 @@ import {
   Tag,
   message
 } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { passwordSchema } from '../../helpers'
 import { useCountdown } from '../../hooks'
@@ -21,7 +21,9 @@ import {
   forgetPassReq,
   getMemberProfileReq,
   logoutReq,
-  resetPassReq
+  resetPassReq,
+  updateMemberProfileReq,
+  updateMerchantInfoReq
 } from '../../requests'
 import { IMerchantMemberProfile, TRole } from '../../shared.types'
 import {
@@ -33,14 +35,31 @@ import {
 } from '../../stores'
 import ResetPasswordWithOTP from '../login/forgetPasswordForm'
 
-const Index = () => {
+interface IProfileFormValues {
+  firstName: string;
+  lastName: string;
+  mobile: string;
+  id?: string;
+  merchantId?: string;
+  email?: string;
+  MemberRoles?: TRole[];
+}
+
+const Index = forwardRef((_props, ref) => {
   const merchantProfile = useMerchantMemberProfileStore()
+  const merchantInfoStore = useMerchantInfoStore()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false) // page loading
-  const [submitting] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [resetPasswordModal, setResetPasswordModal] = useState(false)
   const togglePasswordModal = () => setResetPasswordModal(!resetPasswordModal)
   const [_, setMyInfo] = useState<IMerchantMemberProfile | null>(null)
+
+  useImperativeHandle(ref, () => ({
+    submitForm: () => {
+      form.submit()
+    }
+  }))
 
   const getInfo = async () => {
     setLoading(true)
@@ -52,6 +71,49 @@ const Index = () => {
     }
     setMyInfo(res.merchantMember)
     form.setFieldsValue(res.merchantMember)
+  }
+
+  const onSubmit = async (values: IProfileFormValues) => {
+    setSubmitting(true)
+    const [_, err] = await updateMemberProfileReq({
+      firstName: values.firstName,
+      lastName: values.lastName,
+      mobile: values.mobile
+    })
+    
+    if (err != null) {
+      message.error(err.message)
+      setSubmitting(false)
+      return
+    }
+
+    // Also update merchant info if user is owner
+    if (merchantProfile.isOwner) {
+      const merchantValues = {
+        ...merchantInfoStore.getMerchantInfo(),
+        firstName: values.firstName,
+        lastName: values.lastName,
+        mobile: values.mobile
+      }
+      const [__, err2] = await updateMerchantInfoReq(merchantValues)
+      if (err2 != null) {
+        message.error(err2.message)
+        setSubmitting(false)
+        return
+      }
+    }
+
+    // Update the merchant member profile store with the new values
+    merchantProfile.setProfile({
+      ...merchantProfile.getProfile(),
+      firstName: values.firstName,
+      lastName: values.lastName,
+      mobile: values.mobile
+    });
+
+    setSubmitting(false)
+    message.success('Profile updated successfully')
+    getInfo() // Refresh the data
   }
 
   useEffect(() => {
@@ -78,9 +140,8 @@ const Index = () => {
       )}
       <Form
         form={form}
-        // onFinish={onSubmit}
+        onFinish={onSubmit}
         name="merchant-user-profile"
-        // labelAlign="left"
         labelCol={{
           flex: '130px'
         }}
@@ -163,20 +224,11 @@ const Index = () => {
           >
             Password Management
           </Button>
-          &nbsp;&nbsp;&nbsp;&nbsp;
-          {/* <Button
-            type="primary"
-            onClick={form.submit}
-            loading={submitting}
-            disabled={submitting}
-          >
-            Save
-          </Button> */}
         </div>
       </Form>
     </div>
   )
-}
+})
 
 export default Index
 

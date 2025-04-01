@@ -1,7 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons'
-import { Button, Form, Input, Spin, message } from 'antd'
+import { Form, Input, Spin, message } from 'antd'
 import update from 'immutability-helper'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 import {
   emailValidate,
   formatBytes,
@@ -18,7 +18,7 @@ import {
 import type { GetProp, UploadFile, UploadProps } from 'antd'
 import { Image, Upload } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
-// import ImgCrop from 'antd-img-crop'
+// import ImgCrop from 'ant-img-crop'
 // this tool has a bug, when cropping transparent bg png, the bg will become white after cropping
 /* <ImgCrop
       rotationSlider
@@ -48,17 +48,23 @@ const getBase64 = (file: FileType): Promise<string> =>
     reader.onerror = (error) => reject(error)
   })
 
-const Index = () => {
+const Index = forwardRef((_props, ref) => {
   const merchantInfoStore = useMerchantInfoStore()
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const [form] = Form.useForm()
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
   const [loading, setLoading] = useState(false) // page loading
-  const [uploading, setUploading] = useState(false) // logo upload
-  const [submitting, setSubmitting] = useState(false)
+  const [_uploading, setUploading] = useState(false) // logo upload
+  const [_submitting, setSubmitting] = useState(false)
   const [merchantInfo, setMerchantInfo] = useState<TMerchantInfo | null>(null)
   const [fileList, setFileList] = useState<UploadFile[]>([])
+
+  useImperativeHandle(ref, () => ({
+    submitForm: () => {
+      form.submit()
+    }
+  }))
 
   // removing file also trigger this fn
   const onUploadFileChange: UploadProps['onChange'] = ({
@@ -267,24 +273,11 @@ const Index = () => {
             >
               <Input />
             </Form.Item>
-
-            <div className="mx-8 my-8 flex justify-center">
-              {merchantMemberProfile.isOwner && (
-                <Button
-                  type="primary"
-                  onClick={form.submit}
-                  loading={submitting}
-                  disabled={submitting || uploading}
-                >
-                  {uploading ? 'Uploading' : submitting ? 'Submitting' : 'Save'}
-                </Button>
-              )}
-            </div>
           </Form>
         )
       )}
     </div>
   )
-}
+})
 
 export default Index
