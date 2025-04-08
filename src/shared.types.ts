@@ -206,6 +206,7 @@ interface IPlan {
   plan?: IPlan
   externalPlanId?: '' // used for subscription import, the to-be-imported active sub need to bind to a plan.
   planName: string
+  internalName: string
   description: string
   type: PlanType // 1: main plan, 2: add-on, 3: one-time addon
   currency: Currency

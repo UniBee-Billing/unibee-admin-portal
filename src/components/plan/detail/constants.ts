@@ -12,6 +12,7 @@ import { TNewPlan } from './types'
 export const DEFAULT_NEW_PLAN: TNewPlan = {
   currency: 'EUR',
   planName: '',
+  internalName: '',
   description: '',
   intervalUnit: 'month',
   intervalCount: 1,
@@ -48,3 +49,4 @@ export const defaultMetricRecurringCharge = (): MetricMeteredCharge => ({
   graduatedAmounts: [],
   localId: randomString(8)
 })
+

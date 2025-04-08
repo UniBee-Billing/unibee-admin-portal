@@ -2493,3 +2493,18 @@ export const getRevenueReq = async () => {
     return [null, e]
   }
 }
+
+export const updateMemberProfileReq = async (body: {
+  firstName: string
+  lastName: string
+  mobile: string
+}) => {
+  try {
+    const res = await request.post('/merchant/member/update', body)
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}

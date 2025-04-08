@@ -7,7 +7,7 @@ import {
   message,
   Modal,
   Select,
-  Switch
+  // Switch
 } from 'antd'
 import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
@@ -123,6 +123,13 @@ type AccountValues = Pick<PersonalAccountValues, 'country'> &
 
 const TRIGGER_PREVIEW_FIELDS = ['country', 'vat', 'discountCode']
 
+// Add enum for payment requirement options
+enum PaymentRequireType {
+  ACTIVATE_AFTER_PAYMENT = 'activateAfterPayment',
+  ACTIVATE_BEFORE_PAYMENT = 'activateBeforePayment',
+  NOT_REQUIRE_PAYMENT = 'notRequirePayment'
+}
+
 export const AssignSubscriptionModal = ({
   user,
   productId,
@@ -149,7 +156,15 @@ export const AssignSubscriptionModal = ({
     setSelectedPlan(undefined)
   }, [selectedPlanType])
 
-  const [requirePayment, setRequirePayment] = useState(true)
+  // Replace requirePayment boolean with enum
+  const [paymentRequireType, setPaymentRequireType] = useState<PaymentRequireType>(PaymentRequireType.ACTIVATE_AFTER_PAYMENT)
+  
+  // // Keep the requirePayment for backward compatibility with existing code
+  // const requirePayment = useMemo(() => 
+  //   paymentRequireType !== PaymentRequireType.NOT_REQUIRE_PAYMENT, 
+  //   [paymentRequireType]
+  // )
+  
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
@@ -262,7 +277,8 @@ export const AssignSubscriptionModal = ({
         .map((a) => ({ quantity: a.quantity as number, addonPlanId: a.id }))
     }
 
-    if (!requirePayment) {
+    // Use the new payment requirement type
+    if (paymentRequireType === PaymentRequireType.NOT_REQUIRE_PAYMENT) {
       const fiveYearFromNow = new Date(
         new Date().setFullYear(new Date().getFullYear() + 5)
       )
@@ -273,7 +289,12 @@ export const AssignSubscriptionModal = ({
       }
     }
 
-    return { ...submitData, startIncomplete: true }
+    if (paymentRequireType === PaymentRequireType.ACTIVATE_BEFORE_PAYMENT) {
+      return { ...submitData, startIncomplete: true }
+    }
+
+    // Default case: ACTIVATE_AFTER_PAYMENT - don't modify the submitData
+    return submitData
   }
 
   const onSubmit = async () => {
@@ -455,7 +476,7 @@ export const AssignSubscriptionModal = ({
       return
     }
     updatePrice()
-  }, [selectedPlan, requirePayment, gatewayId, gatewayPaymentType]) // different gateway has different vat rate, so we need to update the price when gateway changed
+  }, [selectedPlan, paymentRequireType, gatewayId, gatewayPaymentType]) // different gateway has different vat rate, so we need to update the price when gateway changed
 
   const onDiscountCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDiscountCode(e.target.value)
@@ -569,10 +590,16 @@ export const AssignSubscriptionModal = ({
           <div className="w-1/2">
             <div className="text-lg text-gray-800">Payment</div>
             <div className="my-4">
-              <InfoItem title="Require payment" horizontal isBold={false}>
-                <Switch
-                  value={requirePayment}
-                  onChange={(switched) => setRequirePayment(switched)}
+              <InfoItem title="" horizontal isBold={false}>
+                <Select
+                  style={{ width: 360 }}
+                  value={paymentRequireType}
+                  onChange={(value: PaymentRequireType) => setPaymentRequireType(value)}
+                  options={[
+                    { value: PaymentRequireType.ACTIVATE_AFTER_PAYMENT, label: 'Activate After Payment' },
+                    { value: PaymentRequireType.ACTIVATE_BEFORE_PAYMENT, label: 'Activate Before Payment' },
+                    { value: PaymentRequireType.NOT_REQUIRE_PAYMENT, label: 'Not Require Payment' },
+                  ]}
                 />
               </InfoItem>
             </div>
@@ -582,7 +609,7 @@ export const AssignSubscriptionModal = ({
                 selectedPaymentType={gatewayPaymentType}
                 onSelect={setGatewayId}
                 onSelectPaymentType={setGatewayPaymentType}
-                disabled={isLoading || !requirePayment}
+                disabled={isLoading || paymentRequireType === PaymentRequireType.NOT_REQUIRE_PAYMENT}
               />
             </div>
 
