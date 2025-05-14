@@ -458,7 +458,7 @@ const Index = ({
 export default Index
 
 const DEFAULT_TERM = {
-  currency: 'EUR'
+  // currency: 'EUR'
   // status: [],
   // amountStart: '',
   // amountEnd: ''

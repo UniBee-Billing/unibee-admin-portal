@@ -630,7 +630,7 @@ const Index = ({
 export default Index
 
 const DEFAULT_TERM = {
-  currency: 'EUR',
+  // currency: 'EUR',
   amountStart: '',
   amountEnd: ''
 }
