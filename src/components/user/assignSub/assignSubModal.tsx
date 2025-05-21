@@ -127,7 +127,7 @@ const TRIGGER_PREVIEW_FIELDS = ['country', 'vat', 'discountCode']
 enum PaymentRequireType {
   ACTIVATE_AFTER_PAYMENT = 'activateAfterPayment',
   ACTIVATE_BEFORE_PAYMENT = 'activateBeforePayment',
-  NOT_REQUIRE_PAYMENT = 'notRequirePayment'
+  FREE_FIRST_PERIOD = 'freeForFirstPeriod'
 }
 
 export const AssignSubscriptionModal = ({
@@ -161,7 +161,7 @@ export const AssignSubscriptionModal = ({
   
   // // Keep the requirePayment for backward compatibility with existing code
   // const requirePayment = useMemo(() => 
-  //   paymentRequireType !== PaymentRequireType.NOT_REQUIRE_PAYMENT, 
+  //   paymentRequireType !== PaymentRequireType.FREE_FIRST_PERIOD, 
   //   [paymentRequireType]
   // )
   
@@ -277,15 +277,17 @@ export const AssignSubscriptionModal = ({
         .map((a) => ({ quantity: a.quantity as number, addonPlanId: a.id }))
     }
 
+    console.log(paymentRequireType)
     // Use the new payment requirement type
-    if (paymentRequireType === PaymentRequireType.NOT_REQUIRE_PAYMENT) {
-      const fiveYearFromNow = new Date(
-        new Date().setFullYear(new Date().getFullYear() + 5)
-      )
+    if (paymentRequireType === PaymentRequireType.FREE_FIRST_PERIOD) {
+      // const fiveYearFromNow = new Date(
+      //   new Date().setFullYear(new Date().getFullYear() + 5)
+      // )
 
       return {
         ...submitData,
-        trialEnd: Math.round(fiveYearFromNow.getTime() / 1000)
+        // trialEnd: Math.round(fiveYearFromNow.getTime() / 1000)
+        freeInInitialPeriod: true
       }
     }
 
@@ -322,6 +324,7 @@ export const AssignSubscriptionModal = ({
     }
 
     const submitData = getSubmitData(values)
+    console.log(submitData)
 
     const body = {
       ...submitData,
@@ -598,7 +601,7 @@ export const AssignSubscriptionModal = ({
                   options={[
                     { value: PaymentRequireType.ACTIVATE_AFTER_PAYMENT, label: 'Activate After Payment' },
                     { value: PaymentRequireType.ACTIVATE_BEFORE_PAYMENT, label: 'Activate Before Payment' },
-                    { value: PaymentRequireType.NOT_REQUIRE_PAYMENT, label: 'Not Require Payment' },
+                    { value: PaymentRequireType.FREE_FIRST_PERIOD, label: 'Free For First Period' },
                   ]}
                 />
               </InfoItem>
@@ -609,7 +612,7 @@ export const AssignSubscriptionModal = ({
                 selectedPaymentType={gatewayPaymentType}
                 onSelect={setGatewayId}
                 onSelectPaymentType={setGatewayPaymentType}
-                disabled={isLoading || paymentRequireType === PaymentRequireType.NOT_REQUIRE_PAYMENT}
+                disabled={isLoading || paymentRequireType === PaymentRequireType.FREE_FIRST_PERIOD}
               />
             </div>
 

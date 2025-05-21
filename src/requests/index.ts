@@ -881,6 +881,7 @@ type TCreateSubReq = {
   gatewayPaymentType?: string
   userId: number
   trialEnd?: number
+  freeInInitialPeriod?: boolean
   addonParams?: { quantity: number; addonPlanId: number }[]
   confirmTotalAmount?: number
   confirmCurrency?: string
@@ -899,6 +900,7 @@ export const createSubscriptionReq = async ({
   gatewayPaymentType,
   userId,
   trialEnd,
+  freeInInitialPeriod,
   addonParams,
   confirmCurrency,
   confirmTotalAmount,
@@ -917,6 +919,7 @@ export const createSubscriptionReq = async ({
       gatewayPaymentType,
       userId,
       trialEnd,
+      freeInInitialPeriod,
       quantity: 1,
       addonParams: addonParams,
       confirmTotalAmount,
