@@ -588,7 +588,7 @@ const Search = ({
           <Col span={4}>
             <Form.Item name="amountStart" noStyle={true}>
               <Input
-                prefix={`from ${currencySymbol}`}
+                prefix={currencySymbol ? `from ${currencySymbol}` : ''}
                 onPressEnter={form.submit}
               />
             </Form.Item>
@@ -596,7 +596,7 @@ const Search = ({
           <Col span={4}>
             <Form.Item name="amountEnd" noStyle={true}>
               <Input
-                prefix={`to ${currencySymbol}`}
+                prefix={currencySymbol ? `to ${currencySymbol}` : ''}
                 onPressEnter={form.submit}
               />
             </Form.Item>

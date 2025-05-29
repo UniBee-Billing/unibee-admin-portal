@@ -155,8 +155,13 @@ const Index = ({
 
   const onNewPlan = () => {
     // setPage(0) // if user are on page 3, after creating new plan, they'll be redirected back to page 1,so the newly created plan will be shown on the top
-    onPageChange(1, 100)
-    navigate(`/plan/new?productId=${productId}`)
+    // onPageChange(1, 100)
+    // navigate(`/plan/new?productId=${productId}`)
+    navigate(`/plan/new?productId=${productId}`, {
+      state: {
+        from: location.pathname + location.search
+      }
+    })
   }
 
   const fetchAllPlans = async () => {
