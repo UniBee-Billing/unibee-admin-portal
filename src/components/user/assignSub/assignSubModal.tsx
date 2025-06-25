@@ -277,7 +277,7 @@ export const AssignSubscriptionModal = ({
         .map((a) => ({ quantity: a.quantity as number, addonPlanId: a.id }))
     }
 
-    console.log(paymentRequireType)
+    // console.log(paymentRequireType)
     // Use the new payment requirement type
     if (paymentRequireType === PaymentRequireType.FREE_FIRST_PERIOD) {
       // const fiveYearFromNow = new Date(
@@ -324,7 +324,7 @@ export const AssignSubscriptionModal = ({
     }
 
     const submitData = getSubmitData(values)
-    console.log(submitData)
+    // console.log(submitData)
 
     const body = {
       ...submitData,

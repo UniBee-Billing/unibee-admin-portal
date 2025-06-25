@@ -23,7 +23,7 @@ import { Form } from 'antd'
 import { Currency } from 'dinero.js'
 import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react'
 import { formatQuantity } from '../helpers'
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
+import { PlusOutlined } from '@ant-design/icons'
 import { nanoid } from 'nanoid'
 
 const { RangePicker } = DatePicker
