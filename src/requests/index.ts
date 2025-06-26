@@ -219,6 +219,18 @@ export const getMerchantInfoReq = async (refreshCb?: () => void) => {
   }
 }
 
+export const getLicenseReq = async (refreshCb?: () => void) => {
+  try {
+    const res = await request.get('/license-api/merchant/license/get')
+    handleStatusCode(res.data.code, refreshCb)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return [res.data.data as any, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 export const updateMerchantInfoReq = async (body: TMerchantInfo) => {
   try {
     const res = await request.post(`/merchant/update`, body)

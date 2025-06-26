@@ -10,8 +10,7 @@ import Signup from './components/signup'
 import TaskList from './components/taskList'
 import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppRoutes } from './routes'
-import { useLicense } from './hooks/useVersion'
-import { getMerchantInfoReq } from './requests'
+import { getLicenseReq, getMerchantInfoReq } from './requests'
 import {
   useAppConfigStore,
   useMerchantMemberProfileStore,
@@ -34,7 +33,6 @@ const App: React.FC = () => {
   } = theme.useToken()
   const appRoutes = useAppRoutes()
   const [analyticsModalVisible, setAnalyticsModalVisible] = useState(false)
-  const { isActivePremium, isExpiredPremium } = useLicense()
 
   const toggleTaskListOpen = useCallback(
     () => appConfigStore.setTaskListOpen(!appConfigStore.taskListOpen),
@@ -43,13 +41,16 @@ const App: React.FC = () => {
 
   const handleAnalyticsClick = async () => {
     try {
-      const [merchantData, merchantErr] = await getMerchantInfoReq()
-      
-      if (merchantErr) {
+      const [[merchantData, merchantErr], [licenseData, licenseErr]] =
+        await Promise.all([getMerchantInfoReq(), getLicenseReq()])
+      if (merchantErr || licenseErr) {
         setAnalyticsModalVisible(true)
         return
       }
-      
+      const isActivePremium =
+        licenseData?.version?.isPaid && !licenseData?.version?.expired
+      const isExpiredPremium =
+        licenseData?.version?.isPaid && !!licenseData?.version?.expired
       if (!isActivePremium || isExpiredPremium || !merchantData.analyticsHost) {
         setAnalyticsModalVisible(true)
       } else {
