@@ -19,11 +19,11 @@ import {
   IPlan
 } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
-import { Form } from 'antd'
+import { Form, FormInstance } from 'antd'
 import { Currency } from 'dinero.js'
 import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react'
 import { formatQuantity } from '../helpers'
-import { PlusOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { nanoid } from 'nanoid'
 
 const { RangePicker } = DatePicker
@@ -47,7 +47,8 @@ const Index = ({
   setIsOpenUpdateDiscountCodeQuantityModal,
   canActiveItemEdit,
   billingPeriods,
-  setBillingPeriods
+  setBillingPeriods,
+  form
 }: {
   code: DiscountCode
   isNew: boolean
@@ -62,6 +63,7 @@ const Index = ({
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
   billingPeriods: BillingPeriod[]
   setBillingPeriods: Dispatch<SetStateAction<BillingPeriod[]>>
+  form: FormInstance
 }) => {
   const appConfigStore = useAppConfigStore()
 
@@ -440,6 +442,18 @@ const Index = ({
                   ]}
                   style={{ width: 120 }}
                 />
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled={billingPeriods.length <= 1}
+                  onClick={() => {
+                    const newBillingPeriods = [...billingPeriods];
+                    newBillingPeriods.splice(index, 1);
+                    setBillingPeriods(newBillingPeriods);
+                  }}
+                  title="Delete this option"
+                />
               </Space>
             ))}
           </div>
@@ -459,15 +473,6 @@ const Index = ({
               icon={<PlusOutlined />}
             >
               Add More Options
-            </Button>
-            <Button
-              danger
-              disabled={billingPeriods.length <= 1}
-              onClick={() => {
-                setBillingPeriods(billingPeriods.slice(0, -1))
-              }}
-            >
-              Delete Options
             </Button>
           </div>
         </Form.Item>
@@ -514,28 +519,46 @@ const Index = ({
               : 'The discount code will be applied to all plans except selected plans'
           }
         >
-          <Select
-            disabled={!formEditable}
-            mode="multiple"
-            maxTagCount={'responsive'}
-            showSearch
-            filterSort={(optionA, optionB) => {
-              const labelA = String(optionA?.label ?? '')
-              const labelB = String(optionB?.label ?? '')
-              return labelA
-                .toLocaleLowerCase()
-                .localeCompare(labelB.toLocaleLowerCase())
-            }}
-            filterOption={(input, option) =>
-              String(option?.label ?? '')
-                .toLowerCase()
-                .includes(input.toLowerCase())
-            }
-            options={filteredPlanList.map((plan) => ({
-              label: getPlanLabel(plan.id),
-              value: plan.id
-            }))}
-          />
+          {formEditable ? (
+            <Select
+              mode="multiple"
+              maxTagCount={'responsive'}
+              showSearch
+              filterSort={(optionA, optionB) => {
+                const labelA = String(optionA?.label ?? '')
+                const labelB = String(optionB?.label ?? '')
+                return labelA
+                  .toLocaleLowerCase()
+                  .localeCompare(labelB.toLocaleLowerCase())
+              }}
+              filterOption={(input, option) =>
+                String(option?.label ?? '')
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              options={filteredPlanList.map((plan) => ({
+                label: getPlanLabel(plan.id),
+                value: plan.id
+              }))}
+            />
+          ) : (
+            <div className="ant-select ant-select-disabled ant-select-multiple">
+              <div className="ant-select-selector" style={{ height: 'auto', minHeight: '32px', padding: '0 4px' }}>
+                {form.getFieldValue('planIds')?.map((planId: number) => (
+                  <span key={planId} className="ant-select-selection-item" style={{ 
+                    margin: '2px 4px', 
+                    padding: '0 8px',
+                    backgroundColor: '#f5f5f5',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: '4px',
+                    display: 'inline-block' 
+                  }}>
+                    {getPlanLabel(planId)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </Form.Item>
       )}
     </div>

@@ -480,6 +480,7 @@ const Index = () => {
                       canActiveItemEdit={canActiveItemEdit}
                       billingPeriods={billingPeriods}
                       setBillingPeriods={setBillingPeriods}
+                      form={form}
                     />
                   )
                 },
