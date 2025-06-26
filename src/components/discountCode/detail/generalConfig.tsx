@@ -495,16 +495,9 @@ const Index = ({
           }
           name="planIds"
           rules={[
-            {
-              required: true,
-              message: 'Please select plans'
-            },
             () => ({
               validator(_, plans) {
-                if (!plans || plans.length === 0) {
-                  return Promise.reject('You must select at least one plan.')
-                }
-                if (plans.length > 50) {
+                if (plans && plans.length > 50) {
                   return Promise.reject(
                     'You can select up to 50 plans at most'
                   )
