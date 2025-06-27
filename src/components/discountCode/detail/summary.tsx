@@ -125,16 +125,43 @@ const Summary = ({
               {planIds?.map((id) => getPlanLabel(id, true)).join(', ')}
             </p>
           )
-        ) : planIds == null || planIds.length == 0 ? (
-          <NotSetPlaceholder />
-        ) : (
+        ) : applyType == DiscountCodeApplyType.NOT_SELECTED ? (
+          planIds == null || planIds.length == 0 ? (
+            <NotSetPlaceholder />
+          ) : (
+            <div className="flex flex-col items-end">
+              <div className="text-right text-red-500">All plans except:</div>
+              <p className="long-content">
+                {planIds?.map((id) => getPlanLabel(id, true)).join(', ')}
+              </p>
+            </div>
+          )
+        ) : applyType ==
+          DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD ? (
           <div className="flex flex-col items-end">
-            <div className="text-right text-red-500">All plans except:</div>
-            <p className="long-content">
-              {planIds?.map((id) => getPlanLabel(id, true)).join(', ')}
-            </p>
+            <div className="text-right" style={{ fontSize: '12px' }}>
+              Plans by selected billing period
+            </div>
+            <div className="text-right" style={{ fontSize: '12px' }}>
+              
+              <span className="long-content">
+              excluded:{' '} {planIds?.map((id) => getPlanLabel(id, true)).join(', ')}
+              </span>
+            </div>
           </div>
-        )
+        ) : applyType ==
+          DiscountCodeApplyType.APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD ? (
+          <div className="flex flex-col items-end">
+            <div className="text-right" style={{ fontSize: '12px' }}>
+              Plans by except selected billing period
+            </div>
+            <div className="text-right" style={{ fontSize: '12px' }}>
+              <span className="long-content">
+              included:{' '} {planIds?.map((id) => getPlanLabel(id, true)).join(', ')}
+              </span>
+            </div>
+          </div>
+        ) : null
     }
   ]
 

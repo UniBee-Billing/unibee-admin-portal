@@ -507,9 +507,13 @@ const Index = ({
             })
           ]}
           extra={
-            watchApplyType == DiscountCodeApplyType.SELECTED
+            watchApplyType === DiscountCodeApplyType.SELECTED
               ? 'The discount code will be applied to selected plans'
-              : 'The discount code will be applied to all plans except selected plans'
+              : watchApplyType === DiscountCodeApplyType.NOT_SELECTED
+              ? 'The discount code will be applied to all plans except selected plans'
+              : watchApplyType === DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD
+              ? 'The discount code will be applied to selected billing period exclude selected plans'
+              : 'The discount code will be not applied to selected billing period but include selected plans'
           }
         >
           {formEditable ? (
