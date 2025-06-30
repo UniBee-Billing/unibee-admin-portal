@@ -165,7 +165,16 @@ const Index = () => {
               whiteSpace: 'nowrap'
             }}
           >
-            <a href={`${location.origin}${BASE_PATH}subscription/${id}`}>
+            <a 
+              href={`${location.origin}${BASE_PATH}subscription/${id}`}
+              onClick={(e) => {
+                // Only navigate using react-router for left clicks without modifier keys
+                if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                  e.preventDefault();
+                  navigate(`/subscription/${id}`);
+                }
+              }}
+            >
               {id}
             </a>
           </div>

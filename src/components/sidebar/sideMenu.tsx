@@ -16,11 +16,33 @@ import { basePathName, trimEnvBasePath } from '@/utils'
 import Icon, { DollarOutlined } from '@ant-design/icons'
 import { Menu, MenuProps } from 'antd'
 import { ItemType, MenuItemType } from 'antd/es/menu/interface'
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { MouseEvent, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './sideMenu.css'
 
 const BASE_PATH = import.meta.env.BASE_URL
+
+// Custom link component to handle both client-side navigation and preserving right-click behavior
+const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    // Only navigate using react-router for left clicks without modifier keys
+    if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation(); // Stop propagation to prevent Menu's onClick from also firing
+      navigate(to);
+    }
+  };
+
+  return (
+    <a 
+      href={`${location.origin}${BASE_PATH}${to}`}
+      onClick={handleClick}
+    >
+      {children}
+    </a>
+  );
+};
 
 const MENU_ITEMS: ItemType<MenuItemType>[] = [
   {
@@ -47,15 +69,15 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
   },
   {
     label: (
-      <a href={`${location.origin}${BASE_PATH}subscription/list`}>
+      <NavLink to="subscription/list">
         Subscription
-      </a>
-    ), // 'Subscription',
+      </NavLink>
+    ),
     key: 'subscription',
     icon: <Icon component={SubscriptionSvg} />
   },
   {
-    label: <a href={`${location.origin}${BASE_PATH}invoice/list`}>Invoice</a>, // 'Invoice',
+    label: <NavLink to="invoice/list">Invoice</NavLink>,
     key: 'invoice',
     icon: <Icon component={InvoiceSvg} />
   },
@@ -70,7 +92,7 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     icon: <Icon component={PromoCreditSvg} />
   },
   {
-    label: <a href={`${location.origin}${BASE_PATH}user/list`}>User List</a>, // 'User List',
+    label: <NavLink to="user/list">User List</NavLink>,
     key: 'user',
     icon: <Icon component={UserListSvg} />
   },
@@ -130,7 +152,21 @@ export const SideMenu = (props: MenuProps) => {
   )
 
   useLayoutEffect(() => {
-    setActiveMenuItem([basePathName(trimEnvBasePath(window.location.pathname))])
+    const path = basePathName(trimEnvBasePath(window.location.pathname));
+    
+    // Handle the special case for custom NavLink paths
+    let activeKey = path;
+    
+    // Map paths like 'subscription/list' to just 'subscription' for menu highlighting
+    if (path.startsWith('subscription/')) {
+      activeKey = 'subscription';
+    } else if (path.startsWith('invoice/')) {
+      activeKey = 'invoice';
+    } else if (path.startsWith('user/')) {
+      activeKey = 'user';
+    }
+    
+    setActiveMenuItem([activeKey]);
   }, [window.location.pathname])
 
   return (
@@ -138,7 +174,14 @@ export const SideMenu = (props: MenuProps) => {
       theme="dark"
       mode="inline"
       selectedKeys={activeMenuItem}
-      onClick={(e) => navigate(e.key)}
+      onClick={(e) => {
+        // Check if the key belongs to an item with a NavLink
+        const isNavLinkItem = ['subscription', 'invoice', 'user'].includes(basePathName(e.key));
+        // Only navigate for non-NavLink items
+        if (!isNavLinkItem) {
+          navigate(e.key);
+        }
+      }}
       defaultSelectedKeys={['/plan/list']}
       items={items}
       style={{ maxHeight: 'calc(100vh - 340px)', overflowY: 'auto' }}
