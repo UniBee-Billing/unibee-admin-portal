@@ -19,12 +19,20 @@ import {
   IPlan
 } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
-import { Form } from 'antd'
+import { Form, FormInstance } from 'antd'
 import { Currency } from 'dinero.js'
 import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react'
 import { formatQuantity } from '../helpers'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { nanoid } from 'nanoid'
 
 const { RangePicker } = DatePicker
+
+type BillingPeriod = {
+  intervalUnit: 'month' | 'year'
+  intervalCount: number
+  localId: string
+}
 
 const Index = ({
   code,
@@ -37,7 +45,10 @@ const Index = ({
   planList,
   getPlanLabel,
   setIsOpenUpdateDiscountCodeQuantityModal,
-  canActiveItemEdit
+  canActiveItemEdit,
+  billingPeriods,
+  setBillingPeriods,
+  form
 }: {
   code: DiscountCode
   isNew: boolean
@@ -50,8 +61,29 @@ const Index = ({
   getPlanLabel: (planId: number) => ReactNode
   setIsOpenUpdateDiscountCodeQuantityModal: Dispatch<SetStateAction<boolean>>
   canActiveItemEdit: (status?: DiscountCodeStatus) => boolean
+  billingPeriods: BillingPeriod[]
+  setBillingPeriods: Dispatch<SetStateAction<BillingPeriod[]>>
+  form: FormInstance
 }) => {
   const appConfigStore = useAppConfigStore()
+
+  const filteredPlanList = useMemo(() => {
+    if (
+      watchApplyType ===
+        DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD ||
+      watchApplyType ===
+        DiscountCodeApplyType.APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD
+    ) {
+      return planList.filter((plan) => {
+        return billingPeriods.some(
+          (period) =>
+            plan.intervalUnit === period.intervalUnit &&
+            plan.intervalCount === Number(period.intervalCount)
+        )
+      })
+    }
+    return planList
+  }, [planList, billingPeriods, watchApplyType])
 
   const RENDERED_QUANTITY_ITEMS_MAP: Record<number, ReactNode> = useMemo(
     () => ({
@@ -352,63 +384,180 @@ const Index = ({
         />
       </Form.Item>
       <Form.Item label="Apply Discount Code To" name="planApplyType">
-        <Radio.Group disabled={!canActiveItemEdit(code?.status)}>
+        <Radio.Group disabled={!formEditable}>
           <Space direction="vertical">
             <Radio value={DiscountCodeApplyType.ALL}>All plans</Radio>
             <Radio value={DiscountCodeApplyType.SELECTED}>Selected plans</Radio>
             <Radio value={DiscountCodeApplyType.NOT_SELECTED}>
               All plans except selected plans
             </Radio>
+            <Radio
+              value={DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD}
+            >
+              Apply to Plans by Billing Period
+            </Radio>
+            <Radio
+              value={
+                DiscountCodeApplyType.APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD
+              }
+            >
+              Apply to Plans except by Billing Period
+            </Radio>
           </Space>
         </Radio.Group>
       </Form.Item>
-      <Form.Item
-        hidden={watchApplyType == DiscountCodeApplyType.ALL}
-        name="planIds"
-        rules={[
-          {
-            // required: watchPlanIds != null && watchPlanIds.length > 0
-            required: watchApplyType != DiscountCodeApplyType.ALL,
-            message: 'Plan list should not be empty.'
-          },
-          () => ({
-            validator(_, plans) {
-              if (
-                watchApplyType !== DiscountCodeApplyType.ALL &&
-                (plans == null || plans.length == 0)
-              ) {
-                return Promise.reject(
-                  `Please select the plans you ${watchApplyType == DiscountCodeApplyType.SELECTED ? 'want to apply' : "don't want to apply"}.`
-                )
-              }
-              for (let i = 0; i < plans.length; i++) {
-                if (planList.findIndex((p) => p.id == plans[i]) == -1) {
+      {(watchApplyType ===
+        DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD ||
+        watchApplyType ===
+          DiscountCodeApplyType.APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD) && (
+        <Form.Item label="Billing Periods">
+          <div className="flex flex-col gap-4">
+            {billingPeriods.map((period, index) => (
+              <Space key={period.localId} className="flex items-center">
+                <label className="w-[100px]">
+                  <span className="mr-1 text-red-500">*</span>Billing Period
+                </label>
+                <span className="mr-2">Every</span>
+                <InputNumber
+                  min={1}
+                  value={period.intervalCount}
+                  onChange={(value) => {
+                    const newBillingPeriods = [...billingPeriods]
+                    newBillingPeriods[index].intervalCount = value || 1
+                    setBillingPeriods(newBillingPeriods)
+                  }}
+                  style={{ width: '100px' }}
+                />
+
+                <Select
+                  value={period.intervalUnit}
+                  onChange={(value) => {
+                    const newBillingPeriods = [...billingPeriods]
+                    newBillingPeriods[index].intervalUnit = value
+                    setBillingPeriods(newBillingPeriods)
+                  }}
+                  options={[
+                    { value: 'month', label: 'Month(s)' },
+                    { value: 'year', label: 'Year(s)' }
+                  ]}
+                  style={{ width: 120 }}
+                />
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled={billingPeriods.length <= 1}
+                  onClick={() => {
+                    const newBillingPeriods = [...billingPeriods];
+                    newBillingPeriods.splice(index, 1);
+                    setBillingPeriods(newBillingPeriods);
+                  }}
+                  title="Delete this option"
+                />
+              </Space>
+            ))}
+          </div>
+          <div className="flex gap-4 mt-4">
+            <Button
+              type="primary"
+              onClick={() => {
+                setBillingPeriods([
+                  ...billingPeriods,
+                  {
+                    intervalCount: 1,
+                    intervalUnit: 'month',
+                    localId: nanoid()
+                  }
+                ])
+              }}
+              icon={<PlusOutlined />}
+            >
+              Add More Options
+            </Button>
+          </div>
+        </Form.Item>
+      )}
+
+      {(watchApplyType === DiscountCodeApplyType.SELECTED ||
+        watchApplyType === DiscountCodeApplyType.NOT_SELECTED ||
+        watchApplyType ===
+          DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD ||
+        watchApplyType ===
+          DiscountCodeApplyType.APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD) && (
+        <Form.Item
+          className="mb-0"
+          label={
+            watchApplyType === DiscountCodeApplyType.SELECTED ||
+            watchApplyType ===
+              DiscountCodeApplyType.APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD
+              ? 'Include Plans'
+              : 'Exclude Plans'
+          }
+          name="planIds"
+          rules={[
+            () => ({
+              validator(_, plans) {
+                if (plans && plans.length > 50) {
                   return Promise.reject(
-                    `${getPlanLabel(plans[i])} doesn't exist in plan list, please remove it.`
+                    'You can select up to 50 plans at most'
                   )
                 }
+                return Promise.resolve()
               }
-              return Promise.resolve()
-            }
-          })
-        ]}
-        extra={
-          watchApplyType == DiscountCodeApplyType.SELECTED
-            ? 'The discount code will be applied to selected plans'
-            : 'The discount code will be applied to all plans except selected plans'
-        }
-      >
-        <Select
-          mode="multiple"
-          disabled={!canActiveItemEdit(code?.status)}
-          allowClear
-          style={{ width: '100%' }}
-          options={planList.map((p) => ({
-            label: getPlanLabel(p.id),
-            value: p.id
-          }))}
-        />
-      </Form.Item>
+            })
+          ]}
+          extra={
+            watchApplyType === DiscountCodeApplyType.SELECTED
+              ? 'The discount code will be applied to selected plans'
+              : watchApplyType === DiscountCodeApplyType.NOT_SELECTED
+              ? 'The discount code will be applied to all plans except selected plans'
+              : watchApplyType === DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD
+              ? 'The discount code will be applied to selected billing period exclude selected plans'
+              : 'The discount code will be not applied to selected billing period but include selected plans'
+          }
+        >
+          {formEditable ? (
+            <Select
+              mode="multiple"
+              maxTagCount={'responsive'}
+              showSearch
+              filterSort={(optionA, optionB) => {
+                const labelA = String(optionA?.label ?? '')
+                const labelB = String(optionB?.label ?? '')
+                return labelA
+                  .toLocaleLowerCase()
+                  .localeCompare(labelB.toLocaleLowerCase())
+              }}
+              filterOption={(input, option) =>
+                String(option?.label ?? '')
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              options={filteredPlanList.map((plan) => ({
+                label: getPlanLabel(plan.id),
+                value: plan.id
+              }))}
+            />
+          ) : (
+            <div className="ant-select ant-select-disabled ant-select-multiple">
+              <div className="ant-select-selector" style={{ height: 'auto', minHeight: '32px', padding: '0 4px' }}>
+                {form.getFieldValue('planIds')?.map((planId: number) => (
+                  <span key={planId} className="ant-select-selection-item" style={{ 
+                    margin: '2px 4px', 
+                    padding: '0 8px',
+                    backgroundColor: '#f5f5f5',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: '4px',
+                    display: 'inline-block' 
+                  }}>
+                    {getPlanLabel(planId)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </Form.Item>
+      )}
     </div>
   )
 }

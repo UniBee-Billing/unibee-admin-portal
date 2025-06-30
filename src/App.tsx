@@ -1,6 +1,6 @@
-import { UnorderedListOutlined } from '@ant-design/icons'
-import { Button, Layout, theme } from 'antd'
-import { useCallback, useEffect } from 'react'
+import { UnorderedListOutlined, RightOutlined } from '@ant-design/icons'
+import { Button, Layout, theme, Modal } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import AppSearch from './components/appSearch'
 import Login from './components/login'
@@ -10,11 +10,13 @@ import Signup from './components/signup'
 import TaskList from './components/taskList'
 import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppRoutes } from './routes'
+import { getLicenseReq, getMerchantInfoReq } from './requests'
 import {
   useAppConfigStore,
   useMerchantMemberProfileStore,
   useSessionStore
 } from './stores'
+import UnibeeAnalyticSvg from './assets/navIcons/analytics.svg?react'
 
 const { Header, Content, Footer } = Layout
 
@@ -30,11 +32,38 @@ const App: React.FC = () => {
     token: { colorBgContainer, borderRadiusLG }
   } = theme.useToken()
   const appRoutes = useAppRoutes()
+  const [analyticsModalVisible, setAnalyticsModalVisible] = useState(false)
 
   const toggleTaskListOpen = useCallback(
     () => appConfigStore.setTaskListOpen(!appConfigStore.taskListOpen),
     [appConfigStore]
   )
+
+  const handleAnalyticsClick = async () => {
+    try {
+      const [[merchantData, merchantErr], [licenseData, licenseErr]] =
+        await Promise.all([getMerchantInfoReq(), getLicenseReq()])
+      if (merchantErr || licenseErr) {
+        setAnalyticsModalVisible(true)
+        return
+      }
+      const isActivePremium =
+        licenseData?.version?.isPaid && !licenseData?.version?.expired
+      const isExpiredPremium =
+        licenseData?.version?.isPaid && !!licenseData?.version?.expired
+      if (!isActivePremium || isExpiredPremium || !merchantData.analyticsHost) {
+        setAnalyticsModalVisible(true)
+      } else {
+        window.open(merchantData.analyticsHost, '_blank')
+      }
+    } catch (_error) {
+      setAnalyticsModalVisible(true)
+    }
+  }
+
+  const handleCloseAnalyticsModal = () => {
+    setAnalyticsModalVisible(false)
+  }
 
   useEffect(() => {
     appInitialize()
@@ -62,12 +91,32 @@ const App: React.FC = () => {
             <Header style={{ background: colorBgContainer }}>
               <div className="flex h-full items-center justify-between">
                 <AppSearch />
-                <Button
-                  onClick={toggleTaskListOpen}
-                  icon={<UnorderedListOutlined />}
-                >
-                  Tasks
-                </Button>
+                <div className="flex items-center gap-4">
+                  <Button
+                    onClick={handleAnalyticsClick}
+                    style={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      background: '#FEE076',
+                      border: '1px solid #FEE076',
+                      borderRadius: '8px',
+                      padding: '0 16px',
+                      width: '247px',
+                      height: '37px',
+                      color: '#ffcd29'
+                    }}
+                    icon={<UnibeeAnalyticSvg style={{ marginRight: '8px', height: '20px' }} />}
+                  >
+                    <span style={{ marginRight: '8px', color: '#000', fontSize: '14px' }}>Go to UniBee Analytics</span>
+                    <RightOutlined style={{ color: '#000' }}/>
+                  </Button>
+                  <Button
+                    onClick={toggleTaskListOpen}
+                    icon={<UnorderedListOutlined />}
+                  >
+                    Tasks
+                  </Button>
+                </div>
               </div>
             </Header>
             <Content
@@ -95,6 +144,29 @@ const App: React.FC = () => {
           </Layout>
         </Layout>
       )}
+
+      <Modal
+        title="Premium Analytics"
+        open={analyticsModalVisible}
+        onCancel={handleCloseAnalyticsModal}
+        footer={[
+          <Button key="cancel" onClick={handleCloseAnalyticsModal}>
+            Cancel
+          </Button>,
+          <Button 
+            key="ok" 
+            type="primary" 
+            onClick={handleCloseAnalyticsModal}
+            // style={{ backgroundColor: 'blue', borderColor: 'blue' }}
+          >
+            Ok
+          </Button>
+        ]}
+      >
+        <div className="py-4">
+          <p>This is a Premium plan feature, <a href="https://unibee.dev/pricing" target="_blank" className="text-[#ffcd29] cursor-pointer hover:underline">upgrade</a> and unlock Analytics insights</p>
+        </div>
+      </Modal>
     </>
   )
 }

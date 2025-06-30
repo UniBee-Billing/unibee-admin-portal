@@ -5,7 +5,8 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 
-RUN yarn 
+RUN sed -i 's@https://mirrors.cloud.tencent.com/npm@https://registry.npmjs.org@g' yarn.lock \
+    && yarn install --frozen-lockfile
 
 # Build from source
 FROM deps AS builder

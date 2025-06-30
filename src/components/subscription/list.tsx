@@ -165,7 +165,16 @@ const Index = () => {
               whiteSpace: 'nowrap'
             }}
           >
-            <a href={`${location.origin}${BASE_PATH}subscription/${id}`}>
+            <a 
+              href={`${location.origin}${BASE_PATH}subscription/${id}`}
+              onClick={(e) => {
+                // Only navigate using react-router for left clicks without modifier keys
+                if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                  e.preventDefault();
+                  navigate(`/subscription/${id}`);
+                }
+              }}
+            >
               {id}
             </a>
           </div>
@@ -600,7 +609,7 @@ const Index = () => {
 export default Index
 
 const DEFAULT_TERM = {
-  currency: 'EUR'
+  // currency: 'EUR'
   // amountStart: '',
   // amountEnd: ''
   // refunded: false,
@@ -726,7 +735,7 @@ const Search = ({
           <Col span={4}>
             <Form.Item name="amountStart" noStyle={true}>
               <Input
-                prefix={`from ${currencySymbol}`}
+                prefix={currencySymbol ? `from ${currencySymbol}` : ''}
                 onPressEnter={form.submit}
               />
             </Form.Item>
@@ -734,7 +743,7 @@ const Search = ({
           <Col span={4}>
             <Form.Item name="amountEnd" noStyle={true}>
               <Input
-                prefix={`to ${currencySymbol}`}
+                prefix={currencySymbol ? `to ${currencySymbol}` : ''}
                 onPressEnter={form.submit}
               />
             </Form.Item>

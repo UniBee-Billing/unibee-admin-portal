@@ -425,12 +425,20 @@ export const enum DiscountCodeStatus {
 export const enum DiscountCodeApplyType {
   ALL = 0,
   SELECTED = 1,
-  NOT_SELECTED = 2
+  NOT_SELECTED = 2,
+  APPLY_TO_PLANS_BY_BILLING_PERIOD = 3,
+  APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD = 4
 }
 export const enum DiscountCodeUserScope {
   ALL_USERS = 0, // all users can use this code
   NEW_USERS = 1, // only new users can use this code
   RENEWAL_USERS = 2 // only for subscription renewal
+}
+type PlanApplyGroup = {
+  groupPlanIntervalSelector?: {
+    intervalUnit: 'month' | 'year'
+    intervalCount: number
+  }[]
 }
 type DiscountCode = {
   id?: number
@@ -450,6 +458,7 @@ type DiscountCode = {
   createTime?: number
   planApplyType: DiscountCodeApplyType
   planIds?: number[] // this code applies to these plan only
+  planApplyGroup?: PlanApplyGroup
   quantity: number
   liveQuantity: number // remaining quantity
   quantityUsed: number // used quantity

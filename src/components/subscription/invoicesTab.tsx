@@ -630,7 +630,7 @@ const Index = ({
 export default Index
 
 const DEFAULT_TERM = {
-  currency: 'EUR',
+  // currency: 'EUR',
   amountStart: '',
   amountEnd: ''
 }
@@ -703,7 +703,7 @@ const Search = ({
               <InputNumber
                 min={0}
                 style={{ width: '100%' }}
-                prefix={`from ${currencySymbol}`}
+                prefix={currencySymbol ? `from ${currencySymbol}` : ''}
                 onPressEnter={form.submit}
               />
             </Form.Item>
@@ -714,7 +714,7 @@ const Search = ({
               <InputNumber
                 min={0}
                 style={{ width: '100%' }}
-                prefix={`to ${currencySymbol}`}
+                prefix={currencySymbol ? `to ${currencySymbol}` : ''}
                 onPressEnter={form.submit}
               />
             </Form.Item>

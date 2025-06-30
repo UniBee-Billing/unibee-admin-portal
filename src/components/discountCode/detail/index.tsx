@@ -32,6 +32,14 @@ import { UpdateDiscountCodeQuantityModal } from '../updateDiscountCodeQuantityMo
 import AdvancedConfig from './advancedConfig'
 import GeneralConfig from './generalConfig'
 import Summary, { NotSetPlaceholder } from './summary'
+import { nanoid } from 'nanoid'
+
+type BillingPeriod = {
+  intervalUnit: 'month' | 'year'
+  intervalCount: number
+  localId: string
+}
+
 const DEFAULT_NEW_CODE: DiscountCode = {
   merchantId: useMerchantInfoStore.getState().id,
   name: '',
@@ -48,6 +56,9 @@ const DEFAULT_NEW_CODE: DiscountCode = {
   validityRange: [null, null],
   planApplyType: DiscountCodeApplyType.ALL,
   planIds: [],
+  planApplyGroup: {
+    groupPlanIntervalSelector: []
+  },
   quantity: 0,
   liveQuantity: 0,
   quantityUsed: 0,
@@ -82,6 +93,9 @@ const Index = () => {
     !codeId && !isCopy ? DEFAULT_NEW_CODE : null
   )
   const [planList, setPlanList] = useState<IPlan[]>([])
+  const [billingPeriods, setBillingPeriods] = useState<BillingPeriod[]>([
+    { intervalUnit: 'month', intervalCount: 1, localId: nanoid() }
+  ])
   const planListRef = useRef<IPlan[]>([])
   const [
     isOpenUpdateDiscountCodeQuantityModal,
@@ -127,6 +141,16 @@ const Index = () => {
       return
     }
 
+    if (res.discount.planApplyGroup?.groupPlanIntervalSelector) {
+      setBillingPeriods(
+        res.discount.planApplyGroup.groupPlanIntervalSelector.map(
+          (p: { intervalUnit: 'month' | 'year'; intervalCount: number }) => ({
+            ...p,
+            localId: nanoid()
+          })
+        )
+      )
+    }
     return res
   }
 
@@ -213,6 +237,24 @@ const Index = () => {
     code.discountPercentage = Number(code.discountPercentage) * 100
     delete code.validityRange
     code.userLimit = numBoolConvert(code.userLimit)
+
+    if (
+      code.planApplyType ===
+        DiscountCodeApplyType.APPLY_TO_PLANS_BY_BILLING_PERIOD ||
+      code.planApplyType ===
+        DiscountCodeApplyType.APPLY_TO_PLANS_EXCEPT_BY_BILLING_PERIOD
+    ) {
+      code.planApplyGroup = {
+        groupPlanIntervalSelector: billingPeriods.map(
+          ({ intervalUnit, intervalCount }) => ({
+            intervalUnit,
+            intervalCount: Number(intervalCount)
+          })
+        )
+      }
+    } else {
+      delete code.planApplyGroup
+    }
 
     if (code.discountType == DiscountType.PERCENTAGE) {
       delete code.currency
@@ -436,6 +478,9 @@ const Index = () => {
                       watchDiscountType={watchDiscountType}
                       watchCurrency={watchCurrency}
                       canActiveItemEdit={canActiveItemEdit}
+                      billingPeriods={billingPeriods}
+                      setBillingPeriods={setBillingPeriods}
+                      form={form}
                     />
                   )
                 },
