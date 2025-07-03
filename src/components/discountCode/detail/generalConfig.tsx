@@ -452,9 +452,21 @@ const Index = ({
                   icon={<DeleteOutlined />}
                   disabled={billingPeriods.length <= 1 || !canActiveItemEdit(code?.status)}
                   onClick={() => {
+                    const removedPeriod = billingPeriods[index];
                     const newBillingPeriods = [...billingPeriods];
                     newBillingPeriods.splice(index, 1);
                     setBillingPeriods(newBillingPeriods);
+
+                    const currentPlanIds = form.getFieldValue('planIds') as number[];
+                    if (currentPlanIds?.length > 0) {
+                      const plansForRemovedPeriod = planList.filter(plan =>
+                        plan.intervalUnit === removedPeriod.intervalUnit &&
+                        plan.intervalCount === Number(removedPeriod.intervalCount)
+                      );
+                      const planIdsForRemovedPeriod = plansForRemovedPeriod.map(plan => plan.id);
+                      const newPlanIds = currentPlanIds.filter(id => !planIdsForRemovedPeriod.includes(id));
+                      form.setFieldsValue({ planIds: newPlanIds });
+                    }
                   }}
                   title="Delete this option"
                 />
