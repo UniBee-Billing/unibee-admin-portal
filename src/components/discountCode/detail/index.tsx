@@ -452,7 +452,7 @@ const Index = () => {
           wrapperCol={{ flex: 1 }}
           colon={false}
           initialValues={code}
-          disabled={!formEditable}
+          disabled={!canActiveItemEdit(code?.status)}
         >
           <div className="flex gap-4">
             <Tabs

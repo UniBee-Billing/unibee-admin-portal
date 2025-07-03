@@ -183,6 +183,7 @@ const Index = ({
             { value: DiscountType.PERCENTAGE, label: 'Percentage' },
             { value: DiscountType.AMOUNT, label: 'Fixed amount' }
           ]}
+          disabled={!isNew}
         />
       </Form.Item>
       <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
@@ -307,6 +308,7 @@ const Index = ({
             { value: DiscountCodeBillingType.ONE_TIME, label: 'One time use' },
             { value: DiscountCodeBillingType.RECURRING, label: 'Recurring' }
           ]}
+          disabled={!isNew}
         />
       </Form.Item>
       <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
@@ -384,7 +386,7 @@ const Index = ({
         />
       </Form.Item>
       <Form.Item label="Apply Discount Code To" name="planApplyType">
-        <Radio.Group disabled={!formEditable}>
+        <Radio.Group disabled={!canActiveItemEdit(code?.status)}>
           <Space direction="vertical">
             <Radio value={DiscountCodeApplyType.ALL}>All plans</Radio>
             <Radio value={DiscountCodeApplyType.SELECTED}>Selected plans</Radio>
@@ -427,6 +429,7 @@ const Index = ({
                     setBillingPeriods(newBillingPeriods)
                   }}
                   style={{ width: '100px' }}
+                  disabled={!canActiveItemEdit(code?.status)}
                 />
 
                 <Select
@@ -441,16 +444,29 @@ const Index = ({
                     { value: 'year', label: 'Year(s)' }
                   ]}
                   style={{ width: 120 }}
+                  disabled={!canActiveItemEdit(code?.status)}
                 />
                 <Button
                   type="text"
                   danger
                   icon={<DeleteOutlined />}
-                  disabled={billingPeriods.length <= 1}
+                  disabled={billingPeriods.length <= 1 || !canActiveItemEdit(code?.status)}
                   onClick={() => {
+                    const removedPeriod = billingPeriods[index];
                     const newBillingPeriods = [...billingPeriods];
                     newBillingPeriods.splice(index, 1);
                     setBillingPeriods(newBillingPeriods);
+
+                    const currentPlanIds = form.getFieldValue('planIds') as number[];
+                    if (currentPlanIds?.length > 0) {
+                      const plansForRemovedPeriod = planList.filter(plan =>
+                        plan.intervalUnit === removedPeriod.intervalUnit &&
+                        plan.intervalCount === Number(removedPeriod.intervalCount)
+                      );
+                      const planIdsForRemovedPeriod = plansForRemovedPeriod.map(plan => plan.id);
+                      const newPlanIds = currentPlanIds.filter(id => !planIdsForRemovedPeriod.includes(id));
+                      form.setFieldsValue({ planIds: newPlanIds });
+                    }
                   }}
                   title="Delete this option"
                 />
@@ -471,6 +487,7 @@ const Index = ({
                 ])
               }}
               icon={<PlusOutlined />}
+              disabled={!canActiveItemEdit(code?.status)}
             >
               Add More Options
             </Button>
@@ -516,46 +533,28 @@ const Index = ({
               : 'The discount code will be not applied to selected billing period but include selected plans'
           }
         >
-          {formEditable ? (
-            <Select
-              mode="multiple"
-              maxTagCount={'responsive'}
-              showSearch
-              filterSort={(optionA, optionB) => {
-                const labelA = String(optionA?.label ?? '')
-                const labelB = String(optionB?.label ?? '')
-                return labelA
-                  .toLocaleLowerCase()
-                  .localeCompare(labelB.toLocaleLowerCase())
-              }}
-              filterOption={(input, option) =>
-                String(option?.label ?? '')
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-              options={filteredPlanList.map((plan) => ({
-                label: getPlanLabel(plan.id),
-                value: plan.id
-              }))}
-            />
-          ) : (
-            <div className="ant-select ant-select-disabled ant-select-multiple">
-              <div className="ant-select-selector" style={{ height: 'auto', minHeight: '32px', padding: '0 4px' }}>
-                {form.getFieldValue('planIds')?.map((planId: number) => (
-                  <span key={planId} className="ant-select-selection-item" style={{ 
-                    margin: '2px 4px', 
-                    padding: '0 8px',
-                    backgroundColor: '#f5f5f5',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '4px',
-                    display: 'inline-block' 
-                  }}>
-                    {getPlanLabel(planId)}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <Select
+            mode="multiple"
+            maxTagCount={'responsive'}
+            showSearch
+            disabled={false}
+            filterSort={(optionA, optionB) => {
+              const labelA = String(optionA?.label ?? '')
+              const labelB = String(optionB?.label ?? '')
+              return labelA
+                .toLocaleLowerCase()
+                .localeCompare(labelB.toLocaleLowerCase())
+            }}
+            filterOption={(input, option) =>
+              String(option?.label ?? '')
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            }
+            options={filteredPlanList.map((plan) => ({
+              label: getPlanLabel(plan.id),
+              value: plan.id
+            }))}
+          />
         </Form.Item>
       )}
     </div>
