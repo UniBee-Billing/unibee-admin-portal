@@ -183,6 +183,7 @@ const Index = ({
             { value: DiscountType.PERCENTAGE, label: 'Percentage' },
             { value: DiscountType.AMOUNT, label: 'Fixed amount' }
           ]}
+          disabled={!isNew}
         />
       </Form.Item>
       <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
@@ -307,6 +308,7 @@ const Index = ({
             { value: DiscountCodeBillingType.ONE_TIME, label: 'One time use' },
             { value: DiscountCodeBillingType.RECURRING, label: 'Recurring' }
           ]}
+          disabled={!isNew}
         />
       </Form.Item>
       <div className="my-5 ml-[180px] rounded-xl bg-[#FAFAFA] px-4 py-6">
@@ -519,46 +521,28 @@ const Index = ({
               : 'The discount code will be not applied to selected billing period but include selected plans'
           }
         >
-          {canActiveItemEdit(code?.status) ? (
-            <Select
-              mode="multiple"
-              maxTagCount={'responsive'}
-              showSearch
-              filterSort={(optionA, optionB) => {
-                const labelA = String(optionA?.label ?? '')
-                const labelB = String(optionB?.label ?? '')
-                return labelA
-                  .toLocaleLowerCase()
-                  .localeCompare(labelB.toLocaleLowerCase())
-              }}
-              filterOption={(input, option) =>
-                String(option?.label ?? '')
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-              options={filteredPlanList.map((plan) => ({
-                label: getPlanLabel(plan.id),
-                value: plan.id
-              }))}
-            />
-          ) : (
-            <div className="ant-select ant-select-disabled ant-select-multiple">
-              <div className="ant-select-selector" style={{ height: 'auto', minHeight: '32px', padding: '0 4px' }}>
-                {form.getFieldValue('planIds')?.map((planId: number) => (
-                  <span key={planId} className="ant-select-selection-item" style={{ 
-                    margin: '2px 4px', 
-                    padding: '0 8px',
-                    backgroundColor: '#f5f5f5',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '4px',
-                    display: 'inline-block' 
-                  }}>
-                    {getPlanLabel(planId)}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <Select
+            mode="multiple"
+            maxTagCount={'responsive'}
+            showSearch
+            disabled={false}
+            filterSort={(optionA, optionB) => {
+              const labelA = String(optionA?.label ?? '')
+              const labelB = String(optionB?.label ?? '')
+              return labelA
+                .toLocaleLowerCase()
+                .localeCompare(labelB.toLocaleLowerCase())
+            }}
+            filterOption={(input, option) =>
+              String(option?.label ?? '')
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            }
+            options={filteredPlanList.map((plan) => ({
+              label: getPlanLabel(plan.id),
+              value: plan.id
+            }))}
+          />
         </Form.Item>
       )}
     </div>
