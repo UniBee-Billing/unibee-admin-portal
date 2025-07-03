@@ -384,7 +384,7 @@ const Index = ({
         />
       </Form.Item>
       <Form.Item label="Apply Discount Code To" name="planApplyType">
-        <Radio.Group disabled={!formEditable}>
+        <Radio.Group disabled={!canActiveItemEdit(code?.status)}>
           <Space direction="vertical">
             <Radio value={DiscountCodeApplyType.ALL}>All plans</Radio>
             <Radio value={DiscountCodeApplyType.SELECTED}>Selected plans</Radio>
@@ -427,6 +427,7 @@ const Index = ({
                     setBillingPeriods(newBillingPeriods)
                   }}
                   style={{ width: '100px' }}
+                  disabled={!canActiveItemEdit(code?.status)}
                 />
 
                 <Select
@@ -441,12 +442,13 @@ const Index = ({
                     { value: 'year', label: 'Year(s)' }
                   ]}
                   style={{ width: 120 }}
+                  disabled={!canActiveItemEdit(code?.status)}
                 />
                 <Button
                   type="text"
                   danger
                   icon={<DeleteOutlined />}
-                  disabled={billingPeriods.length <= 1}
+                  disabled={billingPeriods.length <= 1 || !canActiveItemEdit(code?.status)}
                   onClick={() => {
                     const newBillingPeriods = [...billingPeriods];
                     newBillingPeriods.splice(index, 1);
@@ -471,6 +473,7 @@ const Index = ({
                 ])
               }}
               icon={<PlusOutlined />}
+              disabled={!canActiveItemEdit(code?.status)}
             >
               Add More Options
             </Button>
@@ -516,7 +519,7 @@ const Index = ({
               : 'The discount code will be not applied to selected billing period but include selected plans'
           }
         >
-          {formEditable ? (
+          {canActiveItemEdit(code?.status) ? (
             <Select
               mode="multiple"
               maxTagCount={'responsive'}
