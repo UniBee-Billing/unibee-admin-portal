@@ -436,7 +436,7 @@ export const enum DiscountCodeUserScope {
 }
 type PlanApplyGroup = {
   groupPlanIntervalSelector?: {
-    intervalUnit: 'month' | 'year'
+    intervalUnit: 'day' | 'week' | 'month' | 'year'
     intervalCount: number
   }[]
 }

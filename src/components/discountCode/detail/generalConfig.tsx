@@ -29,7 +29,7 @@ import { nanoid } from 'nanoid'
 const { RangePicker } = DatePicker
 
 type BillingPeriod = {
-  intervalUnit: 'month' | 'year'
+  intervalUnit: 'day' | 'week' | 'month' | 'year'
   intervalCount: number
   localId: string
 }
@@ -440,6 +440,8 @@ const Index = ({
                     setBillingPeriods(newBillingPeriods)
                   }}
                   options={[
+                    { value: 'day', label: 'Day(s)' },
+                    { value: 'week', label: 'Week(s)' },
                     { value: 'month', label: 'Month(s)' },
                     { value: 'year', label: 'Year(s)' }
                   ]}
