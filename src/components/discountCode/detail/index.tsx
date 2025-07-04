@@ -35,7 +35,7 @@ import Summary, { NotSetPlaceholder } from './summary'
 import { nanoid } from 'nanoid'
 
 type BillingPeriod = {
-  intervalUnit: 'month' | 'year'
+  intervalUnit: 'day' | 'week' | 'month' | 'year'
   intervalCount: number
   localId: string
 }
@@ -144,7 +144,7 @@ const Index = () => {
     if (res.discount.planApplyGroup?.groupPlanIntervalSelector) {
       setBillingPeriods(
         res.discount.planApplyGroup.groupPlanIntervalSelector.map(
-          (p: { intervalUnit: 'month' | 'year'; intervalCount: number }) => ({
+          (p: { intervalUnit: 'day' | 'week' | 'month' | 'year'; intervalCount: number }) => ({
             ...p,
             localId: nanoid()
           })
