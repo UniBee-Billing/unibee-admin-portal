@@ -1,4 +1,4 @@
-import { Select, SelectProps } from 'antd'
+import { Button, Select, SelectProps, Skeleton } from 'antd'
 import { useMemo } from 'react'
 import { ignoreCaseLabelFilter } from '../../utils'
 
@@ -41,35 +41,41 @@ export const TemplateSelector = ({
   templates,
   ...selectProps
 }: TemplateSelectorProps) => {
-  const options = useMemo(
-    () =>
-      templates.map((template) => ({
-        label: template.name,
-        value: template.templateId
-      })),
-    [templates]
-  )
-
   const handleTemplateChange = (templateId: number) => {
     const template = templates.find(
       (template) => template.templateId === templateId
     )
+    if (template) {
+      onChange(template)
+    }
+  }
 
-    onChange(template!)
+  if (isLoadingTemplates) {
+    return <Skeleton active paragraph={{ rows: 4 }} />
   }
 
   return (
-    <Select
-      value={isLoadingTemplates ? '' : selectedTemplateName}
-      loading={isLoadingTemplates}
-      disabled={isLoadingTemplates}
-      className="w-[360px]"
-      showSearch
-      onChange={handleTemplateChange}
-      filterOption={ignoreCaseLabelFilter}
-      placeholder="Select a template"
-      options={options}
-      {...selectProps}
-    />
+    <div className="flex flex-col gap-y-2">
+      {templates.map((template) => {
+        const isSelected = selectedTemplateName === template.name
+        return (
+          <Button
+            key={template.templateId}
+            onClick={() => handleTemplateChange(template.templateId)}
+            className={`w-full text-left justify-start h-auto py-2 px-3 whitespace-normal ${
+              isSelected
+                ? 'border-blue-400 bg-white text-blue-500'
+                : 'border-gray-300'
+            }`}
+            style={{
+              borderColor: isSelected ? '#3B82F6' : '#D1D5DB',
+              color: isSelected ? '#3B82F6' : 'inherit'
+            }}
+          >
+            {template.name}
+          </Button>
+        )
+      })}
+    </div>
   )
 }

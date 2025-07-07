@@ -1,43 +1,28 @@
-import { PlusOutlined, SaveOutlined } from '@ant-design/icons'
-import { Button, Cascader, Input } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
+import { Button, Cascader } from 'antd'
 import { CascaderRef } from 'antd/es/cascader'
 import { useMemo, useRef, useState } from 'react'
 import { WithStyle } from '../../../shared.types'
 import { safeConvertPascalCaseToSentence } from '../../../utils'
-import { FieldsSearchInput } from './fieldsSearchInput'
+import { FieldItem } from '../preview/fieldItem'
 
 interface FieldsSelectorProps {
-  searchContent: string
   value: string[][]
-  saveLoading?: boolean
-  templateName?: string
-  columns: string[]
-  loadingTemplates: boolean
   groupColumns: Record<string, string[]>
-  loading: boolean
-  onClearButtonClick: () => void
-  onSaveButtonClick: () => void
+  selectedFields: string[]
   onChange: (value: string[][]) => void
-  onTemplateNameChange: (templateName: string) => void
-  onSearchFieldNameSelected: (value: string) => void
+  onFieldDelete: (field: string) => void
+  onClearButtonClick: () => void
 }
 
-const mapOptionWithSameValue = (value: string) => ({ label: value, value })
-
 export const FieldsSelector = ({
-  templateName,
-  onTemplateNameChange,
   className,
   value,
   onChange,
-  loading,
-  columns,
   groupColumns,
-  onSearchFieldNameSelected,
-  onClearButtonClick,
-  onSaveButtonClick,
-  saveLoading,
-  searchContent
+  selectedFields,
+  onFieldDelete,
+  onClearButtonClick
 }: WithStyle<FieldsSelectorProps>) => {
   const [isOpenCascader, setIsOpenCascader] = useState(false)
   const cascaderRef = useRef<CascaderRef | null>(null)
@@ -50,7 +35,8 @@ export const FieldsSelector = ({
   const options = useMemo(
     () =>
       categories.map((category) => ({
-        ...mapOptionWithSameValue(category),
+        label: safeConvertPascalCaseToSentence(category),
+        value: category,
         children: groupColumns[category].map((value) => ({
           label: safeConvertPascalCaseToSentence(value),
           value
@@ -59,45 +45,35 @@ export const FieldsSelector = ({
     [categories, groupColumns]
   )
 
-  const handleAddMatrixButtonClick = () => {
+  const handleAddCategoryClick = () => {
     setIsOpenCascader(true)
-    cascaderRef.current!.focus()
+    cascaderRef.current?.focus()
   }
 
   return (
-    <div className={`rounded-xl bg-[#f5f5f5] p-5 ${className}`}>
-      <div className="flex justify-between">
-        <div className="flex">
-          <Input
-            className="mr-3 w-[270px]"
-            value={templateName}
-            onChange={(e) => onTemplateNameChange(e.target.value)}
-          />
-          <FieldsSearchInput
-            searchContent={searchContent}
-            onChange={onSearchFieldNameSelected}
-            loadingColumns={loading}
-            columns={columns}
-          />
-        </div>
-        <Button
-          icon={<SaveOutlined />}
-          onClick={onSaveButtonClick}
-          loading={saveLoading}
-          disabled={saveLoading}
-        >
-          Save
+    <div className={`relative ${className}`}>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-base font-medium">Export header categories</h3>
+        <Button type="link" onClick={onClearButtonClick} className="text-blue-500 hover:text-blue-600">
+          clear all
         </Button>
       </div>
-      <div className="mt-4 flex justify-between">
-        <div className="flex w-[60%]">
+      <div className="w-full ring-1 ring-[#D7D5D6] bg-white rounded-lg p-4 min-h-[110px] flex flex-wrap gap-2 items-start">
+        {selectedFields.map((field) => (
+          <FieldItem
+            key={field}
+            value={field}
+            onDeleteButtonClick={onFieldDelete}
+            isDeletable
+          />
+        ))}
+        <div className="relative">
           <Button
-            color="default"
-            variant="filled"
+            className="bg-blue-50 border-blue-400 rounded-md flex items-center text-sm px-3 py-1 text-blue-600 hover:bg-blue-100"
+            onClick={handleAddCategoryClick}
             icon={<PlusOutlined />}
-            onClick={handleAddMatrixButtonClick}
           >
-            Add Matrix
+            Add Category
           </Button>
           <Cascader
             ref={cascaderRef}
@@ -105,7 +81,7 @@ export const FieldsSelector = ({
             value={value}
             onFocus={() => setIsOpenCascader(true)}
             onBlur={() => setIsOpenCascader(false)}
-            className="ml-3 grow"
+            className="absolute opacity-0 pointer-events-none"
             options={options}
             multiple
             showCheckedStrategy={Cascader.SHOW_CHILD}
@@ -113,9 +89,6 @@ export const FieldsSelector = ({
             maxTagCount="responsive"
           />
         </div>
-        <Button color="primary" variant="text" onClick={onClearButtonClick}>
-          Clear Filters
-        </Button>
       </div>
     </div>
   )
