@@ -1,15 +1,19 @@
 import { Button, Input, message, Modal } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
 import { useState } from 'react'
 import { useLoading } from '../../hooks'
 import { saveExportTmplReq } from '../../requests'
 import { Template } from './templateSelector'
+import { getSystemTimezone } from '../../utils'
 
 interface AddNewTemplateButtonProps {
   onTemplateCreate(template: Template): void
+  templates?: Template[]
 }
 
 export const AddNewTemplateButton = ({
-  onTemplateCreate
+  onTemplateCreate,
+  templates = []
 }: AddNewTemplateButtonProps) => {
   const { isLoading, withLoading } = useLoading()
   const [isOpenAddNewTemplateModal, setIsOpenAddNewTemplateModal] =
@@ -24,8 +28,28 @@ export const AddNewTemplateButton = ({
       return
     }
 
+    // Check if template with the same name already exists
+    const isDuplicateName = templates.some(
+      template => template.name.toLowerCase() === templateName.toLowerCase()
+    )
+    
+    if (isDuplicateName) {
+      message.error('Template name already exists. Please use a different name.')
+      return
+    }
+
     const [data, err] = await withLoading(
-      () => saveExportTmplReq({ task: 'InvoiceExport', name: templateName }),
+      () => {
+        return saveExportTmplReq({ 
+          task: 'InvoiceExport', 
+          name: templateName,
+          format: 'xlsx',
+          payload: {
+            timezone: getSystemTimezone(),
+            isIncludePaidInvoices: false
+          }
+        })
+      },
       false
     )
 
@@ -47,32 +71,36 @@ export const AddNewTemplateButton = ({
         title="Add new template"
         destroyOnClose
         onCancel={closeAddNewTemplateModal}
-        footer={[
-          <Button key="cancel" onClick={closeAddNewTemplateModal}>
-            Cancel
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            onClick={handleSubmitClick}
-            loading={isLoading}
-          >
-            Submit
-          </Button>
-        ]}
+        footer={
+          <div className="flex justify-end pt-4">
+            <Button key="cancel" onClick={closeAddNewTemplateModal} className="mr-2">
+              Cancel
+            </Button>
+            <Button
+              key="submit"
+              onClick={handleSubmitClick}
+              loading={isLoading}
+              type="primary"
+            >
+              Submit
+            </Button>
+          </div>
+        }
       >
         <Input
           value={templateName}
           onChange={(e) => setTemplateName(e.target.value)}
           placeholder="Input new template name"
-        ></Input>
+          className="mt-4"
+        />
       </Modal>
       <Button
         type="primary"
-        className="mb-5 ml-6"
+        className="flex items-center justify-center w-full"
         onClick={() => setIsOpenAddNewTemplateModal(true)}
+        icon={<PlusOutlined />}
       >
-        Add new template
+        Add New Template
       </Button>
     </>
   )

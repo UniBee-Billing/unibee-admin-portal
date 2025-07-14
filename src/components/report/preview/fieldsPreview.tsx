@@ -13,6 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
+import { Empty } from 'antd'
 import { WithStyle } from '../../../shared.types'
 import { FieldItem } from './fieldItem'
 
@@ -54,14 +55,23 @@ export const FieldsPreview = ({
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={fields} strategy={verticalListSortingStrategy}>
-        <div className={`h-[406px] overflow-y-scroll px-1 py-2 ${className}`}>
-          {fields.map((field) => (
-            <FieldItem
-              onDeleteButtonClick={onDeleteButtonClick}
-              key={field}
-              value={field}
-            />
-          ))}
+        <div className={`${className}`}>
+          {fields.length > 0 ? (
+            fields.map((field) => (
+              <FieldItem
+                onDeleteButtonClick={onDeleteButtonClick}
+                key={field}
+                value={field}
+              />
+            ))
+          ) : (
+            <div className="flex items-center justify-center h-[200px]">
+              <Empty 
+                description="No fields selected" 
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            </div>
+          )}
         </div>
       </SortableContext>
     </DndContext>

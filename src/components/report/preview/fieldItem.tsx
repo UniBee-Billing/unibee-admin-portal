@@ -1,42 +1,34 @@
-import { DeleteOutlined } from '@ant-design/icons'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { CloseOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
 import { safeConvertPascalCaseToSentence } from '../../../utils'
 
 interface FieldItemProps {
   value: string
   onDeleteButtonClick(fieldName: string): void
+  isDeletable?: boolean
 }
 
-export const FieldItem = ({ value, onDeleteButtonClick }: FieldItemProps) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: value })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition
-  }
-
+export const FieldItem = ({
+  value,
+  onDeleteButtonClick,
+  isDeletable
+}: FieldItemProps) => {
   return (
     <div
-      {...attributes}
-      style={style}
-      ref={setNodeRef}
       key={value}
-      className="group flex h-8 items-center justify-between rounded px-3 py-1 hover:bg-[#ebebeb]"
+      className="group flex items-center rounded-sm bg-gray-100 border border-gray-300 px-2 py-1 text-sm"
     >
-      <div className="flex-1" {...listeners}>
-        {safeConvertPascalCaseToSentence(value)}
-      </div>
-      <Button
-        onClick={() => onDeleteButtonClick(value)}
-        className="hidden group-hover:block"
-        icon={<DeleteOutlined />}
-        variant="text"
-        color="default"
-        shape="circle"
-      ></Button>
+      <div className="mr-1">{safeConvertPascalCaseToSentence(value)}</div>
+      {isDeletable && (
+        <Button
+          onClick={() => onDeleteButtonClick(value)}
+          className="flex"
+          icon={<CloseOutlined style={{ fontSize: '10px' }} />}
+          type="text"
+          size="small"
+          shape="circle"
+        />
+      )}
     </div>
   )
 }
