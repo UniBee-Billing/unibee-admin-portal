@@ -221,7 +221,7 @@ export const getMerchantInfoReq = async (refreshCb?: () => void) => {
 
 export const getLicenseReq = async (refreshCb?: () => void) => {
   try {
-    const res = await request.get('/license-api/merchant/license/get')
+    const res = await request.get('/merchant/get_license')
     handleStatusCode(res.data.code, refreshCb)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return [res.data.data as any, null]
