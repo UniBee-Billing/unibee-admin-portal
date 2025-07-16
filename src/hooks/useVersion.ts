@@ -43,22 +43,15 @@ export const useLicense = () => {
   )
 
   return useMemo(() => {
-    // 获取license数据
     const licenseData = response.data?.data?.license
     const version = licenseData?.version
-    
-    // 确保licenseName有值，不为undefined
-    let licenseName = 'Loading...'
-    if (version?.name) {
-      licenseName = version.name
-    }
 
     return {
       license: licenseData?.license,
       isActivePremium: (licenseData?.isPaid || version?.isPaid) && !version?.expired,
       isExpiredPremium: (licenseData?.isPaid || version?.isPaid) && !!version?.expired,
       ownerEmail: licenseData?.ownerEmail,
-      licenseName,
+      licenseName: version?.name ?? 'Loading...',
       apiRateLimit: response.data?.data?.APIRateLimit,
       memberLimit: response.data?.data?.memberLimit,
       currentMemberCount: response.data?.data?.currentMemberCount,
