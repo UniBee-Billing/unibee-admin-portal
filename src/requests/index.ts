@@ -2523,3 +2523,16 @@ export const updateMemberProfileReq = async (body: {
     return [null, e]
   }
 }
+
+export const getExportColumnListReq = async (task: TExportDataType) => {
+  try {
+    const res = await request.post(`/merchant/task/export_column_list`, {
+      task
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}

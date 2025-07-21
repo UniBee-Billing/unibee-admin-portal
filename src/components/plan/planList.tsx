@@ -13,7 +13,8 @@ import {
   copyPlanReq,
   getPlanList,
   exportDataReq,
-  TPlanListBody
+  TPlanListBody,
+  getExportColumnListReq
 } from '@/requests/index'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
 import {
@@ -780,32 +781,38 @@ const ExportModal = ({
   const [exportType, setExportType] = useState<'filtered' | 'all'>('filtered')
   const [fileFormat, setFileFormat] = useState<'csv' | 'xlsx'>('csv')
   const appConfigStore = useAppConfigStore()
+  const [columnLoading, setColumnLoading] = useState(true)
+  const [columnOptions, setColumnOptions] = useState<{ label: string; value: string; checked: boolean }[]>([])
+  const [selectedFields, setSelectedFields] = useState<string[]>([])
   
-  // Available export fields
-  const exportFields = [
-    { label: 'ID', value: 'id', checked: true },
-    { label: 'Merchant ID', value: 'merchantId', checked: true },
-    { label: 'Plan Name', value: 'planName', checked: true },
-    { label: 'Amount', value: 'amount', checked: true },
-    { label: 'Currency', value: 'currency', checked: true },
-    { label: 'Interval Unit', value: 'intervalUnit', checked: true },
-    { label: 'Interval Count', value: 'intervalCount', checked: true },
-    { label: 'Description', value: 'description', checked: true },
-    { label: 'Type', value: 'type', checked: true },
-    { label: 'Status', value: 'status', checked: true },
-    { label: 'Is Deleted', value: 'isDeleted', checked: true },
-    { label: 'Binding Recurring Addon IDs', value: 'addonIds', checked: true },
-    { label: 'Binding Onetime Addon IDs', value: 'onetimeAddonIds', checked: true },
-    { label: 'Publish Status', value: 'publishStatus', checked: true },
-    { label: 'Create Time', value: 'createTime', checked: true },
-    { label: 'Extra Metric Data', value: 'metricData', checked: true },
-    { label: 'Meta Data', value: 'metadata', checked: true },
-    { label: 'Internal Name', value: 'internalName', checked: true }
-  ]
-  
-  const [selectedFields, setSelectedFields] = useState<string[]>(
-    exportFields.filter(field => field.checked).map(field => field.value)
-  )
+  // Fetch column options when component mounts
+  useEffect(() => {
+    const fetchColumnOptions = async () => {
+      setColumnLoading(true)
+      const [data, err] = await getExportColumnListReq('PlanExport')
+      setColumnLoading(false)
+      
+      if (err != null) {
+        message.error(err.message)
+        return
+      }
+      
+      if (data && data.columnHeaders) {
+        // Convert columnHeaders object to array of options
+        const options = Object.entries(data.columnHeaders).map(([key, value]) => ({
+          label: value as string,
+          value: key,
+          checked: true
+        }))
+        
+        setColumnOptions(options)
+        // Select all fields by default
+        setSelectedFields(options.map(opt => opt.value))
+      }
+    }
+    
+    fetchColumnOptions()
+  }, [])
 
   const handleFieldChange = (field: string, checked: boolean) => {
     if (checked) {
@@ -816,7 +823,7 @@ const ExportModal = ({
   }
 
   const selectAllFields = () => {
-    setSelectedFields(exportFields.map(field => field.value))
+    setSelectedFields(columnOptions.map(field => field.value))
   }
 
   const deselectAllFields = () => {
@@ -938,22 +945,27 @@ const ExportModal = ({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto border p-3 rounded">
-            {exportFields.map(field => (
-              <div key={field.value} className="flex items-center">
-                <Checkbox
-                  checked={selectedFields.includes(field.value)}
-                  onChange={(e) => handleFieldChange(field.value, e.target.checked)}
-                >
-                  {field.label}
-                </Checkbox>
+            {columnLoading ? (
+              <div className="col-span-2 flex justify-center items-center py-4">
+                <LoadingOutlined style={{ fontSize: 24 }} />
               </div>
-            ))}
+            ) : (
+              columnOptions.map(field => (
+                <div key={field.value} className="flex items-center">
+                  <Checkbox
+                    checked={selectedFields.includes(field.value)}
+                    onChange={(e) => handleFieldChange(field.value, e.target.checked)}
+                  >
+                    {field.label}
+                  </Checkbox>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         <div className="text-gray-500 text-sm">
           <p>The exported file will include only the selected fields.</p>
-          <p>File will be automatically downloaded with timestamp.</p>
         </div>
       </div>
     </Modal>
