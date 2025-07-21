@@ -851,11 +851,15 @@ const ExportModal = ({
         if (filters.status?.length) {
           payload.status = filters.status
         }
-        if (filters.planName?.length) {
-          payload.planIds = filters.planName
-        }
-        if (filters.internalName?.length) {
-          payload.internalNameIds = filters.internalName
+        
+        // Combine both planName and internalName filters into a single planIds array
+        const combinedPlanIds = [
+          ...(filters.planName || []),
+          ...(filters.internalName || [])
+        ];
+        
+        if (combinedPlanIds.length > 0) {
+          payload.planIds = combinedPlanIds
         }
 
         // Include sort information if available
