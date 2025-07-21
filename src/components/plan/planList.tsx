@@ -12,6 +12,7 @@ import {
   archivePlanReq,
   copyPlanReq,
   getPlanList,
+  exportDataReq,
   TPlanListBody
 } from '@/requests/index'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
@@ -20,6 +21,7 @@ import {
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
+  ExportOutlined,
   InboxOutlined,
   LoadingOutlined,
   MinusOutlined,
@@ -36,12 +38,15 @@ import {
   Row,
   Space,
   Table,
-  Tooltip
+  Tooltip,
+  Radio,
+  Checkbox
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
+import { useAppConfigStore } from '../../stores'
 
 type OnChange = NonNullable<TableProps<IPlan>['onChange']>
 type GetSingle<T> = T extends (infer U)[] ? U : never
@@ -92,6 +97,7 @@ const Index = ({
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
   const internalNameFilterRef = useRef<{ value: number; text: string }[]>([])
   const [allPlans,setAllPlans] = useState<IPlan[]>([])
+  const [exportModalOpen, setExportModalOpen] = useState<boolean>(false)
 
   // Note: We use 'planIds' parameter in URL for both plan name and internal name filters
   // since both are filtering by plan ID
@@ -547,6 +553,14 @@ const Index = ({
           refreshCb={fetchPlan}
         />
       )}
+      {exportModalOpen && (
+        <ExportModal 
+          closeModal={() => setExportModalOpen(false)}
+          filters={filters}
+          productId={productId}
+          sortFilter={sortFilter}
+        />
+      )}
       {!isProductValid ? (
         <div className="flex justify-center">
           <Result
@@ -558,6 +572,16 @@ const Index = ({
         </div>
       ) : (
         <>
+          <div className="flex justify-between mb-4">
+            <div></div>
+            <Button
+              type="primary"
+              onClick={() => setExportModalOpen(true)}
+              icon={<ExportOutlined />}
+            >
+              Export
+            </Button>
+          </div>
           <Table
             columns={columns}
             dataSource={plan}
@@ -735,6 +759,203 @@ const ArchiveModal = ({
         disabled={loading}
         setSelectedOption={setSelectedOption}
       />
+    </Modal>
+  )
+}
+
+interface ExportModalProps {
+  closeModal: () => void
+  filters: TFilters
+  productId: number
+  sortFilter: Sorts
+}
+
+const ExportModal = ({
+  closeModal,
+  filters,
+  productId,
+  sortFilter
+}: ExportModalProps) => {
+  const [loading, setLoading] = useState(false)
+  const [exportType, setExportType] = useState<'filtered' | 'all'>('filtered')
+  const [fileFormat, setFileFormat] = useState<'csv' | 'xlsx'>('csv')
+  const appConfigStore = useAppConfigStore()
+  
+  // Available export fields
+  const exportFields = [
+    { label: 'ID', value: 'id', checked: true },
+    { label: 'Merchant ID', value: 'merchantId', checked: true },
+    { label: 'Plan Name', value: 'planName', checked: true },
+    { label: 'Amount', value: 'amount', checked: true },
+    { label: 'Currency', value: 'currency', checked: true },
+    { label: 'Interval Unit', value: 'intervalUnit', checked: true },
+    { label: 'Interval Count', value: 'intervalCount', checked: true },
+    { label: 'Description', value: 'description', checked: true },
+    { label: 'Type', value: 'type', checked: true },
+    { label: 'Status', value: 'status', checked: true },
+    { label: 'Is Deleted', value: 'isDeleted', checked: true },
+    { label: 'Binding Recurring Addon IDs', value: 'addonIds', checked: true },
+    { label: 'Binding Onetime Addon IDs', value: 'onetimeAddonIds', checked: true },
+    { label: 'Publish Status', value: 'publishStatus', checked: true },
+    { label: 'Create Time', value: 'createTime', checked: true },
+    { label: 'Extra Metric Data', value: 'metricData', checked: true },
+    { label: 'Meta Data', value: 'metadata', checked: true },
+    { label: 'Internal Name', value: 'internalName', checked: true }
+  ]
+  
+  const [selectedFields, setSelectedFields] = useState<string[]>(
+    exportFields.filter(field => field.checked).map(field => field.value)
+  )
+
+  const handleFieldChange = (field: string, checked: boolean) => {
+    if (checked) {
+      setSelectedFields(prev => [...prev, field])
+    } else {
+      setSelectedFields(prev => prev.filter(f => f !== field))
+    }
+  }
+
+  const selectAllFields = () => {
+    setSelectedFields(exportFields.map(field => field.value))
+  }
+
+  const deselectAllFields = () => {
+    setSelectedFields([])
+  }
+
+  const handleExport = async () => {
+    try {
+      if (selectedFields.length === 0) {
+        message.error('Please select at least one field to export')
+        return
+      }
+
+      setLoading(true)
+
+      const payload: any = {
+        productIds: [productId]
+      }
+
+      // Include filters if exporting filtered data
+      if (exportType === 'filtered') {
+        if (filters.type?.length) {
+          payload.type = filters.type
+        }
+        if (filters.status?.length) {
+          payload.status = filters.status
+        }
+        if (filters.planName?.length) {
+          payload.planIds = filters.planName
+        }
+        if (filters.internalName?.length) {
+          payload.internalNameIds = filters.internalName
+        }
+
+        // Include sort information if available
+        if (sortFilter.columnKey != null) {
+          payload.sortField = sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
+          payload.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
+        }
+      }
+
+      // Call API to export data
+      const [_, err] = await exportDataReq({
+        task: 'PlanExport',
+        payload: payload,
+        format: fileFormat,
+        exportColumns: selectedFields
+      })
+      
+      if (err != null) {
+        message.error(err.message)
+        setLoading(false)
+        return
+      }
+      
+      message.success('Plan list is being exported, please check task list for progress.')
+      appConfigStore.setTaskListOpen(true)
+      closeModal()
+    } catch (error: any) {
+      message.error(error.message || 'Export failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Modal
+      open={true}
+      title="Export Plans"
+      width={600}
+      onCancel={closeModal}
+      footer={[
+        <Button key="cancel" onClick={closeModal} disabled={loading}>
+          Cancel
+        </Button>,
+        <Button
+          key="export"
+          type="primary"
+          onClick={handleExport}
+          loading={loading}
+        >
+          Confirm Export
+        </Button>
+      ]}
+    >
+      <div className="py-4">
+        <div className="mb-4">
+          <div className="mb-2 font-medium">Export Data</div>
+          <Radio.Group
+            value={exportType}
+            onChange={(e) => setExportType(e.target.value)}
+          >
+            <Radio value="filtered">Current Filtered Results</Radio>
+            <Radio value="all">All Plans</Radio>
+          </Radio.Group>
+        </div>
+
+        <div className="mb-4">
+          <div className="mb-2 font-medium">File Format</div>
+          <Radio.Group
+            value={fileFormat}
+            onChange={(e) => setFileFormat(e.target.value)}
+          >
+            <Radio value="csv">CSV</Radio>
+            <Radio value="xlsx">Excel</Radio>
+          </Radio.Group>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <div className="font-medium">Select Fields to Export</div>
+            <div>
+              <Button size="small" onClick={selectAllFields} style={{ marginRight: '8px' }}>
+                Select All
+              </Button>
+              <Button size="small" onClick={deselectAllFields}>
+                Deselect All
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto border p-3 rounded">
+            {exportFields.map(field => (
+              <div key={field.value} className="flex items-center">
+                <Checkbox
+                  checked={selectedFields.includes(field.value)}
+                  onChange={(e) => handleFieldChange(field.value, e.target.checked)}
+                >
+                  {field.label}
+                </Checkbox>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-gray-500 text-sm">
+          <p>The exported file will include only the selected fields.</p>
+          <p>File will be automatically downloaded with timestamp.</p>
+        </div>
+      </div>
     </Modal>
   )
 }

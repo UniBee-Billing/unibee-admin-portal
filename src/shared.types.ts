@@ -900,6 +900,7 @@ export type TExportDataType =
   | 'UserDiscountExport'
   | 'MultiUserDiscountExport'
   | 'CreditTransactionExport'
+  | 'PlanExport'
 
 export type TImportDataType =
   | 'UserImport'
