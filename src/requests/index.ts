@@ -221,7 +221,7 @@ export const getMerchantInfoReq = async (refreshCb?: () => void) => {
 
 export const getLicenseReq = async (refreshCb?: () => void) => {
   try {
-    const res = await request.get('/license-api/merchant/license/get')
+    const res = await request.get('/merchant/get_license')
     handleStatusCode(res.data.code, refreshCb)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return [res.data.data as any, null]
@@ -2516,6 +2516,19 @@ export const updateMemberProfileReq = async (body: {
 }) => {
   try {
     const res = await request.post('/merchant/member/update', body)
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getExportColumnListReq = async (task: TExportDataType) => {
+  try {
+    const res = await request.post(`/merchant/task/export_column_list`, {
+      task
+    })
     handleStatusCode(res.data.code)
     return [res.data.data, null]
   } catch (err) {

@@ -47,10 +47,18 @@ const App: React.FC = () => {
         setAnalyticsModalVisible(true)
         return
       }
-      const isActivePremium =
-        licenseData?.version?.isPaid && !licenseData?.version?.expired
-      const isExpiredPremium =
-        licenseData?.version?.isPaid && !!licenseData?.version?.expired
+
+      
+      //new json structure
+      const licenseInfo = licenseData?.license
+      const version = licenseInfo?.version
+      
+      // check premium status
+      const isActivePremium = 
+        (licenseInfo?.isPaid || version?.isPaid) && !version?.expired
+      const isExpiredPremium = 
+        (licenseInfo?.isPaid || version?.isPaid) && !!version?.expired
+        
       if (!isActivePremium || isExpiredPremium || !merchantData.analyticsHost) {
         setAnalyticsModalVisible(true)
       } else {

@@ -169,8 +169,20 @@ const rowStyle: CSSProperties = {
 }
 
 const TaskItem = ({ t }: { t: AppTask }) => {
+  const formatTimestamp = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`
+  }
+
+  const buildFileName = () => {
+    // If the task is PlanExport, use "Plans_Export" as prefix, otherwise use taskName
+    const prefix = t.taskName === 'PlanExport' ? 'Plans_Export' : t.taskName
+    const timestamp = formatTimestamp(new Date())
+    return `${prefix}_${t.id}_${timestamp}.${t.format}`
+  }
+
   const onDownload = (url: string) => () => {
-    downloadStaticFile(url, `${t.taskName}_${t.id}.${t.format}`)
+    downloadStaticFile(url, buildFileName())
   }
   return (
     <div style={{ height: '50px' }}>
