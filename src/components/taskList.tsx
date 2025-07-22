@@ -178,7 +178,7 @@ const TaskItem = ({ t }: { t: AppTask }) => {
     // If the task is PlanExport, use "Plans_Export" as prefix, otherwise use taskName
     const prefix = t.taskName === 'PlanExport' ? 'Plans_Export' : t.taskName
     const timestamp = formatTimestamp(new Date())
-    return `${prefix}_${timestamp}_${t.id}.${t.format}`
+    return `${prefix}_${t.id}_${timestamp}.${t.format}`
   }
 
   const onDownload = (url: string) => () => {
