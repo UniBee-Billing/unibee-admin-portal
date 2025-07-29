@@ -642,6 +642,7 @@ type TSubListReq = {
   planIds?: number[]
   createTimeStart?: number
   createTimeEnd?: number
+  email?: string
 } & PagedReq
 export const getSublist = async (body: TSubListReq, refreshCb: () => void) => {
   try {

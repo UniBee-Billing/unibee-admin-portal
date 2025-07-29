@@ -509,6 +509,10 @@ const Index = () => {
     }
     searchTerm.amountStart = amtFrom
     searchTerm.amountEnd = amtTo
+    const email = form.getFieldValue('email')
+    if (email) {
+      searchTerm.email = email
+    }
 
     return searchTerm
   }
@@ -758,6 +762,16 @@ const Search = ({
               />
             </Form.Item>
           </Col> */}
+        </Row>
+        <Row className="flex items-center mt-3" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
+            Email
+          </Col>
+          <Col span={8}>
+            <Form.Item name="email" noStyle>
+              <Input placeholder="Search by email" onPressEnter={form.submit} />
+            </Form.Item>
+          </Col>
         </Row>
       </Form>
     </div>
