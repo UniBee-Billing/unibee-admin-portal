@@ -190,8 +190,8 @@ const Index = () => {
       key: 'planIds',
       filters: planFilterRef.current,
       filteredValue: filters.planIds,
-      filterMode: 'tree',
-      filterSearch: true,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
       width: 120,
       render: (_, sub) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
@@ -214,8 +214,8 @@ const Index = () => {
       key: 'internalPlanNameIds',
       filters: internalPlanNameFilterRef.current,
       filteredValue: filters.internalPlanNameIds,
-      filterMode: 'tree',
-      filterSearch: true,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
       width: 140,
       onFilter: (value, record) => record.plan?.id === value,
       render: (_, sub) => (
