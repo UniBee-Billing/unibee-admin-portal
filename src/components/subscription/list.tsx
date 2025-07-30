@@ -511,12 +511,22 @@ const Index = () => {
 
   const normalizeSearchTerms = () => {
     const searchTerm = JSON.parse(JSON.stringify(form.getFieldsValue()))
+    
+    // Handle email separately to avoid being deleted by the cleanup logic
+    const email = form.getFieldValue('email')
+    if (email && email.trim() !== '') {
+      searchTerm.email = email.trim()
+    }
+    
+    // Clean up empty values (but preserve email if it was set above)
     Object.keys(searchTerm).forEach(
       (k) =>
+        k !== 'email' && // Don't delete email field
         (searchTerm[k] == undefined ||
           (typeof searchTerm[k] == 'string' && searchTerm[k].trim() == '')) &&
         delete searchTerm[k]
     )
+    
     const start = form.getFieldValue('createTimeStart')
     const end = form.getFieldValue('createTimeEnd')
     if (start != null) {
@@ -555,10 +565,6 @@ const Index = () => {
     }
     searchTerm.amountStart = amtFrom
     searchTerm.amountEnd = amtTo
-    const email = form.getFieldValue('email')
-    if (email) {
-      searchTerm.email = email
-    }
 
     return searchTerm
   }
