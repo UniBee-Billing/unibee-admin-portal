@@ -224,7 +224,9 @@ const Index = () => {
         </div>
       ),
       filters: planFilterRef.current,
-      filteredValue: filters.planIds
+      filteredValue: filters.planIds,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
     },
     {
       title: 'Sub ID',

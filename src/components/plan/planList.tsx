@@ -321,13 +321,8 @@ const Index = ({
       width: 120,
       filters: planFilterRef.current,
       filteredValue: filters.planName,
-      filterMode: 'tree',
-      filterSearch: true,
-      onFilter: (value, record) => {
-        // console.log('onFilter comparing:', { value, recordId: record.id, valueType: typeof value, recordIdType: typeof record.id });
-        // 确保类型匹配，将value转换为数字进行比较
-        return record.id === Number(value);
-      },
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
@@ -340,12 +335,9 @@ const Index = ({
       key: 'internalName',
       width: 120,
       filters: internalNameFilterRef.current,
-      filterMode: 'tree',
-      filterSearch: true,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
       filteredValue: filters.internalName,
-      onFilter: (value, record) => {
-        return record.id === Number(value);
-      },
       render: (internalName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={internalName || ''} placement="topLeft" width="120px" />
