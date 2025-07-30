@@ -756,7 +756,7 @@ const Search = ({
                 Clear
               </Button>
               <Button
-                onClick={form.submit}
+                htmlType="submit"
                 type="primary"
                 loading={searching}
                 disabled={searching || exporting}
@@ -792,7 +792,6 @@ const Search = ({
             <Form.Item name="amountStart" noStyle={true}>
               <Input
                 prefix={currencySymbol ? `from ${currencySymbol}` : ''}
-                onPressEnter={form.submit}
               />
             </Form.Item>
           </Col>
@@ -800,7 +799,6 @@ const Search = ({
             <Form.Item name="amountEnd" noStyle={true}>
               <Input
                 prefix={currencySymbol ? `to ${currencySymbol}` : ''}
-                onPressEnter={form.submit}
               />
             </Form.Item>
           </Col>
@@ -821,7 +819,7 @@ const Search = ({
           </Col>
           <Col span={8}>
             <Form.Item name="email" noStyle>
-              <Input placeholder="Search by email" onPressEnter={form.submit} />
+              <Input placeholder="Search by email" />
             </Form.Item>
           </Col>
         </Row>
