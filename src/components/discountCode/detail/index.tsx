@@ -166,12 +166,17 @@ const Index = () => {
     // if discount.currency is EUR, and discountType == fixed-amt, then filter the planList to contain only euro plans
     let plans =
       planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
+
+    // ① Only allow ACTIVE plans to be selected/displayed
+    plans = plans.filter((p: IPlan) => p.status === PlanStatus.ACTIVE)
+
+    // If discount type is fixed amount, filter by currency as well
     if (discount.discountType == DiscountType.AMOUNT) {
       plans = plans.filter((p: IPlan) => p.currency == discount.currency)
     }
     setPlanList(plans)
-    planListRef.current =
-      planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
+    // keep the same ACTIVE-only rule for the ref copy as well
+    planListRef.current = plans
 
     discount.validityRange = [
       dayjs(discount.startTime * 1000),
@@ -348,7 +353,7 @@ const Index = () => {
       p.planName
     ) : (
       <>
-        {p.planName}&nbsp;(
+        #{p.id}&nbsp;-&nbsp;{p.planName}&nbsp;(
         <span className="text-xs text-gray-500">
           {showAmount(p.amount, p.currency)}/
           {p.intervalCount == 1 ? '' : p.intervalCount}
