@@ -132,9 +132,10 @@ const Index = () => {
 
   const fetchPlan = async () => {
     setLoadingPlans(true)
+    //Filter out all the plans
     const [planList, err] = await getPlanList(
       {
-        type: [PlanType.MAIN],
+        // type: [PlanType.MAIN],
         status: [PlanStatus.ACTIVE],
         page: page,
         count: 100
@@ -223,7 +224,9 @@ const Index = () => {
         </div>
       ),
       filters: planFilterRef.current,
-      filteredValue: filters.planIds
+      filteredValue: filters.planIds,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
     },
     {
       title: 'Sub ID',

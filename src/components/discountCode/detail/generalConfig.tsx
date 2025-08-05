@@ -541,17 +541,24 @@ const Index = ({
             showSearch
             disabled={false}
             filterSort={(optionA, optionB) => {
-              const labelA = String(optionA?.label ?? '')
-              const labelB = String(optionB?.label ?? '')
-              return labelA
-                .toLocaleLowerCase()
-                .localeCompare(labelB.toLocaleLowerCase())
+              const planA = filteredPlanList.find((p) => p.id === optionA?.value)
+              const planB = filteredPlanList.find((p) => p.id === optionB?.value)
+              const nameA = planA?.planName?.toLowerCase() ?? ''
+              const nameB = planB?.planName?.toLowerCase() ?? ''
+              return nameA.localeCompare(nameB)
             }}
-            filterOption={(input, option) =>
-              String(option?.label ?? '')
-                .toLowerCase()
-                .includes(input.toLowerCase())
-            }
+            filterOption={(input, option) => {
+              const searchText = input.toLowerCase()
+              const value = option?.value as number | string | undefined
+              if (value == null) return false
+
+              // Find the plan details to search
+              const plan = filteredPlanList.find((p) => p.id === Number(value))
+              if (!plan) return false
+
+              const combinedText = `${plan.planName} ${plan.id}`.toLowerCase()
+              return combinedText.includes(searchText)
+            }}
             options={filteredPlanList.map((plan) => ({
               label: getPlanLabel(plan.id),
               value: plan.id

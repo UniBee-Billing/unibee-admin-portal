@@ -369,6 +369,7 @@ export type TPlanListBody = {
   publishStatus?: PlanPublishStatus // UnPublished, Published
   sortField?: 'plan_name' | 'gmt_create' | 'gmt_modify'
   sortType?: 'asc' | 'desc'
+  searchKey?: string
 } & PagedReq
 export const getPlanList = async (
   body: TPlanListBody,
@@ -642,6 +643,7 @@ type TSubListReq = {
   planIds?: number[]
   createTimeStart?: number
   createTimeEnd?: number
+  email?: string
 } & PagedReq
 export const getSublist = async (body: TSubListReq, refreshCb: () => void) => {
   try {

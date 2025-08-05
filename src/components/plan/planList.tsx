@@ -41,13 +41,16 @@ import {
   Table,
   Tooltip,
   Radio,
-  Checkbox
+  Checkbox,
+  Input
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 import { useAppConfigStore } from '../../stores'
+
+const { Search } = Input
 
 type OnChange = NonNullable<TableProps<IPlan>['onChange']>
 type GetSingle<T> = T extends (infer U)[] ? U : never
@@ -74,6 +77,7 @@ type TFilters = {
   status: PlanStatus[] | null
   planName?: number[] | null
   internalName?: number[] | null
+  searchKey?: string | null
 }
 
 const Index = ({
@@ -99,6 +103,8 @@ const Index = ({
   const internalNameFilterRef = useRef<{ value: number; text: string }[]>([])
   const [allPlans,setAllPlans] = useState<IPlan[]>([])
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false)
+  const [searchKey, setSearchKey] = useState(searchParams.get('searchKey') || '')
+
 
   // Note: We use 'planIds' parameter in URL for both plan name and internal name filters
   // since both are filtering by plan ID
@@ -134,7 +140,8 @@ const Index = ({
     type: typeFilters.type,
     status: statusFilters.status,
     planName: planIdFilter,
-    internalName: internalNameIdFilter
+    internalName: internalNameIdFilter,
+    searchKey: searchKey,
   });
 
   const [sortFilter, setSortFilter] = useState<Sorts>(
@@ -176,6 +183,7 @@ const Index = ({
       productIds: [productId],
       page: 0,
       count: 150,
+      searchKey: filters.searchKey || '',
       // status: [
       //   PlanStatus.ACTIVE,
       //   PlanStatus.SOFT_ARCHIVED,
@@ -209,7 +217,7 @@ const Index = ({
 
   const fetchPlan = async () => {
     // 如果已经有所有计划的数据，直接从中过滤
-    if (allPlans.length > 0) {
+    if (allPlans.length > 0 && !searchKey) {
       let filteredPlans = allPlans;
       
       // 应用排序
@@ -269,6 +277,10 @@ const Index = ({
       body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
     }
 
+    if (filters.searchKey) {
+      body.searchKey = filters.searchKey
+    }
+
     setLoading(true)
     const [planList, err] = await getPlanList(body, fetchPlan)
     setLoading(false)
@@ -308,6 +320,26 @@ const Index = ({
     setPlan(filteredPlans)
   }
 
+  const handleSearch = (value: string) => {
+    const newSearchKey = value.trim()
+    setSearchKey(newSearchKey)
+    onPageChange(1, PAGE_SIZE)
+
+    // Update URL
+    if (newSearchKey) {
+      searchParams.set('searchKey', newSearchKey)
+    } else {
+      searchParams.delete('searchKey')
+    }
+    setSearchParams(searchParams)
+
+    // Update filters state
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      searchKey: newSearchKey
+    }))
+  }
+
   const columns: ColumnsType<IPlan> = [
     {
       title: 'Plan ID',
@@ -321,13 +353,8 @@ const Index = ({
       width: 120,
       filters: planFilterRef.current,
       filteredValue: filters.planName,
-      filterMode: 'tree',
-      filterSearch: true,
-      onFilter: (value, record) => {
-        // console.log('onFilter comparing:', { value, recordId: record.id, valueType: typeof value, recordIdType: typeof record.id });
-        // 确保类型匹配，将value转换为数字进行比较
-        return record.id === Number(value);
-      },
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
@@ -340,12 +367,9 @@ const Index = ({
       key: 'internalName',
       width: 120,
       filters: internalNameFilterRef.current,
-      filterMode: 'tree',
-      filterSearch: true,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
       filteredValue: filters.internalName,
-      onFilter: (value, record) => {
-        return record.id === Number(value);
-      },
       render: (internalName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={internalName || ''} placement="topLeft" width="120px" />
@@ -574,7 +598,13 @@ const Index = ({
       ) : (
         <>
           <div className="flex justify-between mb-4">
-            <div></div>
+          <Search
+              allowClear
+              placeholder="Search by Plan Name or Description"
+              onSearch={handleSearch}
+              style={{ width: 375 }}
+              defaultValue={searchKey}
+            />
             <Button
               type="primary"
               onClick={() => setExportModalOpen(true)}

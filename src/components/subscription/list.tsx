@@ -70,6 +70,7 @@ const PLAN_TYPE_FILTER = [
 type TFilters = {
   status: number[] | null
   planIds: number[] | null
+  internalPlanNameIds: number[] | null
   planType: number[] | null
 }
 
@@ -91,9 +92,11 @@ const Index = () => {
   const [filters, setFilters] = useState<TFilters>({
     ...initializeFilters('status', Number, SubscriptionStatus),
     planIds: null, // when the page is loading, we don't know how many plans we have, so we set planIds to null, in fetchPlan call, we will initialize this filter.
+    internalPlanNameIds: null,
     planType: null
   } as TFilters)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
+  const internalPlanNameFilterRef = useRef<{ value: number; text: string }[]>([])
 
   const exportData = async () => {
     let payload = normalizeSearchTerms()
@@ -187,8 +190,8 @@ const Index = () => {
       key: 'planIds',
       filters: planFilterRef.current,
       filteredValue: filters.planIds,
-      filterMode: 'tree',
-      filterSearch: true,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
       width: 120,
       render: (_, sub) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
@@ -202,6 +205,28 @@ const Index = () => {
           <div className="text-xs text-gray-400">
             {`${showAmount(sub.plan?.amount, sub.plan?.currency)}/${formatPlanInterval(sub.plan)}`}
           </div>
+        </div>
+      )
+    },
+    {
+      title: 'Internal Plan Name',
+      dataIndex: 'internalPlanName',
+      key: 'internalPlanNameIds',
+      filters: internalPlanNameFilterRef.current,
+      filteredValue: filters.internalPlanNameIds,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
+      width: 140,
+      onFilter: (value, record) => record.plan?.id === value,
+      render: (_, sub) => (
+        <div className="w-36 overflow-hidden whitespace-nowrap">
+          {sub.plan?.internalName != undefined && (
+            <LongTextPopover
+              text={sub.plan.internalName}
+              placement="topLeft"
+              width="140px"
+            />
+          )}
         </div>
       )
     },
@@ -392,7 +417,7 @@ const Index = () => {
     setLoadingPlans(true)
     const [planList, err] = await getPlanList(
       {
-        type: [PlanType.MAIN],
+        // type: [PlanType.MAIN, PlanType.ONE_TIME_ADD_ON],
         status: [
           PlanStatus.ACTIVE,
           PlanStatus.SOFT_ARCHIVED, // users might have subscribed to an active plan, but later that plan was archived by admin
@@ -416,12 +441,23 @@ const Index = () => {
             value: p.plan?.id,
             text: p.plan?.planName
           }))
+          
+    internalPlanNameFilterRef.current =
+      plans == null
+        ? []
+        : plans
+            .filter((p: IPlan) => p.plan?.internalName != null && p.plan?.internalName.trim() !== '')
+            .map((p: IPlan) => ({
+              value: p.plan?.id,
+              text: p.plan?.internalName || '(Empty)'
+            }))
 
     // to initialize the planIds filter.
     // planIds filter on URL is a string like planIds=1-2-3, or it could be null.
     // initializeFilters's 3rd param is a Enum type or objects of all the plans, with k/v both being planId.
     // we need to convert the planFilterRef.current to {1: 1, 2: 2, 3: 3, ...}
     const planIds = searchParams.get('planIds')
+    const internalPlanNameIds = searchParams.get('internalPlanNameIds')
     const planType = searchParams.get('planType')
     const newFilters = { ...filters }
 
@@ -429,6 +465,12 @@ const Index = () => {
       const planIdsMap: { [key: number]: number } = {}
       planFilterRef.current.forEach((p) => (planIdsMap[p.value] = p.value))
       newFilters.planIds = initializeFilters('planIds', Number, planIdsMap).planIds
+    }
+    
+    if (internalPlanNameIds != null && internalPlanNameFilterRef.current.length > 0) {
+      const internalPlanNameIdsMap: { [key: number]: number } = {}
+      internalPlanNameFilterRef.current.forEach((p) => (internalPlanNameIdsMap[p.value] = p.value))
+      newFilters.internalPlanNameIds = initializeFilters('internalPlanNameIds', Number, internalPlanNameIdsMap).internalPlanNameIds
     }
 
     if (planType != null) {
@@ -452,6 +494,10 @@ const Index = () => {
       ? searchParams.delete('planIds')
       : searchParams.set('planIds', filters.planIds.join('-'))
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    filters.internalPlanNameIds == null
+      ? searchParams.delete('internalPlanNameIds')
+      : searchParams.set('internalPlanNameIds', filters.internalPlanNameIds.join('-'))
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     filters.status == null
       ? searchParams.delete('status')
       : searchParams.set('status', filters.status.join('-'))
@@ -465,12 +511,22 @@ const Index = () => {
 
   const normalizeSearchTerms = () => {
     const searchTerm = JSON.parse(JSON.stringify(form.getFieldsValue()))
+    
+    // Handle email separately to avoid being deleted by the cleanup logic
+    const email = form.getFieldValue('email')
+    if (email && email.trim() !== '') {
+      searchTerm.email = email.trim()
+    }
+    
+    // Clean up empty values (but preserve email if it was set above)
     Object.keys(searchTerm).forEach(
       (k) =>
+        k !== 'email' && // Don't delete email field
         (searchTerm[k] == undefined ||
           (typeof searchTerm[k] == 'string' && searchTerm[k].trim() == '')) &&
         delete searchTerm[k]
     )
+    
     const start = form.getFieldValue('createTimeStart')
     const end = form.getFieldValue('createTimeEnd')
     if (start != null) {
@@ -513,7 +569,7 @@ const Index = () => {
     return searchTerm
   }
 
-  const clearFilters = () => setFilters({ status: null, planIds: null, planType: null })
+  const clearFilters = () => setFilters({ status: null, planIds: null, internalPlanNameIds: null, planType: null })
 
   const goSearch = () => {
     if (page == 0) {
@@ -700,7 +756,7 @@ const Search = ({
                 Clear
               </Button>
               <Button
-                onClick={form.submit}
+                htmlType="submit"
                 type="primary"
                 loading={searching}
                 disabled={searching || exporting}
@@ -736,7 +792,6 @@ const Search = ({
             <Form.Item name="amountStart" noStyle={true}>
               <Input
                 prefix={currencySymbol ? `from ${currencySymbol}` : ''}
-                onPressEnter={form.submit}
               />
             </Form.Item>
           </Col>
@@ -744,7 +799,6 @@ const Search = ({
             <Form.Item name="amountEnd" noStyle={true}>
               <Input
                 prefix={currencySymbol ? `to ${currencySymbol}` : ''}
-                onPressEnter={form.submit}
               />
             </Form.Item>
           </Col>
@@ -758,6 +812,16 @@ const Search = ({
               />
             </Form.Item>
           </Col> */}
+        </Row>
+        <Row className="flex items-center mt-3" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
+            Email
+          </Col>
+          <Col span={8}>
+            <Form.Item name="email" noStyle>
+              <Input placeholder="Search by email" />
+            </Form.Item>
+          </Col>
         </Row>
       </Form>
     </div>
