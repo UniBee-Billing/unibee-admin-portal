@@ -98,12 +98,28 @@ const Index = () => {
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
   const internalPlanNameFilterRef = useRef<{ value: number; text: string }[]>([])
 
+  // Combine planIds and internalPlanNameIds into a single planIds array for API requests
+  const buildApiFilters = (curFilters: TFilters) => {
+    const { planIds, internalPlanNameIds, ...restFilters } = curFilters
+    let mergedPlanIds: number[] | null = null
+    if (planIds != null) {
+      mergedPlanIds = [...planIds]
+    }
+    if (internalPlanNameIds != null) {
+      mergedPlanIds = mergedPlanIds == null ? [...internalPlanNameIds] : [...new Set([...mergedPlanIds, ...internalPlanNameIds])]
+    }
+    return {
+      ...restFilters,
+      ...(mergedPlanIds != null && mergedPlanIds.length > 0 ? { planIds: mergedPlanIds } : {})
+    }
+  }
+
   const exportData = async () => {
     let payload = normalizeSearchTerms()
     if (null == payload) {
       return
     }
-    payload = { ...payload, ...filters }
+    payload = { ...payload, ...buildApiFilters(filters) }
 
     setExporting(true)
     const [_, err] = await exportDataReq({
@@ -376,7 +392,7 @@ const Index = () => {
       {
         page: page as number,
         count: PAGE_SIZE,
-        ...filters,
+        ...buildApiFilters(filters),
         ...searchTerm
       },
       fetchData
