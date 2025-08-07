@@ -233,7 +233,7 @@ const Index = () => {
       filterSearch: (input, record) =>
         String(record.text).toLowerCase().includes(input.toLowerCase()),
       width: 140,
-      onFilter: (value, record) => record.plan?.id === value,
+      // onFilter: (value, record) => record.plan?.id === value,
       render: (_, sub) => (
         <div className="w-36 overflow-hidden whitespace-nowrap">
           {sub.plan?.internalName != undefined && (
