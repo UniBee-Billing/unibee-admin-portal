@@ -18,7 +18,7 @@ import {
   TMerchantInfo,
   TRole
 } from '../shared.types'
-import { useMerchantInfoStore, useSessionStore } from '../stores'
+import { useMerchantInfoStore, useSessionStore, useProductListStore } from '../stores'
 import { serializeSearchParams } from '../utils/query'
 import { analyticsRequest, request } from './client'
 
@@ -376,6 +376,14 @@ export const getPlanList = async (
   refreshCb?: () => void
 ) => {
   try {
+    // If caller does not provide productIds, default to cached product ids
+    if (body.productIds == null) {
+      const { list } = useProductListStore.getState()
+      const cachedIds = list.map((p) => p.id)
+      if (cachedIds.length > 0) {
+        body = { ...body, productIds: cachedIds }
+      }
+    }
     const res = await request.post('/merchant/plan/list', body)
     handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
@@ -434,11 +442,11 @@ export const getPlanDetailWithMore = async (
       type: [PlanType.ADD_ON, PlanType.ONE_TIME_ADD_ON],
       status: [PlanStatus.ACTIVE],
       page: 0,
-      count: 150
+      count: 500
     }),
     getMetricsListReq({
       page: 0,
-      count: 150
+      count: 500
     }),
     getProductListReq({})
   ])
@@ -641,12 +649,21 @@ type TSubListReq = {
   amountStart?: number
   amountEnd?: number
   planIds?: number[]
+  productIds?: number[]
   createTimeStart?: number
   createTimeEnd?: number
   email?: string
 } & PagedReq
 export const getSublist = async (body: TSubListReq, refreshCb: () => void) => {
   try {
+    // Auto-fill productIds from cache when not provided
+    if (body.productIds == null) {
+      const { list } = useProductListStore.getState()
+      const cachedIds = list.map((p) => p.id)
+      if (cachedIds.length > 0) {
+        body = { ...body, productIds: cachedIds }
+      }
+    }
     const res = await request.post(`/merchant/subscription/list`, body)
     handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
@@ -1428,7 +1445,7 @@ export const getDiscountCodeDetailWithMore = async (
       type: [PlanType.MAIN],
       status: [PlanStatus.ACTIVE],
       page: 0,
-      count: 150
+      count: 500
     })
   ])
 
@@ -2280,6 +2297,14 @@ export const getProductListReq = async ({
       page: page ?? 0
     })
     handleStatusCode(res.data.code, refreshCb)
+    // Cache product list ids for subsequent plan list queries
+    const products = res?.data?.data?.products ?? []
+    try {
+      const store = useProductListStore.getState()
+      store.setProductList({ list: products })
+    } catch (_) {
+      // noop if store is unavailable during certain execution contexts
+    }
     return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')

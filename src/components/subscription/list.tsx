@@ -440,7 +440,7 @@ const Index = () => {
           PlanStatus.HARD_ARCHIVED
         ],
         page: page,
-        count: 150
+        count: 500
       },
       fetchPlan
     )
