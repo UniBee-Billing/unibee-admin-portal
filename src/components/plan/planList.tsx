@@ -182,7 +182,7 @@ const Index = ({
     const [planList, err] = await getPlanList({
       productIds: [productId],
       page: 0,
-      count: 150,
+      count: 500,
       searchKey: filters.searchKey || '',
       // status: [
       //   PlanStatus.ACTIVE,
