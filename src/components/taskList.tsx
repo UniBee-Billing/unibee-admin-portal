@@ -185,7 +185,7 @@ const TaskItem = ({ t }: { t: AppTask }) => {
     downloadStaticFile(url, buildFileName())
   }
   return (
-    <div style={{ height: '50px' }}>
+    <div style={{ height: '70px' }}>
       <Row style={rowStyle}>
         <Col span={3}>{t.id}</Col>
         <Col span={3} className="font-bold text-gray-500">
@@ -232,6 +232,18 @@ const TaskItem = ({ t }: { t: AppTask }) => {
         <Col span={6}>
           {t.finishTime == 0 ? '―' : formatDate(t.finishTime, true)}
         </Col>
+      </Row>
+
+      <Row style={rowStyle}>
+        <Col span={3}></Col>
+        <Col span={3} className="font-bold text-gray-500">
+          Success
+        </Col>
+        <Col span={8}>
+          {(t as any).successCount !== undefined ? (t as any).successCount : '―'}
+        </Col>
+        <Col span={2}></Col>
+        <Col span={6}></Col>
       </Row>
     </div>
   )
