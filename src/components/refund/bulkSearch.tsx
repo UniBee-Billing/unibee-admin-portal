@@ -680,12 +680,12 @@ const BulkSearch: React.FC = () => {
             <TextArea
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Please enter email addresses, one per line&#10;Example:&#10;user1@example.com&#10;user2@example.com"
+              placeholder="Paste or type email addresses separated by line breaks or commas.&#10;Examples:&#10;user1@example.com, user2@example.com&#10;user3@example.com&#10;user4@example.com"
               style={{ height: 160, resize: 'none' }}
               className="mb-2"
             />
             <div className="text-sm text-gray-500 mb-4">
-              Support pasting multiple emails, one per line
+              Support multiple emails, separated by line breaks or commas
             </div>
             <div className="flex justify-end">
               <Button 
