@@ -357,7 +357,22 @@ const BulkSearch: React.FC = () => {
       const reader = new FileReader()
       reader.onload = (e) => {
         const text = e.target?.result as string
-        const emails = text.split('\n').map(line => line.trim()).filter(line => line && line.includes('@'))
+        // from csv file, extract emails, deduplicate and preserve order
+        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
+        const matches = text.match(emailRegex) || []
+        const seen = new Set<string>()
+        const emails: string[] = []
+        for (const raw of matches) {
+          const email = raw.trim()
+          if (email && !seen.has(email)) {
+            seen.add(email)
+            emails.push(email)
+          }
+        }
+        if (emails.length === 0) {
+          message.warning('No valid email addresses found in CSV')
+          return
+        }
         setEmailInput(emails.join('\n'))
         message.success(`Loaded ${emails.length} emails from CSV`)
       }
