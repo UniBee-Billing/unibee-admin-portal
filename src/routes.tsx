@@ -20,6 +20,7 @@ import PlanDetail from './components/plan/detail/index'
 import { ReportPage } from './components/report'
 import Settings from './components/settings/index'
 import WebhookLogs from './components/settings/webHooks/webhookLogs'
+import RefundModule from './components/refund'
 import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
 import CustomerDetail from './components/user/detail'
@@ -186,6 +187,11 @@ export const APP_ROUTES: RouteObject[] = [
         element: <PaymentDetail />
       }
     ]
+  },
+  {
+    id: 'refund',
+    path: 'refund',
+    element: <RefundModule />
   },
   {
     id: 'promo-credit',
