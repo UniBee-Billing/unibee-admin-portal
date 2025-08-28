@@ -34,6 +34,24 @@ import dayjs from 'dayjs'
 const { RangePicker } = DatePicker
 const { TextArea } = Input
 
+// format price display, format: $299.00 USD, same as refundList.tsx
+const formatPriceDisplay = (amount: number, currency: string) => {
+  const appConfigStore = useAppConfigStore.getState()
+  const currencyInfo = appConfigStore.supportCurrency.find(c => c.Currency === currency)
+
+  if (!currencyInfo) {
+    return `${currency} ${Math.abs(amount).toFixed(2)}`
+  }
+
+  const symbol = currencyInfo.Symbol
+  const formattedAmount = Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Math.abs(amount) / currencyInfo.Scale)
+
+  return `${symbol}${formattedAmount} ${currency}`
+}
+
 const BulkSearch: React.FC = () => {
   const [emailInput, setEmailInput] = useState('')
   const [dateRange, setDateRange] = useState<[string, string] | null>(null)
@@ -506,7 +524,7 @@ const BulkSearch: React.FC = () => {
       render: (_, record: RefundItem) => (
         <div className="min-w-0">
           <div className="font-medium text-gary-600 truncate-text">
-            ${record.refundAmount.toFixed(2)} {record.currency}
+            {formatPriceDisplay(record.refundAmount, record.currency)}
           </div>
         </div>
       )
