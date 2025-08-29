@@ -97,17 +97,39 @@ const Index = () => {
   } as TFilters)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
   const internalPlanNameFilterRef = useRef<{ value: number; text: string }[]>([])
+  const allPlansRef = useRef<IPlan[]>([]) // Store all plans data for planType filtering
 
   // Combine planIds and internalPlanNameIds into a single planIds array for API requests
   const buildApiFilters = (curFilters: TFilters) => {
-    const { planIds, internalPlanNameIds, ...restFilters } = curFilters
+    const { planIds, internalPlanNameIds, planType, ...restFilters } = curFilters
     let mergedPlanIds: number[] | null = null
+    
+    // Handle planIds filter
     if (planIds != null) {
       mergedPlanIds = [...planIds]
     }
+    
+    // Handle internalPlanNameIds filter
     if (internalPlanNameIds != null) {
       mergedPlanIds = mergedPlanIds == null ? [...internalPlanNameIds] : [...new Set([...mergedPlanIds, ...internalPlanNameIds])]
     }
+    
+    // Handle planType filter by converting to planIds
+    if (planType != null && planType.length > 0) {
+      const planTypeFilteredIds = allPlansRef.current
+        .filter(p => p.plan && planType.includes(p.plan.type))
+        .map(p => p.plan!.id)
+      
+      if (planTypeFilteredIds.length > 0) {
+        mergedPlanIds = mergedPlanIds == null 
+          ? planTypeFilteredIds 
+          : mergedPlanIds.filter(id => planTypeFilteredIds.includes(id))
+      } else {
+        // If no plans match the planType filter, return empty array to get no results
+        mergedPlanIds = []
+      }
+    }
+    
     return {
       ...restFilters,
       ...(mergedPlanIds != null && mergedPlanIds.length > 0 ? { planIds: mergedPlanIds } : {})
@@ -184,7 +206,7 @@ const Index = () => {
               whiteSpace: 'nowrap'
             }}
           >
-            <a 
+            <a
               href={`${location.origin}${BASE_PATH}subscription/${id}`}
               onClick={(e) => {
                 // Only navigate using react-router for left clicks without modifier keys
@@ -267,7 +289,6 @@ const Index = () => {
       width: 160,
       filters: PLAN_TYPE_FILTER,
       filteredValue: filters.planType,
-      onFilter: (value, record) => record.plan?.type === value,
       render: (_, sub) => (
         <span className="whitespace-nowrap">
           {sub.plan?.type === PlanType.ONE_TIME_ADD_ON ? 'One-time Payment' : 'Main Plan'}
@@ -372,7 +393,7 @@ const Index = () => {
         <Space
           size="small"
           className="invoice-action-btn-wrapper"
-          // style={{ width: '170px' }}
+        // style={{ width: '170px' }}
         >
           <Tooltip title="Detail">
             <Button icon={<ProfileOutlined />} style={{ border: 'unset' }} />
@@ -418,9 +439,9 @@ const Index = () => {
             s.addons == null
               ? []
               : s.addons.map((a) => ({
-                  ...a.addonPlan,
-                  quantity: a.quantity
-                })),
+                ...a.addonPlan,
+                quantity: a.quantity
+              })),
           user: s.user
         }
       }
@@ -450,23 +471,27 @@ const Index = () => {
       return
     }
     const { plans } = planList
+    
+    // Store all plans data for planType filtering
+    allPlansRef.current = plans || []
+    
     planFilterRef.current =
       plans == null
         ? []
         : plans.map((p: IPlan) => ({
-            value: p.plan?.id,
-            text: p.plan?.planName
-          }))
-          
+          value: p.plan?.id,
+          text: p.plan?.planName
+        }))
+
     internalPlanNameFilterRef.current =
       plans == null
         ? []
         : plans
-            .filter((p: IPlan) => p.plan?.internalName != null && p.plan?.internalName.trim() !== '')
-            .map((p: IPlan) => ({
-              value: p.plan?.id,
-              text: p.plan?.internalName || '(Empty)'
-            }))
+          .filter((p: IPlan) => p.plan?.internalName != null && p.plan?.internalName.trim() !== '')
+          .map((p: IPlan) => ({
+            value: p.plan?.id,
+            text: p.plan?.internalName || '(Empty)'
+          }))
 
     // to initialize the planIds filter.
     // planIds filter on URL is a string like planIds=1-2-3, or it could be null.
@@ -482,7 +507,7 @@ const Index = () => {
       planFilterRef.current.forEach((p) => (planIdsMap[p.value] = p.value))
       newFilters.planIds = initializeFilters('planIds', Number, planIdsMap).planIds
     }
-    
+
     if (internalPlanNameIds != null && internalPlanNameFilterRef.current.length > 0) {
       const internalPlanNameIdsMap: { [key: number]: number } = {}
       internalPlanNameFilterRef.current.forEach((p) => (internalPlanNameIdsMap[p.value] = p.value))
@@ -527,13 +552,13 @@ const Index = () => {
 
   const normalizeSearchTerms = () => {
     const searchTerm = JSON.parse(JSON.stringify(form.getFieldsValue()))
-    
+
     // Handle email separately to avoid being deleted by the cleanup logic
     const email = form.getFieldValue('email')
     if (email && email.trim() !== '') {
       searchTerm.email = email.trim()
     }
-    
+
     // Clean up empty values (but preserve email if it was set above)
     Object.keys(searchTerm).forEach(
       (k) =>
@@ -542,7 +567,7 @@ const Index = () => {
           (typeof searchTerm[k] == 'string' && searchTerm[k].trim() == '')) &&
         delete searchTerm[k]
     )
-    
+
     const start = form.getFieldValue('createTimeStart')
     const end = form.getFieldValue('createTimeEnd')
     if (start != null) {
