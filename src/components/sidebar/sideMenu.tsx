@@ -10,6 +10,7 @@ import PromoCreditSvg from '@/assets/navIcons/promoCredit.svg?react'
 import ReportSvg from '@/assets/navIcons/report.svg?react'
 import SubscriptionSvg from '@/assets/navIcons/subscription.svg?react'
 import UserListSvg from '@/assets/navIcons/userList.svg?react'
+import RefundSvg from '@/assets/refund.svg?react'
 import { APP_ROUTES } from '@/routes'
 import { useMerchantMemberProfileStore, usePermissionStore } from '@/stores'
 import { basePathName, trimEnvBasePath } from '@/utils'
@@ -85,6 +86,11 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     label: 'Transaction',
     key: 'transaction',
     icon: <DollarOutlined />
+  },
+  {
+    label: 'Refund',
+    key: 'refund',
+    icon: <Icon component={RefundSvg} />
   },
   {
     label: 'Promo Credit',
