@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { 
-  Form, 
-  Input, 
-  DatePicker, 
-  Select, 
-  Button, 
+import {
+  Form,
+  Input,
+  DatePicker,
+  Select,
+  Button,
   Card,
   message,
   Table,
@@ -17,13 +17,14 @@ import { SearchOutlined, ClearOutlined, FilterOutlined, CopyOutlined, FileTextOu
 import { ExportButton } from '../table/exportButton'
 import RefundStatusTag from './refundStatusTag'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import { 
-  CreditNote, 
+import {
+  CreditNote,
   CreditNoteListRequest
 } from './types'
-import { 
-  getCreditNoteListReq, 
-  getPlanList
+import {
+  getCreditNoteListReq,
+  getPlanList,
+  getPaymentGatewayListReq
 } from '../../requests'
 import { exportDataReq } from '../../requests'
 import { useAppConfigStore } from '../../stores'
@@ -32,7 +33,7 @@ import { IPlan, PlanStatus } from '../../shared.types'
 
 const { RangePicker } = DatePicker
 
-// 添加响应式表格样式
+// Add responsive table styles
 const tableStyles = `
   .responsive-table-container {
     overflow-x: auto;
@@ -45,7 +46,7 @@ const tableStyles = `
     border-radius: 8px;
   }
   
-  /* 表头样式 - 统一灰色背景，左对齐 */
+  /* Table header styles - unified gray background, left aligned */
   .responsive-table-container .ant-table-thead > tr > th {
     white-space: nowrap;
     padding: 12px 8px;
@@ -57,7 +58,7 @@ const tableStyles = `
     text-align-last: left !important;
   }
   
-  /* 表格内容样式 - 统一白色背景，左对齐 */
+  /* Table content styles - unified white background, left aligned */
   .responsive-table-container .ant-table-tbody > tr > td {
     padding: 12px 8px;
     vertical-align: top;
@@ -279,30 +280,30 @@ const tableStyles = `
   }
 `
 
-// 定义过滤器选项类型
+// Define filter option types
 interface FilterOption {
   text: string
   label: string
   value: string | number
 }
 
-// 格式化价格显示，格式：$299.00 USD
+// Format price display, format: $299.00 USD
 const formatPriceDisplay = (amount: number, currency: string) => {
   const appConfigStore = useAppConfigStore.getState()
   const currencyInfo = appConfigStore.supportCurrency.find(c => c.Currency === currency)
-  
+
   if (!currencyInfo) {
     return `${currency} ${Math.abs(amount).toFixed(2)}`
   }
-  
-  // 获取货币符号
+
+  // Get currency symbol
   const symbol = currencyInfo.Symbol
-  // 格式化金额（考虑 Scale），使用绝对值去除负号
+  // Format amount (considering Scale), use absolute value to remove negative sign
   const formattedAmount = Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(Math.abs(amount) / currencyInfo.Scale)
-  
+
   return `${symbol}${formattedAmount} ${currency}`
 }
 
@@ -319,11 +320,13 @@ const RefundList: React.FC = () => {
   const [planOptions, setPlanOptions] = useState<FilterOption[]>([])
   const [planLoading, setPlanLoading] = useState(false)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
-  
-  // 网关筛选选项
+
+  // Gateway filter options
   const [gatewayOptions, setGatewayOptions] = useState<FilterOption[]>([])
 
-  // 状态选项
+
+
+  // Status options
   const statusOptions: FilterOption[] = [
     { text: 'Processing', label: 'Processing', value: 2 },
     { text: 'Completed', label: 'Completed', value: 3 },
@@ -331,44 +334,27 @@ const RefundList: React.FC = () => {
     { text: 'Cancelled', label: 'Cancelled', value: 5 }
   ]
 
-  // 退款方式选项 - 将根据数据动态生成
-
-  // 获取所有可能的网关选项
+  // Fetch all available payment gateways for filter options
   const fetchAllGateways = async () => {
     try {
-      // 获取所有数据来生成完整的网关选项列表
-      const requestData: CreditNoteListRequest = {
-        page: 0,
-        count: 100, // 获取足够多的数据来覆盖所有网关
-        sortField: 'gmt_modify',
-        sortType: 'desc'
-      }
-      
-      const [result, error] = await getCreditNoteListReq(requestData)
-      
+      const [gateways, error] = await getPaymentGatewayListReq()
+
       if (error) {
-        console.error('Error fetching all gateways:', error)
+        console.error('Error fetching gateways:', error)
         return
       }
-      
-      if (result && result.creditNotes) {
-        const gatewayMap = new Map<number, string>()
-        result.creditNotes.forEach((creditNote: CreditNote) => {
-          if (creditNote.gateway?.gatewayId && creditNote.gateway?.displayName) {
-            gatewayMap.set(creditNote.gateway.gatewayId, creditNote.gateway.displayName)
-          }
-        })
-        
-        const gatewayOptionsArray: FilterOption[] = Array.from(gatewayMap).map(([id, name]) => ({
-          text: name,
-          label: name,
-          value: id
+
+      if (gateways && Array.isArray(gateways)) {
+        const gatewayOptionsArray: FilterOption[] = gateways.map((gateway: any) => ({
+          text: gateway.displayName || gateway.name,
+          label: gateway.displayName || gateway.name,
+          value: gateway.gatewayId
         }))
-        
+
         setGatewayOptions(gatewayOptionsArray)
       }
     } catch (error) {
-      console.error('Error fetching all gateways:', error)
+      console.error('Error fetching gateways:', error)
     }
   }
 
@@ -376,12 +362,12 @@ const RefundList: React.FC = () => {
     fetchCreditNoteList()
   }, [currentPage, pageSize, filters])
 
-  // 获取计划列表信息
+  // Fetch plan list information
   useEffect(() => {
     fetchPlan()
   }, [])
 
-  // 获取所有网关选项
+  // Fetch all gateway options
   useEffect(() => {
     fetchAllGateways()
   }, [])
@@ -401,7 +387,7 @@ const RefundList: React.FC = () => {
         },
         fetchPlan
       )
-      
+
       if (err) {
         console.error('Error fetching plan list:', err)
         setPlanOptions([
@@ -409,23 +395,23 @@ const RefundList: React.FC = () => {
         ])
         return
       }
-      
+
       if (planList && planList.plans) {
-        // 为 Plan Name 列生成筛选选项
+        // Generate filter options for Plan Name column
         planFilterRef.current =
           planList.plans == null
             ? []
             : planList.plans.map((p: IPlan) => ({
-                value: p.plan?.id,
-                text: p.plan?.planName
-              }))
-        
+              value: p.plan?.id,
+              text: p.plan?.planName
+            }))
+
         const planOptionsArray: FilterOption[] = planFilterRef.current.map((p) => ({
           text: p.text,
           label: p.text,
           value: p.value
         }))
-        
+
         setPlanOptions(planOptionsArray)
       } else {
         setPlanOptions([
@@ -448,24 +434,26 @@ const RefundList: React.FC = () => {
     try {
       const requestData: CreditNoteListRequest = {
         ...filters,
-        page: currentPage - 1, // API从0开始
+        page: currentPage - 1, // API starts from 0
         count: pageSize,
         sortField: filters.sortField || 'gmt_modify',
         sortType: filters.sortType || 'desc'
       }
 
-      // 调用API
+
+
+      // Call API
       const [result, error] = await getCreditNoteListReq(requestData)
-      
+
       if (error) {
         throw error
       }
-      
+
       if (result) {
         setCreditNoteList(result.creditNotes)
         setTotal(result.total)
-        
-        // 动态生成网关筛选选项的逻辑已移至fetchAllGateways函数
+
+        // Gateway filter options are fetched through dedicated API
       }
     } catch (error) {
       console.error('Error fetching credit note list:', error)
@@ -477,13 +465,13 @@ const RefundList: React.FC = () => {
 
   const handleSearch = async (values: any) => {
     const newFilters: CreditNoteListRequest = {}
-    
+
     if (values.email) newFilters.searchKey = values.email
     if (values.planIds && values.planIds.length > 0) newFilters.planIds = values.planIds
     if (values.dateRange) {
-      // 开始时间设置为当天00:00:00
+      // Set start time to 00:00:00 of the day
       newFilters.createTimeStart = values.dateRange[0].startOf('day').unix()
-      // 结束时间设置为当天23:59:59，确保能筛选到完整的一天
+      // Set end time to 23:59:59 of the day to ensure full day filtering
       newFilters.createTimeEnd = values.dateRange[1].endOf('day').unix()
     }
 
@@ -495,9 +483,9 @@ const RefundList: React.FC = () => {
     form.resetFields()
     setFilters({})
     setCurrentPage(1)
-    // 清除表格列的筛选器状态
+    // Clear table column filter state
     setTableFilters({})
-    // 网关筛选选项现在是静态的，不需要重置
+    // Gateway filter options are now static, no need to reset
   }
 
   const appConfigStore = useAppConfigStore()
@@ -507,7 +495,7 @@ const RefundList: React.FC = () => {
       const exportParams = {
         ...filters,
         page: 0,
-        count: total, // 导出所有数据
+        count: total, // Export all data
         sortField: filters.sortField || 'gmt_modify',
         sortType: filters.sortType || 'desc'
       }
@@ -517,11 +505,11 @@ const RefundList: React.FC = () => {
         payload: exportParams,
         format: type
       })
-      
+
       if (err) {
         throw err
       }
-      
+
       message.success(
         'Credit note list is being exported via credit note export, please check task list for progress.'
       )
@@ -558,10 +546,10 @@ const RefundList: React.FC = () => {
         return (
           <div className="min-w-0 flex items-center gap-2">
             <Tooltip title="Click to view invoice PDF">
-              <span 
+              <span
                 className="font-medium text-blue-600 truncate-text block cursor-pointer hover:text-blue-800"
                 onClick={() => {
-                  // 跳转到 invoice 页面，这里需要根据实际路由调整
+                  // Navigate to invoice page, adjust according to actual routing
                   window.open(`/invoice/${record.invoiceId}`, '_blank')
                 }}
               >
@@ -570,7 +558,7 @@ const RefundList: React.FC = () => {
               </span>
             </Tooltip>
             <Tooltip title="Copy Invoice ID">
-              <CopyOutlined 
+              <CopyOutlined
                 className="text-gray-400 hover:text-gray-600 cursor-pointer"
                 onClick={() => {
                   navigator.clipboard.writeText(invoiceId)
@@ -593,13 +581,13 @@ const RefundList: React.FC = () => {
       render: (_, record: CreditNote) => {
         let email = 'N/A'
         let userId = null
-        
-        // 尝试从userSnapshot获取邮箱和用户ID
+
+        // Try to get email and user ID from userSnapshot
         if (record.userSnapshot?.email) {
           email = record.userSnapshot.email
           userId = record.userSnapshot.id
         }
-        // 如果userSnapshot中没有，尝试从originalPaymentInvoice.data中解析
+        // If not in userSnapshot, try to parse from originalPaymentInvoice.data
         else if (record.originalPaymentInvoice?.data) {
           try {
             const userData = JSON.parse(record.originalPaymentInvoice.data)
@@ -613,20 +601,20 @@ const RefundList: React.FC = () => {
             console.warn('Failed to parse user data:', e)
           }
         }
-        
-        // 如果还是没有userId，使用record中的userId
+
+        // If still no userId, use userId from record
         if (!userId && record.userId) {
           userId = record.userId
         }
-        
+
         return (
           <div className="min-w-0">
             <Tooltip title="Click to view user details">
-              <span 
+              <span
                 className="font-medium text-blue-600 truncate-text block cursor-pointer hover:text-blue-800"
                 onClick={() => {
                   if (userId) {
-                    // 跳转到 user detail 页面，这里需要根据实际路由调整
+                    // Navigate to user detail page, adjust according to actual routing
                     window.open(`/user/${userId}`, '_blank')
                   } else {
                     message.warning('User ID not available')
@@ -671,7 +659,7 @@ const RefundList: React.FC = () => {
       ellipsis: true,
       align: 'left',
       render: (_, record: CreditNote) => {
-        // 从订阅信息中获取周期信息
+        // Get cycle information from subscription info
         const plan = record.planSnapshot?.plan
         if (plan) {
           const intervalCount = plan.intervalCount || 1
@@ -726,7 +714,7 @@ const RefundList: React.FC = () => {
       ellipsis: true,
       align: 'left',
       render: (_, record: CreditNote) => {
-        // 从支付网关信息中获取退款方式
+        // Get refund method from payment gateway information
         const gatewayName = record.gateway?.displayName || 'N/A'
         return (
           <div>
@@ -741,9 +729,12 @@ const RefundList: React.FC = () => {
       filters: gatewayOptions,
       filteredValue: tableFilters.refundMethod || null,
       filterSearch: (input, record) =>
-        String(record.text).toLowerCase().includes(input.toLowerCase())
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
+      onFilter: (value, record) => {
+        return record.gateway?.gatewayId === value
+      }
     },
-   
+
     {
       title: 'Status',
       dataIndex: 'status',
@@ -753,7 +744,7 @@ const RefundList: React.FC = () => {
       ellipsis: true,
       align: 'left',
       render: (status: number) => {
-        // 将数字状态转换为字符串状态
+        // Convert numeric status to string status
         let statusString: 'completed' | 'partial' | 'failed' | 'processing' | 'cancelled'
         switch (status) {
           case 2:
@@ -766,7 +757,7 @@ const RefundList: React.FC = () => {
             statusString = 'failed'
             break
           case 5:
-            statusString = 'cancelled' // 取消状态映射为取消
+            statusString = 'cancelled' // Cancelled status maps to cancelled
             break
           default:
             statusString = 'processing'
@@ -789,18 +780,18 @@ const RefundList: React.FC = () => {
       render: (message: string, record: CreditNote) => {
         const refundReason = message || record.message || 'N/A'
         return (
-          <Tooltip 
+          <Tooltip
             title={refundReason}
             placement="topLeft"
-            overlayStyle={{ 
-              maxWidth: '600px', 
+            overlayStyle={{
+              maxWidth: '600px',
               wordBreak: 'break-word',
               fontSize: '13px',
               lineHeight: '1.5',
               padding: '12px'
             }}
           >
-            <span 
+            <span
               style={{
                 cursor: 'pointer',
                 fontSize: '13px',
@@ -819,7 +810,7 @@ const RefundList: React.FC = () => {
     <div className="space-y-6">
       {/* 注入响应式表格样式 */}
       <style dangerouslySetInnerHTML={{ __html: tableStyles }} />
-      
+
       {/* 筛选条件 */}
       <Card className="shadow-sm">
         <Form
@@ -830,14 +821,14 @@ const RefundList: React.FC = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Form.Item label="Email" name="email" className="mb-0">
-              <Input 
-                placeholder="Select email" 
+              <Input
+                placeholder="Select email"
                 suffix={<SearchOutlined className="text-gray-400" />}
               />
             </Form.Item>
-            
+
             <Form.Item label="Date Range" name="dateRange" className="mb-0">
-              <RangePicker 
+              <RangePicker
                 className="w-full"
                 placeholder={['Start Date', 'End Date']}
               />
@@ -860,18 +851,18 @@ const RefundList: React.FC = () => {
               />
             </Form.Item>
           </div>
-          
+
           <div className="flex justify-end space-x-3">
-            <Button 
-              icon={<ClearOutlined />} 
+            <Button
+              icon={<ClearOutlined />}
               onClick={handleClear}
               className="px-6"
             >
               Clear
             </Button>
-            <Button 
-              type="primary" 
-              icon={<SearchOutlined />} 
+            <Button
+              type="primary"
+              icon={<SearchOutlined />}
               htmlType="submit"
               className="px-6"
             >
@@ -908,7 +899,7 @@ const RefundList: React.FC = () => {
             dataSource={creditNoteList}
             loading={loading}
             rowKey="id"
-            scroll={{ 
+            scroll={{
               x: 1350,
               y: 'calc(100vh - 400px)'
             }}
@@ -923,55 +914,61 @@ const RefundList: React.FC = () => {
               )
             }}
             onChange={((pagination, filters) => {
-              // 处理分页变化
+              // Handle pagination changes
               if (pagination.current) {
                 setCurrentPage(pagination.current)
               }
               if (pagination.pageSize) {
                 setPageSize(pagination.pageSize)
               }
-              
-              // 处理筛选器变化
+
+              // Handle filter changes
               setTableFilters(filters)
-              
-              // 处理 planName 筛选器
+
+              // Handle planName filter
               if (filters.planName && filters.planName.length > 0) {
+                setCurrentPage(1) // Reset to first page when filter changes
                 setFilters(prev => ({
                   ...prev,
                   planIds: filters.planName as number[]
                 }))
               } else {
-                // 当 planName 筛选器被清空时，也要清除 filters 中的 planIds
+                // Clear planIds in filters when planName filter is cleared
+                setCurrentPage(1) // Reset to first page when filter is cleared
                 setFilters(prev => {
                   const newFilters = { ...prev }
                   delete newFilters.planIds
                   return newFilters
                 })
               }
-              
-              // 处理 status 筛选器
+
+              // Handle status filter
               if (filters.status && filters.status.length > 0) {
+                setCurrentPage(1) // Reset to first page when filter changes
                 setFilters(prev => ({
                   ...prev,
                   status: filters.status as number[]
                 }))
               } else {
-                // 当 status 筛选器被清空时，也要清除 filters 中的 status
+                // Clear status in filters when status filter is cleared
+                setCurrentPage(1) // Reset to first page when filter is cleared
                 setFilters(prev => {
                   const newFilters = { ...prev }
                   delete newFilters.status
                   return newFilters
                 })
               }
-              
-              // 处理 refundMethod 筛选器
+
+              // Handle refund method filter
               if (filters.refundMethod && filters.refundMethod.length > 0) {
+                setCurrentPage(1) // Reset to first page when filter changes
                 setFilters(prev => ({
                   ...prev,
                   gatewayIds: filters.refundMethod as number[]
                 }))
               } else {
-                // 当 refundMethod 筛选器被清空时，也要清除 filters 中的 gatewayIds
+                // Clear gateway filter when refund method filter is cleared
+                setCurrentPage(1) // Reset to first page when filter is cleared
                 setFilters(prev => {
                   const newFilters = { ...prev }
                   delete newFilters.gatewayIds
@@ -981,7 +978,7 @@ const RefundList: React.FC = () => {
             }) as TableProps<CreditNote>['onChange']}
             pagination={false}
           />
-          
+
           {/* 分页和记录条数 */}
           <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
             <div className="text-gray-600">
