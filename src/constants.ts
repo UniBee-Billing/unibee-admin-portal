@@ -245,57 +245,64 @@ const PERMISSIONS = {
     width: 100,
     permissions: ['access']
   },
-  'promo-credit': {
+  refund: {
     order: 6,
+    group: 'refund',
+    label: 'Refund',
+    width: 100,
+    permissions: ['access']
+  },
+  'promo-credit': {
+    order: 7,
     group: 'promo-credit',
     label: 'Promo credit',
     width: 100,
     permissions: ['access']
   },
   user: {
-    order: 7,
+    order: 8,
     group: 'user',
     label: 'User List',
     width: 100,
     permissions: ['access']
   },
   admin: {
-    order: 8,
+    order: 9,
     group: 'admin',
     label: 'Admin List',
     width: 100,
     permissions: ['access']
   },
   /* analytics: {
-    order: 9,
+    order: 10,
     group: 'analytics',
     label: 'Analytics',
     width: 100,
     permissions: ['access']
   }, */
   report: {
-    order: 10,
+    order: 11,
     group: 'report',
     label: 'Report',
     width: 100,
     permissions: ['access']
   },
   'my-account': {
-    order: 11,
+    order: 12,
     group: 'my-account',
     label: 'My Account',
     width: 100,
     permissions: ['access']
   },
   'activity-logs': {
-    order: 12,
+    order: 13,
     group: 'activity-logs',
     label: 'Activity Logs',
     width: 100,
     permissions: ['access']
   },
   configuration: {
-    order: 13,
+    order: 14,
     group: 'configuration',
     label: 'Configuration',
     width: 140,
