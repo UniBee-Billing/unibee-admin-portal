@@ -515,6 +515,8 @@ const Index = ({
   ]
 
   const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
+    // Reset to first page when filters change
+    onPageChange(1, 100)
     // Store the filters in state
     setFilters(filters as TFilters)
 
