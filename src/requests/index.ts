@@ -702,7 +702,7 @@ export const getSubDetailWithMore = async (
           PlanStatus.HARD_ARCHIVED // on ChangePlan/AssignSub Modal, I still need to get these archived plans.
         ],
         page: 0,
-        count: 200
+        count: 500
       })
     ])
   const err = errSubDetail || errPlanList
