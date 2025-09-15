@@ -377,7 +377,7 @@ const Index = ({
     _sorter,
     _extra
   ) => {
-    // onPageChange(1, PAGE_SIZE)
+    pageChange(1, PAGE_SIZE)
 
     setFilters(filters as TFilters)
   }

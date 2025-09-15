@@ -210,7 +210,7 @@ const Index = () => {
         type: [PlanType.MAIN],
         status: [PlanStatus.ACTIVE],
         page: 0,
-        count: 200
+        count: 500
       },
       fetchPlans
     )
