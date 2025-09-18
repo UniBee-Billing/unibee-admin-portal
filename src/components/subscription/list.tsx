@@ -383,8 +383,8 @@ const Index = () => {
       key: 'externalUserId',
       width: 100,
       render: (_, sub) => (
-        <div className="overflow-hidden whitespace-nowrap text-xs" title={sub.externalUserId}>
-          {sub.externalUserId || ''}
+        <div className="overflow-hidden whitespace-nowrap text-xs" title={sub.user?.externalUserId}>
+          {sub.user?.externalUserId || ''}
         </div>
       )
     },
