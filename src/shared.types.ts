@@ -312,6 +312,7 @@ interface ISubscriptionType {
   planId: number
   productId: number
   userId: number
+  externalUserId?: string
   status: SubscriptionStatus
   firstPaidTime: number
   currentPeriodStart: number

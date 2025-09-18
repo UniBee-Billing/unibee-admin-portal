@@ -202,6 +202,12 @@ const Index = () => {
       )
     },
     {
+      title: 'External User ID',
+      dataIndex: 'externalUserId',
+      key: 'externalUserId',
+      render: (externalUserId) => externalUserId || ''
+    },
+    {
       title: 'Name',
       dataIndex: 'firstName',
       key: 'userName',
@@ -212,6 +218,7 @@ const Index = () => {
       dataIndex: 'email',
       key: 'email'
     },
+    
 
     {
       title: 'Subscription Plan',
@@ -475,6 +482,17 @@ const Search = ({
           <Col span={5}>
             <Form.Item name="email" noStyle={true}>
               <Input onPressEnter={goSearch} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row className="my-3 flex items-center" gutter={[8, 8]}>
+          <Col span={3} className="font-bold text-gray-500">
+            External User ID
+          </Col>
+          <Col span={8}>
+            <Form.Item name="externalUserId" noStyle={true}>
+              <Input onPressEnter={goSearch} placeholder="External User ID" />
             </Form.Item>
           </Col>
         </Row>
