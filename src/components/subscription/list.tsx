@@ -72,6 +72,8 @@ type TFilters = {
   planIds: number[] | null
   internalPlanNameIds: number[] | null
   planType: number[] | null
+  userId?: number | null
+  externalUserId?: string | null
 }
 
 const Index = () => {
@@ -93,7 +95,9 @@ const Index = () => {
     ...initializeFilters('status', Number, SubscriptionStatus),
     planIds: null, // when the page is loading, we don't know how many plans we have, so we set planIds to null, in fetchPlan call, we will initialize this filter.
     internalPlanNameIds: null,
-    planType: null
+    planType: null,
+    userId: null,
+    externalUserId: null
   } as TFilters)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
   const internalPlanNameFilterRef = useRef<{ value: number; text: string }[]>([])
@@ -101,7 +105,7 @@ const Index = () => {
 
   // Combine planIds and internalPlanNameIds into a single planIds array for API requests
   const buildApiFilters = (curFilters: TFilters) => {
-    const { planIds, internalPlanNameIds, planType, ...restFilters } = curFilters
+    const { planIds, internalPlanNameIds, planType, userId, externalUserId, ...restFilters } = curFilters
     let mergedPlanIds: number[] | null = null
     
     // Handle planIds filter
@@ -132,7 +136,9 @@ const Index = () => {
     
     return {
       ...restFilters,
-      ...(mergedPlanIds != null && mergedPlanIds.length > 0 ? { planIds: mergedPlanIds } : {})
+      ...(mergedPlanIds != null && mergedPlanIds.length > 0 ? { planIds: mergedPlanIds } : {}),
+      ...(userId != null ? { userId } : {}),
+      ...(externalUserId != null && externalUserId.trim() !== '' ? { externalUserId } : {})
     }
   }
 
@@ -193,14 +199,16 @@ const Index = () => {
 
   const getColumns = (): ColumnsType<ISubscriptionType> => [
     {
-      title: 'Sub Id',
+      title: 'Sub ID',
       dataIndex: 'subscriptionId',
       key: 'subscriptionId',
+      width: 90,
+      fixed: 'left',
       render: (id) => (
         <Tooltip title={id} overlayClassName="sub-tooltip-wrapper">
           <div
             style={{
-              width: '100px',
+              width: '80px',
               textOverflow: 'ellipsis',
               overflow: 'hidden',
               whiteSpace: 'nowrap'
@@ -230,15 +238,25 @@ const Index = () => {
       filteredValue: filters.planIds,
       filterSearch: (input, record) =>
         String(record.text).toLowerCase().includes(input.toLowerCase()),
-      width: 120,
+      width: 110,
       render: (_, sub) => (
-        <div className="w-28 overflow-hidden whitespace-nowrap">
+        <div className="w-24 overflow-hidden whitespace-nowrap">
           {sub.plan?.planName != undefined && (
-            <LongTextPopover
-              text={sub.plan.planName}
+            <Tooltip 
+              title={
+                <div>
+                  <div><strong>{sub.plan.planName}</strong></div>
+                  {sub.plan.description && (
+                    <div className="mt-1 text-gray-300">{sub.plan.description}</div>
+                  )}
+                </div>
+              }
               placement="topLeft"
-              width="120px"
-            />
+            >
+              <div className="cursor-pointer text-blue-600 hover:text-blue-800">
+                {sub.plan.planName}
+              </div>
+            </Tooltip>
           )}
           <div className="text-xs text-gray-400">
             {`${showAmount(sub.plan?.amount, sub.plan?.currency)}/${formatPlanInterval(sub.plan)}`}
@@ -254,44 +272,29 @@ const Index = () => {
       filteredValue: filters.internalPlanNameIds,
       filterSearch: (input, record) =>
         String(record.text).toLowerCase().includes(input.toLowerCase()),
-      width: 140,
-      // onFilter: (value, record) => record.plan?.id === value,
+      width: 120,
       render: (_, sub) => (
-        <div className="w-36 overflow-hidden whitespace-nowrap">
+        <div className="w-28 overflow-hidden whitespace-nowrap">
           {sub.plan?.internalName != undefined && (
             <LongTextPopover
               text={sub.plan.internalName}
               placement="topLeft"
-              width="140px"
+              width="120px"
             />
           )}
         </div>
       )
     },
     {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      width: 160,
-      render: (_, sub) =>
-        sub.plan?.description != undefined && (
-          <LongTextPopover
-            text={sub.plan.description}
-            placement="topLeft"
-            width="160px"
-          />
-        )
-    },
-    {
       title: 'Plan Type',
       dataIndex: 'planType',
       key: 'planType',
-      width: 160,
+      width: 100,
       filters: PLAN_TYPE_FILTER,
       filteredValue: filters.planType,
       render: (_, sub) => (
-        <span className="whitespace-nowrap">
-          {sub.plan?.type === PlanType.ONE_TIME_ADD_ON ? 'One-time Payment' : 'Main Plan'}
+        <span className="whitespace-nowrap text-xs">
+          {sub.plan?.type === PlanType.ONE_TIME_ADD_ON ? 'One-time' : 'Main'}
         </span>
       )
     },
@@ -331,6 +334,7 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      width: 80,
       render: (_, sub) => SubscriptionStatusTag(sub.status),
       filters: SUB_STATUS_FILTER,
       filteredValue: filters.status
@@ -339,29 +343,63 @@ const Index = () => {
       title: 'Start',
       dataIndex: 'currentPeriodStart',
       key: 'currentPeriodStart',
-      render: (_, sub) => formatDate(sub.currentPeriodStart, true)
+      width: 90,
+      render: (_, sub) => (
+        <span className="text-xs">{formatDate(sub.currentPeriodStart, true)}</span>
+      )
     },
     {
       title: 'End',
       dataIndex: 'currentPeriodEnd',
       key: 'currentPeriodEnd',
-      render: (_, sub) => formatDate(sub.currentPeriodEnd, true)
+      width: 90,
+      render: (_, sub) => (
+        <span className="text-xs">{formatDate(sub.currentPeriodEnd, true)}</span>
+      )
     },
     {
       title: 'User',
       dataIndex: 'userId',
       key: 'userId',
+      width: 80,
       render: (_, sub) => (
-        <span>{`${sub.user != null ? sub.user.firstName + ' ' + sub.user.lastName : ''}`}</span>
+        <div className="overflow-hidden whitespace-nowrap text-xs">
+          {sub.user != null ? `${sub.user.firstName} ${sub.user.lastName}` : ''}
+        </div>
+      )
+    },
+    {
+      title: 'User ID',
+      dataIndex: 'userId',
+      key: 'userIdDisplay',
+      width: 80,
+      render: (_, sub) => (
+        <span className="text-xs">{sub.userId || ''}</span>
+      )
+    },
+    {
+      title: 'External User ID',
+      dataIndex: 'externalUserId',
+      key: 'externalUserId',
+      width: 100,
+      render: (_, sub) => (
+        <div className="overflow-hidden whitespace-nowrap text-xs" title={sub.externalUserId}>
+          {sub.externalUserId || ''}
+        </div>
       )
     },
     {
       title: 'Email',
       dataIndex: 'userEmail',
       key: 'userEmail',
+      width: 180,
       render: (_, sub) =>
         sub.user != null ? (
-          <a href={`mailto:${sub.user.email}`}>{sub.user.email}</a>
+          <div className="overflow-hidden whitespace-nowrap text-xs">
+            <a href={`mailto:${sub.user.email}`} title={sub.user.email}>
+              {sub.user.email}
+            </a>
+          </div>
         ) : null
     },
     {
@@ -387,8 +425,8 @@ const Index = () => {
         </>
       ),
       key: 'action',
-      width: 160,
-      // fixed: 'right',
+      width: 120,
+      fixed: 'right',
       render: (_) => (
         <Space
           size="small"
@@ -559,10 +597,22 @@ const Index = () => {
       searchTerm.email = email.trim()
     }
 
-    // Clean up empty values (but preserve email if it was set above)
+    // Handle userId separately to avoid being deleted by the cleanup logic
+    const userId = form.getFieldValue('userId')
+    if (userId && !isNaN(Number(userId))) {
+      searchTerm.userId = Number(userId)
+    }
+
+    // Handle externalUserId separately to avoid being deleted by the cleanup logic
+    const externalUserId = form.getFieldValue('externalUserId')
+    if (externalUserId && externalUserId.trim() !== '') {
+      searchTerm.externalUserId = externalUserId.trim()
+    }
+
+    // Clean up empty values (but preserve email, userId, externalUserId if they were set above)
     Object.keys(searchTerm).forEach(
       (k) =>
-        k !== 'email' && // Don't delete email field
+        !['email', 'userId', 'externalUserId'].includes(k) && // Don't delete these fields
         (searchTerm[k] == undefined ||
           (typeof searchTerm[k] == 'string' && searchTerm[k].trim() == '')) &&
         delete searchTerm[k]
@@ -610,7 +660,7 @@ const Index = () => {
     return searchTerm
   }
 
-  const clearFilters = () => setFilters({ status: null, planIds: null, internalPlanNameIds: null, planType: null })
+  const clearFilters = () => setFilters({ status: null, planIds: null, internalPlanNameIds: null, planType: null, userId: null, externalUserId: null })
 
   const goSearch = () => {
     if (page == 0) {
@@ -665,6 +715,8 @@ const Index = () => {
           rowClassName="clickable-tbl-row"
           pagination={false}
           onChange={onTableChange}
+          scroll={{ x: 1200, y: 'calc(100vh - 400px)' }}
+          size="small"
           onRow={(record) => {
             return {
               onClick: (evt) => {
@@ -861,6 +913,36 @@ const Search = ({
           <Col span={8}>
             <Form.Item name="email" noStyle>
               <Input placeholder="Search by email" />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row className="flex items-center mt-3" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
+            User ID
+          </Col>
+          <Col span={8}>
+            <Form.Item name="userId" noStyle>
+              <Input 
+                placeholder="Search by User ID" 
+                type="number" 
+                min={1}
+                onKeyPress={(e) => {
+                  // only allow numbers, no negative sign, no decimal point
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row className="flex items-center mt-3" gutter={[8, 8]}>
+          <Col span={4} className="font-bold text-gray-500">
+            External User ID
+          </Col>
+          <Col span={8}>
+            <Form.Item name="externalUserId" noStyle>
+              <Input placeholder="Search by External User ID" />
             </Form.Item>
           </Col>
         </Row>
