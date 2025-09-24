@@ -1954,7 +1954,7 @@ export const getAppKeysWithMore = async (refreshCb: () => void) => {
 */
 
 type TWireTransferAccount = {
-  gatewayId?: number // required only for updating
+  gatewayId?: number
   currency: string
   minimumAmount: number
   bank: {
@@ -1962,6 +1962,15 @@ type TWireTransferAccount = {
     bic: string
     iban: string
     address: string
+    accountNumber?: string
+    bankName?: string
+    swiftCode?: string
+    transitNumber?: string
+    institutionNumber?: string
+    bsbCode?: string
+    ABARoutingNumber?: string
+    CNAPS?: string
+    Remarks?: string
   }
 }
 export const createWireTransferAccountReq = async (
