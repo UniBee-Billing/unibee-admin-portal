@@ -5,7 +5,11 @@ import {
   InputNumber,
   Radio,
   Select,
-  Space
+  Space,
+  Card,
+  Spin,
+  Typography,
+  Popover
 } from 'antd'
 
 import { getDiscountCodeStatusTagById } from '@/components/ui/statusTag'
@@ -21,10 +25,31 @@ import {
 import { useAppConfigStore } from '@/stores'
 import { Form, FormInstance } from 'antd'
 import { Currency } from 'dinero.js'
-import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react'
+import { Dispatch, ReactNode, SetStateAction, useMemo, useState, useEffect } from 'react'
 import { formatQuantity } from '../helpers'
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import { nanoid } from 'nanoid'
+import { amountMultiCurrenciesExchangeReq, getMerchantInfoReq } from '@/requests'
+
+interface MultiCurrencyExchange {
+  currency: string
+  autoExchange: boolean
+  exchangeRate: number
+  amount: number
+  disable: boolean
+}
+
+interface MultiCurrencyData {
+  exchanges: MultiCurrencyExchange[]
+  lastUpdated: string
+  loading: boolean
+}
+
+interface CurrencyInfo {
+  Currency: string
+  Symbol: string
+  Scale: number
+}
 
 const { RangePicker } = DatePicker
 
@@ -66,6 +91,118 @@ const Index = ({
   form: FormInstance
 }) => {
   const appConfigStore = useAppConfigStore()
+  const [multiCurrencyData, setMultiCurrencyData] = useState<MultiCurrencyData>({
+    exchanges: [],
+    lastUpdated: '',
+    loading: false
+  })
+  const [currencyList, setCurrencyList] = useState<CurrencyInfo[]>([])
+
+  // Fetch currency list from merchant info
+  useEffect(() => {
+    const fetchCurrencyList = async () => {
+      try {
+        const [merchantInfo, error] = await getMerchantInfoReq()
+        if (error) {
+          // console.error('Failed to fetch merchant info:', error)
+          return
+        }
+        
+        if (merchantInfo?.Currency && Array.isArray(merchantInfo.Currency)) {
+          setCurrencyList(merchantInfo.Currency)
+        }
+      } catch (_error) {
+        // console.error('Error fetching merchant info:', _error)
+      }
+    }
+
+    fetchCurrencyList()
+  }, [])
+
+  // Fetch multi-currency exchange rates when discount amount changes
+  const fetchMultiCurrencyExchange = async (amount: number, currency: string) => {
+    if (!amount || amount <= 0) {
+      setMultiCurrencyData({
+        exchanges: [],
+        lastUpdated: '',
+        loading: false
+      })
+      return
+    }
+
+    setMultiCurrencyData(prev => ({
+      ...prev,
+      loading: true
+    }))
+
+    try {
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      )
+      
+      const apiPromise = amountMultiCurrenciesExchangeReq(Math.round(amount * 100), currency)
+      const [data, error] = await Promise.race([apiPromise, timeoutPromise]) as [unknown, unknown]
+      
+      if (error) {
+        // console.error('Failed to fetch multi-currency exchange:', error)
+        setMultiCurrencyData({
+          exchanges: [],
+          lastUpdated: '',
+          loading: false
+        })
+        return
+      }
+
+      if (data && (data as any).data && (data as any).data.multiCurrencyConfigs) {
+        const exchangeData = (data as any).data.multiCurrencyConfigs.map((config: { currency: string; autoExchange: boolean; exchangeRate: number; amount: number; disable: boolean }) => ({
+          currency: config.currency,
+          autoExchange: config.autoExchange,
+          exchangeRate: config.exchangeRate,
+          amount: config.amount,
+          disable: config.disable
+        }))
+        
+        setMultiCurrencyData({
+          exchanges: exchangeData,
+          lastUpdated: new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          loading: false
+        })
+      } else {
+        setMultiCurrencyData({
+          exchanges: [],
+          lastUpdated: '',
+          loading: false
+        })
+      }
+    } catch (_error) {
+      // console.error('Error fetching multi-currency exchange:', _error)
+      setMultiCurrencyData({
+        exchanges: [],
+        lastUpdated: '',
+        loading: false
+      })
+    }
+  }
+
+  // Watch for discount amount and currency changes
+  const watchDiscountAmount = form.getFieldValue('discountAmount')
+  useEffect(() => {
+    if (watchDiscountType !== DiscountType.PERCENTAGE && watchDiscountAmount && watchCurrency) {
+      fetchMultiCurrencyExchange(watchDiscountAmount, watchCurrency)
+    } else {
+      setMultiCurrencyData({
+        exchanges: [],
+        lastUpdated: '',
+        loading: false
+      })
+    }
+  }, [watchDiscountAmount, watchCurrency, watchDiscountType])
 
   const filteredPlanList = useMemo(() => {
     if (
@@ -291,6 +428,71 @@ const Index = ({
           />
         </Form.Item>
       </div>
+
+      {/* Multi-Currency Pricing Section */}
+      {watchDiscountType !== DiscountType.PERCENTAGE && watchDiscountAmount && watchDiscountAmount > 0 && (
+        <div className="mt-4 mb-4">
+          <div className="bg-gray-50 rounded-md p-4">
+            <div className="flex items-center justify-between mb-3">
+              <Typography.Title level={5} className="mb-0">
+                Multi-Currency Pricing
+                <Popover
+                  content={
+                    <div className="max-w-96">
+                      Real-time currency conversion based on current exchange rates
+                    </div>
+                  }
+                >
+                  <InfoCircleOutlined className="ml-2 text-gray-400" />
+                </Popover>
+              </Typography.Title>
+              {multiCurrencyData.lastUpdated && (
+                <span className="text-sm text-gray-500">
+                  Last updated: {multiCurrencyData.lastUpdated}
+                </span>
+              )}
+            </div>
+            
+            <Spin spinning={multiCurrencyData.loading}>
+              <div className="flex gap-4 flex-wrap">
+                {multiCurrencyData.exchanges?.map((exchange, index) => {
+                  // Get currency symbol from merchant info
+                  const getCurrencySymbol = (currency: string) => {
+                    const currencyInfo = currencyList.find(c => c.Currency === currency)
+                    return currencyInfo?.Symbol || currency
+                  }
+
+                  // Use the amount directly from API response (already calculated)
+                  // Convert from cents to display format
+                  const displayAmount = exchange.amount / 100
+
+                  return (
+                    <Card key={index} size="small" className="flex-1 min-w-[120px]">
+                      <div className="text-center">
+                        <div className="text-sm text-gray-600 mb-1">
+                          {getCurrencySymbol(exchange.currency)} {exchange.currency}
+                        </div>
+                        <div className="text-lg font-bold text-gray-800">
+                          {getCurrencySymbol(exchange.currency)}{displayAmount.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Rate: {exchange.exchangeRate.toFixed(4)}
+                        </div>
+                      </div>
+                    </Card>
+                  )
+                })}
+                {(!multiCurrencyData.exchanges || multiCurrencyData.exchanges.length === 0) && !multiCurrencyData.loading && (
+                  <div className="text-center text-gray-500 py-4 w-full">
+                    No multi-currency data available
+                  </div>
+                )}
+              </div>
+            </Spin>
+          </div>
+        </div>
+      )}
+
       <Form.Item
         label="One-time or recurring"
         name="billingType"

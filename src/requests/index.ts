@@ -2575,6 +2575,50 @@ export const getExportColumnListReq = async (task: TExportDataType) => {
 
 
 
+// Multi-currency related functions
+export const getCreditConfigForCurrencyReq = async (currency: string) => {
+  try {
+    const res = await request.post(`/merchant/credit/config_list`, { 
+      types: [2], 
+      currency 
+    })
+    handleStatusCode(res.data.code)
+    
+    const creditConfigs = res.data.data.creditConfigs || []
+    const isEnabled = creditConfigs.length > 0 && creditConfigs[0]?.payoutEnable === 1
+    
+    return [{ creditConfigs, isEnabled }, null] as const
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e] as const
+  }
+}
+
+export const setupMultiCurrenciesReq = async (multiCurrencyConfigs: unknown[]) => {
+  try {
+    const response = await request.post('/merchant/setup_multi_currencies', {
+      multiCurrencyConfigs
+    })
+    return [response.data, null]
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown }; message?: string }
+    return [null, err.response?.data || err.message]
+  }
+}
+
+export const amountMultiCurrenciesExchangeReq = async (amount: number, currency: string) => {
+  try {
+    const response = await request.post('/merchant/amount_multi_currencies_exchange', {
+      amount,
+      currency
+    })
+    return [response.data, null]
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown }; message?: string }
+    return [null, err.response?.data || err.message]
+  }
+}
+
 // Export refund service functions
 export {
   getCreditNoteListReq,

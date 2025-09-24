@@ -24,7 +24,8 @@ import { useLoading } from '../../../hooks'
 import {
   BusinessUserData,
   createSubscriptionReq,
-  UserData
+  UserData,
+  getCreditConfigForCurrencyReq
 } from '../../../requests'
 import { request, Response } from '../../../requests/client'
 import {
@@ -48,6 +49,19 @@ import { InfoItem } from './infoItem'
 import { PersonalAccountValues } from './personalAccountForm'
 import { PlanSelector } from './planSelector'
 import { UserInfoCard } from './userInfoCard'
+
+interface MultiCurrency {
+  currency: string
+  autoExchange: boolean
+  exchangeRate: number
+  amount: number
+  disable: boolean
+}
+
+// Extended plan interface to include multiCurrencies
+interface IPlanWithMultiCurrencies extends IPlan {
+  multiCurrencies?: MultiCurrency[]
+}
 
 interface Props {
   user: IProfile
@@ -77,6 +91,7 @@ interface CreateSubScriptionBody {
   addonParams?: TSelectedAddon[]
   applyPromoCredit?: boolean
   applyPromoCreditAmount?: number
+  currency: string // Add currency field
 }
 
 type VATNumberValidateResult = {
@@ -151,10 +166,24 @@ export const AssignSubscriptionModal = ({
   const [selectedPlanType, setSelectedPlanType] = useState<PlanType>(
     PlanType.MAIN
   )
+  const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>()
+  const [creditConfigEnabled, setCreditConfigEnabled] = useState<boolean>(false)
+  const [fetchingCreditConfig, setFetchingCreditConfig] = useState<boolean>(false)
 
   useEffect(() => {
     setSelectedPlan(undefined)
+    setSelectedCurrency(undefined)
   }, [selectedPlanType])
+
+  // Update selected currency when plan changes
+  useEffect(() => {
+    if (selectedPlan) {
+      // Default to the plan's main currency
+      setSelectedCurrency(selectedPlan.currency)
+    } else {
+      setSelectedCurrency(undefined)
+    }
+  }, [selectedPlan])
 
   // Replace requirePayment boolean with enum
   const [paymentRequireType, setPaymentRequireType] = useState<PaymentRequireType>(PaymentRequireType.ACTIVATE_AFTER_PAYMENT)
@@ -170,6 +199,77 @@ export const AssignSubscriptionModal = ({
   const [discountCode, setDiscountCode] = useState<string | undefined>()
   const accountFormValues = useRef<AccountValues | undefined>()
   const [creditAmt, setCreditAmt] = useState<null | number>(null)
+
+  // Fetch credit config when plan currency changes
+  const fetchCreditConfig = useCallback(async (currency: string) => {
+    if (!currency) return;
+    
+    setFetchingCreditConfig(true);
+    try {
+      const [result, error] = await getCreditConfigForCurrencyReq(currency);
+      
+      if (error || result === null) {
+        setCreditConfigEnabled(false);
+      } else {
+        setCreditConfigEnabled(result.isEnabled);
+      }
+    } catch (_error) {
+      setCreditConfigEnabled(false);
+    } finally {
+      setFetchingCreditConfig(false);
+    }
+  }, []);
+
+  // Update credit config when selected currency changes
+  useEffect(() => {
+    if (selectedCurrency) {
+      fetchCreditConfig(selectedCurrency);
+    } else {
+      setCreditConfigEnabled(false);
+    }
+  }, [selectedCurrency, fetchCreditConfig]);
+
+  // Get available currencies for the selected plan
+  const getAvailableCurrencies = useCallback(() => {
+    if (!selectedPlan) return [];
+    
+    const currencies: string[] = [selectedPlan.currency];
+    const planWithMultiCurrencies = selectedPlan as IPlanWithMultiCurrencies;
+    
+    // Add multiCurrencies if they exist (only enabled ones)
+    if (planWithMultiCurrencies.multiCurrencies && planWithMultiCurrencies.multiCurrencies.length > 0) {
+      planWithMultiCurrencies.multiCurrencies.forEach((multiCurrency: MultiCurrency) => {
+        // Only add currencies that are not disabled
+        if (!multiCurrency.disable && !currencies.includes(multiCurrency.currency)) {
+          currencies.push(multiCurrency.currency);
+        }
+      });
+    }
+    
+    return currencies;
+  }, [selectedPlan]);
+
+  // Get price for selected currency
+  const getPlanPriceForCurrency = useCallback((currency?: string) => {
+    if (!selectedPlan || !currency) return selectedPlan?.amount;
+    
+    const planWithMultiCurrencies = selectedPlan as IPlanWithMultiCurrencies;
+    
+    // If it's the main currency, return the main amount
+    if (currency === selectedPlan.currency) {
+      return selectedPlan.amount;
+    }
+    
+    // Look for the currency in multiCurrencies
+    if (planWithMultiCurrencies.multiCurrencies && planWithMultiCurrencies.multiCurrencies.length > 0) {
+      const multiCurrency = planWithMultiCurrencies.multiCurrencies.find((mc: MultiCurrency) => mc.currency === currency);
+      if (multiCurrency) {
+        return multiCurrency.amount;
+      }
+    }
+    
+    return selectedPlan.amount;
+  }, [selectedPlan]);
 
   const onAddonChange = (
     addonId: number,
@@ -206,10 +306,10 @@ export const AssignSubscriptionModal = ({
 
   const formatAmount = useCallback(
     (amount: number | undefined) =>
-      selectedPlan && !isEmpty(amount)
-        ? showAmount(amount, selectedPlan.currency)
+      selectedCurrency && !isEmpty(amount)
+        ? showAmount(amount, selectedCurrency)
         : undefined,
-    [selectedPlan]
+    [selectedCurrency]
   )
 
   const formattedDiscountValue = useMemo(() => {
@@ -269,7 +369,9 @@ export const AssignSubscriptionModal = ({
       discountCode: discountCode,
       addonParams: [] as TSelectedAddon[],
       applyPromoCredit: creditAmt != null && creditAmt > 0,
-      applyPromoCreditAmount: creditAmt
+      applyPromoCreditAmount: creditAmt,
+      // Use selectedCurrency only if it's valid for the selected plan
+      currency: selectedCurrency
     }
     if (selectedPlan?.addons != null && selectedPlan.addons.length > 0) {
       submitData.addonParams = selectedPlan.addons
@@ -322,6 +424,14 @@ export const AssignSubscriptionModal = ({
       message.error('Please choose a payment method')
       return
     }
+    // Prevent submitting when selected currency is not valid for the selected plan
+    if (selectedPlan && selectedCurrency) {
+      const currencies = getAvailableCurrencies()
+      if (!currencies.includes(selectedCurrency)) {
+        message.error('Selected currency is not available for this plan')
+        return
+      }
+    }
 
     const submitData = getSubmitData(values)
     // console.log(submitData)
@@ -329,7 +439,7 @@ export const AssignSubscriptionModal = ({
     const body = {
       ...submitData,
       confirmTotalAmount: previewData?.totalAmount,
-      confirmCurrency: selectedPlan?.currency,
+      confirmCurrency: selectedCurrency, // Use selected currency instead of plan's default
       applyPromoCredit: creditAmt != null && creditAmt > 0,
       applyPromoCreditAmount: creditAmt
     } as WithDoubleConfirmFields<CreateSubScriptionBody>
@@ -478,8 +588,20 @@ export const AssignSubscriptionModal = ({
     if (!selectedPlan) {
       return
     }
-    updatePrice()
-  }, [selectedPlan, paymentRequireType, gatewayId, gatewayPaymentType]) // different gateway has different vat rate, so we need to update the price when gateway changed
+    // Only update price when the currency is valid for the current plan
+    // Allow update when selectedCurrency is undefined (initial state) or when it's valid
+    if (selectedCurrency) {
+      const currencies = getAvailableCurrencies()
+      if (!currencies.includes(selectedCurrency)) {
+        return
+      }
+    }
+    // Debounce to avoid firing for transient currency changes (e.g., RUB -> USD)
+    const timer = setTimeout(() => {
+      updatePrice()
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [selectedPlan, selectedCurrency, paymentRequireType, gatewayId, gatewayPaymentType]) // different gateway has different vat rate, so we need to update the price when gateway changed
 
   const onDiscountCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDiscountCode(e.target.value)
@@ -491,6 +613,9 @@ export const AssignSubscriptionModal = ({
       setPreviewData(preview)
     }
   }
+
+  // Check if credit input should be disabled
+  const isCreditInputDisabled = !creditConfigEnabled || !getCreditInfo()?.credit || fetchingCreditConfig;
 
   return (
     <Modal
@@ -509,7 +634,10 @@ export const AssignSubscriptionModal = ({
           disabled={
             loading ||
             isEmpty(selectedPlan) ||
-            (previewData != null && previewData.discountMessage != '')
+            (previewData != null && previewData.discountMessage != '') ||
+            // Block when currency is missing or invalid for the selected plan
+            !selectedCurrency ||
+            (selectedPlan != null && selectedCurrency != null && !getAvailableCurrencies().includes(selectedCurrency))
           }
         >
           OK
@@ -555,10 +683,41 @@ export const AssignSubscriptionModal = ({
               planType={selectedPlanType}
             />
 
+            {/* Currency Selector */}
+            {selectedPlan && getAvailableCurrencies().length > 1 && (
+              <div className="mt-4">
+                <div className="mb-2 text-lg text-gray-800">Choose currency</div>
+                <Select
+                  style={{ width: '100%', height: '40px' }}
+                  value={selectedCurrency}
+                  onChange={(value) => setSelectedCurrency(value)}
+                  options={getAvailableCurrencies().map((currency) => {
+                    const currencyInfo = appConfig.supportCurrency.find(c => c.Currency === currency);
+                    const price = getPlanPriceForCurrency(currency);
+                    return {
+                      value: currency,
+                      label: (
+                        <div className="flex items-center justify-between">
+                          <span>{`${currency} (${currencyInfo?.Symbol || currency})`}</span>
+                          <span className="text-xs text-gray-400 ml-2">
+                            {price ? showAmount(price, currency) : '-'}
+                          </span>
+                        </div>
+                      )
+                    };
+                  })}
+                />
+              </div>
+            )}
+
             {selectedPlan && (
               <div className="mt-4 flex justify-center">
                 <Plan
-                  plan={selectedPlan}
+                  plan={{
+                    ...selectedPlan,
+                    currency: selectedCurrency as Currency,
+                    amount: getPlanPriceForCurrency(selectedCurrency) || selectedPlan.amount
+                  }}
                   width="280px"
                   selectedPlan={selectedPlan.id}
                   isThumbnail
@@ -625,8 +784,9 @@ export const AssignSubscriptionModal = ({
                   style={{ width: 240 }}
                   value={creditAmt}
                   onChange={(value) => setCreditAmt(value)}
+                  disabled={isCreditInputDisabled}
                 />
-                <Button onClick={onApplyPromoCredit}>Apply</Button>
+                <Button onClick={onApplyPromoCredit} disabled={isCreditInputDisabled}>Apply</Button>
               </div>
               {creditUseNote()}
 

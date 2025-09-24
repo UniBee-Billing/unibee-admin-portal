@@ -11,6 +11,7 @@ import AppIntegrationServices from './integrations'
 import Permissions from './permissions'
 import { SubscriptionConfig } from './subscriptionConfig'
 import WebhookList from './webHooks/list'
+import MultiCurrencyConfiguration from './multiCurrencyConfig'
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -27,6 +28,11 @@ const Index = () => {
       key: 'integrations',
       label: 'Integrations',
       children: <AppIntegrationServices />
+    },
+    {
+      key: 'multiCurrencyConfig',
+      label: 'Multi-Currency Config',
+      children: <MultiCurrencyConfiguration />
     },
     {
       key: 'permission',

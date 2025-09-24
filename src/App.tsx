@@ -1,7 +1,7 @@
 import { UnorderedListOutlined, RightOutlined } from '@ant-design/icons'
 import { Button, Layout, theme, Modal } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import AppSearch from './components/appSearch'
 import Login from './components/login'
 import { LoginModal } from './components/login/LoginModal'
@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const sessionStore = useSessionStore()
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const appConfigStore = useAppConfigStore()
+  const location = useLocation()
   const {
     token: { colorBgContainer, borderRadiusLG }
   } = theme.useToken()
@@ -148,7 +149,9 @@ const App: React.FC = () => {
                 {appRoutes}
               </div>
             </Content>
-            <Footer style={{ textAlign: 'center' }}>Copyright © 2025</Footer>
+            {!location.pathname.includes('configuration') || !location.search.includes('tab=multiCurrencyConfig') ? (
+              <Footer style={{ textAlign: 'center' }}>Copyright © 2025</Footer>
+            ) : null}
           </Layout>
         </Layout>
       )}
