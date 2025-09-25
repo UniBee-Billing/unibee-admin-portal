@@ -422,7 +422,7 @@ const Index = ({
                                   updateCurrency(index, 'exchangeRate', newRate)
                                 }
                               }}
-                              disabled={currency.disable || formDisabled}
+                              disabled={true}
                               className="w-full"
                               size="small"
                               prefix={currencyInfo?.Symbol}
@@ -445,7 +445,7 @@ const Index = ({
                                 const newAmount = baseAmountWithScale * (value || 0)
                                 updateCurrency(index, 'amount', newAmount)
                               }}
-                              disabled={currency.disable || formDisabled}
+                              disabled={true}
                               className="w-full"
                               size="small"
                               min={0}
