@@ -915,7 +915,7 @@ type TCreateSubReq = {
   freeInInitialPeriod?: boolean
   addonParams?: { quantity: number; addonPlanId: number }[]
   confirmTotalAmount?: number
-  confirmCurrency?: string
+  currency?: string
   startIncomplete?: boolean
   user: UserData & Partial<BusinessUserData>
   vatCountryCode: string | undefined
@@ -933,7 +933,7 @@ export const createSubscriptionReq = async ({
   trialEnd,
   freeInInitialPeriod,
   addonParams,
-  confirmCurrency,
+  currency,
   confirmTotalAmount,
   startIncomplete,
   user,
@@ -954,7 +954,7 @@ export const createSubscriptionReq = async ({
       quantity: 1,
       addonParams: addonParams,
       confirmTotalAmount,
-      confirmCurrency,
+      currency,
       startIncomplete,
       user,
       vatCountryCode,

@@ -439,7 +439,7 @@ export const AssignSubscriptionModal = ({
     const body = {
       ...submitData,
       confirmTotalAmount: previewData?.totalAmount,
-      confirmCurrency: selectedCurrency, // Use selected currency instead of plan's default
+      currency: selectedCurrency, // Use selected currency instead of plan's default
       applyPromoCredit: creditAmt != null && creditAmt > 0,
       applyPromoCreditAmount: creditAmt
     } as WithDoubleConfirmFields<CreateSubScriptionBody>
