@@ -709,11 +709,11 @@ const MultiCurrencyConfiguration = () => {
               loading={loading}
               disabled={!hasChanges}
               size="large"
-              className="min-w-[120px] bg-yellow-400 hover:bg-yellow-500 border-yellow-400 hover:border-yellow-500 text-black font-medium"
+              className="min-w-[120px] font-medium"
               style={{
-                backgroundColor: !hasChanges ? '#d1d5db' : '#facc15',
-                borderColor: !hasChanges ? '#d1d5db' : '#facc15',
-                color: !hasChanges ? '#9ca3af' : '#000000'
+                backgroundColor: !hasChanges ? '#d1d5db' : '#1677ff',
+                borderColor: !hasChanges ? '#d1d5db' : '#1677ff',
+                color: !hasChanges ? '#9ca3af' : '#ffffff'
               }}
             >
               {loading ? 'Saving...' : hasChanges ? 'Save' : 'Saved'}
