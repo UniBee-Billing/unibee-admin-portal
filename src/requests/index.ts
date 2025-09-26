@@ -915,7 +915,7 @@ type TCreateSubReq = {
   freeInInitialPeriod?: boolean
   addonParams?: { quantity: number; addonPlanId: number }[]
   confirmTotalAmount?: number
-  confirmCurrency?: string
+  currency?: string
   startIncomplete?: boolean
   user: UserData & Partial<BusinessUserData>
   vatCountryCode: string | undefined
@@ -933,7 +933,7 @@ export const createSubscriptionReq = async ({
   trialEnd,
   freeInInitialPeriod,
   addonParams,
-  confirmCurrency,
+  currency,
   confirmTotalAmount,
   startIncomplete,
   user,
@@ -954,7 +954,7 @@ export const createSubscriptionReq = async ({
       quantity: 1,
       addonParams: addonParams,
       confirmTotalAmount,
-      confirmCurrency,
+      currency,
       startIncomplete,
       user,
       vatCountryCode,
@@ -1954,7 +1954,7 @@ export const getAppKeysWithMore = async (refreshCb: () => void) => {
 */
 
 type TWireTransferAccount = {
-  gatewayId?: number // required only for updating
+  gatewayId?: number
   currency: string
   minimumAmount: number
   bank: {
@@ -1962,6 +1962,15 @@ type TWireTransferAccount = {
     bic: string
     iban: string
     address: string
+    accountNumber?: string
+    bankName?: string
+    swiftCode?: string
+    transitNumber?: string
+    institutionNumber?: string
+    bsbCode?: string
+    ABARoutingNumber?: string
+    CNAPS?: string
+    Remarks?: string
   }
 }
 export const createWireTransferAccountReq = async (
@@ -2565,6 +2574,50 @@ export const getExportColumnListReq = async (task: TExportDataType) => {
 }
 
 
+
+// Multi-currency related functions
+export const getCreditConfigForCurrencyReq = async (currency: string) => {
+  try {
+    const res = await request.post(`/merchant/credit/config_list`, { 
+      types: [2], 
+      currency 
+    })
+    handleStatusCode(res.data.code)
+    
+    const creditConfigs = res.data.data.creditConfigs || []
+    const isEnabled = creditConfigs.length > 0 && creditConfigs[0]?.payoutEnable === 1
+    
+    return [{ creditConfigs, isEnabled }, null] as const
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e] as const
+  }
+}
+
+export const setupMultiCurrenciesReq = async (multiCurrencyConfigs: unknown[]) => {
+  try {
+    const response = await request.post('/merchant/setup_multi_currencies', {
+      multiCurrencyConfigs
+    })
+    return [response.data, null]
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown }; message?: string }
+    return [null, err.response?.data || err.message]
+  }
+}
+
+export const amountMultiCurrenciesExchangeReq = async (amount: number, currency: string) => {
+  try {
+    const response = await request.post('/merchant/amount_multi_currencies_exchange', {
+      amount,
+      currency
+    })
+    return [response.data, null]
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown }; message?: string }
+    return [null, err.response?.data || err.message]
+  }
+}
 
 // Export refund service functions
 export {
