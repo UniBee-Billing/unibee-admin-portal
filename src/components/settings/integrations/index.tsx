@@ -72,17 +72,18 @@ const Index = () => {
       keyName: ['segmentServerSideKey', 'segmentUserPortalKey'],
       keyValue: ['', ''],
       compositeKey: true
-    },
-    {
-      IsSetupFinished: false,
-      name: 'Exchange API key',
-      description:
-        'Use it to access Exchange, allowing for secure ops and user behavior tracking.',
-      logo: <ExchangeRateLogo />,
-      gatewayWebsiteLink: '',
-      keyName: 'exchangeRateApiKey',
-      keyValue: ''
     }
+    // Exchange API key - commented out as requested
+    // {
+    //   IsSetupFinished: false,
+    //   name: 'Exchange API key',
+    //   description:
+    //     'Use it to access Exchange, allowing for secure ops and user behavior tracking.',
+    //   logo: <ExchangeRateLogo />,
+    //   gatewayWebsiteLink: '',
+    //   keyName: 'exchangeRateApiKey',
+    //   keyValue: ''
+    // }
   ]
 
   const initializeKeys = (keyName: string, keyValue: string) => {
@@ -132,7 +133,7 @@ const Index = () => {
   initializeKeys('openApiKey', openApiKey)
   initializeKeys('sendGridKey', sendGridKey)
   initializeKeys('vatSenseKey', vatSenseKey)
-  initializeKeys('exchangeRateApiKey', exchangeRateApiKey)
+  // initializeKeys('exchangeRateApiKey', exchangeRateApiKey) // Commented out
   initializeKeys('segmentServerSideKey', segmentServerSideKey)
   initializeKeys('segmentUserPortalKey', segmentUserPortalKey)
 
@@ -160,10 +161,11 @@ const Index = () => {
           <SendGridModal closeModal={toggleSetupModal} />
         )}
 
-      {openSetupModal &&
+      {/* Exchange API key modal - commented out */}
+      {/* {openSetupModal &&
         integrationList[itemIndex].keyName == 'exchangeRateApiKey' && (
           <ExchangeRateModal closeModal={toggleSetupModal} />
-        )}
+        )} */}
 
       <List
         itemLayout="horizontal"
