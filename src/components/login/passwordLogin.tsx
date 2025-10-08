@@ -29,9 +29,24 @@ const Index = ({
   const passwordRef = useRef<InputRef>(null)
   const emailRef = useRef<InputRef>(null)
 
-  const onForgetPass = () => {
-    // Navigate to the forgot password page
-    navigate('/forgot-password')
+  const onForgetPass = async () => {
+    // Validate email field first
+    try {
+      await form.validateFields(['email'])
+    } catch (error) {
+      message.error('Please enter a valid email address first')
+      return
+    }
+
+    const email = form.getFieldValue('email')
+    if (!email || !emailValidate(email)) {
+      message.error('Please enter a valid email address first')
+      return
+    }
+
+    // Encode email and navigate to forgot password page
+    const encodedEmail = encodeURIComponent(email)
+    navigate(`/forgot-password?email=${encodedEmail}`)
   }
 
   const onSubmit = async () => {

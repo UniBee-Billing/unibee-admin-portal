@@ -1,7 +1,7 @@
 import { Button, Form, Input, message } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import type { InputRef } from 'antd'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { emailValidate, passwordSchema } from '../../helpers'
 import { useCountdown } from '../../hooks'
 import { forgetPassReq, forgetPassVerifyReq } from '../../requests'
@@ -10,17 +10,39 @@ import AppHeader from '../appHeader'
 
 const ForgetPasswordPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [sendingCode, setSendingCode] = useState(false)
   const [countVal, counting, startCount, stopCounter] = useCountdown(60)
   const emailRef = useRef<InputRef>(null)
   const watchEmail = Form.useWatch('email', form)
+  const [emailFromUrl, setEmailFromUrl] = useState<string | null>(null)
+  const [autoSendTriggered, setAutoSendTriggered] = useState(false)
 
   useEffect(() => {
-    // Focus on email input when page loads
-    emailRef.current?.focus()
+    // Get email from URL parameter
+    const encodedEmail = searchParams.get('email')
+    if (encodedEmail) {
+      const decodedEmail = decodeURIComponent(encodedEmail)
+      setEmailFromUrl(decodedEmail)
+      form.setFieldsValue({ email: decodedEmail })
+    } else {
+      // Focus on email input when page loads without email param
+      emailRef.current?.focus()
+    }
   }, [])
+
+  // Auto send verification code when email is from URL
+  useEffect(() => {
+    if (emailFromUrl && !autoSendTriggered) {
+      setAutoSendTriggered(true)
+      // Delay auto send to ensure form is ready
+      setTimeout(() => {
+        onSendCode()
+      }, 300)
+    }
+  }, [emailFromUrl])
 
   // Function to send verification code
   const onSendCode = async () => {
@@ -151,7 +173,11 @@ const ForgetPasswordPage = () => {
               })
             ]}
           >
-            <Input ref={emailRef} placeholder="unibeelogin1234@gmail.com" />
+            <Input 
+              ref={emailRef} 
+              placeholder="unibeelogin1234@gmail.com" 
+              disabled={!!emailFromUrl}
+            />
           </Form.Item>
 
           <Form.Item
