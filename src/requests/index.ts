@@ -2624,3 +2624,21 @@ export {
   getCreditNoteListReq,
   uploadCSVAndSearchReq
 } from './refundService'
+
+// Export VAT service functions
+export {
+  getVATValidationHistoryReq,
+  correctVATValidationReq,
+  deactivateVATValidationReq,
+  type VATNumberValidateHistory,
+  type VATValidationHistoryParams,
+  type VATValidationCorrectParams,
+  type VATValidationDeactivateParams
+} from './vatService'
+
+// Export email service functions
+export {
+  getEmailHistoryListReq,
+  type TEmailHistory,
+  type EmailHistoryListResponse
+} from './emailService'

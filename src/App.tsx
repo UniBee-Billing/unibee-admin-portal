@@ -151,9 +151,9 @@ const App: React.FC = () => {
                 {appRoutes}
               </div>
             </Content>
-            {!location.pathname.includes('configuration') || !location.search.includes('tab=multiCurrencyConfig') ? (
+            {/* {!location.pathname.includes('configuration') || !location.search.includes('tab=multiCurrencyConfig') ? (
               <Footer style={{ textAlign: 'center' }}>Copyright © 2025</Footer>
-            ) : null}
+            ) : null} */}
           </Layout>
         </Layout>
       )}
