@@ -374,15 +374,18 @@ const Index = () => {
                     // return
                   }
                   const tgt = evt.target
+                  
+                  // Check if clicked on Roles column to edit roles
                   if (
-                    tgt instanceof HTMLElement &&
-                    tgt.classList.contains('btn-merchant-user-roles')
+                    tgt instanceof Element &&
+                    tgt.closest('.btn-merchant-user-roles')
                   ) {
                     setActiveUser(user)
                     toggleInviteModal()
                     return
                   }
 
+                  // Check if clicked on suspend button
                   if (
                     tgt instanceof Element &&
                     tgt.closest('.btn-merchant-suspend')
