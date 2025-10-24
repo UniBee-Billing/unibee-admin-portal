@@ -537,16 +537,37 @@ export const togglePublishReq = async ({
   }
 }
 
+// export const getMetricsListReq = async ({
+//   refreshCb,
+//   page,
+//   count
+// }: { refreshCb?: () => void } & PagedReq) => {
+//   try {
+//     const res = await request.get(`/merchant/metric/list`, {
+//       params: {
+//         page,
+//         count
+//       }
+//     })
+//     handleStatusCode(res.data.code, refreshCb)
+//     return [res.data.data, null]
+//   } catch (err) {
+//     const e = err instanceof Error ? err : new Error('Unknown error')
+//     return [null, e]
+//   }
+// }
 export const getMetricsListReq = async ({
   refreshCb,
   page,
-  count
-}: { refreshCb?: () => void } & PagedReq) => {
+  count,
+  searchKey
+}: { refreshCb?: () => void; searchKey?: string } & PagedReq) => {
   try {
     const res = await request.get(`/merchant/metric/list`, {
       params: {
         page,
-        count
+        count,
+        searchKey
       }
     })
     handleStatusCode(res.data.code, refreshCb)
@@ -556,6 +577,19 @@ export const getMetricsListReq = async ({
     return [null, e]
   }
 }
+export const deleteMetricReq = async (metricId: number) => {
+  try {
+    const res = await request.post(`/merchant/metric/delete`, {
+      metricId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 
 // --------
 type TMetricsBody = {
@@ -581,7 +615,7 @@ export const saveMetricsReq = async (
   try {
     const res = await request.post(url, body)
     handleStatusCode(res.data.code)
-    return [null, null]
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
