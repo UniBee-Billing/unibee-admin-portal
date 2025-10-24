@@ -340,7 +340,7 @@ const Index = () => {
             type="link"
             onClick={() => navigate(`/user/${record.id}`)}
           >
-            View Details
+            Edit
           </Button>
         </Space>
       )
