@@ -1822,16 +1822,20 @@ const getMerchantUserListReq = async (refreshCb?: () => void) => {
   }
 }
 
+type TMerchantMemberListReq = {
+  searchKey?: string // Search Key, FirstName, LastName or Email
+  email?: string // Search Filter Email
+  roleIds?: number[] // The member roleId if specified
+  createTimeStart?: number // CreateTimeStart, UTC timestamp, seconds
+  createTimeEnd?: number // CreateTimeEnd, UTC timestamp, seconds
+} & PagedReq
+
 export const getMerchantUserListReq2 = async (
-  { page, count, roleIds }: { roleIds?: number[] } & PagedReq,
+  params: TMerchantMemberListReq,
   refreshCb?: () => void
 ) => {
   try {
-    const res = await request.post('/merchant/member/list', {
-      page,
-      count,
-      roleIds
-    })
+    const res = await request.post('/merchant/member/list', params)
     handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {

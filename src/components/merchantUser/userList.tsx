@@ -6,7 +6,8 @@ import {
   getMerchantUserListWithMoreReq,
   inviteMemberReq,
   suspendMemberReq,
-  updateMemberRolesReq
+  updateMemberRolesReq,
+  getRoleListReq
 } from '@/requests'
 import { IMerchantMemberProfile, TRole } from '@/shared.types'
 import { useMerchantMemberProfileStore } from '@/stores'
@@ -15,43 +16,59 @@ import {
   ProfileOutlined,
   SyncOutlined,
   UserAddOutlined,
-  UserDeleteOutlined
+  UserDeleteOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons'
 import {
   Button,
   Col,
+  DatePicker,
   Form,
+  FormInstance,
   Input,
   Modal,
-  Pagination,
-  Popover,
   Row,
   Select,
   Space,
-  Table,
   Tag,
   Tooltip,
   message
 } from 'antd'
 import { ColumnsType, TableProps } from 'antd/es/table'
 import { CSSProperties, useEffect, useRef, useState } from 'react'
+import ResponsiveTable from '../table/responsiveTable'
+import './userList.css'
 
 const PAGE_SIZE = 10
 
+const MERCHANT_USER_STATUS = {
+  0: { label: 'Active', color: 'green' },
+  2: { label: 'Suspended', color: 'red' }
+}
+
+const STATUS_FILTER = Object.entries(MERCHANT_USER_STATUS).map(([value, { label }]) => ({
+  text: label,
+  value: Number(value)
+}))
+
 type TFilters = {
   MemberRoles: number[] | null
+  status: number[] | null
 }
 
 const Index = () => {
   // const navigate = useNavigate()
   const isMountingRef = useRef(false)
   const merchantMemberProfile = useMerchantMemberProfileStore()
-  const { page, onPageChange } = usePagination()
+  const { page, onPageChange, onPageChangeNoParams } = usePagination()
+  const [form] = Form.useForm()
   const [total, setTotal] = useState(0)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE)
   const [loading, setLoading] = useState(false)
   const [roles, setRoles] = useState<TRole[]>([])
-  const [roleFilters, setRoleFilters] = useState<TFilters>({
-    MemberRoles: null
+  const [filters, setFilters] = useState<TFilters>({
+    MemberRoles: null,
+    status: null
   })
   const [users, setUsers] = useState<IMerchantMemberProfile[]>([])
   const [activeUser, setActiveUser] = useState<
@@ -75,33 +92,44 @@ const Index = () => {
     setSuspendModalOpen(!suspendModalOpen)
   }
 
-  const fetchData = async () => {
-    setLoading(true)
-    const [res, err] = await getMerchantUserListWithMoreReq(fetchData)
-    setLoading(false)
-    if (err != null) {
-      message.error(err.message)
-      return
+  const normalizeSearchTerms = () => {
+    const searchTerm = JSON.parse(JSON.stringify(form.getFieldsValue()))
+    
+    // Clean up empty values
+    Object.keys(searchTerm).forEach(
+      (k) =>
+        (searchTerm[k] == undefined ||
+          (typeof searchTerm[k] == 'string' && searchTerm[k].trim() == '')) &&
+        delete searchTerm[k]
+    )
+
+    const start = form.getFieldValue('createTimeStart')
+    const end = form.getFieldValue('createTimeEnd')
+    if (start != null) {
+      searchTerm.createTimeStart = start.hour(0).minute(0).second(0).unix()
+    }
+    if (end != null) {
+      searchTerm.createTimeEnd = end.hour(23).minute(59).second(59).unix()
     }
 
-    const { merchantUserListRes, roleListRes } = res
-    const { merchantMembers, total } = merchantUserListRes
-    setUsers(merchantMembers ?? [])
-    setTotal(total)
-    setRoles(roleListRes.merchantRoles ?? [])
+    return searchTerm
   }
 
-  const getMerchantUserList = async () => {
+  const fetchData = async () => {
+    const searchTerm = normalizeSearchTerms()
+    
     const body = {
       page,
-      count: PAGE_SIZE,
+      count: pageSize,
       roleIds:
-        roleFilters.MemberRoles != null && roleFilters.MemberRoles.length > 0
-          ? roleFilters.MemberRoles
-          : undefined
+        filters.MemberRoles != null && filters.MemberRoles.length > 0
+          ? filters.MemberRoles
+          : undefined,
+      ...searchTerm
     }
+    
     setLoading(true)
-    const [res, err] = await getMerchantUserListReq2(body, getMerchantUserList)
+    const [res, err] = await getMerchantUserListReq2(body, fetchData)
     setLoading(false)
     if (err != null) {
       message.error(err.message)
@@ -113,102 +141,104 @@ const Index = () => {
     setTotal(total)
   }
 
+  const fetchRoles = async () => {
+    const [res, err] = await getRoleListReq(fetchRoles)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+
+    setRoles(res.merchantRoles ?? [])
+  }
+
   const columns: ColumnsType<IMerchantMemberProfile> = [
     {
       title: 'First Name',
       dataIndex: 'firstName',
-      key: 'firstName'
-      // render: (text) => <a>{text}</a>,
+      key: 'firstName',
+      width: 120
     },
     {
       title: 'Last Name',
       dataIndex: 'lastName',
-      key: 'lastName'
+      key: 'lastName',
+      width: 120
     },
     {
       title: 'Roles',
       dataIndex: 'MemberRoles',
       key: 'MemberRoles',
+      width: 130,
       filters: roles.map((r) => ({ text: r.role, value: r.id as number })),
-      render: (roles) => (
-        <Popover
-          placement="top"
-          content={
-            <Space size={[0, 8]} wrap>
-              {roles.map((role: TRole) => (
-                <Tag key={role.id as number}>{role.role}</Tag>
-              ))}
-            </Space>
-          }
-        >
-          <div className="btn-merchant-user-roles h-6 w-4 cursor-pointer text-blue-500">
-            {roles.length}
-          </div>
-        </Popover>
+      filteredValue: filters.MemberRoles,
+      filterSearch: (input, record) =>
+        String(record.text).toLowerCase().includes(input.toLowerCase()),
+      onFilter: (value, record) => {
+        // Filter by role ID in MemberRoles array
+        return record.MemberRoles.some((role: TRole) => role.id === value)
+      },
+      render: (memberRoles: TRole[], record: IMerchantMemberProfile) => (
+        <Space size={[0, 8]} wrap className="btn-merchant-user-roles cursor-pointer">
+          {record.isOwner && (
+            <Tag color="gold">
+              owner
+            </Tag>
+          )}
+          {memberRoles.map((role: TRole) => (
+            <Tag key={role.id as number}>
+              {role.role}
+            </Tag>
+          ))}
+        </Space>
       )
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      width: 120,
+      filters: STATUS_FILTER,
+      filteredValue: filters.status,
+      onFilter: (value, record) => record.status === value,
       render: (s) => MerchantUserStatusTag(s)
     },
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email'
+      key: 'email',
+      width: 200
     },
     {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
-      render: (d) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
+      width: 120,
+      render: (d) => (d === 0 ? '―' : formatDate(d))
     },
     {
-      title: (
-        <>
-          <span>Actions</span>
-
-          <Tooltip title="Invite member">
-            <Button
-              size="small"
-              style={{ border: 'unset', marginLeft: '4px' }}
-              onClick={toggleInviteModal}
-              icon={<UserAddOutlined />}
-            />
-          </Tooltip>
-
-          <Tooltip title="Refresh">
-            <Button
-              size="small"
-              style={{ border: 'unset', marginLeft: '8px' }}
-              disabled={loading}
-              onClick={getMerchantUserList}
-              icon={<SyncOutlined />}
-            ></Button>
-          </Tooltip>
-        </>
-      ),
-      width: 164,
+      title: 'Actions',
+      width: 220,
       key: 'action',
-      render: (_) => (
-        <Space size="middle" className="member-action-btn-wrapper">
+      render: (_, record) => (
+        <Space size="small" className="member-action-btn-wrapper">
           <Tooltip title="View activities logs">
             <Button
+              type="text"
               disabled={loading}
-              style={{ border: 'unset' }}
-              // onClick={() => goToDetail(record.id)}
-              icon={<ProfileOutlined />}
+              icon={<ProfileOutlined className="text-blue-500" />}
             />
           </Tooltip>
 
           <Tooltip title="Suspend account">
             <Button
+              type="text"
               className="btn-merchant-suspend"
-              style={{ border: 'unset' }}
               disabled={loading}
-              onClick={toggleSuspendModal}
-              icon={<UserDeleteOutlined />}
+              onClick={() => {
+                setActiveUser(record);
+                toggleSuspendModal();
+              }}
+              icon={<UserDeleteOutlined className="text-red-500" />}
             />
           </Tooltip>
         </Space>
@@ -217,32 +247,54 @@ const Index = () => {
   ]
 
   const onTableChange: TableProps<IMerchantMemberProfile>['onChange'] = (
-    _,
+    pagination,
     filters
   ) => {
-    setRoleFilters(filters as TFilters)
-    onPageChange(1, PAGE_SIZE) // any search term, filters change should reset page to 1.
+    const newPageSize = pagination.pageSize || PAGE_SIZE
+    const newPage = pagination.current || 1
+    
+    // If pageSize changed, reset to page 1
+    if (newPageSize !== pageSize) {
+      setPageSize(newPageSize)
+      onPageChangeNoParams(1, newPageSize) // Reset to page 0 (backend uses 0-based)
+    } else {
+      // Convert from 1-based (UI) to 0-based (backend)
+      onPageChangeNoParams(newPage, newPageSize)
+    }
+
+    setFilters(filters as TFilters)
+  }
+
+  const clearFilters = () => {
+    setFilters({ MemberRoles: null, status: null })
+  }
+
+  const goSearch = () => {
+    // Always go to first page (page=0 backend) on new search
+    if (page === 0) {
+      // Already on page 0, just fetch data
+      fetchData()
+    } else {
+      // Go to page 0, useEffect will trigger fetchData
+      onPageChange(1, pageSize)
+    }
   }
 
   useEffect(() => {
-    isMountingRef.current = true
+    fetchRoles()
+    fetchData()
   }, [])
 
   useEffect(() => {
-    if (!isMountingRef.current) {
-      getMerchantUserList()
-    } else {
-      isMountingRef.current = false
-      fetchData()
-    }
-  }, [roleFilters, page])
+    fetchData()
+  }, [filters, page, pageSize])
 
   return (
-    <div>
+    <div className="bg-gray-50 min-h-screen">
       {inviteModalOpen && (
         <InviteModal
           closeModal={toggleInviteModal}
-          refresh={getMerchantUserList}
+          refresh={fetchData}
           userData={activeUser}
           roles={roles}
         />
@@ -250,71 +302,101 @@ const Index = () => {
       {suspendModalOpen && (
         <SuspendModal
           closeModal={toggleSuspendModal}
-          refresh={getMerchantUserList}
+          refresh={fetchData}
           userData={activeUser}
         />
       )}
-      {/* <Search form={form} goSearch={fetchData} searching={loading} /> */}
-      {/* merchantMemberProfile.isOwner && (
-        <div className="my-2 flex justify-end">
-          <Button type="primary" onClick={toggleInviteModal}>
-            Invite
-          </Button>
-        </div>
-      ) */}
-      <Table
-        columns={columns}
-        dataSource={users}
-        onChange={onTableChange}
-        rowKey={'id'}
-        rowClassName="clickable-tbl-row"
-        pagination={false}
-        loading={{
-          spinning: loading,
-          indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
-        }}
-        onRow={(user) => {
-          return {
-            onClick: (evt) => {
-              if (!merchantMemberProfile.isOwner) {
-                // return
-              }
-              const tgt = evt.target
-              if (
-                tgt instanceof HTMLElement &&
-                tgt.classList.contains('btn-merchant-user-roles')
-              ) {
-                setActiveUser(user)
-                toggleInviteModal()
-                return
-              }
 
-              if (
-                tgt instanceof Element &&
-                tgt.closest('.btn-merchant-suspend')
-              ) {
-                setActiveUser(user)
-                toggleSuspendModal()
-                return
-              }
-              // navigate(`/admin/${user.id}`)
-            }
-          }
-        }}
-      />
-      <div className="mx-0 my-4 flex items-center justify-end">
-        <Pagination
-          current={page + 1} // back-end starts with 0, front-end starts with 1
-          pageSize={PAGE_SIZE}
-          total={total}
-          size="small"
-          onChange={onPageChange}
-          showTotal={(total, range) =>
-            `${range[0]}-${range[1]} of ${total} items`
-          }
-          disabled={loading}
-          showSizeChanger={false}
+      <div className="p-6">
+        {/* Page Title */}
+        <h1 className="text-2xl font-semibold mb-6">Admin List</h1>
+
+        <Search
+          form={form}
+          goSearch={goSearch}
+          searching={loading}
+          onPageChange={onPageChange}
+          clearFilters={clearFilters}
         />
+
+        {/* Records Section */}
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium">Members</h2>
+              <div className="flex items-center gap-3">
+                <Button
+                  icon={<SyncOutlined />}
+                  onClick={fetchData}
+                  disabled={loading}
+                  className="flex items-center"
+                >
+                  Refresh
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<UserAddOutlined />}
+                  onClick={toggleInviteModal}
+                  className="flex items-center"
+                >
+                  Invite member
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <ResponsiveTable
+            columns={columns}
+            dataSource={users}
+            onChange={onTableChange}
+            rowKey={'id'}
+            rowClassName="clickable-tbl-row"
+            pagination={{
+              current: page + 1,
+              pageSize: pageSize,
+              total: total,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+              locale: { items_per_page: '' },
+              disabled: loading,
+              className: 'admin-list-pagination',
+            }}
+            loading={{
+              spinning: loading,
+              indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+            }}
+            scroll={{ x: 1200 }}
+            onRow={(user) => {
+              return {
+                onClick: (evt) => {
+                  if (!merchantMemberProfile.isOwner) {
+                    // return
+                  }
+                  const tgt = evt.target
+                  if (
+                    tgt instanceof HTMLElement &&
+                    tgt.classList.contains('btn-merchant-user-roles')
+                  ) {
+                    setActiveUser(user)
+                    toggleInviteModal()
+                    return
+                  }
+
+                  if (
+                    tgt instanceof Element &&
+                    tgt.closest('.btn-merchant-suspend')
+                  ) {
+                    setActiveUser(user)
+                    toggleSuspendModal()
+                    return
+                  }
+                  // navigate(`/admin/${user.id}`)
+                }
+              }
+            }}
+          />
+        </div>
       </div>
     </div>
   )
@@ -342,7 +424,15 @@ const InviteModal = ({
     const body = form.getFieldsValue()
     setLoading(true)
     if (isNew) {
-      const [_, err] = await inviteMemberReq(body)
+      // Get the current hostname
+      const hostname = window.location.origin
+      // Construct the returnUrl for password setup
+      const returnUrl = `${hostname}/member_inviter`
+      
+      const [_, err] = await inviteMemberReq({
+        ...body,
+        returnUrl
+      })
       setLoading(false)
       if (null != err) {
         message.error(err.message)
@@ -362,7 +452,7 @@ const InviteModal = ({
 
     message.success(
       isNew
-        ? `An invitation email has been sent to ${form.getFieldValue('email')}`
+        ? `An invitation email has been sent to ${form.getFieldValue('email')}. They will be prompted to set up a password.`
         : 'New roles saved'
     )
     closeModal()
@@ -467,6 +557,13 @@ const InviteModal = ({
             }))}
           />
         </Form.Item>
+        
+        {isNew && (
+          <div className="mb-3 ml-6 text-sm text-gray-500">
+            An invitation email will be sent to the team member.
+            They will need to set up their password via the link in the email.
+          </div>
+        )}
       </Form>
 
       <div className="mt-6 flex items-center justify-end gap-4">
@@ -577,5 +674,124 @@ const SuspendModal = ({
         </Button>
       </div>
     </Modal>
+  )
+}
+
+const DEFAULT_SEARCH = {}
+
+const Search = ({
+  form,
+  searching,
+  goSearch,
+  onPageChange,
+  clearFilters
+}: {
+  form: FormInstance<unknown>
+  searching: boolean
+  goSearch: () => void
+  onPageChange: (page: number, pageSize: number) => void
+  clearFilters: () => void
+}) => {
+  const clear = () => {
+    form.resetFields()
+    clearFilters()
+    // Reset to first page - onPageChange will trigger data fetch via useEffect
+    onPageChange(1, PAGE_SIZE)
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <Form
+        form={form}
+        onFinish={goSearch}
+        initialValues={DEFAULT_SEARCH}
+        disabled={searching}
+      >
+        {/* Single Row - Search field, Created at, and Buttons */}
+        <div className="flex items-end gap-4 flex-wrap">
+          {/* Search Field */}
+          <div className="flex-shrink-0">
+            <div className="text-sm text-gray-600 mb-2">Search</div>
+            <Form.Item name="searchKey" noStyle>
+              <Input 
+                placeholder="Search first name, last name, email" 
+                onPressEnter={() => form.submit()}
+                size="large"
+                allowClear
+                style={{ width: '300px' }}
+              />
+            </Form.Item>
+          </div>
+
+          {/* Created At Date Range */}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm text-gray-600 mb-2">Created at</div>
+            <div className="flex items-center gap-2">
+              <Form.Item name="createTimeStart" noStyle={true}>
+                <DatePicker
+                  placeholder="Start Date"
+                  format="MM.DD.YYYY"
+                  disabledDate={(d) => d.isAfter(new Date())}
+                  size="large"
+                  allowClear
+                  style={{ width: '140px' }}
+                />
+              </Form.Item>
+              <span className="text-gray-400">-</span>
+              <Form.Item
+                name="createTimeEnd"
+                noStyle={true}
+                rules={[
+                  {
+                    required: false,
+                    message: 'Must be later than start date.'
+                  },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const start = getFieldValue('createTimeStart')
+                      if (null == start || value == null) {
+                        return Promise.resolve()
+                      }
+                      return value.isAfter(start) || value.isSame(start, 'day')
+                        ? Promise.resolve()
+                        : Promise.reject('Must be same or later than start date')
+                    }
+                  })
+                ]}
+              >
+                <DatePicker
+                  placeholder="End Date"
+                  format="MM.DD.YYYY"
+                  disabledDate={(d) => d.isAfter(new Date())}
+                  size="large"
+                  allowClear
+                  style={{ width: '140px' }}
+                />
+              </Form.Item>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 ml-auto">
+            <Button
+              size="large"
+              onClick={clear}
+              disabled={searching}
+            >
+              Clear
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              htmlType="submit"
+              loading={searching}
+              disabled={searching}
+            >
+              Search
+            </Button>
+          </div>
+        </div>
+      </Form>
+    </div>
   )
 }
