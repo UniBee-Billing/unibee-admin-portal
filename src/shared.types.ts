@@ -22,7 +22,7 @@ export type BareStyleProps = WithStyle<{}>
 
 export type WithDoubleConfirmFields<T> = {
   confirmTotalAmount: number
-  confirmCurrency: string
+  currency: string
 } & T
 
 export type TPromoAccount = {

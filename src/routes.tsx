@@ -20,6 +20,8 @@ import PlanDetail from './components/plan/detail/index'
 import { ReportPage } from './components/report'
 import Settings from './components/settings/index'
 import WebhookLogs from './components/settings/webHooks/webhookLogs'
+import SendGridRecords from './components/settings/integrations/sendgrid/SendGridRecords'
+import VATSenseRecords from './components/settings/integrations/vatsense/VATSenseRecords'
 import RefundModule from './components/refund'
 import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
@@ -50,6 +52,14 @@ export const APP_ROUTES: RouteObject[] = [
       {
         path: 'webhook-logs/:id',
         element: <WebhookLogs />
+      },
+      {
+        path: 'integrations/sendgrid/records',
+        element: <SendGridRecords />
+      },
+      {
+        path: 'integrations/vat-sense',
+        element: <VATSenseRecords />
       }
     ]
   },

@@ -30,11 +30,9 @@ import {
   FormInstance,
   Input,
   MenuProps,
-  Pagination,
   Row,
   Space,
   Spin,
-  Table,
   Tooltip,
   message
 } from 'antd'
@@ -45,6 +43,8 @@ import ImportModal from '../shared/dataImportModal'
 import LongTextPopover from '../ui/longTextPopover'
 import { SubscriptionStatusTag, UserStatusTag } from '../ui/statusTag'
 import CreateUserModal from './createUserModal'
+import CopyToClipboard from '../ui/copyToClipboard'
+import ResponsiveTable from '../table/responsiveTable'
 import './list.css'
 
 const BASE_PATH = import.meta.env.BASE_URL
@@ -197,26 +197,44 @@ const Index = () => {
       title: 'User ID',
       dataIndex: 'id',
       key: 'id',
+      width: 100,
       render: (id) => (
-        <a href={`${location.origin}${BASE_PATH}user/${id}`}>{id}</a>
+        <div className="flex items-center gap-1">
+          <Tooltip title={id}>
+            <div
+              style={{
+                width: '100px',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {id}
+            </div>
+          </Tooltip>
+          <CopyToClipboard content={String(id)} />
+        </div>
       )
     },
     {
       title: 'External User ID',
       dataIndex: 'externalUserId',
       key: 'externalUserId',
+      width: 100,
       render: (externalUserId) => externalUserId || ''
     },
     {
       title: 'Name',
       dataIndex: 'firstName',
       key: 'userName',
+      width: 100,
       render: (_, user) => user.firstName + ' ' + user.lastName
     },
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email'
+      key: 'email',
+      width: 200
     },
     
 
@@ -239,14 +257,22 @@ const Index = () => {
       title: 'Sub ID',
       dataIndex: 'subscriptionId',
       key: 'subscriptionId',
+      width: 150,
       render: (subId, _) => (
-        <div
-          className="btn-user-with-subid w-28 overflow-hidden overflow-ellipsis whitespace-nowrap text-blue-500"
-          onClick={() => {
-            navigate(`/subscription/${subId}`)
-          }}
-        >
-          {subId}
+        <div className="flex items-center gap-1">
+          <Tooltip title={subId}>
+            <div
+              style={{
+                width: '100px',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {subId}
+            </div>
+          </Tooltip>
+          <CopyToClipboard content={String(subId)} />
         </div>
       )
     },
@@ -254,6 +280,7 @@ const Index = () => {
       title: 'Sub Status',
       dataIndex: 'subscriptionStatus',
       key: 'subStatus',
+      width: 120,
       render: (subStatus, _) => SubscriptionStatusTag(subStatus),
       filters: SUB_STATUS_FILTER,
       filteredValue: filters.subStatus
@@ -262,12 +289,14 @@ const Index = () => {
       title: 'Created at',
       dataIndex: 'createTime',
       key: 'createTime',
+      width: 120,
       render: (d) => (d === 0 ? '―' : formatDate(d)) // dayjs(d * 1000).format('YYYY-MMM-DD')
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      width: 100,
       render: (status, _) => UserStatusTag(status),
       filters: USER_STATUS_FILTER,
       filteredValue: filters.status
@@ -302,18 +331,17 @@ const Index = () => {
           </Dropdown>
         </>
       ),
-      width: 128,
+      width: 140,
       key: 'action',
-      render: (_) => (
+      fixed: 'right',
+      render: (_, record) => (
         <Space size="middle" className="user-action-btn-wrapper">
-          <Tooltip title="Edit">
-            <Button
-              // disabled={copyingPlan}
-              style={{ border: 'unset' }}
-              // onClick={() => goToDetail(record.id)}
-              icon={<EditOutlined />}
-            />
-          </Tooltip>
+          <Button
+            type="link"
+            onClick={() => navigate(`/user/${record.id}`)}
+          >
+            Edit
+          </Button>
         </Space>
       )
     }
@@ -333,13 +361,14 @@ const Index = () => {
     setFilters({ status: null, subStatus: null, planIds: null })
 
   const onTableChange: TableProps<IProfile>['onChange'] = (
-    _pagination,
+    pagination,
     filters,
     _sorter,
     _extra
   ) => {
-    onPageChange(1, PAGE_SIZE)
-
+    const newPage = pagination.current || 1
+    
+    onPageChange(newPage, PAGE_SIZE)
     setFilters(filters as TFilters)
   }
 
@@ -389,47 +418,28 @@ const Index = () => {
           }}
         />
       ) : (
-        <Table
+        <ResponsiveTable
           columns={getColumns()}
           dataSource={users}
           onChange={onTableChange}
           rowKey={'id'}
-          rowClassName="clickable-tbl-row"
-          pagination={false}
+          pagination={{
+            current: page + 1,
+            pageSize: PAGE_SIZE,
+            total: total,
+            onChange: onPageChange,
+            disabled: loading,
+            showSizeChanger: false,
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} of ${total} items`
+          }}
           loading={{
             spinning: loading,
             indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
           }}
-          onRow={(user) => {
-            return {
-              onClick: (evt) => {
-                if (
-                  evt.target instanceof HTMLElement &&
-                  evt.target.classList.contains('btn-user-with-subid')
-                ) {
-                  return
-                }
-                navigate(`/user/${user.id}`)
-              }
-            }
-          }}
+          scroll={{ x: 1200 }}
         />
       )}
-
-      <div className="mx-0 my-4 flex items-center justify-end">
-        <Pagination
-          current={page + 1} // back-end starts with 0, front-end starts with 1
-          pageSize={PAGE_SIZE}
-          total={total}
-          size="small"
-          onChange={onPageChange}
-          disabled={loading}
-          showSizeChanger={false}
-          showTotal={(total, range) =>
-            `${range[0]}-${range[1]} of ${total} items`
-          }
-        />
-      </div>
     </div>
   )
 }

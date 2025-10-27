@@ -1,186 +1,306 @@
 import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
-import { getMetricsListReq } from '@/requests/index'
+import { getMetricsListReq, deleteMetricReq } from '@/requests/index'
 import {
   IBillableMetrics,
   MetricAggregationType,
   MetricType
 } from '@/shared.types'
-import { LoadingOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons'
-import { Button, Pagination, Space, Table, Tooltip, message } from 'antd'
+import { EditOutlined, DeleteOutlined, PlusOutlined, SyncOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { Button, Input, Tag, Tooltip, message, Modal } from 'antd'
+
+const { Search } = Input
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { formatDate } from '@/helpers/index'
-import { usePagination } from '@/hooks/index'
 import '@/shared.css'
-
-const PAGE_SIZE = 10
+import ResponsiveTable from '../table/responsiveTable'
+import './list.css'
 
 const Index = () => {
   const navigate = useNavigate()
-  const [total, setTotal] = useState(0)
-  const { page, onPageChange } = usePagination()
+  const [searchText, setSearchText] = useState('')
   const [loading, setLoading] = useState(false)
   const [metricsList, setMetricsList] = useState<IBillableMetrics[]>([])
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  })
 
-  const fetchMetricsList = async () => {
+  const fetchMetricsList = async (overrides?: {
+    page?: number;
+    pageSize?: number;
+    searchKey?: string;
+  }) => {
     setLoading(true)
-    const [res, err] = await getMetricsListReq({
-      refreshCb: fetchMetricsList,
-      page,
-      count: PAGE_SIZE
-    })
-    setLoading(false)
-    if (err != null) {
-      message.error((err as Error).message)
-      return
+    try {
+      const currentPage = overrides?.page !== undefined ? overrides.page : pagination.current - 1
+      const currentPageSize = overrides?.pageSize !== undefined ? overrides.pageSize : pagination.pageSize
+      const currentSearchKey = overrides?.searchKey !== undefined ? overrides.searchKey : searchText
+
+      const [res, err] = await getMetricsListReq({
+        refreshCb: fetchMetricsList,
+        page: currentPage,
+        count: currentPageSize,
+        searchKey: currentSearchKey
+      })
+      
+      if (err != null) {
+        message.error((err as Error).message)
+        return
+      }
+      
+      const { merchantMetrics, total } = res
+      setMetricsList(merchantMetrics ?? [])
+      setPagination(prev => ({ ...prev, total }))
+    } catch (err) {
+      message.error('An error occurred while fetching data')
+      console.error('Exception in fetchMetricsList:', err)
+    } finally {
+      setLoading(false)
     }
-    const { merchantMetrics, total } = res
-    setMetricsList(merchantMetrics ?? [])
-    setTotal(total)
   }
 
   const onNewMetrics = () => {
-    onPageChange(1, PAGE_SIZE)
-    // setPage(0) // if user are on page 3, after creating new plan, they'll be redirected back to page 1,so the newly created plan will be shown on the top
     navigate(`/billable-metric/new`)
+  }
+
+  const handleRefresh = () => {
+    fetchMetricsList()
+  }
+
+  const handleTableChange: TableProps<IBillableMetrics>['onChange'] = (newPagination) => {
+    const newPage = newPagination.current || 1
+    const newPageSize = newPagination.pageSize || 20
+    
+    setPagination(prev => ({
+      ...prev,
+      current: newPage,
+      pageSize: newPageSize,
+    }))
+    
+    fetchMetricsList({
+      page: newPage - 1,
+      pageSize: newPageSize,
+    })
+  }
+
+  const handleEdit = (record: IBillableMetrics, e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate(`/billable-metric/${record.id}`)
+  }
+
+  const handleDelete = (record: IBillableMetrics, e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    Modal.confirm({
+      title: 'Delete Billable Metric',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>Are you sure you want to delete this billable metric?</p>
+          <p className="mt-2">
+            <strong>Name:</strong> {record.metricName}
+          </p>
+          <p>
+            <strong>Code:</strong> {record.code}
+          </p>
+          <p className="mt-2 text-red-500">This action cannot be undone.</p>
+        </div>
+      ),
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          const [, error] = await deleteMetricReq(record.id)
+          
+          if (error) {
+            message.error('Failed to delete metric: ' + error.message)
+            return
+          }
+          
+          message.success('Metric deleted successfully')
+          // Refresh the list
+          fetchMetricsList()
+        } catch (err) {
+          message.error('An error occurred while deleting the metric')
+          console.error('Exception in handleDelete:', err)
+        }
+      },
+    })
   }
 
   const columns: ColumnsType<IBillableMetrics> = [
     {
       title: 'Name',
       dataIndex: 'metricName',
-      key: 'metricName'
+      key: 'metricName',
+      width: 180,
     },
-
     {
       title: 'Code',
       dataIndex: 'code',
-      key: 'code'
+      key: 'code',
+      width: 150,
+      render: (code: string) => (
+        <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm font-mono">
+          {code}
+        </span>
+      ),
     },
     {
       title: 'Description',
       dataIndex: 'metricDescription',
-      key: 'metricDescription'
+      key: 'metricDescription',
+      ellipsis: true,
+      render: (desc: string) => desc || '-',
     },
     {
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
-      render: (t) => {
-        return <span>{METRICS_TYPE[t as MetricType].label}</span>
+      width: 150,
+      render: (t: MetricType) => {
+        const typeLabel = METRICS_TYPE[t]?.label || t
+        return <Tag color="blue">{typeLabel}</Tag>
       }
     },
     {
-      title: 'Aggregation Type',
+      title: 'Aggregation',
       dataIndex: 'aggregationType',
       key: 'aggregationType',
-      render: (aggreType) => (
-        <span>
-          {METRICS_AGGREGATE_TYPE[aggreType as MetricAggregationType].label}
-        </span>
-      )
+      width: 150,
+      render: (aggreType: MetricAggregationType) => {
+        const aggreLabel = METRICS_AGGREGATE_TYPE[aggreType]?.label || aggreType
+        return <span>{aggreLabel}</span>
+      }
     },
     {
-      title: 'Aggregation Property',
-      dataIndex: 'aggregationProperty',
-      key: 'aggregationProperty',
-      render: (prop) => <span>{prop}</span>
-      // filters: PLAN_STATUS_FILTER,
-      // onFilter: (value, record) => record.status == value,
-    },
-    {
-      title: 'Updated at',
+      title: 'Updated',
       dataIndex: 'gmtModify',
       key: 'gmtModify',
-      render: (d) => formatDate(d, true) // dayjs(d * 1000).format('YYYY-MMM-DD, HH:MM:ss')
+      width: 150,
+      render: (d) => formatDate(d, true)
     },
     {
-      title: (
-        <>
-          <span>Actions</span>
-          <Tooltip title="New billable metric">
+      title: 'Actions',
+      key: 'actions',
+      width: 120,
+      fixed: 'right',
+      render: (_: any, record: IBillableMetrics) => (
+        <div className="flex items-center gap-3">
+          <Tooltip title="Edit">
             <Button
-              size="small"
-              style={{ marginLeft: '8px' }}
-              onClick={onNewMetrics}
-              icon={<PlusOutlined />}
-            ></Button>
+              type="text"
+              icon={<EditOutlined className="text-blue-500" />}
+              onClick={(e) => handleEdit(record, e)}
+            />
           </Tooltip>
-          <Tooltip title="Refresh">
+          <Tooltip title="Delete">
             <Button
-              size="small"
-              style={{ marginLeft: '8px' }}
-              disabled={loading}
-              onClick={fetchMetricsList}
-              icon={<SyncOutlined />}
-            ></Button>
+              type="text"
+              icon={<DeleteOutlined className="text-red-500" />}
+              onClick={(e) => handleDelete(record, e)}
+            />
           </Tooltip>
-        </>
+        </div>
       ),
-      key: 'action',
-      width: 150,
-      render: (_) => (
-        <Space size="middle">
-          <a>Edit</a>
-        </Space>
-      )
     }
   ]
 
-  const onTableChange: TableProps<IBillableMetrics>['onChange'] = (
-    _pagination,
-    filters,
-    _sorter,
-    _extra
-  ) => {
-    if (filters.status == null) {
-      return
-    }
-    // setStatusFilter(filters.status as number[]);
-  }
-
   useEffect(() => {
     fetchMetricsList()
-  }, [page])
+  }, [])
 
   return (
-    <>
-      <Table
-        columns={columns}
-        dataSource={metricsList}
-        rowKey={'id'}
-        rowClassName="clickable-tbl-row"
-        pagination={false}
-        loading={{
-          spinning: loading,
-          indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
-        }}
-        onChange={onTableChange}
-        onRow={(record) => {
-          return {
-            onClick: () => {
-              navigate(`/billable-metric/${record.id}`)
-            }
-          }
-        }}
-      />
-      <div className="mx-0 my-4 flex items-center justify-end">
-        <Pagination
-          current={page + 1} // back-end starts with 0, front-end starts with 1
-          pageSize={PAGE_SIZE}
-          total={total}
-          size="small"
-          onChange={onPageChange}
-          showTotal={(total, range) =>
-            `${range[0]}-${range[1]} of ${total} items`
-          }
-          disabled={loading}
-          showSizeChanger={false}
-        />
+    <div className="bg-gray-50 min-h-screen">
+      <div className="p-6">
+        {/* Page Title */}
+        <h1 className="text-2xl font-semibold mb-6">Billable Metric</h1>
+
+        {/* Search and Action Bar */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            {/* Search Input */}
+            <div className="flex-1 max-w-md">
+              <Search
+                placeholder="Search by code or name"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onSearch={(value) => {
+                  const trimmedValue = value.trim()
+                  setSearchText(trimmedValue)
+                  setPagination(prev => ({ ...prev, current: 1 }))
+                  fetchMetricsList({ page: 0, searchKey: trimmedValue })
+                }}
+                size="large"
+                allowClear
+                enterButton
+                className="w-full"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                size="large"
+                icon={<SyncOutlined />}
+                onClick={handleRefresh}
+                disabled={loading}
+              >
+                Refresh
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={<PlusOutlined />}
+                onClick={onNewMetrics}
+                style={{
+                  backgroundColor: '#1890ff',
+                  borderColor: '#1890ff',
+                  color: '#fff',
+                  fontWeight: 500,
+                }}
+                className="hover:opacity-90"
+              >
+                New Metric
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <ResponsiveTable
+            columns={columns}
+            dataSource={metricsList}
+            rowKey={'id'}
+            rowClassName="clickable-tbl-row"
+            pagination={{
+              ...pagination,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+              locale: { items_per_page: '' },
+              className: 'billable-metric-pagination',
+            }}
+            loading={loading}
+            onChange={handleTableChange}
+            scroll={{ x: 1200 }}
+            onRow={(record) => {
+              return {
+                onClick: () => {
+                  navigate(`/billable-metric/${record.id}`)
+                }
+              }
+            }}
+          />
+        </div>
       </div>
-    </>
+    </div>
   )
 }
 

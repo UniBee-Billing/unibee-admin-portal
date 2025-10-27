@@ -8,13 +8,15 @@ import {
 import { usePagination } from '@/hooks'
 import { exportDataReq, getPlanList, getSublist } from '@/requests'
 import '@/shared.css'
+import './list.css'
 import {
   ExportOutlined,
   ImportOutlined,
   LoadingOutlined,
   MoreOutlined,
   ProfileOutlined,
-  SyncOutlined
+  SyncOutlined,
+  DownOutlined,
 } from '@ant-design/icons'
 import {
   Button,
@@ -28,9 +30,7 @@ import {
   Pagination,
   Row,
   Select,
-  Space,
   Spin,
-  Table,
   Tooltip,
   message
 } from 'antd'
@@ -51,6 +51,8 @@ import { useAppConfigStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import LongTextPopover from '../ui/longTextPopover'
 import { SubscriptionStatusTag } from '../ui/statusTag'
+import ResponsiveTable from '../table/responsiveTable'
+import CopyToClipboard from '../ui/copyToClipboard'
 
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
@@ -72,8 +74,6 @@ type TFilters = {
   planIds: number[] | null
   internalPlanNameIds: number[] | null
   planType: number[] | null
-  userId?: number | null
-  externalUserId?: string | null
 }
 
 const Index = () => {
@@ -81,8 +81,9 @@ const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const appConfigStore = useAppConfigStore()
   const [form] = Form.useForm()
-  const { page, onPageChange } = usePagination()
+  const { page, onPageChange, onPageChangeNoParams } = usePagination()
   const [total, setTotal] = useState(0)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE)
   const [subList, setSubList] = useState<ISubscriptionType[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingPlans, setLoadingPlans] = useState(false)
@@ -95,50 +96,40 @@ const Index = () => {
     ...initializeFilters('status', Number, SubscriptionStatus),
     planIds: null, // when the page is loading, we don't know how many plans we have, so we set planIds to null, in fetchPlan call, we will initialize this filter.
     internalPlanNameIds: null,
-    planType: null,
-    userId: null,
-    externalUserId: null
+    planType: null
   } as TFilters)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
   const internalPlanNameFilterRef = useRef<{ value: number; text: string }[]>([])
-  const allPlansRef = useRef<IPlan[]>([]) // Store all plans data for planType filtering
+  const planTypeToIdsRef = useRef<{ [key: number]: number[] }>({})
 
-  // Combine planIds and internalPlanNameIds into a single planIds array for API requests
-  const buildApiFilters = (curFilters: TFilters) => {
-    const { planIds, internalPlanNameIds, planType, userId, externalUserId, ...restFilters } = curFilters
-    let mergedPlanIds: number[] | null = null
-    
-    // Handle planIds filter
+  // Merge planIds, internalPlanNameIds, and planType-filtered planIds before sending to backend
+  const getBackendFilters = () => {
+    const { planIds, internalPlanNameIds, planType, ...rest } = filters
+    const merged = new Set<number>()
+
+    // Add explicitly selected planIds
     if (planIds != null) {
-      mergedPlanIds = [...planIds]
+      planIds.forEach((id) => merged.add(id))
     }
-    
-    // Handle internalPlanNameIds filter
+
+    // Add explicitly selected internalPlanNameIds
     if (internalPlanNameIds != null) {
-      mergedPlanIds = mergedPlanIds == null ? [...internalPlanNameIds] : [...new Set([...mergedPlanIds, ...internalPlanNameIds])]
+      internalPlanNameIds.forEach((id) => merged.add(id))
     }
-    
-    // Handle planType filter by converting to planIds
+
+    // Add planIds that match the selected planType
     if (planType != null && planType.length > 0) {
-      const planTypeFilteredIds = allPlansRef.current
-        .filter(p => p.plan && planType.includes(p.plan.type))
-        .map(p => p.plan!.id)
-      
-      if (planTypeFilteredIds.length > 0) {
-        mergedPlanIds = mergedPlanIds == null 
-          ? planTypeFilteredIds 
-          : mergedPlanIds.filter(id => planTypeFilteredIds.includes(id))
-      } else {
-        // If no plans match the planType filter, return empty array to get no results
-        mergedPlanIds = []
-      }
+      planType.forEach((type) => {
+        const planIdsForType = planTypeToIdsRef.current[type]
+        if (planIdsForType) {
+          planIdsForType.forEach((id) => merged.add(id))
+        }
+      })
     }
-    
+
     return {
-      ...restFilters,
-      ...(mergedPlanIds != null && mergedPlanIds.length > 0 ? { planIds: mergedPlanIds } : {}),
-      ...(userId != null ? { userId } : {}),
-      ...(externalUserId != null && externalUserId.trim() !== '' ? { externalUserId } : {})
+      ...rest,
+      planIds: merged.size > 0 ? Array.from(merged) : null
     }
   }
 
@@ -147,7 +138,7 @@ const Index = () => {
     if (null == payload) {
       return
     }
-    payload = { ...payload, ...buildApiFilters(filters) }
+    payload = { ...payload, ...getBackendFilters() }
 
     setExporting(true)
     const [_, err] = await exportDataReq({
@@ -173,25 +164,13 @@ const Index = () => {
 
   const extraButtons = [
     {
-      key: 'exportData',
-      label: 'Export',
-      icon: <ExportOutlined />
-    },
-    {
       key: 'importActiveSub',
       label: 'Import active subscription',
-      icon: <ImportOutlined />
     },
     {
       key: 'importSubHistory',
       label: 'Import subscription history',
-      icon: <ImportOutlined />
     }
-    /* {
-      key: 'downloadImportTemplate',
-      label: 'Download import template',
-      icon: <DownloadOutlined />
-    } */
   ]
   const onMenuClick: MenuProps['onClick'] = (e) => {
     extraActions[e.key]()
@@ -199,35 +178,25 @@ const Index = () => {
 
   const getColumns = (): ColumnsType<ISubscriptionType> => [
     {
-      title: 'Sub ID',
+      title: 'Sub Id',
       dataIndex: 'subscriptionId',
       key: 'subscriptionId',
-      width: 90,
-      fixed: 'left',
       render: (id) => (
-        <Tooltip title={id} overlayClassName="sub-tooltip-wrapper">
-          <div
-            style={{
-              width: '80px',
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <a
-              href={`${location.origin}${BASE_PATH}subscription/${id}`}
-              onClick={(e) => {
-                // Only navigate using react-router for left clicks without modifier keys
-                if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-                  e.preventDefault();
-                  navigate(`/subscription/${id}`);
-                }
+        <div className="flex items-center gap-1">
+          <Tooltip title={id}>
+            <div
+              style={{
+                width: '100px',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap'
               }}
             >
               {id}
-            </a>
-          </div>
-        </Tooltip>
+            </div>
+          </Tooltip>
+          <CopyToClipboard content={id} />
+        </div>
       )
     },
     {
@@ -238,25 +207,15 @@ const Index = () => {
       filteredValue: filters.planIds,
       filterSearch: (input, record) =>
         String(record.text).toLowerCase().includes(input.toLowerCase()),
-      width: 110,
+      width: 120,
       render: (_, sub) => (
-        <div className="w-24 overflow-hidden whitespace-nowrap">
+        <div className="w-28 overflow-hidden whitespace-nowrap">
           {sub.plan?.planName != undefined && (
-            <Tooltip 
-              title={
-                <div>
-                  <div><strong>{sub.plan.planName}</strong></div>
-                  {sub.plan.description && (
-                    <div className="mt-1 text-gray-300">{sub.plan.description}</div>
-                  )}
-                </div>
-              }
+            <LongTextPopover
+              text={sub.plan.planName}
               placement="topLeft"
-            >
-              <div className="cursor-pointer text-blue-600 hover:text-blue-800">
-                {sub.plan.planName}
-              </div>
-            </Tooltip>
+              width="120px"
+            />
           )}
           <div className="text-xs text-gray-400">
             {`${showAmount(sub.plan?.amount, sub.plan?.currency)}/${formatPlanInterval(sub.plan)}`}
@@ -272,29 +231,45 @@ const Index = () => {
       filteredValue: filters.internalPlanNameIds,
       filterSearch: (input, record) =>
         String(record.text).toLowerCase().includes(input.toLowerCase()),
-      width: 120,
+      width: 140,
+      // onFilter: (value, record) => record.plan?.id === value,
       render: (_, sub) => (
-        <div className="w-28 overflow-hidden whitespace-nowrap">
+        <div className="w-36 overflow-hidden whitespace-nowrap">
           {sub.plan?.internalName != undefined && (
             <LongTextPopover
               text={sub.plan.internalName}
               placement="topLeft"
-              width="120px"
+              width="140px"
             />
           )}
         </div>
       )
     },
     {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      width: 160,
+      render: (_, sub) =>
+        sub.plan?.description != undefined && (
+          <LongTextPopover
+            text={sub.plan.description}
+            placement="topLeft"
+            width="160px"
+          />
+        )
+    },
+    {
       title: 'Plan Type',
       dataIndex: 'planType',
       key: 'planType',
-      width: 100,
+      width: 160,
       filters: PLAN_TYPE_FILTER,
       filteredValue: filters.planType,
+      onFilter: (value, record) => record.plan?.type === value,
       render: (_, sub) => (
-        <span className="whitespace-nowrap text-xs">
-          {sub.plan?.type === PlanType.ONE_TIME_ADD_ON ? 'One-time' : 'Main'}
+        <span className="whitespace-nowrap">
+          {sub.plan?.type === PlanType.ONE_TIME_ADD_ON ? 'One-time Payment' : 'Main Plan'}
         </span>
       )
     },
@@ -334,7 +309,6 @@ const Index = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      width: 80,
       render: (_, sub) => SubscriptionStatusTag(sub.status),
       filters: SUB_STATUS_FILTER,
       filteredValue: filters.status
@@ -343,100 +317,43 @@ const Index = () => {
       title: 'Start',
       dataIndex: 'currentPeriodStart',
       key: 'currentPeriodStart',
-      width: 90,
-      render: (_, sub) => (
-        <span className="text-xs">{formatDate(sub.currentPeriodStart, true)}</span>
-      )
+      render: (_, sub) => formatDate(sub.currentPeriodStart, true)
     },
     {
       title: 'End',
       dataIndex: 'currentPeriodEnd',
       key: 'currentPeriodEnd',
-      width: 90,
-      render: (_, sub) => (
-        <span className="text-xs">{formatDate(sub.currentPeriodEnd, true)}</span>
-      )
+      render: (_, sub) => formatDate(sub.currentPeriodEnd, true)
     },
     {
       title: 'User',
       dataIndex: 'userId',
       key: 'userId',
-      width: 80,
       render: (_, sub) => (
-        <div className="overflow-hidden whitespace-nowrap text-xs">
-          {sub.user != null ? `${sub.user.firstName} ${sub.user.lastName}` : ''}
-        </div>
-      )
-    },
-    {
-      title: 'User ID',
-      dataIndex: 'userId',
-      key: 'userIdDisplay',
-      width: 80,
-      render: (_, sub) => (
-        <span className="text-xs">{sub.userId || ''}</span>
-      )
-    },
-    {
-      title: 'External User ID',
-      dataIndex: 'externalUserId',
-      key: 'externalUserId',
-      width: 100,
-      render: (_, sub) => (
-        <div className="overflow-hidden whitespace-nowrap text-xs" title={sub.user?.externalUserId}>
-          {sub.user?.externalUserId || ''}
-        </div>
+        <span>{`${sub.user != null ? sub.user.firstName + ' ' + sub.user.lastName : ''}`}</span>
       )
     },
     {
       title: 'Email',
       dataIndex: 'userEmail',
       key: 'userEmail',
-      width: 180,
       render: (_, sub) =>
         sub.user != null ? (
-          <div className="overflow-hidden whitespace-nowrap text-xs">
-            <a href={`mailto:${sub.user.email}`} title={sub.user.email}>
-              {sub.user.email}
-            </a>
-          </div>
+          <a href={`mailto:${sub.user.email}`}>{sub.user.email}</a>
         ) : null
     },
     {
-      title: (
-        <>
-          <span>Actions</span>
-          <Tooltip title="Refresh">
-            <Button
-              size="small"
-              style={{ marginLeft: '8px' }}
-              disabled={loading}
-              onClick={fetchData}
-              icon={<SyncOutlined />}
-            ></Button>
-          </Tooltip>
-          <Dropdown menu={{ items: extraButtons, onClick: onMenuClick }}>
-            <Button
-              icon={<MoreOutlined />}
-              size="small"
-              style={{ marginLeft: '8px' }}
-            ></Button>
-          </Dropdown>
-        </>
-      ),
+      title: 'Actions',
       key: 'action',
-      width: 120,
+      width: 100,
       fixed: 'right',
-      render: (_) => (
-        <Space
-          size="small"
-          className="invoice-action-btn-wrapper"
-        // style={{ width: '170px' }}
+      render: (_, record) => (
+        <Button 
+          type="link"
+          onClick={() => navigate(`/subscription/${record.subscriptionId}`)}
         >
-          <Tooltip title="Detail">
-            <Button icon={<ProfileOutlined />} style={{ border: 'unset' }} />
-          </Tooltip>
-        </Space>
+          View Details
+        </Button>
       )
     }
   ]
@@ -450,8 +367,8 @@ const Index = () => {
     const [res, err] = await getSublist(
       {
         page: page as number,
-        count: PAGE_SIZE,
-        ...buildApiFilters(filters),
+        count: pageSize,
+        ...getBackendFilters(),
         ...searchTerm
       },
       fetchData
@@ -509,10 +426,6 @@ const Index = () => {
       return
     }
     const { plans } = planList
-    
-    // Store all plans data for planType filtering
-    allPlansRef.current = plans || []
-    
     planFilterRef.current =
       plans == null
         ? []
@@ -530,6 +443,19 @@ const Index = () => {
             value: p.plan?.id,
             text: p.plan?.internalName || '(Empty)'
           }))
+
+    // Build planType to planIds mapping
+    planTypeToIdsRef.current = {}
+    if (plans != null) {
+      plans.forEach((p: IPlan) => {
+        if (p.plan?.type != null && p.plan?.id != null) {
+          if (!planTypeToIdsRef.current[p.plan.type]) {
+            planTypeToIdsRef.current[p.plan.type] = []
+          }
+          planTypeToIdsRef.current[p.plan.type].push(p.plan.id)
+        }
+      })
+    }
 
     // to initialize the planIds filter.
     // planIds filter on URL is a string like planIds=1-2-3, or it could be null.
@@ -562,10 +488,22 @@ const Index = () => {
   }
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
-    _,
-    filters
+    pagination,
+    filters,
   ) => {
-    onPageChange(1, PAGE_SIZE)
+    const newPageSize = pagination.pageSize || PAGE_SIZE
+    const newPage = pagination.current || 1
+    
+    // If pageSize changed, reset to page 1
+    if (newPageSize !== pageSize) {
+      setPageSize(newPageSize)
+      onPageChangeNoParams(1, newPageSize)
+      searchParams.set('page', '1')
+    } else {
+      onPageChangeNoParams(newPage, newPageSize)
+      searchParams.set('page', String(newPage))
+    }
+
     setFilters(filters as TFilters)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -597,22 +535,10 @@ const Index = () => {
       searchTerm.email = email.trim()
     }
 
-    // Handle userId separately to avoid being deleted by the cleanup logic
-    const userId = form.getFieldValue('userId')
-    if (userId && !isNaN(Number(userId))) {
-      searchTerm.userId = Number(userId)
-    }
-
-    // Handle externalUserId separately to avoid being deleted by the cleanup logic
-    const externalUserId = form.getFieldValue('externalUserId')
-    if (externalUserId && externalUserId.trim() !== '') {
-      searchTerm.externalUserId = externalUserId.trim()
-    }
-
-    // Clean up empty values (but preserve email, userId, externalUserId if they were set above)
+    // Clean up empty values (but preserve email if it was set above)
     Object.keys(searchTerm).forEach(
       (k) =>
-        !['email', 'userId', 'externalUserId'].includes(k) && // Don't delete these fields
+        k !== 'email' && // Don't delete email field
         (searchTerm[k] == undefined ||
           (typeof searchTerm[k] == 'string' && searchTerm[k].trim() == '')) &&
         delete searchTerm[k]
@@ -660,7 +586,7 @@ const Index = () => {
     return searchTerm
   }
 
-  const clearFilters = () => setFilters({ status: null, planIds: null, internalPlanNameIds: null, planType: null, userId: null, externalUserId: null })
+  const clearFilters = () => setFilters({ status: null, planIds: null, internalPlanNameIds: null, planType: null })
 
   const goSearch = () => {
     if (page == 0) {
@@ -672,84 +598,95 @@ const Index = () => {
 
   useEffect(() => {
     fetchData()
-  }, [page, filters])
+  }, [page, pageSize, filters])
 
   useEffect(() => {
     fetchPlan()
   }, [])
 
   return (
-    <div>
+    <div className="bg-gray-50 min-h-screen">
       {importModalOpen !== false && (
         <ImportModal
           closeModal={() => setImportModalOpen(false)}
           importType={importModalOpen}
         />
       )}
-      <Search
-        form={form}
-        goSearch={goSearch}
-        searching={loading || loadingPlans}
-        exporting={exporting}
-        onPageChange={onPageChange}
-        clearFilters={clearFilters}
-      />
-      <div className="mb-3"></div>
-      {loadingPlans ? (
-        <Spin
-          indicator={<LoadingOutlined spin />}
-          size="large"
-          style={{
-            width: '100%',
-            height: '320px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        />
-      ) : (
-        <Table
-          columns={getColumns()}
-          dataSource={subList}
-          rowKey={'id'}
-          rowClassName="clickable-tbl-row"
-          pagination={false}
-          onChange={onTableChange}
-          scroll={{ x: 1200, y: 'calc(100vh - 400px)' }}
-          size="small"
-          onRow={(record) => {
-            return {
-              onClick: (evt) => {
-                if (
-                  evt.target instanceof HTMLElement &&
-                  evt.target.closest('.sub-tooltip-wrapper') != null
-                ) {
-                  return
-                }
-                navigate(`/subscription/${record.subscriptionId}`)
-              }
-            }
-          }}
-          loading={{
-            spinning: loading,
-            indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
-          }}
-        />
-      )}
+      
+      <div className="p-6">
+        {/* Page Title */}
+        <h1 className="text-2xl font-semibold mb-6">Subscriptions</h1>
 
-      <div className="mx-0 my-4 flex items-center justify-end">
-        <Pagination
-          current={page + 1} // back-end starts with 0, front-end starts with 1
-          pageSize={PAGE_SIZE}
-          total={total}
-          size="small"
-          onChange={onPageChange}
-          disabled={loading}
-          showSizeChanger={false}
-          showTotal={(total, range) =>
-            `${range[0]}-${range[1]} of ${total} items`
-          }
+        <Search
+          form={form}
+          goSearch={goSearch}
+          searching={loading || loadingPlans}
+          exporting={exporting}
+          onPageChange={onPageChange}
+          clearFilters={clearFilters}
         />
+
+        {/* Records Section */}
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium">Records</h2>
+              <div className="flex items-center gap-3">
+                <Dropdown menu={{ items: extraButtons, onClick: onMenuClick }}>
+                  <Button className="flex items-center">
+                    Import <DownOutlined />
+                  </Button>
+                </Dropdown>
+                <Button
+                  icon={<ExportOutlined />}
+                  onClick={exportData}
+                  loading={exporting}
+                  disabled={loading || exporting}
+                  className="flex items-center"
+                >
+                  Export
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {loadingPlans ? (
+            <Spin
+              indicator={<LoadingOutlined spin />}
+              size="large"
+              style={{
+                width: '100%',
+                height: '320px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            />
+          ) : (
+            <ResponsiveTable
+              columns={getColumns()}
+              dataSource={subList}
+              rowKey={'id'}
+              pagination={{
+                current: page + 1,
+                pageSize: pageSize,
+                total: total,
+                showSizeChanger: true,
+                pageSizeOptions: ['10', '20', '50', '100'],
+                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+                locale: { items_per_page: '' },
+                disabled: loading,
+                className: 'subscription-pagination',
+              }}
+              onChange={onTableChange}
+              loading={{
+                spinning: loading,
+                indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+              }}
+              scroll={{ x: 1400 }}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
@@ -792,160 +729,132 @@ const Search = ({
   )
 
   return (
-    <div>
+    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
       <Form
         form={form}
         onFinish={goSearch}
         initialValues={DEFAULT_TERM}
         disabled={searching || exporting}
       >
-        <Row className="mb-3 flex items-center" gutter={[8, 8]}>
-          <Col span={4} className="font-bold text-gray-500">
-            Subscription created
-          </Col>
-          <Col span={4}>
-            <Form.Item name="createTimeStart" noStyle={true}>
-              <DatePicker
-                style={{ width: '100%' }}
-                placeholder="From"
-                format="YYYY-MMM-DD"
-                disabledDate={(d) => d.isAfter(new Date())}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item
-              name="createTimeEnd"
-              noStyle={true}
-              rules={[
-                {
-                  required: false,
-                  message: 'Must be later than start date.'
-                },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    const start = getFieldValue('createTimeStart')
-                    if (null == start || value == null) {
-                      return Promise.resolve()
+        {/* First Row - Email */}
+        <div className="mb-4">
+          <div className="text-sm text-gray-600 mb-2">Email</div>
+          <Form.Item name="email" noStyle>
+            <Input 
+              placeholder="Search email" 
+              onPressEnter={() => form.submit()}
+              size="large"
+              allowClear
+              style={{ maxWidth: '400px' }}
+            />
+          </Form.Item>
+        </div>
+
+        {/* Second Row - Subscription created, Amount, and Buttons */}
+        <div className="flex items-end gap-4 flex-wrap">
+          {/* Subscription Created Date Range */}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm text-gray-600 mb-2">Subscription created</div>
+            <div className="flex items-center gap-2">
+              <Form.Item name="createTimeStart" noStyle={true}>
+                <DatePicker
+                  placeholder="Start Date"
+                  format="MM.DD.YYYY"
+                  disabledDate={(d) => d.isAfter(new Date())}
+                  size="large"
+                  allowClear
+                  style={{ width: '140px' }}
+                />
+              </Form.Item>
+              <span className="text-gray-400">-</span>
+              <Form.Item
+                name="createTimeEnd"
+                noStyle={true}
+                rules={[
+                  {
+                    required: false,
+                    message: 'Must be later than start date.'
+                  },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const start = getFieldValue('createTimeStart')
+                      if (null == start || value == null) {
+                        return Promise.resolve()
+                      }
+                      return value.isAfter(start) || value.isSame(start, 'day')
+                        ? Promise.resolve()
+                        : Promise.reject('Must be same or later than start date')
                     }
-                    return value.isAfter(start)
-                      ? Promise.resolve()
-                      : Promise.reject('Must be later than start date')
-                  }
-                })
-              ]}
-            >
-              <DatePicker
-                style={{ width: '100%' }}
-                placeholder="To"
-                format="YYYY-MMM-DD"
-                disabledDate={(d) => d.isAfter(new Date())}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12} className="flex justify-end">
-            <Space>
-              <Button onClick={clear} disabled={searching || exporting}>
-                Clear
-              </Button>
-              <Button
-                htmlType="submit"
-                type="primary"
-                loading={searching}
-                disabled={searching || exporting}
+                  })
+                ]}
               >
-                Search
-              </Button>
-              {/* <Button
-                onClick={exportData}
-                loading={exporting}
-                disabled={searching || exporting}
-              >
-                Export
-              </Button> */}
-            </Space>
-          </Col>
-        </Row>
-        <Row className="flex items-center" gutter={[8, 8]}>
-          <Col span={4} className="font-bold text-gray-500">
-            <div className="flex items-center">
-              <span className="mr-2">Amount</span>
+                <DatePicker
+                  placeholder="End Date"
+                  format="MM.DD.YYYY"
+                  disabledDate={(d) => d.isAfter(new Date())}
+                  size="large"
+                  allowClear
+                  style={{ width: '140px' }}
+                />
+              </Form.Item>
+            </div>
+          </div>
+
+          {/* Amount Filter */}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm text-gray-600 mb-2">Amount</div>
+            <div className="flex items-center gap-2">
               <Form.Item name="currency" noStyle={true}>
                 <Select
-                  style={{ width: 80 }}
+                  size="large"
+                  style={{ width: '80px' }}
                   options={appConfigStore.supportCurrency.map((c) => ({
                     label: c.Currency,
                     value: c.Currency
                   }))}
                 />
               </Form.Item>
+              <Form.Item name="amountStart" noStyle={true}>
+                <Input
+                  placeholder="From"
+                  onPressEnter={form.submit}
+                  size="large"
+                  style={{ width: '100px' }}
+                />
+              </Form.Item>
+              <span className="text-gray-400">-</span>
+              <Form.Item name="amountEnd" noStyle={true}>
+                <Input
+                  placeholder="To"
+                  onPressEnter={form.submit}
+                  size="large"
+                  style={{ width: '100px' }}
+                />
+              </Form.Item>
             </div>
-          </Col>
-          <Col span={4}>
-            <Form.Item name="amountStart" noStyle={true}>
-              <Input
-                prefix={currencySymbol ? `from ${currencySymbol}` : ''}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item name="amountEnd" noStyle={true}>
-              <Input
-                prefix={currencySymbol ? `to ${currencySymbol}` : ''}
-              />
-            </Form.Item>
-          </Col>
-          {/* <Col span={11} className=" ml-4 font-bold text-gray-500">
-            <span className="mr-2">Status</span>
-            <Form.Item name="status" noStyle={true}>
-              <Select
-                mode="multiple"
-                options={statusOpt}
-                style={{ maxWidth: 420, minWidth: 120, margin: '8px 0' }}
-              />
-            </Form.Item>
-          </Col> */}
-        </Row>
-        <Row className="flex items-center mt-3" gutter={[8, 8]}>
-          <Col span={4} className="font-bold text-gray-500">
-            Email
-          </Col>
-          <Col span={8}>
-            <Form.Item name="email" noStyle>
-              <Input placeholder="Search by email" />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Row className="flex items-center mt-3" gutter={[8, 8]}>
-          <Col span={4} className="font-bold text-gray-500">
-            User ID
-          </Col>
-          <Col span={8}>
-            <Form.Item name="userId" noStyle>
-              <Input 
-                placeholder="Search by User ID" 
-                type="number" 
-                min={1}
-                onKeyPress={(e) => {
-                  // only allow numbers, no negative sign, no decimal point
-                  if (!/[0-9]/.test(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Row className="flex items-center mt-3" gutter={[8, 8]}>
-          <Col span={4} className="font-bold text-gray-500">
-            External User ID
-          </Col>
-          <Col span={8}>
-            <Form.Item name="externalUserId" noStyle>
-              <Input placeholder="Search by External User ID" />
-            </Form.Item>
-          </Col>
-        </Row>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 ml-auto">
+            <Button
+              size="large"
+              onClick={clear}
+              disabled={searching || exporting}
+            >
+              Clear
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              onClick={form.submit}
+              htmlType="submit"
+              loading={searching}
+              disabled={searching || exporting}
+            >
+              Search
+            </Button>
+          </div>
+        </div>
       </Form>
     </div>
   )

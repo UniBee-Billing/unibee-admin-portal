@@ -7,6 +7,7 @@ import { useAppConfigStore } from '@/stores'
 import { CheckOutlined, ExclamationOutlined } from '@ant-design/icons'
 import { Avatar, Button, List, Tag } from 'antd'
 import { ReactNode, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import UniBeeAPIKeyModal from './UniBeeAPIKeyModal'
 import ExchangeRateModal from './exchangeRateKeyModal'
 import SegmentModal from './segmentModal'
@@ -27,6 +28,8 @@ type TAPP_Integration = {
 const Index = () => {
   const [itemIndex, setItemIndex] = useState(-1)
   const [openSetupModal, setOpenSetupModal] = useState(false)
+  const navigate = useNavigate()
+  
   const toggleSetupModal = (itemIndex?: number) => {
     setOpenSetupModal(!openSetupModal)
     if (typeof itemIndex == 'number') {
@@ -73,16 +76,17 @@ const Index = () => {
       keyValue: ['', ''],
       compositeKey: true
     },
-    {
-      IsSetupFinished: false,
-      name: 'Exchange API key',
-      description:
-        'Use it to access Exchange, allowing for secure ops and user behavior tracking.',
-      logo: <ExchangeRateLogo />,
-      gatewayWebsiteLink: '',
-      keyName: 'exchangeRateApiKey',
-      keyValue: ''
-    }
+    // Exchange API key - commented out as requested
+    // {
+    //   IsSetupFinished: false,
+    //   name: 'Exchange API key',
+    //   description:
+    //     'Use it to access Exchange, allowing for secure ops and user behavior tracking.',
+    //   logo: <ExchangeRateLogo />,
+    //   gatewayWebsiteLink: '',
+    //   keyName: 'exchangeRateApiKey',
+    //   keyValue: ''
+    // }
   ]
 
   const initializeKeys = (keyName: string, keyValue: string) => {
@@ -132,7 +136,7 @@ const Index = () => {
   initializeKeys('openApiKey', openApiKey)
   initializeKeys('sendGridKey', sendGridKey)
   initializeKeys('vatSenseKey', vatSenseKey)
-  initializeKeys('exchangeRateApiKey', exchangeRateApiKey)
+  // initializeKeys('exchangeRateApiKey', exchangeRateApiKey) // Commented out
   initializeKeys('segmentServerSideKey', segmentServerSideKey)
   initializeKeys('segmentUserPortalKey', segmentUserPortalKey)
 
@@ -160,53 +164,77 @@ const Index = () => {
           <SendGridModal closeModal={toggleSetupModal} />
         )}
 
-      {openSetupModal &&
+      {/* Exchange API key modal - commented out */}
+      {/* {openSetupModal &&
         integrationList[itemIndex].keyName == 'exchangeRateApiKey' && (
           <ExchangeRateModal closeModal={toggleSetupModal} />
-        )}
+        )} */}
 
       <List
         itemLayout="horizontal"
         dataSource={integrationList}
         renderItem={(item, index) => (
           <List.Item className="rounded-md hover:bg-gray-100">
-            <List.Item.Meta
-              avatar={
-                item.gatewayWebsiteLink == '' ? (
-                  <Avatar shape="square" src={item.logo} className="ml-3" />
+            <div className="flex w-full items-center gap-4">
+              {/* Logo */}
+              <div className="ml-3 flex items-center">
+                {item.gatewayWebsiteLink == '' ? (
+                  <Avatar shape="square" src={item.logo} size={48} />
                 ) : (
                   <a href={item.gatewayWebsiteLink} target="_blank">
-                    <Avatar shape="square" src={item.logo} className="ml-3" />
+                    <Avatar shape="square" src={item.logo} size={48} />
                   </a>
-                )
-              }
-              title={
-                item.gatewayWebsiteLink == '' ? (
-                  item.name
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="flex flex-1 flex-col gap-1">
+                {item.IsSetupFinished ? (
+                  <Tag icon={<CheckOutlined />} color="#34C759" className="w-fit">
+                    Ready
+                  </Tag>
                 ) : (
-                  <a href={item.gatewayWebsiteLink} target="_blank">
-                    {item.name}
-                  </a>
-                )
-              }
-              description={item.description}
-            />
-            <div className="mr-3 flex w-[180px] items-center justify-between">
-              {item.IsSetupFinished ? (
-                <Tag icon={<CheckOutlined />} color="#34C759">
-                  Ready
-                </Tag>
-              ) : (
-                <Tag icon={<ExclamationOutlined />} color="#AEAEB2">
-                  Not Set
-                </Tag>
-              )}
-              <Button
-                onClick={() => toggleSetupModal(index)}
-                type={item.IsSetupFinished ? 'default' : 'primary'}
-              >
-                {item.IsSetupFinished ? 'Edit' : 'Set up'}
-              </Button>
+                  <Tag icon={<ExclamationOutlined />} color="#AEAEB2" className="w-fit">
+                    Not Set
+                  </Tag>
+                )}
+                <div className="text-base font-medium">
+                  {item.gatewayWebsiteLink == '' ? (
+                    <span>{item.name}</span>
+                  ) : (
+                    <a href={item.gatewayWebsiteLink} target="_blank" className="text-blue-600 hover:text-blue-700">
+                      {item.name}
+                    </a>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500">{item.description}</div>
+              </div>
+
+              {/* Buttons */}
+              <div className="mr-3 flex items-center justify-end gap-2">
+                {item.name === 'SendGrid Email Key' && item.IsSetupFinished && (
+                  <Button
+                    onClick={() => navigate('/configuration/integrations/sendgrid/records')}
+                    type="default"
+                  >
+                    View Records
+                  </Button>
+                )}
+                {item.name === 'VAT Sense Key' && item.IsSetupFinished && (
+                  <Button
+                    onClick={() => navigate('/configuration/integrations/vat-sense')}
+                    type="default"
+                  >
+                    Manage
+                  </Button>
+                )}
+                <Button
+                  onClick={() => toggleSetupModal(index)}
+                  type={item.IsSetupFinished ? 'default' : 'primary'}
+                >
+                  {item.IsSetupFinished ? 'Edit' : 'Set up'}
+                </Button>
+              </div>
             </div>
           </List.Item>
         )}

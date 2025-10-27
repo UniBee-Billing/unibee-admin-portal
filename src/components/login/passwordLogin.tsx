@@ -1,13 +1,11 @@
 import type { InputRef } from 'antd'
-import { Button, Form, Input, Modal, message } from 'antd'
+import { Button, Form, Input, message } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { emailValidate } from '../../helpers'
-import { useCountdown } from '../../hooks'
 import { useAppInitialize } from '../../hooks/useAppInitialize'
-import { forgetPassReq, loginWithPasswordReq } from '../../requests'
+import { loginWithPasswordReq } from '../../requests'
 import { useMerchantMemberProfileStore, useSessionStore } from '../../stores'
-import ForgetPasswordForm from './forgetPasswordForm'
 
 const Index = ({
   email,
@@ -24,35 +22,31 @@ const Index = ({
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const sessionStore = useSessionStore()
   const [errMsg, setErrMsg] = useState('')
-  const [countVal, counting, startCount, stopCounter] = useCountdown(60)
   const navigate = useNavigate()
   const [submitting, setSubmitting] = useState(false) // login submit
-  const [submittingForgetPass, setSubmittingForgetPass] = useState(false) // click 'forget password'
-  const [forgetPassModalOpen, setForgetPassModalOpen] = useState(false)
-  const toggleForgetPassModal = () =>
-    setForgetPassModalOpen(!forgetPassModalOpen)
   const [form] = Form.useForm()
   const watchEmail = Form.useWatch('email', form)
   const passwordRef = useRef<InputRef>(null)
   const emailRef = useRef<InputRef>(null)
 
   const onForgetPass = async () => {
-    const isValid = form.getFieldError('email').length == 0
-    if (!isValid) {
+    // Validate email field first
+    try {
+      await form.validateFields(['email'])
+    } catch (error) {
+      message.error('Please enter a valid email address first')
       return
     }
 
-    stopCounter()
-    startCount()
-    setSubmittingForgetPass(true)
-    const [_, err] = await forgetPassReq(form.getFieldValue('email'))
-    setSubmittingForgetPass(false)
-    if (err != null) {
-      message.error(err.message)
+    const email = form.getFieldValue('email')
+    if (!email || !emailValidate(email)) {
+      message.error('Please enter a valid email address first')
       return
     }
-    setForgetPassModalOpen(true)
-    message.success('Code sent, please check your email!')
+
+    // Encode email and navigate to forgot password page
+    const encodedEmail = encodeURIComponent(email)
+    navigate(`/forgot-password?email=${encodedEmail}`)
   }
 
   const onSubmit = async () => {
@@ -105,16 +99,6 @@ const Index = ({
 
   return (
     <>
-      {forgetPassModalOpen && (
-        <ForgetPasswordModal
-          email={form.getFieldValue('email')}
-          closeModal={toggleForgetPassModal}
-          resend={onForgetPass}
-          countVal={countVal}
-          counting={counting}
-        />
-      )}
-
       <Form
         form={form}
         onFinish={onSubmit}
@@ -162,8 +146,6 @@ const Index = ({
         <div style={{ position: 'absolute', right: '-130px', top: '56px' }}>
           <Button
             onClick={onForgetPass}
-            loading={submittingForgetPass}
-            disabled={submittingForgetPass}
             type="link"
             style={{ fontSize: '11px' }}
           >
@@ -188,41 +170,3 @@ const Index = ({
 }
 
 export default Index
-
-const ForgetPasswordModal = ({
-  email,
-  closeModal,
-  resend,
-  countVal,
-  counting
-}: {
-  email: string
-  closeModal: () => void
-  resend: () => void
-  countVal: number
-  counting: boolean
-}) => {
-  // we're already on /login, there is no need to logout,
-  // this is to show a success toast.
-  const logout = () => {
-    message.success('Password reset succeeded.')
-  }
-  return (
-    <Modal
-      title="Forgot Password"
-      open={true}
-      width={'640px'}
-      footer={null}
-      closeIcon={null}
-    >
-      <ForgetPasswordForm
-        resend={resend}
-        closeModal={closeModal}
-        email={email}
-        counting={counting}
-        countVal={countVal}
-        logout={logout}
-      />
-    </Modal>
-  )
-}

@@ -1,10 +1,11 @@
 import { UnorderedListOutlined, RightOutlined } from '@ant-design/icons'
 import { Button, Layout, theme, Modal } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import AppSearch from './components/appSearch'
 import Login from './components/login'
 import { LoginModal } from './components/login/LoginModal'
+import ForgetPasswordPage from './components/login/forgetPasswordPage'
 import { Sidebar } from './components/sidebar/sidebar'
 import Signup from './components/signup'
 import TaskList from './components/taskList'
@@ -21,13 +22,14 @@ import UnibeeAnalyticSvg from './assets/navIcons/analytics.svg?react'
 const { Header, Content, Footer } = Layout
 
 const APP_PATH = import.meta.env.BASE_URL
-const noSiderRoutes = [`${APP_PATH}login`, `${APP_PATH}signup`]
+const noSiderRoutes = [`${APP_PATH}login`, `${APP_PATH}signup`, `${APP_PATH}forgot-password`]
 
 const App: React.FC = () => {
   const appInitialize = useAppInitialize()
   const sessionStore = useSessionStore()
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const appConfigStore = useAppConfigStore()
+  const location = useLocation()
   const {
     token: { colorBgContainer, borderRadiusLG }
   } = theme.useToken()
@@ -84,6 +86,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/login" Component={Login} />
             <Route path="/signup" Component={Signup} />
+            <Route path="/forgot-password" Component={ForgetPasswordPage} />
           </Routes>
         </Layout>
       ) : (
@@ -148,7 +151,9 @@ const App: React.FC = () => {
                 {appRoutes}
               </div>
             </Content>
-            <Footer style={{ textAlign: 'center' }}>Copyright © 2025</Footer>
+            {/* {!location.pathname.includes('configuration') || !location.search.includes('tab=multiCurrencyConfig') ? (
+              <Footer style={{ textAlign: 'center' }}>Copyright © 2025</Footer>
+            ) : null} */}
           </Layout>
         </Layout>
       )}

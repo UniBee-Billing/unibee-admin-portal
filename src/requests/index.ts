@@ -537,16 +537,37 @@ export const togglePublishReq = async ({
   }
 }
 
+// export const getMetricsListReq = async ({
+//   refreshCb,
+//   page,
+//   count
+// }: { refreshCb?: () => void } & PagedReq) => {
+//   try {
+//     const res = await request.get(`/merchant/metric/list`, {
+//       params: {
+//         page,
+//         count
+//       }
+//     })
+//     handleStatusCode(res.data.code, refreshCb)
+//     return [res.data.data, null]
+//   } catch (err) {
+//     const e = err instanceof Error ? err : new Error('Unknown error')
+//     return [null, e]
+//   }
+// }
 export const getMetricsListReq = async ({
   refreshCb,
   page,
-  count
-}: { refreshCb?: () => void } & PagedReq) => {
+  count,
+  searchKey
+}: { refreshCb?: () => void; searchKey?: string } & PagedReq) => {
   try {
     const res = await request.get(`/merchant/metric/list`, {
       params: {
         page,
-        count
+        count,
+        searchKey
       }
     })
     handleStatusCode(res.data.code, refreshCb)
@@ -556,6 +577,19 @@ export const getMetricsListReq = async ({
     return [null, e]
   }
 }
+export const deleteMetricReq = async (metricId: number) => {
+  try {
+    const res = await request.post(`/merchant/metric/delete`, {
+      metricId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 
 // --------
 type TMetricsBody = {
@@ -581,7 +615,7 @@ export const saveMetricsReq = async (
   try {
     const res = await request.post(url, body)
     handleStatusCode(res.data.code)
-    return [null, null]
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -915,7 +949,7 @@ type TCreateSubReq = {
   freeInInitialPeriod?: boolean
   addonParams?: { quantity: number; addonPlanId: number }[]
   confirmTotalAmount?: number
-  confirmCurrency?: string
+  currency?: string
   startIncomplete?: boolean
   user: UserData & Partial<BusinessUserData>
   vatCountryCode: string | undefined
@@ -933,7 +967,7 @@ export const createSubscriptionReq = async ({
   trialEnd,
   freeInInitialPeriod,
   addonParams,
-  confirmCurrency,
+  currency,
   confirmTotalAmount,
   startIncomplete,
   user,
@@ -954,7 +988,7 @@ export const createSubscriptionReq = async ({
       quantity: 1,
       addonParams: addonParams,
       confirmTotalAmount,
-      confirmCurrency,
+      currency,
       startIncomplete,
       user,
       vatCountryCode,
@@ -1788,16 +1822,20 @@ const getMerchantUserListReq = async (refreshCb?: () => void) => {
   }
 }
 
+type TMerchantMemberListReq = {
+  searchKey?: string // Search Key, FirstName, LastName or Email
+  email?: string // Search Filter Email
+  roleIds?: number[] // The member roleId if specified
+  createTimeStart?: number // CreateTimeStart, UTC timestamp, seconds
+  createTimeEnd?: number // CreateTimeEnd, UTC timestamp, seconds
+} & PagedReq
+
 export const getMerchantUserListReq2 = async (
-  { page, count, roleIds }: { roleIds?: number[] } & PagedReq,
+  params: TMerchantMemberListReq,
   refreshCb?: () => void
 ) => {
   try {
-    const res = await request.post('/merchant/member/list', {
-      page,
-      count,
-      roleIds
-    })
+    const res = await request.post('/merchant/member/list', params)
     handleStatusCode(res.data.code, refreshCb)
     return [res.data.data, null]
   } catch (err) {
@@ -1954,7 +1992,7 @@ export const getAppKeysWithMore = async (refreshCb: () => void) => {
 */
 
 type TWireTransferAccount = {
-  gatewayId?: number // required only for updating
+  gatewayId?: number
   currency: string
   minimumAmount: number
   bank: {
@@ -1962,6 +2000,15 @@ type TWireTransferAccount = {
     bic: string
     iban: string
     address: string
+    accountNumber?: string
+    bankName?: string
+    swiftCode?: string
+    transitNumber?: string
+    institutionNumber?: string
+    bsbCode?: string
+    ABARoutingNumber?: string
+    CNAPS?: string
+    Remarks?: string
   }
 }
 export const createWireTransferAccountReq = async (
@@ -2566,8 +2613,70 @@ export const getExportColumnListReq = async (task: TExportDataType) => {
 
 
 
+// Multi-currency related functions
+export const getCreditConfigForCurrencyReq = async (currency: string) => {
+  try {
+    const res = await request.post(`/merchant/credit/config_list`, { 
+      types: [2], 
+      currency 
+    })
+    handleStatusCode(res.data.code)
+    
+    const creditConfigs = res.data.data.creditConfigs || []
+    const isEnabled = creditConfigs.length > 0 && creditConfigs[0]?.payoutEnable === 1
+    
+    return [{ creditConfigs, isEnabled }, null] as const
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e] as const
+  }
+}
+
+export const setupMultiCurrenciesReq = async (multiCurrencyConfigs: unknown[]) => {
+  try {
+    const response = await request.post('/merchant/setup_multi_currencies', {
+      multiCurrencyConfigs
+    })
+    return [response.data, null]
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown }; message?: string }
+    return [null, err.response?.data || err.message]
+  }
+}
+
+export const amountMultiCurrenciesExchangeReq = async (amount: number, currency: string) => {
+  try {
+    const response = await request.post('/merchant/amount_multi_currencies_exchange', {
+      amount,
+      currency
+    })
+    return [response.data, null]
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown }; message?: string }
+    return [null, err.response?.data || err.message]
+  }
+}
+
 // Export refund service functions
 export {
   getCreditNoteListReq,
   uploadCSVAndSearchReq
 } from './refundService'
+
+// Export VAT service functions
+export {
+  getVATValidationHistoryReq,
+  correctVATValidationReq,
+  deactivateVATValidationReq,
+  type VATNumberValidateHistory,
+  type VATValidationHistoryParams,
+  type VATValidationCorrectParams,
+  type VATValidationDeactivateParams
+} from './vatService'
+
+// Export email service functions
+export {
+  getEmailHistoryListReq,
+  type TEmailHistory,
+  type EmailHistoryListResponse
+} from './emailService'
