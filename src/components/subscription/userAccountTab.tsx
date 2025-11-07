@@ -220,7 +220,16 @@ const UserAccountTab = ({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Account Type" name="type">
+                <Form.Item
+                  label="Account Type"
+                  name="type"
+                  rules={[
+                    {
+                      required: true,
+                      message: 'Please select an account type!'
+                    }
+                  ]}
+                >
                   <Radio.Group>
                     <Radio value={1}>Individual</Radio>
                     <Radio value={2}>Business</Radio>
