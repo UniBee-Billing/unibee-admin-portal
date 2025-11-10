@@ -678,12 +678,13 @@ export const getMetricUsageBySubIdReq = async (
 
 // ----------
 type TSubListReq = {
-  status: number[]
+  status?: number[]
   currency?: string
   amountStart?: number
   amountEnd?: number
   planIds?: number[]
   productIds?: number[]
+  searchKey?: string
   createTimeStart?: number
   createTimeEnd?: number
   email?: string
@@ -1056,6 +1057,7 @@ export const resumeSubReq = async (subscriptionId: string) => {
 // -------------
 type TGetSubTimelineReq = {
   userId?: number
+  searchKey?: string
   currency?: string
   amountStart?: number
   amountEnd?: number
@@ -1075,6 +1077,7 @@ export const getPaymentTimelineReq = async (
     page,
     count,
     userId,
+    searchKey,
     currency,
     amountStart,
     amountEnd,
@@ -1090,6 +1093,9 @@ export const getPaymentTimelineReq = async (
   }
   if (userId != null) {
     url += `&userId=${userId}`
+  }
+  if (searchKey != null && searchKey != '') {
+    url += `&searchKey=${encodeURIComponent(searchKey)}`
   }
   if (createTimeStart != null) {
     url += `&createTimeStart=${createTimeStart}`
@@ -1559,8 +1565,11 @@ type TGetInvoicesReq = {
   userId?: number
   firstName?: string
   lastName?: string
+  searchKey?: string
   currency?: string
   status?: number[]
+  createTimeStart?: number
+  createTimeEnd?: number
   amountStart?: number
   amountEnd?: number
 } & PagedReq
@@ -1767,12 +1776,13 @@ export const sendInvoiceInMailReq = async (invoiceId: string) => {
 type TUserList = {
   merchantId: number
   userId?: number
+  searchKey?: string
   firstName?: string
   lastName?: string
   email?: string
   status?: number[]
   subStatus?: number[]
-  planId?: number[]
+  planIds?: number[]
   createTimeStart?: number
   createTimeEnd?: number
 } & PagedReq

@@ -1,21 +1,5 @@
-.user-data-file-upload {
-  font-size: 14px;
-  height: 32px;
-  padding: 0 7px;
-  border: 1px solid;
-  border-radius: 4px;
-  border-color: #d9d9d9;
-}
-.user-data-file-upload.disabled:hover {
-  cursor: not-allowed;
-}
-.user-data-file-upload:hover {
-  cursor: pointer;
-  border: 1px solid #1677ff;
-}
-
 /* Custom pagination styling to match design */
-.user-list-pagination.ant-pagination {
+.invoice-pagination.ant-pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -25,7 +9,7 @@
 }
 
 /* Left side: page size selector */
-.user-list-pagination .ant-pagination-options {
+.invoice-pagination .ant-pagination-options {
   order: -1;
   margin-right: auto !important;
   margin-left: 0 !important;
@@ -35,22 +19,22 @@
   position: relative;
 }
 
-.user-list-pagination .ant-pagination-options-size-changer {
+.invoice-pagination .ant-pagination-options-size-changer {
   margin: 0 !important;
 }
 
-.user-list-pagination .ant-pagination-options-size-changer .ant-select-selector {
+.invoice-pagination .ant-pagination-options-size-changer .ant-select-selector {
   min-width: 60px;
   padding: 4px 11px;
 }
 
 /* Only show the number in the select */
-.user-list-pagination .ant-pagination-options-size-changer .ant-select-selection-item {
+.invoice-pagination .ant-pagination-options-size-changer .ant-select-selection-item {
   text-align: left;
 }
 
 /* Style the "rows per page" text */
-.user-list-pagination .ant-pagination-options::after {
+.invoice-pagination .ant-pagination-options::after {
   content: 'rows per page';
   color: #9ca3af;
   font-size: 14px;
@@ -60,14 +44,14 @@
 }
 
 /* Right side container for total text and navigation */
-.user-list-pagination > :not(.ant-pagination-options) {
+.invoice-pagination > :not(.ant-pagination-options) {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 /* Right side: total text */
-.user-list-pagination .ant-pagination-total-text {
+.invoice-pagination .ant-pagination-total-text {
   order: 1;
   margin: 0 16px 0 0 !important;
   color: #9ca3af;
@@ -75,14 +59,14 @@
 }
 
 /* Navigation buttons */
-.user-list-pagination .ant-pagination-prev,
-.user-list-pagination .ant-pagination-next {
+.invoice-pagination .ant-pagination-prev,
+.invoice-pagination .ant-pagination-next {
   order: 2;
   margin: 0 2px !important;
 }
 
-.user-list-pagination .ant-pagination-prev button,
-.user-list-pagination .ant-pagination-next button {
+.invoice-pagination .ant-pagination-prev button,
+.invoice-pagination .ant-pagination-next button {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   width: 32px;
@@ -93,27 +77,29 @@
   background: #fff;
 }
 
-.user-list-pagination .ant-pagination-prev button:hover,
-.user-list-pagination .ant-pagination-next button:hover {
+.invoice-pagination .ant-pagination-prev button:hover,
+.invoice-pagination .ant-pagination-next button:hover {
   border-color: #9ca3af;
 }
 
 /* Hide page number items, only show prev/next */
-.user-list-pagination .ant-pagination-item {
+.invoice-pagination .ant-pagination-item {
   display: none !important;
 }
 
 /* Hide jump inputs and other options */
-.user-list-pagination .ant-pagination-options-quick-jumper {
+.invoice-pagination .ant-pagination-options-quick-jumper {
   display: none !important;
 }
 
+
 /* Table row hover effect */
-.user-list-table .ant-table-tbody > tr:hover > td {
+.invoice-table .ant-table-tbody > tr:hover > td {
   background-color: #f9fafb !important;
 }
 
 /* Right align numeric columns */
-.user-list-table .ant-table-cell-right-align {
+.invoice-table .ant-table-cell-right-align {
   text-align: right;
 }
+

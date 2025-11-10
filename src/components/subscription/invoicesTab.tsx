@@ -9,6 +9,7 @@ import {
 import { usePagination } from '@/hooks'
 import { exportDataReq, getInvoiceListReq } from '@/requests'
 import '@/shared.css'
+import './invoicesTab.css'
 import { InvoiceStatus, IProfile, UserInvoice } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import {
@@ -17,26 +18,32 @@ import {
   DownloadOutlined,
   EditOutlined,
   ExportOutlined,
+  FilterOutlined,
   LoadingOutlined,
   MailOutlined,
+  MoreOutlined,
   PlusOutlined,
+  SearchOutlined,
   SyncOutlined
 } from '@ant-design/icons'
 import {
   Button,
   Col,
   DatePicker,
+  Dropdown,
   Form,
   FormInstance,
   Input,
   InputNumber,
+  MenuProps,
   message,
   Pagination,
   Row,
   Select,
   Space,
   Table,
-  Tooltip
+  Tooltip,
+  Tag
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import { Currency } from 'dinero.js'
@@ -45,6 +52,7 @@ import { normalizeAmt } from '../helpers'
 import MarkAsPaidModal from '../invoice/markAsPaidModal'
 import MarkAsRefundedModal from '../invoice/markAsRefundedModal'
 import RefundInfoModal from '../payment/refundModal'
+import ResponsiveTable from '../table/responsiveTable'
 import CopyToClipboard from '../ui/copyToClipboard'
 import { InvoiceStatusTag } from '../ui/statusTag'
 import InvoiceDetailModal from './modals/invoiceDetail'
@@ -52,10 +60,22 @@ import NewInvoiceModal from './modals/newInvoice'
 
 const BASE_PATH = import.meta.env.BASE_URL
 const PAGE_SIZE = 10
-const STATUS_FILTER = Object.entries(INVOICE_STATUS).map((s) => {
-  const [value, { label }] = s
-  return { value: Number(value), text: label }
-})
+const STATUS_FILTER = [
+  { value: 1, text: 'Pending' },
+  { value: 2, text: 'Processing' },
+  { value: 3, text: 'Paid' },
+  { value: 4, text: 'Failed' },
+  { value: 5, text: 'Cancelled' }
+]
+
+const DEFAULT_TERM = {
+  // currency: 'EUR',
+  amountStart: '',
+  amountEnd: ''
+}
+
+// Blue tone to indicate clickable icons
+const ACTION_ICON_COLOR = '#1677ff'
 
 type TFilters = {
   status: number[] | null
@@ -89,11 +109,15 @@ const Index = ({
   const [filters, setFilters] = useState<TFilters>({
     status: null
   })
+  const [standaloneFilters, setStandaloneFilters] = useState<Record<string, any>>({})
   const [total, setTotal] = useState(0)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE)
   const [newInvoiceModalOpen, setNewInvoiceModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [invoiceIdx, setInvoiceIdx] = useState(-1) // -1: not selected, any action button: (delete, edit,refund) will set this value to the selected invoiceIdx
   const [refundMode, setRefundMode] = useState(false) // create invoice and create refund invoice share a modal, I need this to check which one is used.
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
+  const [searchText, setSearchText] = useState('')
 
   // refund invoice Modal, showing refund info
   const [refundInfoModalOpen, setRefundInfoModalOpen] = useState(false)
@@ -130,19 +154,30 @@ const Index = ({
   const toggleInvoiceDetailModal = () => {
     if (invoiceDetailModalOpen) {
       setInvoiceIdx(-1)
-      setRefundMode(false)
     }
     setInvoiceDetailModalOpen(!invoiceDetailModalOpen)
   }
 
-  const normalizeSearchTerms = () => {
-    const searchTerm = JSON.parse(JSON.stringify(form.getFieldsValue()))
+  const normalizeSearchTerms = (overrideSearchKey?: string) => {
+    const rawFormValues = form.getFieldsValue()
+    // For standalone mode, form may be unmounted (drawer closed). Merge with last saved values.
+    const mergedValues = !embeddingMode
+      ? { ...standaloneFilters, ...rawFormValues }
+      : rawFormValues
+    const searchTerm = JSON.parse(JSON.stringify(mergedValues))
     Object.keys(searchTerm).forEach(
       (k) =>
         (searchTerm[k] == undefined ||
           (typeof searchTerm[k] == 'string' && searchTerm[k].trim() == '')) &&
         delete searchTerm[k]
     )
+
+    // Add search key from search input (for standalone mode)
+    const sk = overrideSearchKey !== undefined ? overrideSearchKey : searchText
+    if (!embeddingMode && sk && sk.trim() !== '') {
+      searchTerm.searchKey = sk.trim()
+    }
+
     if (enableSearch) {
       const start = form.getFieldValue('createTimeStart')
       const end = form.getFieldValue('createTimeEnd')
@@ -153,6 +188,13 @@ const Index = ({
         searchTerm.createTimeEnd = end.hour(23).minute(59).second(59).unix()
       }
 
+      // Handle currency separately - can be used independently of amount
+      const currency = form.getFieldValue('currency')
+      if (currency) {
+        searchTerm.currency = currency
+      }
+
+      // return
       let amtFrom = searchTerm.amountStart,
         amtTo = searchTerm.amountEnd
       if (amtFrom != '' && amtFrom != null) {
@@ -191,7 +233,7 @@ const Index = ({
     return searchTerm
   }
 
-  const fetchData = async () => {
+  const fetchData = async (overrideSearchKey?: string) => {
     // in embedding mode, invoice table is inside user detail component or subscription component, or other in the future.
     // in these cases, userId must be ready to get the invoices for this specific user.
     // most of times, user obj might take a while to be ready(other component are running req to get it).
@@ -199,13 +241,17 @@ const Index = ({
     if (embeddingMode && user == null) {
       return
     }
-    let searchTerm = normalizeSearchTerms()
+    let searchTerm = normalizeSearchTerms(overrideSearchKey)
     if (null == searchTerm) {
       return
     }
     searchTerm.page = page
-    searchTerm.count = PAGE_SIZE
-    searchTerm = { ...searchTerm, ...filters }
+    searchTerm.count = pageSize
+    // Only merge column filters when in embedding mode;
+    // in standalone mode, we read all conditions from the form values directly.
+    if (embeddingMode) {
+      searchTerm = { ...searchTerm, ...filters }
+    }
     setLoading(true)
     const [res, err] = await getInvoiceListReq(searchTerm, fetchData)
     setLoading(false)
@@ -228,7 +274,9 @@ const Index = ({
     if (null == payload) {
       return
     }
-    payload = { ...payload, ...filters }
+    if (embeddingMode) {
+      payload = { ...payload, ...filters }
+    }
 
     setExporting(true)
     const [_, err] = await exportDataReq({ task: 'InvoiceExport', payload })
@@ -247,31 +295,211 @@ const Index = ({
     downloadStaticFile(iv.sendPdf, `${iv.invoiceId}.pdf`)
   }
 
-  const goSearch = () => {
+  // Status tag renderer (override label for status=2 to "Processing")
+  const renderStatusTag = (statusId: InvoiceStatus) => {
+    const conf = INVOICE_STATUS[statusId]
+    const text =
+      statusId === InvoiceStatus.AWAITING_PAYMENT
+        ? 'Processing'
+        : statusId === InvoiceStatus.DRAFT
+        ? 'Pending'
+        : conf.label
+    return <Tag color={conf.color}>{text}</Tag>
+  }
+
+  const goSearch = (overrideSearchKey?: string) => {
     if (page == 0) {
+      fetchData(overrideSearchKey)
+    } else {
+      pageChange(1, pageSize)
+    }
+  }
+
+  const clearFilters = () => {
+    setFilters({ status: null })
+    setSearchText('')
+    setStandaloneFilters({})
+  }
+
+  // Standalone mode filter helpers
+  const getStandaloneFilterCount = () => {
+    const filters = standaloneFilters
+    let count = 0
+    if (filters?.status && filters.status.length > 0) count += filters.status.length
+    if (filters?.createTimeStart || filters?.createTimeEnd) count++
+    if ((filters?.amountStart && (filters.amountStart + '').trim() !== '') || (filters?.amountEnd && (filters.amountEnd + '').trim() !== '')) count++
+    if (filters?.currency) count++
+    return count
+  }
+
+  const getStandaloneActiveFilters = () => {
+    const activeFilters: { key: string; label: string; value: any; type: string }[] = []
+    const filters = standaloneFilters
+    
+    // Status filters
+    if (filters?.status && filters.status.length > 0) {
+      filters.status.forEach((status: number) => {
+        const statusLabel = STATUS_FILTER.find(s => s.value === status)?.text
+        if (statusLabel) {
+          activeFilters.push({ key: `status-${status}`, label: statusLabel, value: status, type: 'status' })
+        }
+      })
+    }
+
+    // Date range filters
+    if (filters?.createTimeStart || filters?.createTimeEnd) {
+      const startStr = filters.createTimeStart ? filters.createTimeStart.format('MMM DD') : ''
+      const endStr = filters.createTimeEnd ? filters.createTimeEnd.format('MMM DD') : ''
+      const startYear = filters.createTimeStart ? filters.createTimeStart.year() : null
+      const endYear = filters.createTimeEnd ? filters.createTimeEnd.year() : null
+      
+      // Check if dates span different years
+      const isYearSpanning = startYear != null && endYear != null && startYear !== endYear
+      
+      let dateLabel = ''
+      if (startStr && endStr) {
+        if (isYearSpanning) {
+          dateLabel = `${filters.createTimeStart.format('MMM DD, YYYY')} ~ ${filters.createTimeEnd.format('MMM DD, YYYY')}`
+        } else {
+          dateLabel = `${startStr} ~ ${endStr}`
+        }
+      } else if (startStr) {
+        dateLabel = `From ${startStr}${startYear && endYear === null ? `, ${startYear}` : ''}`
+      } else if (endStr) {
+        dateLabel = `Until ${endStr}${endYear && startYear === null ? `, ${endYear}` : ''}`
+      }
+      
+      if (dateLabel) {
+        activeFilters.push({ key: 'dateRange', label: dateLabel, value: 'dateRange', type: 'date' })
+      }
+    }
+
+    // Amount filters
+    if ((filters?.amountStart && (filters.amountStart + '').trim() !== '') || (filters?.amountEnd && (filters.amountEnd + '').trim() !== '')) {
+      let amountLabel = ''
+      if (filters.amountStart && (filters.amountStart + '').trim() !== '' && filters.amountEnd && (filters.amountEnd + '').trim() !== '') {
+        amountLabel = `${filters.amountStart}~${filters.amountEnd} ${filters.currency || ''}`
+      } else if (filters.amountStart && (filters.amountStart + '').trim() !== '') {
+        amountLabel = `From ${filters.amountStart} ${filters.currency || ''}`
+      } else if (filters.amountEnd && (filters.amountEnd + '').trim() !== '') {
+        amountLabel = `To ${filters.amountEnd} ${filters.currency || ''}`
+      }
+      if (amountLabel) {
+        activeFilters.push({ key: 'amountRange', label: amountLabel, value: 'amountRange', type: 'amount' })
+      }
+    } else if (filters?.currency) {
+      // Show currency as a standalone filter when no amount is specified
+      activeFilters.push({ key: 'currency', label: filters.currency, value: filters.currency, type: 'currency' })
+    }
+
+    return activeFilters
+  }
+
+  const removeStandaloneFilter = (filterKey: string) => {
+    if (filterKey.startsWith('status-')) {
+      const status = Number(filterKey.replace('status-', ''))
+      const currentStatus = form.getFieldValue('status') || []
+      const newStatus = currentStatus.filter((s: number) => s !== status)
+      form.setFieldValue('status', newStatus.length > 0 ? newStatus : undefined)
+    } else if (filterKey === 'dateRange') {
+      form.setFieldsValue({ createTimeStart: undefined, createTimeEnd: undefined })
+    } else if (filterKey === 'amountRange') {
+      form.setFieldsValue({ amountStart: undefined, amountEnd: undefined, currency: undefined })
+    } else if (filterKey === 'currency') {
+      form.setFieldValue('currency', undefined)
+    }
+    // Sync to persistent standalone filters
+    setStandaloneFilters(form.getFieldsValue())
+    // Trigger refetch
+    if (page === 0) {
       fetchData()
     } else {
-      pageChange(1, PAGE_SIZE)
+      pageChange(1, pageSize)
     }
+  }
+
+  const getInvoiceActions = (invoice: UserInvoice, rowIndex: number): MenuProps['items'] => {
+    const permission = getInvoicePermission(invoice)
+    const items: MenuProps['items'] = []
+
+    if (permission.refundable) {
+      items.push({
+        key: 'refund',
+        icon: <DollarOutlined style={{ color: ACTION_ICON_COLOR }} />,
+        label: 'Create Refund Invoice',
+        onClick: (e) => {
+          e.domEvent.stopPropagation()
+          setInvoiceIdx(rowIndex)
+          refund()
+        }
+      })
+    }
+
+    if (permission.sendable) {
+      items.push({
+        key: 'send',
+        icon: <MailOutlined style={{ color: ACTION_ICON_COLOR }} />,
+        label: 'Send Invoice',
+        onClick: (e) => {
+          e.domEvent.stopPropagation()
+          setInvoiceIdx(rowIndex)
+          toggleInvoiceDetailModal()
+        }
+      })
+    }
+
+    if (permission.asPaidMarkable) {
+      items.push({
+        key: 'markPaid',
+        icon: <CheckCircleOutlined style={{ color: ACTION_ICON_COLOR }} />,
+        label: 'Mark as Paid',
+        onClick: (e) => {
+          e.domEvent.stopPropagation()
+          setInvoiceIdx(rowIndex)
+          toggleMarkPaidModal()
+        }
+      })
+    }
+
+    if (permission.asRefundedMarkable) {
+      items.push({
+        key: 'markRefunded',
+        icon: <CheckCircleOutlined style={{ color: ACTION_ICON_COLOR }} />,
+        label: 'Mark as Refunded',
+        onClick: (e) => {
+          e.domEvent.stopPropagation()
+          setInvoiceIdx(rowIndex)
+          toggleMarkRefundedModal()
+        }
+      })
+    }
+
+    return items
   }
 
   const columns: ColumnsType<UserInvoice> = [
     {
-      title: 'Invoice Id',
+      title: 'Invoice ID',
       dataIndex: 'invoiceId',
       key: 'invoiceId',
+      width: 140,
       render: (ivId) => {
         const referer = encodeURIComponent(
           window.location.pathname + window.location.search
         )
         return (
-          <div className="invoice-id-wrapper flex items-center">
-            <a
-              href={`${location.origin}${BASE_PATH}invoice/${ivId}?&referer=${referer}`}
-              style={{ fontFamily: 'monospace' }}
-            >
-              {ivId}
-            </a>
+          <div className="invoice-id-wrapper flex items-center gap-1">
+            <Tooltip title={ivId}>
+              <a
+                href={`${location.origin}${BASE_PATH}invoice/${ivId}?&referer=${referer}`}
+                style={{
+                  fontFamily: 'monospace',
+                  wordBreak: 'break-all'
+                }}
+              >
+                {ivId}
+              </a>
+            </Tooltip>
             <CopyToClipboard content={ivId} />
           </div>
         )
@@ -281,14 +509,14 @@ const Index = ({
       title: 'Amount',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
-      width: 160,
+      width: 120,
       render: (amt, iv) => (
         <div className="flex items-center">
           <div className={iv.refund == null ? '' : 'text-red-500'}>
             {showAmount(amt, iv.currency, true)}
           </div>
           {iv.refund == null && (
-            <div className="text-xs text-gray-500">{` (tax: ${showAmount(iv.taxAmount, iv.currency, true)})`}</div>
+            <div className="text-xs text-gray-500 ml-1">{`(tax: ${showAmount(iv.taxAmount, iv.currency, true)})`}</div>
           )}
           {iv.refund != null && (
             <Tooltip title="Refund info">
@@ -304,16 +532,17 @@ const Index = ({
       title: 'Type',
       dataIndex: 'refund',
       key: 'refund',
-      width: 100,
+      width: 120,
       render: (refund) => (refund == null ? 'Invoice' : 'Credit Note')
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      filters: STATUS_FILTER,
-      filteredValue: filters.status,
-      render: (s, iv) => InvoiceStatusTag(s as InvoiceStatus, iv.refund != null)
+      width: 140,
+      filters: embeddingMode ? STATUS_FILTER : undefined,
+      filteredValue: embeddingMode ? filters.status : undefined,
+      render: (s) => renderStatusTag(s as InvoiceStatus)
     },
     {
       title: 'Paid Date',
@@ -325,14 +554,14 @@ const Index = ({
           payment == null || payment.paidTime == 0 ? (
             '―'
           ) : (
-            <div className="w-[130px] font-mono">
+            <div className="font-mono">
               {formatDate(payment.paidTime, true)}
             </div>
           )
         ) : iv.refund.refundTime == 0 ? (
           '―'
         ) : (
-          <div className="w-[130px] font-mono">
+          <div className="font-mono">
             {formatDate(iv.refund.refundTime, true)}
           </div>
         )
@@ -341,235 +570,196 @@ const Index = ({
       title: 'Gateway',
       dataIndex: 'gateway',
       key: 'gateway',
+      width: 120,
       render: (g) => (g == null ? null : g.name)
     },
     {
       title: 'Created by',
       dataIndex: 'createFrom',
       key: 'createFrom',
-      width: 110,
+      width: 120,
       render: (by, _) => (by != 'Admin' ? 'System' : 'Admin')
-    },
-    {
-      title: 'User',
-      dataIndex: 'userAccount',
-      key: 'userName',
-      width: 130,
-      // hidden: embeddingMode,
-      // "hidden" is supported in higher version of antd, but that version broke many other things,
-      // like <DatePicker />
-      render: (_, iv) => (
-        <span>{`${iv.userAccount.firstName} ${iv.userAccount.lastName}`}</span>
-      )
     },
     {
       title: 'Email',
       dataIndex: 'userAccount',
       key: 'userEmail',
-      // hidden: embeddingMode,
+      width: 200,
       render: (_, iv) =>
         iv.userAccount == null ? null : (
-          <a href={`mailto:${iv.userAccount.email}`}> {iv.userAccount.email}</a>
+          <div className="invoice-email-wrapper flex items-center gap-1">
+            <span>{iv.userAccount.email}</span>
+            <CopyToClipboard content={iv.userAccount.email} />
+          </div>
         )
     },
     {
       title: 'Title',
       dataIndex: 'invoiceName',
-      key: 'invoiceName'
+      key: 'invoiceName',
+      width: 150
     },
     {
-      title: (
-        <>
-          <span>Actions</span>
-          {user != undefined && (
-            <Tooltip title="New invoice">
+      title: 'Actions',
+      key: 'action',
+      width: 120,
+      fixed: 'right',
+      render: (_, invoice, index) => {
+        const permission = getInvoicePermission(invoice)
+        const actions = getInvoiceActions(invoice, index)
+        return (
+          <div className="invoice-action-btn-wrapper flex items-center gap-2">
+            <Tooltip title="Edit">
               <Button
-                size="small"
-                style={{ marginLeft: '8px' }}
+                type="text"
+                icon={
+                  <EditOutlined
+                    style={{
+                      color: permission.editable ? ACTION_ICON_COLOR : '#bfbfbf'
+                    }}
+                  />
+                }
                 onClick={() => {
-                  setInvoiceIdx(-1)
+                  setInvoiceIdx(index)
                   toggleNewInvoiceModal()
                 }}
-                icon={<PlusOutlined />}
-                disabled={user == undefined}
+                disabled={!permission.editable}
               />
             </Tooltip>
-          )}
-          <Tooltip title="Refresh">
-            <Button
-              size="small"
-              style={{ marginLeft: '8px' }}
-              disabled={loading}
-              onClick={fetchData}
-              icon={<SyncOutlined />}
-            ></Button>
-          </Tooltip>
-          <Tooltip title="Export">
-            <Button
-              size="small"
-              style={{ marginLeft: '8px' }}
-              disabled={loading || exporting}
-              onClick={exportData}
-              loading={exporting}
-              icon={<ExportOutlined />}
-            ></Button>
-          </Tooltip>
-        </>
-      ),
-      key: 'action',
-      // width: 180,
-      // fixed: 'right',
-      render: (
-        _,
-        invoice // use fn to generate these icons, only show available ones.
-      ) => (
-        <Space
-          size="small"
-          className="invoice-action-btn-wrapper"
-          // style={{ width: '170px' }}
-        >
-          <Tooltip title="Edit">
-            <Button
-              onClick={toggleNewInvoiceModal}
-              icon={<EditOutlined />}
-              style={{ border: 'unset' }}
-              disabled={!getInvoicePermission(invoice).editable}
-            />
-          </Tooltip>
-          <Tooltip title="Create Refund Invoice">
-            <Button
-              onClick={refund}
-              icon={<DollarOutlined />}
-              style={{ border: 'unset' }}
-              disabled={!getInvoicePermission(invoice).refundable}
-            />
-          </Tooltip>
-          {getInvoicePermission(invoice).asPaidMarkable ? (
-            <Tooltip title="Mark invoice as PAID">
+            <Tooltip title="Download">
               <Button
-                onClick={toggleMarkPaidModal}
-                icon={<CheckCircleOutlined />}
-                style={{ border: 'unset' }}
+                type="text"
+                icon={<DownloadOutlined style={{ color: ACTION_ICON_COLOR }} />}
+                onClick={downloadInvoice(invoice)}
+                disabled={!permission.downloadable}
               />
             </Tooltip>
-          ) : null}
-
-          {getInvoicePermission(invoice).asRefundedMarkable ? (
-            <Tooltip title="Mark invoice as Refunded">
-              <Button
-                onClick={toggleMarkRefundedModal}
-                icon={<CheckCircleOutlined />}
-                style={{ border: 'unset' }}
-              />
-            </Tooltip>
-          ) : null}
-
-          <Tooltip title="Send invoice">
-            <Button
-              onClick={toggleInvoiceDetailModal}
-              icon={<MailOutlined />}
-              style={{ border: 'unset' }}
-              disabled={!getInvoicePermission(invoice).sendable}
-            />
-          </Tooltip>
-          <Tooltip title="Download Invoice">
-            <Button
-              onClick={downloadInvoice(invoice)}
-              icon={<DownloadOutlined />}
-              style={{ border: 'unset' }}
-              disabled={!getInvoicePermission(invoice).downloadable}
-            />
-          </Tooltip>
-        </Space>
-      )
+            {actions && actions.length > 0 && (
+              <Dropdown
+                menu={{ items: actions }}
+                trigger={['click']}
+                placement="bottomRight"
+              >
+                <Button type="text" icon={<MoreOutlined style={{ color: ACTION_ICON_COLOR }} />} />
+              </Dropdown>
+            )}
+          </div>
+        )
+      }
     }
   ]
 
   const refund = () => {
     setRefundMode(true)
-    toggleNewInvoiceModal()
+    setNewInvoiceModalOpen(true)
   }
 
-  const clearFilters = () => setFilters({ status: null })
+  const onTableChange: TableProps<UserInvoice>['onChange'] = (
+    pagination,
+    filters,
+    _sorter,
+    _extra
+  ) => {
+    const newPageSize = pagination.pageSize || PAGE_SIZE
+    const newPage = pagination.current || 1
+    
+    // If pageSize changed, reset to page 1
+    if (newPageSize !== pageSize) {
+      setPageSize(newPageSize)
+      pageChange(1, newPageSize)
+    } else {
+      pageChange(newPage, newPageSize)
+    }
 
-  const onTableChange: TableProps<UserInvoice>['onChange'] = (_, filters) => {
-    setFilters(filters as TFilters)
+    // Update filters for embedded mode (when column filters are used)
+    if (embeddingMode) {
+      setFilters(filters as TFilters)
+    }
   }
 
   useEffect(() => {
     fetchData()
-  }, [page, filters, user])
+  }, [page, pageSize, filters, user])
 
-  return (
-    <div>
-      {refundInfoModalOpen && invoiceList[invoiceIdx].refund != null && (
-        <RefundInfoModal
-          originalInvoiceId={invoiceList[invoiceIdx].payment?.invoiceId}
-          detail={invoiceList[invoiceIdx].refund!}
-          closeModal={toggleRefundInfoModal}
-          ignoreAmtFactor={true}
-        />
-      )}
-      {markPaidModalOpen && (
-        <MarkAsPaidModal
-          closeModal={toggleMarkPaidModal}
-          refresh={fetchData}
-          invoiceId={invoiceList[invoiceIdx].invoiceId}
-        />
-      )}
-
-      {markRefundedModalOpen && (
-        <MarkAsRefundedModal
-          closeModal={toggleMarkRefundedModal}
-          refresh={fetchData}
-          invoiceId={invoiceList[invoiceIdx].invoiceId}
-        />
-      )}
-      {newInvoiceModalOpen &&
-        (user != null || invoiceList[invoiceIdx].userAccount != null) && (
-          <NewInvoiceModal
-            isOpen={true}
-            refundMode={refundMode}
-            detail={invoiceIdx == -1 ? null : invoiceList[invoiceIdx]}
-            permission={getInvoicePermission(
-              invoiceIdx == -1 ? null : invoiceList[invoiceIdx]
-            )}
-            user={user ?? invoiceList[invoiceIdx]?.userAccount}
-            closeModal={toggleNewInvoiceModal}
-            refresh={fetchData}
+  if (embeddingMode) {
+    // Embedded mode (used within user detail page or subscription detail page)
+    return (
+      <div>
+        {refundInfoModalOpen && invoiceList[invoiceIdx]?.refund != null && (
+          <RefundInfoModal
+            originalInvoiceId={invoiceList[invoiceIdx].payment?.invoiceId}
+            detail={invoiceList[invoiceIdx].refund!}
+            closeModal={toggleRefundInfoModal}
+            ignoreAmtFactor={true}
           />
         )}
-      {invoiceDetailModalOpen && (
-        <InvoiceDetailModal
-          detail={invoiceList[invoiceIdx]}
-          user={user}
-          closeModal={toggleInvoiceDetailModal}
-        />
-      )}
-      {enableSearch && (
-        <Search
-          form={form}
-          goSearch={goSearch}
-          searching={loading}
-          clearFilters={clearFilters}
-          onPageChange={pageChange}
-        />
-      )}
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Table
-          columns={
-            !embeddingMode
-              ? columns
-              : columns.filter(
-                  (c) => c.key != 'userName' && c.key != 'userEmail'
-                )
-          }
+        {markPaidModalOpen && (
+          <MarkAsPaidModal
+            closeModal={toggleMarkPaidModal}
+            refresh={fetchData}
+            invoiceId={invoiceList[invoiceIdx].invoiceId}
+          />
+        )}
+        {markRefundedModalOpen && (
+          <MarkAsRefundedModal
+            closeModal={toggleMarkRefundedModal}
+            refresh={fetchData}
+            invoiceId={invoiceList[invoiceIdx].invoiceId}
+          />
+        )}
+        {newInvoiceModalOpen &&
+          invoiceIdx !== -1 &&
+          (user != null || invoiceList[invoiceIdx]?.userAccount != null) && (
+            <NewInvoiceModal
+              isOpen={true}
+              refundMode={refundMode}
+              detail={invoiceIdx == -1 ? null : invoiceList[invoiceIdx]}
+              permission={getInvoicePermission(
+                invoiceIdx == -1 ? null : invoiceList[invoiceIdx]
+              )}
+              user={user ?? invoiceList[invoiceIdx]?.userAccount}
+              closeModal={toggleNewInvoiceModal}
+              refresh={fetchData}
+            />
+          )}
+        {invoiceDetailModalOpen && invoiceList[invoiceIdx] && (
+          <InvoiceDetailModal
+            detail={invoiceList[invoiceIdx]}
+            user={user}
+            closeModal={toggleInvoiceDetailModal}
+          />
+        )}
+        {enableSearch && (
+          <Search
+            form={form}
+            goSearch={goSearch}
+            searching={loading}
+            clearFilters={clearFilters}
+            onPageChange={pageChange}
+          />
+        )}
+        <ResponsiveTable
+          columns={columns.filter((c) => c.key != 'userEmail')}
           dataSource={invoiceList}
           onChange={onTableChange}
           rowKey={'id'}
-          rowClassName="clickable-tbl-row"
-          pagination={false}
-          scroll={{ x: 'max-content', y: 640 }}
+          className="invoice-table"
+          pagination={{
+            current: page + 1,
+            pageSize: pageSize,
+            total: total,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50', '100'],
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+            locale: { items_per_page: '' },
+            disabled: loading,
+            className: 'invoice-pagination'
+          }}
+          loading={{
+            spinning: loading,
+            indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+          }}
+          scroll={{ x: 1400 }}
           onRow={(_, rowIndex) => {
             return {
               onClick: (event) => {
@@ -580,7 +770,12 @@ const Index = ({
                 ) {
                   return
                 }
-
+                if (
+                  event.target instanceof Element &&
+                  event.target.closest('.invoice-email-wrapper') != null
+                ) {
+                  return
+                }
                 if (
                   event.target instanceof Element &&
                   event.target.closest('.btn-refund-info-modal-wrapper') != null
@@ -598,30 +793,423 @@ const Index = ({
               }
             }
           }}
-          loading={{
-            spinning: loading,
-            indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
-          }}
         />
-        <span
-          style={{ cursor: 'pointer', marginLeft: '8px' }}
-          onClick={fetchData}
-        ></span>
-      </div>
-      <div className="my-4 flex items-center justify-between">
         <div className="flex items-center justify-center">{extraButton}</div>
-        <Pagination
-          current={page + 1} // back-end starts with 0, front-end starts with 1
-          pageSize={PAGE_SIZE}
-          total={total}
-          size="small"
-          onChange={pageChange}
-          disabled={loading}
-          showSizeChanger={false}
-          showTotal={(total, range) =>
-            `${range[0]}-${range[1]} of ${total} items`
-          }
+      </div>
+    )
+  }
+
+  // Standalone mode (main invoices page)
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      {refundInfoModalOpen && invoiceList[invoiceIdx]?.refund != null && (
+        <RefundInfoModal
+          originalInvoiceId={invoiceList[invoiceIdx].payment?.invoiceId}
+          detail={invoiceList[invoiceIdx].refund!}
+          closeModal={toggleRefundInfoModal}
+          ignoreAmtFactor={true}
         />
+      )}
+      {markPaidModalOpen && (
+        <MarkAsPaidModal
+          closeModal={toggleMarkPaidModal}
+          refresh={fetchData}
+          invoiceId={invoiceList[invoiceIdx].invoiceId}
+        />
+      )}
+      {markRefundedModalOpen && (
+        <MarkAsRefundedModal
+          closeModal={toggleMarkRefundedModal}
+          refresh={fetchData}
+          invoiceId={invoiceList[invoiceIdx].invoiceId}
+        />
+      )}
+      {newInvoiceModalOpen &&
+        invoiceIdx !== -1 &&
+        (user != null || invoiceList[invoiceIdx]?.userAccount != null) && (
+          <NewInvoiceModal
+            isOpen={true}
+            refundMode={refundMode}
+            detail={invoiceIdx == -1 ? null : invoiceList[invoiceIdx]}
+            permission={getInvoicePermission(
+              invoiceIdx == -1 ? null : invoiceList[invoiceIdx]
+            )}
+            user={user ?? invoiceList[invoiceIdx]?.userAccount}
+            closeModal={toggleNewInvoiceModal}
+            refresh={fetchData}
+          />
+        )}
+      {invoiceDetailModalOpen && invoiceList[invoiceIdx] && (
+        <InvoiceDetailModal
+          detail={invoiceList[invoiceIdx]}
+          user={user}
+          closeModal={toggleInvoiceDetailModal}
+        />
+      )}
+
+      <div className="p-6">
+        {/* Page Title */}
+        <h1 className="text-2xl font-semibold mb-6">Invoices</h1>
+
+        {/* Search Bar */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2" style={{ maxWidth: '450px', flex: 1 }}>
+              <Input
+                placeholder="Search by Invoice ID or Email"
+                value={searchText}
+                onChange={(e) => {
+                  const next = e.target.value
+                  setSearchText(next)
+                  const isClearClick =
+                    (e as any).nativeEvent?.type === 'click' || (e as any).type === 'click'
+                  if (isClearClick && next === '') {
+                    goSearch('')
+                  }
+                }}
+                onPressEnter={() => goSearch()}
+                size="large"
+                allowClear
+                style={{ flex: 1 }}
+              />
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                onClick={() => goSearch()}
+                size="large"
+                style={{
+                  backgroundColor: '#FFD700',
+                  borderColor: '#FFD700',
+                  color: '#000'
+                }}
+              />
+            </div>
+
+            {/* Filter Button */}
+            <div style={{ position: 'relative' }}>
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
+                size="large"
+                className="flex items-center"
+                style={{
+                  borderRadius: '8px',
+                  padding: '4px 16px',
+                  height: '40px'
+                }}
+              >
+                <span style={{ marginRight: getStandaloneFilterCount() > 0 ? '8px' : 0 }}>Filter</span>
+                {getStandaloneFilterCount() > 0 && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: '20px',
+                      height: '20px',
+                      padding: '0 6px',
+                      backgroundColor: '#f0f0f0',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      color: '#000'
+                    }}
+                  >
+                    {getStandaloneFilterCount()}
+                  </span>
+                )}
+              </Button>
+
+              {/* Filter Panel - Floating */}
+              {filterDrawerOpen && (
+                <>
+                  {/* Overlay */}
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      zIndex: 999
+                    }}
+                    onClick={() => setFilterDrawerOpen(false)}
+                  />
+                  
+                  {/* Filter Panel */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      width: '400px',
+                      zIndex: 1000
+                    }}
+                    className="bg-white rounded-lg shadow-xl border border-gray-200"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-6">
+                      <h3 className="text-lg font-semibold mb-6">Filters</h3>
+                      <Form
+                        form={form}
+                        layout="vertical"
+                        initialValues={DEFAULT_TERM}
+                      >
+                        {/* Status */}
+                        <Form.Item label="Status" name="status" style={{ marginBottom: '20px' }}>
+                          <Select
+                            placeholder="Choose a Status"
+                            allowClear
+                            mode="multiple"
+                            showSearch
+                            filterOption={(input, option) =>
+                              (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={STATUS_FILTER.map(s => ({ label: s.text, value: s.value }))}
+                          />
+                        </Form.Item>
+
+                        {/* Invoice created */}
+                        <Form.Item label="Invoice created" style={{ marginBottom: '20px' }}>
+                          <div className="flex items-center gap-2">
+                            <Form.Item name="createTimeStart" noStyle>
+                              <DatePicker
+                                placeholder="From"
+                                format="MM.DD.YYYY"
+                                disabledDate={(d) => d.isAfter(new Date())}
+                                style={{ flex: 1 }}
+                              />
+                            </Form.Item>
+                            <span className="text-gray-400">-</span>
+                            <Form.Item
+                              name="createTimeEnd"
+                              noStyle
+                              rules={[
+                                {
+                                  required: false,
+                                  message: 'Must be later than start date.'
+                                },
+                                ({ getFieldValue }) => ({
+                                  validator(_, value) {
+                                    const start = getFieldValue('createTimeStart')
+                                    if (null == start || value == null) {
+                                      return Promise.resolve()
+                                    }
+                                    return value.isAfter(start) || value.isSame(start, 'day')
+                                      ? Promise.resolve()
+                                      : Promise.reject('Must be same or later than start date')
+                                  }
+                                })
+                              ]}
+                            >
+                              <DatePicker
+                                placeholder="To"
+                                format="MM.DD.YYYY"
+                                disabledDate={(d) => d.isAfter(new Date())}
+                                style={{ flex: 1 }}
+                              />
+                            </Form.Item>
+                          </div>
+                        </Form.Item>
+
+                        {/* Amount */}
+                        <Form.Item label="Amount" style={{ marginBottom: '20px' }}>
+                          <Form.Item name="currency" noStyle>
+                            <Select
+                              style={{ width: '100%', marginBottom: '8px' }}
+                              showSearch
+                              filterOption={(input, option) =>
+                                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                              }
+                              options={appConfig.supportCurrency.map((c) => ({
+                                label: c.Currency,
+                                value: c.Currency
+                              }))}
+                            />
+                          </Form.Item>
+                          <div className="flex items-center gap-2">
+                            <Form.Item name="amountStart" noStyle>
+                              <Input placeholder="From" style={{ flex: 1 }} />
+                            </Form.Item>
+                            <span className="text-gray-400">-</span>
+                            <Form.Item name="amountEnd" noStyle>
+                              <Input placeholder="To" style={{ flex: 1 }} />
+                            </Form.Item>
+                          </div>
+                        </Form.Item>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center justify-end gap-3 mt-6">
+                          <Button
+                            onClick={() => setFilterDrawerOpen(false)}
+                            size="large"
+                          >
+                            Close
+                          </Button>
+                          <Button
+                            type="primary"
+                            size="large"
+                            onClick={() => {
+                              // Apply filters from form
+                              setFilterDrawerOpen(false)
+                              // Persist standalone filters so pagination keeps parameters
+                              setStandaloneFilters(form.getFieldsValue())
+                              if (page === 0) {
+                                fetchData()
+                              } else {
+                                pageChange(1, pageSize)
+                              }
+                            }}
+                            style={{
+                              backgroundColor: '#FFD700',
+                              borderColor: '#FFD700',
+                              color: '#000',
+                              fontWeight: 500
+                            }}
+                          >
+                            Save Filters
+                          </Button>
+                        </div>
+                      </Form>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Active Filters Display - Below Search Bar */}
+          {getStandaloneActiveFilters().length > 0 && (
+            <div 
+              className="mt-4 flex items-center gap-2 flex-wrap"
+            >
+              {getStandaloneActiveFilters().map(filter => (
+                <Tag
+                  key={filter.key}
+                  closable
+                  onClose={() => removeStandaloneFilter(filter.key)}
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '13px',
+                    borderRadius: '16px',
+                    border: '1px solid #e0e0e0',
+                    backgroundColor: '#f5f5f5',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    margin: 0,
+                    marginBottom: '4px'
+                  }}
+                >
+                  {filter.label}
+                </Tag>
+              ))}
+              <span
+                onClick={() => {
+                  // Clear all filters including form fields
+                  form.resetFields()
+                  clearFilters()
+                  setStandaloneFilters({})
+                  pageChange(1, PAGE_SIZE)
+                }}
+                style={{
+                  fontSize: '13px',
+                  color: '#666',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  whiteSpace: 'nowrap',
+                  marginLeft: '4px'
+                }}
+              >
+                Clear all
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Records Section */}
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium">Records</h2>
+              <div className="flex items-center gap-3">
+                <Button
+                  icon={<SyncOutlined />}
+                  onClick={() => fetchData()}
+                  disabled={loading}
+                  className="flex items-center"
+                >
+                  Refresh
+                </Button>
+                <Button
+                  icon={<ExportOutlined />}
+                  onClick={exportData}
+                  loading={exporting}
+                  disabled={loading || exporting}
+                  className="flex items-center"
+                >
+                  Export
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <ResponsiveTable
+            columns={columns}
+            dataSource={invoiceList}
+            onChange={onTableChange}
+            rowKey={'id'}
+            className="invoice-table"
+            pagination={{
+              current: page + 1,
+              pageSize: pageSize,
+              total: total,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+              locale: { items_per_page: '' },
+              disabled: loading,
+              className: 'invoice-pagination'
+            }}
+            loading={{
+              spinning: loading,
+              indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+            }}
+            scroll={{ x: 1400 }}
+            onRow={(_, rowIndex) => {
+              return {
+                onClick: (event) => {
+                  setInvoiceIdx(rowIndex as number)
+                  if (
+                    event.target instanceof Element &&
+                    event.target.closest('.invoice-id-wrapper') != null
+                  ) {
+                    return
+                  }
+                  if (
+                    event.target instanceof Element &&
+                    event.target.closest('.invoice-email-wrapper') != null
+                  ) {
+                    return
+                  }
+                  if (
+                    event.target instanceof Element &&
+                    event.target.closest('.btn-refund-info-modal-wrapper') != null
+                  ) {
+                    toggleRefundInfoModal()
+                    return
+                  }
+                  if (
+                    event.target instanceof Element &&
+                    event.target.closest('.invoice-action-btn-wrapper') == null
+                  ) {
+                    toggleInvoiceDetailModal()
+                    return
+                  }
+                }
+              }
+            }}
+          />
+        </div>
       </div>
     </div>
   )
@@ -629,11 +1217,6 @@ const Index = ({
 
 export default Index
 
-const DEFAULT_TERM = {
-  // currency: 'EUR',
-  amountStart: '',
-  amountEnd: ''
-}
 const Search = ({
   form,
   searching,
