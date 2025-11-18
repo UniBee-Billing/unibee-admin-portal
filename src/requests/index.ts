@@ -2523,19 +2523,19 @@ export const getCreditTxListReq = async (
   }
 }
 
-export const getCreditUsageStatReq = async (currency: string) => {
-  try {
-    const res = await request.post(
-      `/merchant/credit/get_promo_config_statistics`,
-      { currency }
-    )
-    handleStatusCode(res.data.code)
-    return [res.data.data.creditConfigStatistics, null]
-  } catch (err) {
-    const e = err instanceof Error ? err : new Error('Unknown error')
-    return [null, e]
-  }
-}
+// export const getCreditUsageStatReq = async (currency: string) => {
+//   try {
+//     const res = await request.post(
+//       `/merchant/credit/get_promo_config_statistics`,
+//       { currency }
+//     )
+//     handleStatusCode(res.data.code)
+//     return [res.data.data.creditConfigStatistics, null]
+//   } catch (err) {
+//     const e = err instanceof Error ? err : new Error('Unknown error')
+//     return [null, e]
+//   }
+// }
 
 export const toggleUserCreditReq = async (id: number, payoutEnable: 1 | 0) => {
   try {
