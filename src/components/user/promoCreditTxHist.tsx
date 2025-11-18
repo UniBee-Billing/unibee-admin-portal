@@ -1,12 +1,12 @@
 import { CREDIT_TX_TYPE } from '@/constants'
-import { formatDate, numberWithComma, showAmount } from '@/helpers'
+import { formatDate, showAmount } from '@/helpers'
 import { usePagination } from '@/hooks'
 import {
   exportDataReq,
   getCreditTxListReq,
-  getCreditUsageStatReq,
   TCreditTxParams
 } from '@/requests'
+import { getSystemInformationReq } from '@/requests/systemService'
 import { CreditTxType, CreditType, IProfile, TCreditTx } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import {
@@ -25,11 +25,12 @@ import {
   Space,
   Tooltip
 } from 'antd'
-import Table, { ColumnsType } from 'antd/es/table'
+import { ColumnsType } from 'antd/es/table'
 import type { FilterDropdownProps } from 'antd/es/table/interface'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CopyToClipboard from '../ui/copyToClipboard'
+import ResponsiveTable from '../table/responsiveTable'
 
 const PAGE_SIZE = 10
 
@@ -38,12 +39,14 @@ const Index = ({
   refreshTxHistory, // when used in user detail -> promoCredit tab, after admin updated credit amt, this component need to re-render to get the latest list
   // when this props passed as true, run fetchCreditTxList
   setRefreshTxHist, // after refresh is done, set this to false
-  embeddingMode
+  embeddingMode,
+  // currency
 }: {
   userDetail?: IProfile
   refreshTxHistory: boolean
   setRefreshTxHist?: (v: boolean) => void
   embeddingMode?: boolean
+  currency?: string
 }) => {
   const navigate = useNavigate()
   const [creditTxList, setCreditTxList] = useState<TCreditTx[]>([])
@@ -57,6 +60,10 @@ const Index = ({
     sortField: 'gmt_modify'
     sortType: 'desc' | 'asc' | undefined
   } | null>(null)
+  const [supportedCurrencies, setSupportedCurrencies] = useState<string[]>([])
+  const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>(
+    undefined
+  )
 
   type DataIndex = keyof TCreditTx
 
@@ -75,6 +82,7 @@ const Index = ({
       accountType: CreditType.PROMO_CREDIT,
       userId: userDetail == undefined ? undefined : (userDetail.id as number),
       email: searchText,
+      currency: selectedCurrency,
       page,
       count: PAGE_SIZE
     }
@@ -99,7 +107,6 @@ const Index = ({
 
   const onTableChange: TableProps<TCreditTx>['onChange'] = (
     _,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     filters,
     sorter
   ) => {
@@ -115,6 +122,18 @@ const Index = ({
     }
     if (Array.isArray(sorter)) {
       return // Handle array case if needed
+    }
+    // Handle currency filter (including Reset)
+    if (filters && Object.prototype.hasOwnProperty.call(filters, 'currency')) {
+      const values = filters.currency as unknown
+      const hasValueArray = Array.isArray(values)
+      const newCurrency =
+        hasValueArray && values.length > 0 ? (values[0] as string) : undefined
+      if (newCurrency !== selectedCurrency) {
+        setSelectedCurrency(newCurrency)
+        onPageChange(1, PAGE_SIZE)
+        return
+      }
     }
     if (sorter.columnKey == undefined) {
       setSortFilter(null)
@@ -263,6 +282,16 @@ const Index = ({
       )
     },
     {
+      title: 'Currency',
+      dataIndex: 'currency',
+      key: 'currency',
+      filters: supportedCurrencies.map((c) => ({ text: c, value: c })),
+      filterSearch: true,
+      filterMultiple: false,
+      filteredValue:
+        selectedCurrency == undefined ? null : [selectedCurrency as string]
+    },
+    {
       title: 'Type',
       dataIndex: 'transactionType',
       key: 'transactionType',
@@ -348,7 +377,7 @@ const Index = ({
 
   useEffect(() => {
     fetchCreditTxList()
-  }, [page, sortFilter, searchedColumn, searchText])
+  }, [page, sortFilter, searchedColumn, searchText, selectedCurrency])
 
   useEffect(() => {
     if (refreshTxHistory) {
@@ -356,19 +385,32 @@ const Index = ({
     }
   }, [refreshTxHistory])
 
+  useEffect(() => {
+    ;(async () => {
+      const [sysInfo, err] = await getSystemInformationReq()
+      if (err == null && sysInfo?.supportCurrency) {
+        const currencies = Array.isArray(sysInfo.supportCurrency)
+          ? sysInfo.supportCurrency
+          : []
+        setSupportedCurrencies(
+          currencies.map((c: { Currency: string }) => c.Currency)
+        )
+      }
+    })()
+  }, [])
+
   return (
     <>
       {!embeddingMode && (
         <ExtraInfo
-          refresh={fetchCreditTxList}
           exportPayload={{
-            email: searchText,
-            sortFilter,
+            userId: userDetail == undefined ? undefined : userDetail.id,
             accountType: CreditType.PROMO_CREDIT
           }}
+          refresh={fetchCreditTxList}
         />
       )}
-      <Table
+      <ResponsiveTable
         columns={columns}
         dataSource={creditTxList}
         onChange={onTableChange}
@@ -407,13 +449,9 @@ const ExtraInfo = ({
 }: {
   exportPayload: unknown
   refresh: () => void
+  currency?: string
 }) => {
   const appConfigStore = useAppConfigStore()
-  const [creditUsageStat, setCreditUsageStat] = useState<{
-    totalIncrementAmount: number | null
-    totalDecrementAmount: number | null
-  }>({ totalIncrementAmount: null, totalDecrementAmount: null })
-  const [loadingStat, setLoadingStat] = useState(true)
   // accountType: 2, email,
   const onExport = async () => {
     const [_, err] = await exportDataReq({
@@ -428,48 +466,9 @@ const ExtraInfo = ({
     appConfigStore.setTaskListOpen(true)
   }
 
-  const getCreditUsageStat = async () => {
-    setLoadingStat(true)
-    const [res, err] = await getCreditUsageStatReq('EUR') // hard-coded here
-    setLoadingStat(false)
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    const { totalIncrementAmount, totalDecrementAmount } = res
-    setCreditUsageStat({ totalIncrementAmount, totalDecrementAmount })
-  }
-
-  useEffect(() => {
-    getCreditUsageStat()
-  }, [])
-
   return (
     <div className="mb-4 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <div className="flex" style={{ width: 240 }}>
-          <TotalAddedCreditsSVG />
-          &nbsp;&nbsp; Total added credits:&nbsp;&nbsp;
-          {loadingStat ? (
-            <LoadingOutlined spin />
-          ) : creditUsageStat.totalIncrementAmount == null ? (
-            <MinusOutlined />
-          ) : (
-            numberWithComma(Math.abs(creditUsageStat.totalIncrementAmount))
-          )}
-        </div>
-        <div className="flex" style={{ width: 240 }}>
-          <TotalUsedCreditsSVG />
-          &nbsp;&nbsp; Total used credits:&nbsp;&nbsp;
-          {loadingStat ? (
-            <LoadingOutlined spin />
-          ) : creditUsageStat.totalDecrementAmount == null ? (
-            <MinusOutlined />
-          ) : (
-            numberWithComma(Math.abs(creditUsageStat.totalDecrementAmount))
-          )}
-        </div>
-      </div>
+      <div />
       <div>
         <Button onClick={refresh}>Refresh</Button>&nbsp;&nbsp;
         <Button onClick={onExport}>Export</Button>
@@ -478,48 +477,4 @@ const ExtraInfo = ({
   )
 }
 
-const TotalAddedCreditsSVG = () => (
-  <svg
-    width="16"
-    height="17"
-    viewBox="0 0 16 17"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M7.99922 15.3195C4.14141 15.3195 1.00391 12.2668 1.00391 8.51328C1.00391 4.75973 4.14141 1.70703 7.99922 1.70703V2.64656C4.67422 2.64656 1.96953 5.27815 1.96953 8.51328C1.96953 11.7484 4.67422 14.38 7.99922 14.38C11.3242 14.38 14.0289 11.7484 14.0289 8.51328H14.9945C14.9945 12.2668 11.8555 15.3195 7.99922 15.3195Z"
-      fill="#6C6C6C"
-    />
-    <path
-      d="M10.8613 9.37226H7.00195V5.61719H7.96602V8.43273H10.8613V9.37226Z"
-      fill="#6C6C6C"
-    />
-    <path
-      d="M7.30859 8.40906L12.7665 3.09863L13.4493 3.76298L7.99139 9.07339L7.30859 8.40906Z"
-      fill="#6C6C6C"
-    />
-  </svg>
-)
-
-const TotalUsedCreditsSVG = () => (
-  <svg
-    width="16"
-    height="17"
-    viewBox="0 0 16 17"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M7.99922 15.3195C4.14141 15.3195 1.00391 12.2668 1.00391 8.51328C1.00391 4.75973 4.14141 1.70703 7.99922 1.70703V2.64656C4.67422 2.64656 1.96953 5.27815 1.96953 8.51328C1.96953 11.7484 4.67422 14.38 7.99922 14.38C11.3242 14.38 14.0289 11.7484 14.0289 8.51328H14.9945C14.9945 12.2668 11.8555 15.3195 7.99922 15.3195Z"
-      fill="#6C6C6C"
-    />
-    <path
-      d="M9.58984 3.09845H13.4492V6.85352H12.4852V4.03797H9.58984V3.09845Z"
-      fill="#6C6C6C"
-    />
-    <path
-      d="M13.1426 4.06165L7.68464 9.37207L7.00184 8.70773L12.4598 3.39732L13.1426 4.06165Z"
-      fill="#6C6C6C"
-    />
-  </svg>
-)
+// Removed credit stats display and related backend requests
