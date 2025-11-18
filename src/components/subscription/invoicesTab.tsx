@@ -600,7 +600,25 @@ const Index = ({
       width: 150
     },
     {
-      title: 'Actions',
+      title: embeddingMode && user ? (
+        <>
+          <span>Actions</span>
+          <Tooltip title="New Invoice">
+            <Button
+              size="small"
+              style={{ marginLeft: '8px' }}
+              onClick={() => {
+                setInvoiceIdx(-1)
+                setRefundMode(false)
+                toggleNewInvoiceModal()
+              }}
+              icon={<PlusOutlined />}
+            />
+          </Tooltip>
+        </>
+      ) : (
+        'Actions'
+      ),
       key: 'action',
       width: 120,
       fixed: 'right',
@@ -708,8 +726,7 @@ const Index = ({
           />
         )}
         {newInvoiceModalOpen &&
-          invoiceIdx !== -1 &&
-          (user != null || invoiceList[invoiceIdx]?.userAccount != null) && (
+          (invoiceIdx === -1 ? user != null : invoiceList[invoiceIdx]?.userAccount != null || user != null) && (
             <NewInvoiceModal
               isOpen={true}
               refundMode={refundMode}
@@ -825,8 +842,7 @@ const Index = ({
         />
       )}
       {newInvoiceModalOpen &&
-        invoiceIdx !== -1 &&
-        (user != null || invoiceList[invoiceIdx]?.userAccount != null) && (
+        (invoiceIdx === -1 ? user != null : invoiceList[invoiceIdx]?.userAccount != null || user != null) && (
           <NewInvoiceModal
             isOpen={true}
             refundMode={refundMode}
