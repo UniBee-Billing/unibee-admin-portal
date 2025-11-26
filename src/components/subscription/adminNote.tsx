@@ -53,7 +53,7 @@ const Index = ({
     const [list, err] = await getAdminNoteReq({
       subscriptionId,
       page: 0,
-      count: 100,
+      count: 500,
       refreshCb: fetchData
     })
     setLoading(false)
