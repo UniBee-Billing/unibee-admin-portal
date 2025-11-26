@@ -52,7 +52,7 @@ const Index = ({
     const [list, err] = await getUserNoteReq({
       userId,
       page: 0,
-      count: 100,
+      count: 500,
       refreshCb: fetchData
     })
     setLoading(false)
