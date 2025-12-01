@@ -82,6 +82,7 @@ const Index = () => {
   ) // plan obj is used for Form's initialValue, any changes is handled by Form itself, not updated here.
   // it's better to use useRef to save plan obj.
   const [addons, setAddons] = useState<IPlan[]>([]) // all the active addons we have (addon has the same structure as Plan).
+  const [addonsOnetime, setAddonsOnetime] = useState<IPlan[]>([]) // all the active one-time addons we have
   // selectAddons is used for options in "addon <Select />"", its option items will change based on other props(currency, intervalUnit/Count, etc)
   // addons variable is all the active addons we have, use this do some filtering, then save the result in selectAddons
   const [selectAddons, setSelectAddons] = useState<IPlan[]>([]) // addon list in <Select /> for the current main plan, this list will change based on different plan props(interval count/unit/currency)
@@ -219,9 +220,9 @@ const Index = () => {
     setSelectAddons(newAddons)
 
     if (isNew) {
-      setSelectOnetime(addons.filter((a) => a.currency === watchCurrency))
+      setSelectOnetime(addonsOnetime.filter((a) => a.currency === watchCurrency))
     }
-  }, [itvCountUnit, itvCountValue, watchCurrency])
+  }, [itvCountUnit, itvCountValue, watchCurrency, addonsOnetime])
 
   useEffect(() => {
     // user chose PlanType.MAIN, then select several addons/onetimeAddons,
@@ -409,6 +410,7 @@ const Index = () => {
       (p: IPlan) => p.type == PlanType.ONE_TIME_ADD_ON
     )
     setAddons(regularAddons)
+    setAddonsOnetime(onetimeAddons)
     setMetricsList(
       metricsList.merchantMetrics == null ? [] : metricsList.merchantMetrics
     )
