@@ -23,12 +23,10 @@ import {
 } from './types'
 import {
   getCreditNoteListReq,
-  getPlanList,
   getPaymentGatewayListReq
 } from '../../requests'
 import { exportDataReq } from '../../requests'
-import { useAppConfigStore } from '../../stores'
-import { IPlan, PlanStatus } from '../../shared.types'
+import { useAppConfigStore, usePlanListStore } from '../../stores'
 // import { showAmount } from '../../helpers'
 
 const { RangePicker } = DatePicker
@@ -317,9 +315,18 @@ const RefundList: React.FC = () => {
   const [filters, setFilters] = useState<CreditNoteListRequest>({})
   const [tableFilters, setTableFilters] = useState<Record<string, any>>({})
 
-  const [planOptions, setPlanOptions] = useState<FilterOption[]>([])
-  const [planLoading, setPlanLoading] = useState(false)
+  // Use global plan list store
+  const { planOptions: globalPlanOptions, loading: planLoading, fetchAllPlans } = usePlanListStore()
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
+
+  const planOptions: FilterOption[] = React.useMemo(() => {
+    planFilterRef.current = globalPlanOptions
+    return globalPlanOptions.map((p) => ({
+      text: p.text,
+      label: p.text,
+      value: p.value
+    }))
+  }, [globalPlanOptions])
 
   // Gateway filter options
   const [gatewayOptions, setGatewayOptions] = useState<FilterOption[]>([])
@@ -362,72 +369,15 @@ const RefundList: React.FC = () => {
     fetchCreditNoteList()
   }, [currentPage, pageSize, filters])
 
-  // Fetch plan list information
+  // Fetch plan list from global store
   useEffect(() => {
-    fetchPlan()
-  }, [])
+    fetchAllPlans()
+  }, [fetchAllPlans])
 
   // Fetch all gateway options
   useEffect(() => {
     fetchAllGateways()
   }, [])
-
-  const fetchPlan = async () => {
-    setPlanLoading(true)
-    try {
-      const [planList, err] = await getPlanList(
-        {
-          status: [
-            PlanStatus.ACTIVE,
-            PlanStatus.SOFT_ARCHIVED,
-            PlanStatus.HARD_ARCHIVED
-          ],
-          page: 0,
-          count: 500
-        },
-        fetchPlan
-      )
-
-      if (err) {
-        console.error('Error fetching plan list:', err)
-        setPlanOptions([
-          { text: 'Error loading plans', label: 'Error loading plans', value: 'error' }
-        ])
-        return
-      }
-
-      if (planList && planList.plans) {
-        // Generate filter options for Plan Name column
-        planFilterRef.current =
-          planList.plans == null
-            ? []
-            : planList.plans.map((p: IPlan) => ({
-              value: p.plan?.id,
-              text: p.plan?.planName
-            }))
-
-        const planOptionsArray: FilterOption[] = planFilterRef.current.map((p) => ({
-          text: p.text,
-          label: p.text,
-          value: p.value
-        }))
-
-        setPlanOptions(planOptionsArray)
-      } else {
-        setPlanOptions([
-          { text: 'No plans available', label: 'No plans available', value: 'no-plans' }
-        ])
-      }
-    } catch (error) {
-      console.error('Error fetching plan list:', error)
-      setPlanOptions([
-        { text: 'Error loading plans', label: 'Error loading plans', value: 'error' }
-      ])
-    } finally {
-      setPlanLoading(false)
-    }
-  }
-
 
   const fetchCreditNoteList = async () => {
     setLoading(true)

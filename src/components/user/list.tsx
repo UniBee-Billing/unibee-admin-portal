@@ -1,16 +1,13 @@
 import { SUBSCRIPTION_STATUS, USER_STATUS } from '@/constants'
 import { formatDate } from '@/helpers'
 import { usePagination } from '@/hooks'
-import { exportDataReq, getPlanList, getUserListReq } from '@/requests'
+import { exportDataReq, getUserListReq } from '@/requests'
 import '@/shared.css'
 import {
-  IPlan,
   IProfile,
-  PlanStatus,
-  PlanType,
   SubscriptionStatus
 } from '@/shared.types'
-import { useAppConfigStore } from '@/stores'
+import { useAppConfigStore, usePlanListStore } from '@/stores'
 import {
   ExportOutlined,
   ImportOutlined,
@@ -86,9 +83,11 @@ const Index = () => {
   const [newUserModalOpen, setNewUserModalOpen] = useState(false)
   const toggleNewUserModal = () => setNewUserModalOpen(!newUserModalOpen)
   const [loading, setLoading] = useState(false)
-  const [loadingPlans, setLoadingPlans] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [users, setUsers] = useState<IProfile[]>([])
+
+  // Use global plan list store
+  const { planOptions: globalPlanOptions, loading: loadingPlans, fetchAllPlans } = usePlanListStore()
   const [form] = Form.useForm()
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -140,31 +139,14 @@ const Index = () => {
     setTotal(total)
   }
 
-  const fetchPlan = async () => {
-    setLoadingPlans(true)
-    const [planList, err] = await getPlanList(
-      {
-        // type: [PlanType.MAIN],
-        status: [PlanStatus.ACTIVE],
-        page: page,
-        count: 500
-      },
-      fetchPlan
-    )
-    setLoadingPlans(false)
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    const { plans } = planList
-    planFilterRef.current =
-      plans == null
-        ? []
-        : plans.map((p: IPlan) => ({
-            value: p.plan?.id,
-            text: p.plan?.planName
-          }))
-  }
+  // Sync global plan store data to filter ref
+  useEffect(() => {
+    fetchAllPlans()
+  }, [fetchAllPlans])
+
+  useEffect(() => {
+    planFilterRef.current = globalPlanOptions
+  }, [globalPlanOptions])
 
   const exportData = async () => {
     let payload = normalizeSearchTerms()
@@ -436,10 +418,6 @@ const Index = () => {
     fetchData()
   }, [filters, page, pageSize])
 
-  useEffect(() => {
-    fetchPlan()
-  }, [])
-
   return (
     <div className="bg-gray-50 min-h-screen">
       {newUserModalOpen && (
@@ -480,13 +458,8 @@ const Index = () => {
                 <Button
                 type="primary"
                 icon={<SearchOutlined />}
-                  onClick={() => goSearch()}
+                onClick={() => goSearch()}
                 size="large"
-                style={{
-                  backgroundColor: '#FFD700',
-                  borderColor: '#FFD700',
-                  color: '#000',
-                }}
               />
             </div>
             
@@ -669,12 +642,6 @@ const Index = () => {
                               
                               setFilterDrawerOpen(false)
                             }}
-                            style={{
-                              backgroundColor: '#FFD700',
-                              borderColor: '#FFD700',
-                              color: '#000',
-                              fontWeight: 500,
-                            }}
                           >
                             Save Filters
                           </Button>
@@ -764,12 +731,6 @@ const Index = () => {
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={toggleNewUserModal}
-                  style={{
-                    backgroundColor: '#FFD700',
-                    borderColor: '#FFD700',
-                    color: '#000',
-                    fontWeight: 500,
-                  }}
                 >
                   New User
                 </Button>

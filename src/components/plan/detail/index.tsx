@@ -13,7 +13,7 @@ import {
   PlanStatus,
   PlanType
 } from '@/shared.types'
-import { useAppConfigStore } from '@/stores'
+import { useAppConfigStore, usePlanListStore } from '@/stores'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button, Form, Popconfirm, Spin, Tabs, message } from 'antd'
 import { Currency } from 'dinero.js'
@@ -325,13 +325,15 @@ const Index = () => {
     }
 
     message.success(`Plan ${isNew ? 'created' : 'saved'}`)
+    
+    // Force refresh global plan list store
+    usePlanListStore.getState().fetchAllPlans(true)
+    
     productId.current = updatedPlan.productId
     if (isNew) {
       navigate(`/plan/${updatedPlan.id}?productId=${updatedPlan.productId}`, {
         replace: true
       })
-    } else {
-      // navigate(`/plan/list`)
     }
   }
 
@@ -349,6 +351,8 @@ const Index = () => {
       return
     }
     message.success('Plan activated')
+    // Force refresh global plan list store
+    usePlanListStore.getState().fetchAllPlans(true)
     fetchData()
   }
 
@@ -372,6 +376,8 @@ const Index = () => {
       return
     }
     message.success('Plan deleted')
+    // Force refresh global plan list store
+    usePlanListStore.getState().fetchAllPlans(true)
     navigate(
       `/plan/list?productId=${productDetail != null ? productDetail.id : 0}`
     )

@@ -363,6 +363,7 @@ export const saveExRateKeyReq = async (exchangeRateApiKey: string) => {
 
 // ---------------
 export type TPlanListBody = {
+  planIds?: number[] | null
   type?: PlanType[] | null
   status?: PlanStatus[] | null
   productIds?: number[] | null

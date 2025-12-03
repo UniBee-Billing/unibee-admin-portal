@@ -1,0 +1,197 @@
+/* Custom pagination styling to match design */
+.plan-pagination.ant-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  flex-wrap: nowrap;
+  gap: 16px;
+}
+
+/* Left side: page size selector */
+.plan-pagination .ant-pagination-options {
+  order: -1;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.plan-pagination .ant-pagination-options-size-changer {
+  margin: 0 !important;
+}
+
+.plan-pagination .ant-pagination-options-size-changer .ant-select-selector {
+  min-width: 60px;
+  padding: 4px 11px;
+}
+
+/* Only show the number in the select */
+.plan-pagination .ant-pagination-options-size-changer .ant-select-selection-item {
+  text-align: left;
+}
+
+/* Style the "rows per page" text */
+.plan-pagination .ant-pagination-options::after {
+  content: 'rows per page';
+  color: #9ca3af;
+  font-size: 14px;
+  white-space: nowrap;
+  position: relative;
+  display: inline-block;
+}
+
+/* Right side container for total text and navigation */
+.plan-pagination > :not(.ant-pagination-options) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Right side: total text */
+.plan-pagination .ant-pagination-total-text {
+  order: 1;
+  margin: 0 16px 0 0 !important;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* Navigation buttons */
+.plan-pagination .ant-pagination-prev,
+.plan-pagination .ant-pagination-next {
+  order: 2;
+  margin: 0 2px !important;
+}
+
+.plan-pagination .ant-pagination-prev button,
+.plan-pagination .ant-pagination-next button {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.plan-pagination .ant-pagination-prev button:hover,
+.plan-pagination .ant-pagination-next button:hover {
+  border-color: #9ca3af;
+}
+
+/* Hide page number items, only show prev/next */
+.plan-pagination .ant-pagination-item {
+  display: none !important;
+}
+
+/* Hide jump inputs and other options */
+.plan-pagination .ant-pagination-options-quick-jumper {
+  display: none !important;
+}
+
+/* Table row hover effect */
+.plan-table .ant-table-tbody > tr:hover > td {
+  background-color: #f9fafb !important;
+}
+
+/* Right align numeric columns */
+.plan-table .ant-table-cell-right-align {
+  text-align: right;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-pill svg {
+  font-size: 16px;
+}
+
+.status-pill--success {
+  background-color: #e3f8ea;
+  color: #21a366;
+}
+
+.status-pill--danger {
+  background-color: #fdecec;
+  color: #e54848;
+}
+
+.plan-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plan-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.plan-action-btn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.plan-action-btn--edit {
+  color: #3b82f6 !important;
+}
+
+.plan-action-btn--delete {
+  color: #f87171 !important;
+}
+
+.plan-action-btn--more {
+  color: #9ca3af !important;
+}
+
+.plan-action-dropdown .ant-dropdown-menu {
+  border-radius: 8px;
+  padding: 6px 0;
+  box-shadow: 0px 20px 40px rgba(15, 23, 42, 0.18);
+  min-width: 200px;
+  border: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.plan-action-dropdown .ant-dropdown-menu-item {
+  padding: 12px 18px 12px 24px;
+  transition: background 0.15s ease;
+}
+
+.plan-action-dropdown .ant-dropdown-menu-item:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.plan-action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 15px;
+  color: #0f172a;
+  font-weight: 500;
+  width: 100%;
+  padding-left: 6px;
+}
+
+.plan-action-menu-item svg {
+  font-size: 18px;
+  color: #4b5563;
+}
+
