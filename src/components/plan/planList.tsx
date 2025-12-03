@@ -28,7 +28,6 @@ import {
   FilterOutlined,
   InboxOutlined,
   LoadingOutlined,
-  MoreOutlined,
   PlusOutlined,
   SearchOutlined,
   SyncOutlined
@@ -37,7 +36,6 @@ import {
   Button,
   Checkbox,
   Col,
-  Dropdown,
   Form,
   Input,
   message,
@@ -51,7 +49,6 @@ import {
   Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
-import type { MenuProps } from 'antd'
 import React, { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
@@ -228,25 +225,6 @@ const Index = ({
     setPlan(planData)
   }
 
-  const getActionMenuItems = (record: IPlan): MenuProps['items'] => {
-    const items: MenuProps['items'] = [
-      {
-        key: `copy-${record.id}`,
-        label: (
-          <div className="plan-action-menu-item">
-            <CopyOutlined />
-            <span>Copy</span>
-          </div>
-        ),
-        onClick: ({ domEvent }) => {
-          domEvent.stopPropagation()
-          copyPlan(record.id)
-        }
-      }
-    ]
-    return items
-  }
-
   const columns: ColumnsType<IPlan> = [
     {
       title: 'Plan ID',
@@ -384,6 +362,18 @@ const Index = ({
                 }}
               />
             </Tooltip>
+            <Tooltip title="Copy">
+              <Button
+                type="text"
+                disabled={copyingPlan}
+                className="plan-action-btn plan-action-btn--copy"
+                icon={<CopyOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  copyPlan(record.id)
+                }}
+              />
+            </Tooltip>
             <Tooltip title="Archive">
               <Button
                 type="text"
@@ -396,18 +386,6 @@ const Index = ({
                 }}
               />
             </Tooltip>
-            <Dropdown
-              menu={{ items: getActionMenuItems(record) }}
-              trigger={['click']}
-              overlayClassName="plan-action-dropdown"
-            >
-              <Button
-                type="text"
-                className="plan-action-btn plan-action-btn--more"
-                icon={<MoreOutlined />}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </Dropdown>
           </div>
         )
       }
