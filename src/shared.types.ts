@@ -616,7 +616,7 @@ export const enum InvoiceStatus {
   PAID = 3, // user paid the invoice
   FAILED = 4, // user not pay the invoice before it get expired
   CANCELLED = 5, // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
-  REVERSED = 6 // 取消后被通知支付成功的，这种情况一般是要排查的
+  REVERSED = 6 // Payment success notification received after cancellation, this typically needs investigation
 }
 type UserInvoice = {
   id: number

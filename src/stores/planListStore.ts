@@ -29,9 +29,9 @@ export const usePlanListStore = create<PlanListSlice>()((set, get) => ({
   loaded: false,
 
   fetchAllPlans: async (forceRefresh = false) => {
-    // 锁保护：加载中则跳过
+    //Lock protection: skip if loading
     if (get().loading) return
-    // 非强制刷新且已加载则跳过
+    // Skip if not force refresh and already loaded
     if (!forceRefresh && get().loaded) return
 
     set({ loading: true })

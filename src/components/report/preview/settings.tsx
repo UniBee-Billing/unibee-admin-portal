@@ -57,7 +57,7 @@ export const ExportSettings = ({
     // only it has time date range can set
     if (payload.reportTimeStart && payload.reportTimeEnd) {
       try {
-        // 导入dayjs来处理日期
+        // Import dayjs for date handling
         formValues.reportDateRange = [
           dayjs.unix(payload.reportTimeStart), 
           dayjs.unix(payload.reportTimeEnd)
@@ -69,14 +69,14 @@ export const ExportSettings = ({
     
     // console.log('Setting form values in ExportSettings:', formValues);
     
-    // 延迟设置表单值，确保组件已渲染
+    // Delay setting form values to ensure component is rendered
     setTimeout(() => {
       form.resetFields();
       form.setFieldsValue(formValues);
     }, 100);
   }, [form]);
   
-  // 获取当前模板的完整数据
+  // Fetch the complete data of the current template
   const fetchCurrentTemplate = useCallback(async () => {
     if (!templateId) return;
     
@@ -90,7 +90,7 @@ export const ExportSettings = ({
         const template = templates.find((t: any) => t.templateId === templateId);
         if (template) {
           setCurrentTemplate(template);
-          // 刷新表单值
+          // Refresh form values
           updateFormFromTemplate(template);
         }
       }
@@ -99,7 +99,7 @@ export const ExportSettings = ({
     }
   }, [templateId, updateFormFromTemplate]);
   
-  // 当模板ID变化时重新获取模板数据
+  // Refetch template data when template ID changes
   useEffect(() => {
     if (templateId && templateId !== previousTemplateId.current) {
       // console.log(`Template ID changed from ${previousTemplateId.current} to ${templateId}`);

@@ -207,7 +207,7 @@ const VATSenseRecords = () => {
   }
 
   const handleCorrectConfirm = (data: any) => {
-    // TODO: 实现保存逻辑
+    // TODO: Implement save logic
     console.log('Correction confirmed:', data)
     message.success('VAT record corrected successfully')
     // Refresh the list after correction

@@ -85,7 +85,7 @@ export const Preview = forwardRef<PreviewRef, PreviewProps>(
         //   reportTimeEnd
         // });
         
-        // 使用 setTimeout 确保值在下一个事件循环中设置，避免竞态条件
+        // Use setTimeout to ensure values are set in the next event loop to avoid race conditions
         setTimeout(() => {
           const formValue: ExportSettingsValue = {
             timezone: timezone ?? getSystemTimezone(),
@@ -98,13 +98,13 @@ export const Preview = forwardRef<PreviewRef, PreviewProps>(
           
           // console.log('Form values to set:', formValue);
           
-          // 重置表单并设置新值
+          // Reset form and set new values
           form.resetFields();
           form.setFieldsValue(formValue);
           
-          // 强制触发表单更新，但不验证 reportDateRange
+          // Force form update without validating reportDateRange
           form.validateFields(['timezone', 'exportType', 'isIncludePaidInvoices'])
-            .catch(() => {}); // 忽略可能的验证错误
+            .catch(() => {}); // Ignore potential validation errors
         }, 0);
       },
       reinitialize: () => {
@@ -118,10 +118,10 @@ export const Preview = forwardRef<PreviewRef, PreviewProps>(
       }
     }));
 
-    // 当 templateId 变化时，强制刷新表单
+    // Force refresh form when templateId changes
     useEffect(() => {
       if (templateId) {
-        // 简单的延迟确保表单有时间加载模板数据
+        // Simple delay to ensure form has time to load template data
         const timer = setTimeout(() => {
           // Only validate fields that are required regardless of exporting
           form.validateFields(['timezone', 'exportType', 'isIncludePaidInvoices'])

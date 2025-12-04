@@ -77,7 +77,7 @@ const BulkSearch: React.FC = () => {
     try {
       let emails: string[] = []
       
-      // 解析邮箱输入
+      // Parse email input
       if (emailInput.trim()) {
         emails = emailInput
           .split(/[\n,;]/)
@@ -85,39 +85,39 @@ const BulkSearch: React.FC = () => {
           .filter(email => email && email.includes('@'))
       }
 
-      // 验证邮箱格式
+      // Validate email format
       if (emails.length === 0) {
         message.warning('No valid email addresses found')
         setLoading(false)
         return
       }
 
-      // 准备请求参数
+      // Prepare request parameters
       const requestParams: CreditNoteListRequest = {
         emails: emails.join(','),
         page: 0,
-        count: 1000, // 设置较大的数量以获取所有结果
+        count: 1000, // Set a large count to fetch all results
         sortField: 'gmt_modify',
         sortType: 'desc'
       }
 
-      // 添加日期范围
+      // Add date range
       if (dateRange && dateRange[0] && dateRange[1]) {
-        // 开始时间设置为当天00:00:00
+        // Set start time to 00:00:00 of the day
         requestParams.createTimeStart = dayjs(dateRange[0]).startOf('day').unix()
-        // 结束时间设置为当天23:59:59，确保能筛选到完整的一天
+        // Set end time to 23:59:59 of the day to ensure full day filtering
         requestParams.createTimeEnd = dayjs(dateRange[1]).endOf('day').unix()
       }
 
-      // 保存当前搜索参数，用于导出
+      // Save current search parameters for export
       setCurrentSearchParams(requestParams)
 
       let response
       if (fileList.length > 0 && fileList[0].originFileObj) {
-        // 如果有文件，使用文件上传接口
+        // If there's a file, use the file upload API
         response = await uploadCSVAndSearchReq(fileList[0].originFileObj, requestParams)
       } else {
-        // 否则使用普通搜索接口
+        // Otherwise use the standard search API
         response = await getCreditNoteListReq(requestParams)
       }
 
@@ -133,9 +133,9 @@ const BulkSearch: React.FC = () => {
         return
       }
 
-      // 检查是否有数据返回
+      // Check if data is returned
       if (!data.creditNotes || data.creditNotes.length === 0) {
-        // 没有找到匹配的记录
+        // No matching records found
         setSearchResults({
           matched: [],
           unmatched: emails,
@@ -146,9 +146,9 @@ const BulkSearch: React.FC = () => {
         return
       }
 
-      // 处理API返回的数据
+      // Process API response data
       const matched: RefundItem[] = (data.creditNotes as CreditNote[]).map((creditNote: CreditNote, index: number) => {
-        // 获取邮箱信息 - 参考 refundList.tsx 的实现
+        // Get email info - following refundList.tsx implementation
         let email = 'N/A'
         let userId: number | undefined = undefined
         
@@ -169,22 +169,22 @@ const BulkSearch: React.FC = () => {
           }
         }
         
-        // 如果还是没有userId，使用record中的userId
+        // If still no userId, use userId from the record
         if (!userId && creditNote.userId) {
           userId = creditNote.userId
         }
 
-        // 获取计划名称
+        // Get plan name
         const planName = creditNote.planSnapshot?.plan?.planName || creditNote.productName || 'N/A'
         
-        // 获取订阅ID
+        // Get subscription ID
         const subscriptionId = creditNote.subscriptionId || 'N/A'
         
-        // 获取计划周期信息
+        // Get plan cycle info
         const planIntervalCount = creditNote.planSnapshot?.plan?.intervalCount || 1
         const planIntervalUnit = creditNote.planSnapshot?.plan?.intervalUnit || 'month'
         
-        // 处理时间戳转换 - 使用更安全的方式
+        // Handle timestamp conversion - using a safer approach
         const formatTimestamp = (timestamp: number | undefined) => {
           if (!timestamp || timestamp <= 0) return 'N/A'
           try {
@@ -199,10 +199,10 @@ const BulkSearch: React.FC = () => {
         
         const refundDate = formatTimestamp(creditNote.createTime)
         
-        // 获取退款方式
+        // Get refund method
         const refundMethod = creditNote.gateway?.displayName || creditNote.gateway?.name || 'N/A'
         
-        // 获取退款原因
+        // Get refund reason
         const refundReason = creditNote.message || 'N/A'
         
         return {
@@ -213,28 +213,28 @@ const BulkSearch: React.FC = () => {
           planName,
           subscriptionId,
           planInterval: `${planIntervalCount} ${planIntervalUnit}${planIntervalCount > 1 ? 's' : ''}`,
-          refundAmount: Math.abs(creditNote.totalAmount || 0), // 使用绝对值
+          refundAmount: Math.abs(creditNote.totalAmount || 0), // Use absolute value
           currency: creditNote.currency || 'USD',
           refundDate,
           refundMethod,
           refundReason,
           refundStatus: getRefundStatus(creditNote.status),
           merchant: refundMethod,
-          // 添加计划周期信息
+          // Add plan cycle info
           planIntervalCount,
           planIntervalUnit
         }
-      }).filter((item: RefundItem) => item.email !== 'N/A') // 过滤掉没有有效邮箱的记录
+      }).filter((item: RefundItem) => item.email !== 'N/A') // Filter out records without valid emails
 
-      // 找出未匹配的邮箱
+      // Find unmatched emails
       const allEmails = emails
       const matchedEmails = matched.map(item => item.email).filter(email => email !== 'N/A')
       const unmatched = allEmails.filter(email => !matchedEmails.includes(email))
 
-      // 计算唯一匹配的邮箱数量
+      // Calculate unique matched email count
       const uniqueMatchedEmails = [...new Set(matchedEmails)]
 
-      // 添加调试日志
+      // Add debug log
       console.log('Search results:', {
         allEmails,
         matchedEmails,
@@ -261,7 +261,7 @@ const BulkSearch: React.FC = () => {
     }
   }
 
-  // 将API状态码转换为显示状态
+  // Convert API status code to display status
   const getRefundStatus = (status: number): 'completed' | 'partial' | 'failed' | 'processing' | 'cancelled' => {
     switch (status) {
       case 2:
@@ -271,25 +271,25 @@ const BulkSearch: React.FC = () => {
       case 4:
         return 'failed'
       case 5:
-        return 'cancelled' // 取消状态映射为取消
+        return 'cancelled' // Cancelled status maps to cancelled
       default:
-        return 'processing' // 默认状态
+        return 'processing' // Default status
     }
   }
 
-  // 获取当前页的数据
+  // Get current page data
   const getCurrentPageData = () => {
     const startIndex = (currentPage - 1) * pageSize
     const endIndex = startIndex + pageSize
     return searchResults.matched.slice(startIndex, endIndex)
   }
 
-  // 处理页码变化
+  // Handle page change
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page)
     if (size && size !== pageSize) {
       setPageSize(size)
-      setCurrentPage(1) // 重置到第一页
+      setCurrentPage(1) // Reset to first page
     }
   }
 
@@ -303,7 +303,7 @@ const BulkSearch: React.FC = () => {
       total: 0,
       uniqueMatchedCount: 0
     })
-    setCurrentPage(1) // 重置页码
+    setCurrentPage(1) // Reset page number
   }
 
   const handleCopyUnmatched = () => {
@@ -333,11 +333,11 @@ const BulkSearch: React.FC = () => {
     }
 
     try {
-      // 使用当前搜索参数进行导出，确保导出的是批量搜索的结果
+      // Use current search parameters for export to ensure bulk search results are exported
       const exportParams = {
         ...currentSearchParams,
         page: 0,
-        count: searchResults.matched.length, // 导出匹配的结果数量
+        count: searchResults.matched.length, // Export matched results count
         sortField: currentSearchParams.sortField || 'gmt_modify',
         sortType: currentSearchParams.sortType || 'desc'
       }
@@ -371,7 +371,7 @@ const BulkSearch: React.FC = () => {
         return false
       }
       
-      // 读取CSV文件内容
+      // Read CSV file content
       const reader = new FileReader()
       reader.onload = (e) => {
         const text = e.target?.result as string
@@ -396,7 +396,7 @@ const BulkSearch: React.FC = () => {
       }
       reader.readAsText(file)
       
-      return false // 阻止自动上传
+      return false // Prevent automatic upload
     },
     onChange: ({ fileList: newFileList }) => {
       setFileList(newFileList)
@@ -422,7 +422,7 @@ const BulkSearch: React.FC = () => {
               <span 
                 className="font-medium text-blue-600 truncate-text block cursor-pointer hover:text-blue-800"
                 onClick={() => {
-                  // 跳转到 invoice 页面，这里需要根据实际路由调整
+                  // Navigate to invoice page, adjust routing as needed
                   window.open(`/invoice/${record.invoiceId}`, '_blank')
                 }}
               >
@@ -460,7 +460,7 @@ const BulkSearch: React.FC = () => {
                 className="font-medium text-blue-600 truncate-text block cursor-pointer hover:text-blue-800"
                 onClick={() => {
                   if (userId) {
-                    // 跳转到 user detail 页面，这里需要根据实际路由调整
+                    // Navigate to user detail page, adjust routing as needed
                     window.open(`/user/${userId}`, '_blank')
                   } else {
                     message.warning('User ID not available')
@@ -501,7 +501,7 @@ const BulkSearch: React.FC = () => {
       ellipsis: true,
       align: 'left',
       render: (_, record: RefundItem) => {
-        // 显示计划周期信息，与 refundList.tsx 保持一致
+        // Display plan cycle info, consistent with refundList.tsx
         if (record.planIntervalCount && record.planIntervalUnit) {
           const intervalCount = record.planIntervalCount
           const intervalUnit = record.planIntervalUnit
@@ -611,7 +611,7 @@ const BulkSearch: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 注入响应式表格样式 */}
+      {/* Inject responsive table styles */}
       <style dangerouslySetInnerHTML={{ __html: `
         .truncate-text {
           overflow: hidden;
@@ -632,7 +632,7 @@ const BulkSearch: React.FC = () => {
           border-radius: 8px;
         }
         
-        /* 表头样式 - 统一灰色背景，左对齐 */
+        /* Table header styles - unified gray background, left aligned */
         .responsive-table-container .ant-table-thead > tr > th {
           white-space: nowrap;
           padding: 12px 8px;
@@ -644,7 +644,7 @@ const BulkSearch: React.FC = () => {
           text-align-last: left !important;
         }
         
-        /* 表格内容样式 - 统一白色背景，左对齐 */
+        /* Table content styles - unified white background, left aligned */
         .responsive-table-container .ant-table-tbody > tr > td {
           padding: 12px 8px;
           vertical-align: top;
@@ -654,7 +654,7 @@ const BulkSearch: React.FC = () => {
           text-align-last: left !important;
         }
         
-        /* 移除表格行的交替背景色 */
+        /* Remove alternating background color for table rows */
         .responsive-table-container .ant-table-tbody > tr:nth-child(even) > td {
           background-color: #ffffff !important;
         }
@@ -663,18 +663,18 @@ const BulkSearch: React.FC = () => {
           background-color: #ffffff !important;
         }
         
-        /* 悬停效果 */
+        /* Hover effect */
         .responsive-table-container .ant-table-tbody > tr:hover > td {
           background-color: #fafafa !important;
         }
       ` }} />
       
-      {/* Preview 区域 */}
+      {/* Preview area */}
       <div>
         <h3 className="text-lg font-medium mb-4">Preview</h3>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 邮箱输入 */}
+          {/* Email input */}
           <div>
             <h4 className="text-base font-medium mb-3">Email Input</h4>
             <TextArea
@@ -698,7 +698,7 @@ const BulkSearch: React.FC = () => {
             </div>
           </div>
 
-          {/* CSV上传 */}
+          {/* CSV upload */}
           <div>
             <h4 className="text-base font-medium mb-3">Or Upload CSV File</h4>
             <div style={{ height: 160, border: '2px dashed #d9d9d9', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
@@ -724,7 +724,7 @@ const BulkSearch: React.FC = () => {
           </div>
         </div>
 
-        {/* 日期范围筛选 */}
+        {/* Date range filter */}
         <div className="mt-6">
           <h4 className="text-base font-medium mb-3">Refund Date Range (Optional)</h4>
           <RangePicker
@@ -744,7 +744,7 @@ const BulkSearch: React.FC = () => {
           />
         </div>
 
-        {/* 搜索按钮 */}
+        {/* Search button */}
         <div className="mt-6">
           <Button
             type="primary"
@@ -758,7 +758,7 @@ const BulkSearch: React.FC = () => {
         </div>
       </div>
 
-      {/* 搜索结果统计 */}
+      {/* Search results statistics */}
       {searchResults.total > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="text-center">
@@ -785,7 +785,7 @@ const BulkSearch: React.FC = () => {
         </div>
       )}
 
-      {/* 未匹配邮箱列表 */}
+      {/* Unmatched email list */}
       {searchResults.unmatched.length > 0 && (
         <Card className="shadow-sm">
           <div className="flex justify-between items-center mb-4">
@@ -819,7 +819,7 @@ const BulkSearch: React.FC = () => {
         </Card>
       )}
 
-      {/* 搜索结果表格 */}
+      {/* Search results table */}
       {searchResults.matched.length > 0 && (
         <>
           <Divider />
@@ -858,7 +858,7 @@ const BulkSearch: React.FC = () => {
               />
             </div>
             
-            {/* 分页和记录条数 */}
+            {/* Pagination and record count */}
             <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
               <div className="text-gray-600">
                 Total {searchResults.matched.length} records
@@ -881,7 +881,7 @@ const BulkSearch: React.FC = () => {
         </>
       )}
 
-      {/* 清空按钮 */}
+      {/* Clear button */}
       {searchResults.total > 0 && (
         <div className="flex justify-center">
           <Button 

@@ -66,7 +66,7 @@ const tableStyles = `
     text-align-last: left !important;
   }
   
-  /* 移除表格行的交替背景色 */
+  /* Remove alternating background color for table rows */
   .responsive-table-container .ant-table-tbody > tr:nth-child(even) > td {
     background-color: #ffffff !important;
   }
@@ -75,12 +75,12 @@ const tableStyles = `
     background-color: #ffffff !important;
   }
   
-  /* 悬停效果 */
+  /* Hover effect */
   .responsive-table-container .ant-table-tbody > tr:hover > td {
     background-color: #fafafa !important;
   }
   
-  /* 中等分辨率屏幕优化 (1920x1080) */
+  /* Medium resolution screen optimization (1920x1080) */
   @media (min-width: 1920px) and (max-width: 2559px) {
     .responsive-table-container .ant-table-thead > tr > th,
     .responsive-table-container .ant-table-tbody > tr > td {
@@ -95,7 +95,7 @@ const tableStyles = `
       font-size: 13px;
     }
     
-    /* 中等分辨率屏幕下的列宽优化 */
+    /* Column width optimization for medium resolution screens */
     .responsive-table-container .ant-table-cell:nth-child(1) { width: 150px !important; } /* Invoice ID */
     .responsive-table-container .ant-table-cell:nth-child(2) { width: 190px !important; } /* Email */
     .responsive-table-container .ant-table-cell:nth-child(3) { width: 170px !important; } /* Plan Name */
@@ -107,7 +107,7 @@ const tableStyles = `
     .responsive-table-container .ant-table-cell:nth-child(9) { width: 130px !important; } /* Status */
   }
   
-  /* 2K屏幕优化 */
+  /* 2K screen optimization */
   @media (min-width: 2560px) {
     .responsive-table-container .ant-table-thead > tr > th,
     .responsive-table-container .ant-table-tbody > tr > td {
@@ -122,7 +122,7 @@ const tableStyles = `
       font-size: 14px;
     }
     
-    /* 2K屏幕下的列宽优化 */
+    /* Column width optimization for 2K screens */
     .responsive-table-container .ant-table-cell:nth-child(1) { width: 160px !important; } /* Invoice ID */
     .responsive-table-container .ant-table-cell:nth-child(2) { width: 200px !important; } /* Email */
     .responsive-table-container .ant-table-cell:nth-child(3) { width: 180px !important; } /* Plan Name */
@@ -134,7 +134,7 @@ const tableStyles = `
     .responsive-table-container .ant-table-cell:nth-child(9) { width: 140px !important; } /* Status */
   }
   
-  /* 13.3英寸屏幕优化 */
+  /* 13.3 inch screen optimization */
   @media (max-width: 1366px) {
     .responsive-table-container .ant-table-thead > tr > th,
     .responsive-table-container .ant-table-tbody > tr > td {
@@ -154,7 +154,7 @@ const tableStyles = `
       line-height: 1.4;
     }
     
-    /* 13.3英寸屏幕下的列宽优化 */
+    /* Column width optimization for 13.3 inch screens */
     .responsive-table-container .ant-table-cell:nth-child(1) { width: 120px !important; } /* Invoice ID */
     .responsive-table-container .ant-table-cell:nth-child(2) { width: 160px !important; } /* Email */
     .responsive-table-container .ant-table-cell:nth-child(3) { width: 140px !important; } /* Plan Name */
@@ -166,18 +166,18 @@ const tableStyles = `
     .responsive-table-container .ant-table-cell:nth-child(9) { width: 100px !important; } /* Status */
   }
   
-  /* 侧边栏展开状态下的表格优化 */
+  /* Table optimization when sidebar is expanded */
   .sidebar-expanded .responsive-table-container {
     margin-left: 0;
   }
   
-  /* 确保表格内容在小屏幕上不会换行 */
+  /* Ensure table content doesn't wrap on small screens */
   .responsive-table-container .ant-table-cell {
     word-break: keep-all;
     white-space: nowrap;
   }
   
-  /* 长文本的省略号处理 */
+  /* Ellipsis handling for long text */
   .responsive-table-container .truncate-text {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -188,7 +188,7 @@ const tableStyles = `
   
 
   
-  /* 固定列样式优化 - 保持一致的背景色 */
+  /* Fixed column style optimization - maintain consistent background color */
   .responsive-table-container .ant-table-cell.ant-table-cell-fix-left,
   .responsive-table-container .ant-table-cell.ant-table-cell-fix-right {
     background-color: #ffffff !important;
@@ -200,7 +200,7 @@ const tableStyles = `
     background-color: #f5f5f5 !important;
   }
   
-  /* 分页器响应式优化 */
+  /* Pagination responsive optimization */
   .responsive-pagination {
     margin-top: 16px;
   }
@@ -211,7 +211,7 @@ const tableStyles = `
     justify-content: flex-start;
   }
   
-  /* 分页器选项左对齐 */
+  /* Pagination options left aligned */
   .responsive-pagination .ant-pagination-options .ant-select,
   .responsive-pagination .ant-pagination-options .ant-pagination-options-quick-jumper {
     text-align: left;
@@ -221,7 +221,7 @@ const tableStyles = `
     text-align: left;
   }
   
-  /* 小屏幕下的分页器优化 */
+  /* Pagination optimization for small screens */
   @media (max-width: 768px) {
     .responsive-pagination .ant-pagination-options {
       flex-direction: column;
@@ -235,7 +235,7 @@ const tableStyles = `
     }
   }
   
-  /* 表格滚动条样式 */
+  /* Table scrollbar styles */
   .responsive-table-container::-webkit-scrollbar {
     height: 8px;
   }
@@ -254,7 +254,7 @@ const tableStyles = `
     background: #a8a8a8;
   }
   
-  /* 筛选器响应式优化 */
+  /* Filter responsive optimization */
   .ant-table-filter-dropdown {
     max-width: 300px;
   }
@@ -264,7 +264,7 @@ const tableStyles = `
     gap: 8px;
   }
   
-  /* 强制覆盖Antd默认样式 */
+  /* Force override Antd default styles */
   .responsive-table-container .ant-table-thead > tr > th::before {
     display: none !important;
   }
@@ -758,10 +758,10 @@ const RefundList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 注入响应式表格样式 */}
+      {/* Inject responsive table styles */}
       <style dangerouslySetInnerHTML={{ __html: tableStyles }} />
 
-      {/* 筛选条件 */}
+      {/* Filter conditions */}
       <Card className="shadow-sm">
         <Form
           form={form}
@@ -822,7 +822,7 @@ const RefundList: React.FC = () => {
         </Form>
       </Card>
 
-      {/* 搜索结果标题和导出按钮 */}
+      {/* Search results title and export buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 className="text-lg font-medium">Search Results</h3>
         <div className="flex flex-wrap gap-3">
@@ -841,7 +841,7 @@ const RefundList: React.FC = () => {
         </div>
       </div>
 
-      {/* 表格 */}
+      {/* Table */}
       <Card className="shadow-sm">
         <div className="responsive-table-container">
           <Table
@@ -929,7 +929,7 @@ const RefundList: React.FC = () => {
             pagination={false}
           />
 
-          {/* 分页和记录条数 */}
+          {/* Pagination and record count */}
           <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
             <div className="text-gray-600">
               Total {total} records
