@@ -150,7 +150,7 @@ interface IProduct {
   id: number
   productName: string
   description: string
-  status: number // ，1-active，2-inactive, default active
+  status: number // 1-active, 2-inactive, default active
   metaData: string // json string
   createTime: number
   isDeleted: number
