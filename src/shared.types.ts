@@ -248,7 +248,39 @@ export interface ISubAddon extends IPlan {
 export const enum MetricType {
   LIMIT_METERED = 1,
   CHARGE_METERED = 2,
-  CHARGE_RECURRING = 3
+  CHARGE_RECURRING = 3,
+  LIMIT_RECURRING = 4
+}
+
+export const enum QuotaType {
+  CARRYOVER = 'carryover',
+  MANUAL = 'manual'
+}
+
+export type QuotaAdjustment = {
+  id: number
+  quotaAmount: number
+  quotaType: QuotaType
+  reason: string
+  previousPeriodLimit?: number
+  previousPeriodUsed?: number
+  merchantMemberId: number
+  adjustmentTime: number
+}
+
+export type PlanLimitInfo = {
+  planId: number
+  metricLimit: number
+}
+
+export type MetricLimitDetail = {
+  metricId: number
+  code: string
+  metricName: string
+  type: MetricType
+  totalLimit: number
+  planLimits: PlanLimitInfo[]
+  quotaAdjustments: QuotaAdjustment[]
 }
 
 export const enum MetricAggregationType {
@@ -273,7 +305,12 @@ interface IBillableMetrics {
 }
 
 export interface LimitMetricUsage {
-  metricLimit: IBillableMetrics & { TotalLimit: number }
+  metricLimit: IBillableMetrics & {
+    metricId: number
+    TotalLimit: number
+    rolloverLimit?: number
+    planLimit?: number
+  }
   CurrentUsedValue: number
 }
 

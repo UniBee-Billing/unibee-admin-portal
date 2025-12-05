@@ -103,7 +103,9 @@ const Index = ({
         <LimitMetricSetup
           metricData={metricData.metricLimits}
           metricsList={metricsList.filter(
-            (m) => m.type == MetricType.LIMIT_METERED
+            (m) =>
+              m.type == MetricType.LIMIT_METERED ||
+              m.type == MetricType.LIMIT_RECURRING
           )}
           onMetricFieldChange={onMetricFieldChange}
           addLimitData={(type) => addMetricData(type, defaultMetricLimit())}

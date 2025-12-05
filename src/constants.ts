@@ -124,9 +124,10 @@ export const INVOICE_BIZ_TYPE: Record<InvoiceBizType, string> = {
 }
 
 export const METRICS_TYPE: Record<MetricType, { label: string }> = {
-  [MetricType.LIMIT_METERED]: { label: 'Limit metered' },
-  [MetricType.CHARGE_METERED]: { label: 'Charge metered' },
-  [MetricType.CHARGE_RECURRING]: { label: 'Charge recurring' }
+  [MetricType.LIMIT_METERED]: { label: 'Limit Metered' },
+  [MetricType.LIMIT_RECURRING]: { label: 'Limit Recurring' },
+  [MetricType.CHARGE_METERED]: { label: 'Charge Metered' },
+  [MetricType.CHARGE_RECURRING]: { label: 'Charge Recurring' }
 }
 
 export const METRICS_AGGREGATE_TYPE: Record<

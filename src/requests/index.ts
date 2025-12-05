@@ -2668,6 +2668,97 @@ export const amountMultiCurrenciesExchangeReq = async (amount: number, currency:
   }
 }
 
+// Metric limit quota related functions
+export const getMetricLimitAdjustListReq = async ({
+  userId,
+  metricId,
+  subscriptionId,
+  page,
+  count
+}: {
+  userId: number
+  metricId: number
+  subscriptionId: string
+  page?: number
+  count?: number
+}) => {
+  try {
+    const res = await request.post('/merchant/metric/limit_adjust_list', {
+      userId,
+      metricId,
+      subscriptionId,
+      page,
+      count
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const metricLimitAdjustReq = async ({
+  userId,
+  subscriptionId,
+  metricCode,
+  productId,
+  amount,
+  reason
+}: {
+  userId?: number
+  subscriptionId?: string
+  metricCode: string
+  productId?: number
+  amount: number
+  reason: string
+}) => {
+  try {
+    const res = await request.post('/merchant/metric/limit_adjust', {
+      userId,
+      subscriptionId,
+      metricCode,
+      productId,
+      amount,
+      reason
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getMetricEventCurrentValueReq = async ({
+  metricCode,
+  userId,
+  externalUserId,
+  email,
+  productId
+}: {
+  metricCode: string
+  userId?: number
+  externalUserId?: string
+  email?: string
+  productId?: number
+}) => {
+  try {
+    const res = await request.post('/merchant/metric/event/current_value', {
+      metricCode,
+      userId,
+      externalUserId,
+      email,
+      productId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // Export refund service functions
 export {
   getCreditNoteListReq,
