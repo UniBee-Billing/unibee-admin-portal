@@ -21,6 +21,6 @@ export default defineConfig((env) => ({
     })
   ],
   server: {
-    port: 5174
+    port: 5175
   }
 }))

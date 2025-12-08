@@ -1,6 +1,6 @@
 import CopyToClipboard from '@/components/ui/copyToClipboard'
 import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
-import { getMetricDetailReq, saveMetricsReq, getUserListReq } from '@/requests/index'
+import { getMetricDetailReq, saveMetricsReq, getUserListReq, getProductListReq } from '@/requests/index'
 import { IBillableMetrics, MetricAggregationType, MetricType } from '@/shared.types'
 import { LoadingOutlined, ApiOutlined, ThunderboltOutlined, ClockCircleOutlined, DatabaseOutlined, MailOutlined, UserOutlined, FileTextOutlined, CopyOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import {
@@ -153,6 +153,8 @@ const Index = () => {
   const [userList, setUserList] = useState<any[]>([])
   const [userListLoading, setUserListLoading] = useState(false)
   const [userSearchValue, setUserSearchValue] = useState('')
+  const [productList, setProductList] = useState<any[]>([])
+  const [productListLoading, setProductListLoading] = useState(false)
   
   const watchTestCode = Form.useWatch('metricCode', testForm)
   const watchTestEventId = Form.useWatch('externalEventId', testForm)
@@ -299,6 +301,21 @@ const Index = () => {
     }, 500)
   }
 
+  const fetchProductList = async () => {
+    setProductListLoading(true)
+    const [res, err] = await getProductListReq({})
+    setProductListLoading(false)
+    
+    if (err != null) {
+      message.error('Failed to fetch product list')
+      return
+    }
+    
+    if (res && res.products) {
+      setProductList(res.products)
+    }
+  }
+
   const onTest = async () => {
     if (!watchCode) {
       message.warning('Please save the metric first to test it')
@@ -327,7 +344,8 @@ const Index = () => {
     setUserSearchValue('') // Clear search value
     setTestModalVisible(true)
     
-    // Don't fetch user list automatically - let user search instead
+    // Fetch product list for dropdown
+    fetchProductList()
   }
 
   const buildRequestBody = () => {
@@ -1047,6 +1065,32 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                     </div>
                   </div>
 
+                  {/* productId */}
+                  <div className="mb-4">
+                    <div className="mb-1 text-sm font-medium">
+                      productId <span className="ml-1 text-xs text-gray-500">integer &lt;int64&gt;</span>
+                    </div>
+                    <Form.Item name="productId" noStyle>
+                      <Select
+                        placeholder="Select a product"
+                        loading={productListLoading}
+                        allowClear
+                        showSearch
+                        filterOption={(input, option) =>
+                          (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                        }
+                        style={{ width: '100%' }}
+                        options={productList.map(p => ({
+                          label: `#${p.id} ${p.productName}`,
+                          value: p.id
+                        }))}
+                      />
+                    </Form.Item>
+                    <div className="mt-1 text-xs text-gray-500">
+                      default product will use if productId not specified and subscriptionId is blank
+                    </div>
+                  </div>
+
                   {/* aggregationUniqueId */}
                   <div className="mb-4">
                     <div className="mb-1 text-sm font-medium">
@@ -1112,18 +1156,6 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                     </div>
                   </div>
 
-                  {/* productId */}
-                  <div className="mb-4">
-                    <div className="mb-1 text-sm font-medium">
-                      productId <span className="ml-1 text-xs text-gray-500">integer &lt;int64&gt;</span>
-                    </div>
-                    <Form.Item name="productId" noStyle>
-                      <InputNumber placeholder="enter productId" style={{ width: '100%' }} />
-                    </Form.Item>
-                    <div className="mt-1 text-xs text-gray-500">
-                      default product will use if productId not specified and subscriptionId is blank
-                    </div>
-                  </div>
                 </Form>
               </div>
             </div>

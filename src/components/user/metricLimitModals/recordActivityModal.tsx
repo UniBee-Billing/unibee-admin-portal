@@ -1,5 +1,5 @@
 import { formatDate } from '@/helpers'
-import { getMetricLimitAdjustListReq } from '@/requests'
+import { getMetricEventCurrentValueReq } from '@/requests'
 import { LimitMetricUsage } from '@/shared.types'
 import { LoadingOutlined, MinusOutlined } from '@ant-design/icons'
 import { Modal, Table } from 'antd'
@@ -8,22 +8,25 @@ import { useEffect, useState } from 'react'
 
 type AdjustRecord = {
   id: number
-  adjustAmount: number
-  operator: string
-  createTime: number
+  quotaAmount: number
+  quotaType: string
   reason: string
+  previousPeriodLimit: number
+  previousPeriodUsed: number
+  merchantMemberId: number
+  adjustmentTime: number
 }
 
 type Props = {
   userId: number
-  subscriptionId: string
+  productId: number
   metricLimit: LimitMetricUsage['metricLimit']
   onClose: () => void
 }
 
 const RecordActivityModal = ({
   userId,
-  subscriptionId,
+  productId,
   metricLimit,
   onClose
 }: Props) => {
@@ -32,12 +35,10 @@ const RecordActivityModal = ({
 
   const fetchRecords = async () => {
     setLoading(true)
-    const [res, err] = await getMetricLimitAdjustListReq({
+    const [res, err] = await getMetricEventCurrentValueReq({
+      metricCode: metricLimit.code,
       userId,
-      subscriptionId,
-      metricId: metricLimit.metricId,
-      page: 0,
-      count: 100
+      productId
     })
     setLoading(false)
 
@@ -45,7 +46,7 @@ const RecordActivityModal = ({
       return
     }
 
-    setRecords(res?.adjustList ?? [])
+    setRecords(res?.metricLimit?.quotaAdjustments ?? [])
   }
 
   useEffect(() => {
@@ -55,20 +56,21 @@ const RecordActivityModal = ({
   const columns: ColumnsType<AdjustRecord> = [
     {
       title: 'Quantity',
-      dataIndex: 'adjustAmount',
-      key: 'adjustAmount'
+      dataIndex: 'quotaAmount',
+      key: 'quotaAmount'
     },
     {
-      title: 'Operator',
-      dataIndex: 'operator',
-      key: 'operator',
+      title: 'Type',
+      dataIndex: 'quotaType',
+      key: 'quotaType',
       ellipsis: true,
-      width: 120
+      width: 120,
+      render: (type) => type || <MinusOutlined />
     },
     {
       title: 'Operation Time',
-      dataIndex: 'createTime',
-      key: 'createTime',
+      dataIndex: 'adjustmentTime',
+      key: 'adjustmentTime',
       render: (time) => (time ? formatDate(time, true) : <MinusOutlined />)
     },
     {

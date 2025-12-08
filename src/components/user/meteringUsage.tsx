@@ -304,7 +304,7 @@ const Index = ({
       {recordActivityModal.open && recordActivityModal.metricLimit && (
         <RecordActivityModal
           userId={userId}
-          subscriptionId={subscriptionIdRef.current}
+          productId={productId}
           metricLimit={recordActivityModal.metricLimit}
           onClose={() => setRecordActivityModal({ open: false, metricLimit: null })}
         />
