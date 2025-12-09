@@ -2,7 +2,7 @@ import { formatDate } from '@/helpers'
 import { getMetricEventCurrentValueReq } from '@/requests'
 import { LimitMetricUsage } from '@/shared.types'
 import { LoadingOutlined, MinusOutlined } from '@ant-design/icons'
-import { Modal, Table } from 'antd'
+import { Modal, Table, Tooltip } from 'antd'
 import { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
 
@@ -78,7 +78,8 @@ const RecordActivityModal = ({
       dataIndex: 'reason',
       key: 'reason',
       ellipsis: true,
-      render: (reason) => reason || <MinusOutlined />
+      render: (reason) =>
+        reason ? <Tooltip title={reason}>{reason}</Tooltip> : <MinusOutlined />
     }
   ]
 

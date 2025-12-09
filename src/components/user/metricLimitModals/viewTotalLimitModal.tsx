@@ -55,6 +55,11 @@ const ViewTotalLimitModal = ({ userId, productId, metricLimit, onClose }: Props)
     metricLimit.rolloverLimit ??
     0
 
+  const manualValue =
+    data?.quotaAdjustments
+      ?.filter((q) => q.quotaType === QuotaType.MANUAL)
+      .reduce((sum, q) => sum + (q.quotaAmount ?? 0), 0) ?? 0
+
   return (
     <Modal
       title="View Total Limit"
@@ -81,6 +86,15 @@ const ViewTotalLimitModal = ({ userId, productId, metricLimit, onClose }: Props)
               style={{ fontSize: 14, padding: '4px 12px' }}
             >
               {rolloverValue > 0 ? `+${rolloverValue}` : rolloverValue}
+            </Tag>
+          </div>
+          <div>
+            <div className="mb-2 text-gray-500">Total manual value</div>
+            <Tag
+              color={manualValue > 0 ? 'green' : manualValue < 0 ? 'red' : 'default'}
+              style={{ fontSize: 14, padding: '4px 12px' }}
+            >
+              {manualValue > 0 ? `+${manualValue}` : manualValue}
             </Tag>
           </div>
         </div>

@@ -151,7 +151,7 @@ const Index = ({
         menu={{
           items: [
             {
-              label: 'Limit metered',
+              label: 'Limit Metered / Recurring',
               disabled: metricData.metricLimits.length > 0,
               key: MetricType.LIMIT_METERED,
               onClick: () => {
@@ -159,7 +159,7 @@ const Index = ({
               }
             },
             {
-              label: 'Charge metered',
+              label: 'Charge Metered',
               disabled: metricData.metricMeteredCharge.length > 0,
               key: MetricType.CHARGE_METERED,
               onClick: () => {
@@ -170,7 +170,7 @@ const Index = ({
               }
             },
             {
-              label: 'Charge recurring',
+              label: 'Charge Recurring',
               disabled: metricData.metricRecurringCharge.length > 0,
               key: MetricType.CHARGE_RECURRING,
               onClick: () => {
