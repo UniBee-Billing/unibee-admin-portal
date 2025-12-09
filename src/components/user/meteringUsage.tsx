@@ -1,5 +1,5 @@
 import GraduationIcon from '@/assets/graduation.svg?react'
-import { METRIC_CHARGE_TYPE, METRICS_AGGREGATE_TYPE } from '@/constants'
+import { METRIC_CHARGE_TYPE, METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
 import { showAmount } from '@/helpers'
 import { getMetricUsageBySubIdReq, getSubDetailInProductReq } from '@/requests'
 import {
@@ -7,7 +7,8 @@ import {
   LimitMetricUsage,
   MetricAggregationType,
   MetricChargeType,
-  MetricGraduatedAmount
+  MetricGraduatedAmount,
+  MetricType
 } from '@/shared.types'
 import {
   EyeOutlined,
@@ -116,6 +117,12 @@ const Index = ({
       key: 'code'
     },
     {
+      title: 'Type',
+      dataIndex: ['metricLimit', 'type'],
+      key: 'type',
+      render: (type: MetricType) => METRICS_TYPE[type]?.label ?? '-'
+    },
+    {
       title: 'Aggregate Type',
       dataIndex: ['metricLimit', 'aggregationType'],
       key: 'aggregationType',
@@ -193,6 +200,12 @@ const Index = ({
       title: 'Name',
       dataIndex: ['merchantMetric', 'metricName'],
       key: 'metricName'
+    },
+    {
+      title: 'Type',
+      dataIndex: ['merchantMetric', 'type'],
+      key: 'type',
+      render: (type: MetricType) => METRICS_TYPE[type]?.label ?? '-'
     },
     /* {
       title: 'Code',
