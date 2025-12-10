@@ -14,6 +14,7 @@ type AdjustRecord = {
   previousPeriodLimit: number
   previousPeriodUsed: number
   merchantMemberId: number
+  merchantMemberEmail: string
   adjustmentTime: number
 }
 
@@ -66,6 +67,14 @@ const RecordActivityModal = ({
       ellipsis: true,
       width: 120,
       render: (type) => type || <MinusOutlined />
+    },
+    {
+      title: 'Operator',
+      dataIndex: 'merchantMemberEmail',
+      key: 'merchantMemberEmail',
+      ellipsis: true,
+      render: (email) =>
+        email ? <Tooltip title={email}>{email}</Tooltip> : <MinusOutlined />
     },
     {
       title: 'Operation Time',
