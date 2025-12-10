@@ -72,7 +72,7 @@ const RecordActivityModal = ({
       title: 'Operator',
       dataIndex: 'merchantMemberEmail',
       key: 'merchantMemberEmail',
-      ellipsis: true,
+      ellipsis: { showTitle: false },
       render: (email) =>
         email ? <Tooltip title={email}>{email}</Tooltip> : <MinusOutlined />
     },
@@ -86,9 +86,20 @@ const RecordActivityModal = ({
       title: 'Notes',
       dataIndex: 'reason',
       key: 'reason',
-      ellipsis: true,
+      ellipsis: { showTitle: false },
       render: (reason) =>
-        reason ? <Tooltip title={reason}>{reason}</Tooltip> : <MinusOutlined />
+        reason ? (
+          <Tooltip
+            title={<div style={{ wordBreak: 'break-all' }}>{reason}</div>}
+            placement="topLeft"
+            overlayStyle={{ maxWidth: 300 }}
+            overlayInnerStyle={{ maxHeight: 200, overflow: 'auto' }}
+          >
+            {reason}
+          </Tooltip>
+        ) : (
+          <MinusOutlined />
+        )
     }
   ]
 
