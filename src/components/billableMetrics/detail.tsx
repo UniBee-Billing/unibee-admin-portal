@@ -704,7 +704,7 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                 label={
                   <span>
                     Metric Type{' '}
-                    <Tooltip title="Limit: quota only; Charge Metered: usage-based billing; Charge Recurring: fixed recurring charge">
+                    <Tooltip title="Limit Metered: quota resets each billing cycle; Limit Recurring: quota accumulates across cycles; Charge Metered: usage-based billing; Charge Recurring: fixed recurring charge">
                       <span className="text-gray-400">ⓘ</span>
                     </Tooltip>
                   </span>
