@@ -17,40 +17,43 @@ import {
   getExportColumnListReq
 } from '@/requests/index'
 import { IPlan, PlanPublishStatus, PlanStatus, PlanType } from '@/shared.types'
+import { useAppConfigStore, usePlanListStore } from '@/stores'
 import {
-  CheckCircleOutlined,
+  CheckOutlined,
+  CloseOutlined,
   CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   ExportOutlined,
+  FilterOutlined,
   InboxOutlined,
   LoadingOutlined,
-  MinusOutlined,
   PlusOutlined,
+  SearchOutlined,
   SyncOutlined
 } from '@ant-design/icons'
 import {
   Button,
+  Checkbox,
   Col,
+  Form,
+  Input,
   message,
   Modal,
-  Pagination,
+  Radio,
   Result,
   Row,
+  Select,
   Space,
-  Table,
-  Tooltip,
-  Radio,
-  Checkbox,
-  Input
+  Tag,
+  Tooltip
 } from 'antd'
 import type { ColumnsType, TableProps } from 'antd/es/table'
 import React, { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import '../../shared.css'
-import { useAppConfigStore } from '../../stores'
-
-const { Search } = Input
+import ResponsiveTable from '../table/responsiveTable'
+import './planList.css'
 
 type OnChange = NonNullable<TableProps<IPlan>['onChange']>
 type GetSingle<T> = T extends (infer U)[] ? U : never
@@ -77,7 +80,6 @@ type TFilters = {
   status: PlanStatus[] | null
   planName?: number[] | null
   internalName?: number[] | null
-  searchKey?: string | null
 }
 
 const Index = ({
@@ -90,7 +92,8 @@ const Index = ({
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const { page, onPageChange } = usePagination()
+  const { page, onPageChange, onPageChangeNoParams } = usePagination()
+  const { plans: globalPlans, fetchAllPlans: fetchGlobalPlans } = usePlanListStore()
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState<IPlan[]>([])
@@ -101,9 +104,12 @@ const Index = ({
   const toggleArchiveModal = (plan?: IPlan) => setArchiveModalOpen(plan)
   const planFilterRef = useRef<{ value: number; text: string }[]>([])
   const internalNameFilterRef = useRef<{ value: number; text: string }[]>([])
-  const [allPlans,setAllPlans] = useState<IPlan[]>([])
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false)
-  const [searchKey, setSearchKey] = useState(searchParams.get('searchKey') || '')
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
+  const [form] = Form.useForm()
+  const [pageSize, setPageSize] = useState(PAGE_SIZE)
 
 
   // Note: We use 'planIds' parameter in URL for both plan name and internal name filters
@@ -140,8 +146,7 @@ const Index = ({
     type: typeFilters.type,
     status: statusFilters.status,
     planName: planIdFilter,
-    internalName: internalNameIdFilter,
-    searchKey: searchKey,
+    internalName: internalNameIdFilter
   });
 
   const [sortFilter, setSortFilter] = useState<Sorts>(
@@ -176,109 +181,28 @@ const Index = ({
         from: location.pathname + location.search
       }
     })
+    
   }
 
-  const fetchAllPlans = async () => {
-    const [planList, err] = await getPlanList({
-      productIds: [productId],
-      page: 0,
-      count: 500,
-      searchKey: filters.searchKey || '',
-      // status: [
-      //   PlanStatus.ACTIVE,
-      //   PlanStatus.SOFT_ARCHIVED,
-      //   PlanStatus.HARD_ARCHIVED
-      // ],
-      type: filters.type
-    }, fetchPlan)
+  const fetchPlan = async (searchOverride?: string) => {
+    const activeSearchQuery = typeof searchOverride === 'string' ? searchOverride : searchQuery
 
-    if (err == null && planList.plans) {
-      const plans = planList.plans.map((p: IPlan) => ({
-        ...p.plan,
-        metricPlanLimits: p.metricPlanLimits
-      }))
-      setAllPlans(plans)
-      
-      // Update filter options
-      planFilterRef.current = plans.map((plan: IPlan) => ({
-        value: plan.id,
-        text: plan.planName
-      }))
-      
-      // Update internal name filter options - using the same approach as plan name
-      internalNameFilterRef.current = plans
-        .filter((plan: IPlan) => plan.internalName && plan.internalName.trim() !== '')
-        .map((plan: IPlan) => ({
-          value: plan.id,
-          text: plan.internalName
-        }));
-    }
-  }
+    // Combine planName and internalName filters into planIds for backend
+    const planIds = [...(filters.planName || []), ...(filters.internalName || [])]
 
-  const fetchPlan = async () => {
-    // 如果已经有所有计划的数据，直接从中过滤
-    if (allPlans.length > 0 && !searchKey) {
-      let filteredPlans = allPlans;
-      
-      // 应用排序
-      if (sortFilter.columnKey != null) {
-        filteredPlans = [...filteredPlans].sort((a, b) => {
-          const field = sortFilter.columnKey === 'planName' ? 'planName' : 'createTime';
-          const order = sortFilter.order === 'descend' ? -1 : 1;
-          return a[field] > b[field] ? order : -order;
-        });
-      }
-      
-      // 应用过滤
-      if (filters.type?.length) {
-        filteredPlans = filteredPlans.filter(plan => filters.type!.includes(plan.type));
-      }
-      if (filters.status?.length) {
-        filteredPlans = filteredPlans.filter(plan => filters.status!.includes(plan.status));
-      }
-      
-      // Apply filtering for planName and internalName independently
-      const hasPlanNameFilter = filters.planName && filters.planName.length > 0;
-      const hasInternalNameFilter = filters.internalName && filters.internalName.length > 0;
-      
-      // Apply planName filter if it exists
-      if (hasPlanNameFilter) {
-        filteredPlans = filteredPlans.filter((plan: IPlan) => 
-          filters.planName!.includes(plan.id)
-        );
-      }
-      
-      // Apply internalName filter if it exists
-      if (hasInternalNameFilter) {
-        filteredPlans = filteredPlans.filter((plan: IPlan) => 
-          filters.internalName!.includes(plan.id)
-        );
-      }
-      
-      // 应用分页
-      const start = page * PAGE_SIZE;
-      const end = start + PAGE_SIZE;
-      
-      setTotal(filteredPlans.length);
-      setPlan(filteredPlans.slice(start, end));
-      return;
-    }
-
-    // 如果没有缓存数据，则从服务器获取
     const body: TPlanListBody = {
       productIds: [productId],
       page: page,
-      count: PAGE_SIZE,
-      type: filters.type
+      count: pageSize,
+      type: filters.type,
+      status: filters.status,
+      planIds: planIds.length > 0 ? planIds : undefined,
+      searchKey: activeSearchQuery || undefined
     }
     if (sortFilter.columnKey != null) {
       body.sortField =
         sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
       body.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
-    }
-
-    if (filters.searchKey) {
-      body.searchKey = filters.searchKey
     }
 
     setLoading(true)
@@ -298,46 +222,7 @@ const Index = ({
           metricPlanLimits: p.metricPlanLimits
         }))
     
-    // Apply filtering for planName and internalName independently
-    let filteredPlans = planData;
-    const hasPlanNameFilter = filters.planName && filters.planName.length > 0;
-    const hasInternalNameFilter = filters.internalName && filters.internalName.length > 0;
-    
-    // Apply planName filter if it exists
-    if (hasPlanNameFilter) {
-      filteredPlans = filteredPlans.filter((plan: IPlan) => 
-        filters.planName!.includes(plan.id)
-      );
-    }
-    
-    // Apply internalName filter if it exists
-    if (hasInternalNameFilter) {
-      filteredPlans = filteredPlans.filter((plan: IPlan) => 
-        filters.internalName!.includes(plan.id)
-      );
-    }
-    
-    setPlan(filteredPlans)
-  }
-
-  const handleSearch = (value: string) => {
-    const newSearchKey = value.trim()
-    setSearchKey(newSearchKey)
-    onPageChange(1, PAGE_SIZE)
-
-    // Update URL
-    if (newSearchKey) {
-      searchParams.set('searchKey', newSearchKey)
-    } else {
-      searchParams.delete('searchKey')
-    }
-    setSearchParams(searchParams)
-
-    // Update filters state
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      searchKey: newSearchKey
-    }))
+    setPlan(planData)
   }
 
   const columns: ColumnsType<IPlan> = [
@@ -351,10 +236,6 @@ const Index = ({
       dataIndex: 'planName',
       key: 'planName',
       width: 120,
-      filters: planFilterRef.current,
-      filteredValue: filters.planName,
-      filterSearch: (input, record) =>
-        String(record.text).toLowerCase().includes(input.toLowerCase()),
       render: (planName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={planName} placement="topLeft" width="120px" />
@@ -366,10 +247,6 @@ const Index = ({
       dataIndex: 'internalName',
       key: 'internalName',
       width: 120,
-      filters: internalNameFilterRef.current,
-      filterSearch: (input, record) =>
-        String(record.text).toLowerCase().includes(input.toLowerCase()),
-      filteredValue: filters.internalName,
       render: (internalName) => (
         <div className="w-28 overflow-hidden whitespace-nowrap">
           <LongTextPopover text={internalName || ''} placement="topLeft" width="120px" />
@@ -399,39 +276,47 @@ const Index = ({
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
-      render: (type) => PLAN_TYPE[type as PlanType].label,
-      filters: PLAN_TYPE_FILTER,
-      filteredValue: filters.type
+      render: (type) => PLAN_TYPE[type as PlanType].label
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (s) => PlanStatusTag(s as PlanStatus),
-      filters: PLAN_STATUS_FILTER,
-      filteredValue: filters.status
+      render: (s) => PlanStatusTag(s as PlanStatus)
     },
     {
       title: 'Published',
       dataIndex: 'publishStatus',
       key: 'publishStatus',
-      render: (publishStatus) =>
-        publishStatus == PlanPublishStatus.PUBLISHED ? (
-          <CheckCircleOutlined style={{ color: 'green' }} />
-        ) : (
-          <MinusOutlined style={{ color: 'red' }} />
-        )
+      render: (publishStatus) => (
+        <span
+          className={`status-pill ${
+            publishStatus == PlanPublishStatus.PUBLISHED
+              ? 'status-pill--success'
+              : 'status-pill--danger'
+          }`}
+        >
+          {publishStatus == PlanPublishStatus.PUBLISHED ? (
+            <CheckOutlined />
+          ) : (
+            <CloseOutlined />
+          )}
+        </span>
+      )
     },
     {
       title: 'Allow Trial',
       dataIndex: 'trialDurationTime',
       key: 'trialDurationTime',
-      render: (trialDurationTime) =>
-        trialDurationTime > 0 ? (
-          <CheckCircleOutlined style={{ color: 'green' }} />
-        ) : (
-          <MinusOutlined style={{ color: 'red' }} />
-        )
+      render: (trialDurationTime) => (
+        <span
+          className={`status-pill ${
+            trialDurationTime > 0 ? 'status-pill--success' : 'status-pill--danger'
+          }`}
+        >
+          {trialDurationTime > 0 ? <CheckOutlined /> : <CloseOutlined />}
+        </span>
+      )
     },
     {
       title: 'Billable metrics',
@@ -454,93 +339,73 @@ const Index = ({
       sortOrder: sortFilter?.columnKey == 'createTime' ? sortFilter.order : null
     },
     {
-      title: (
-        <>
-          <span>Actions</span>
-          <Tooltip title="New plan">
-            <Button
-              // type="primary"
-              size="small"
-              style={{ marginLeft: '8px' }}
-              disabled={copyingPlan}
-              onClick={onNewPlan}
-              icon={<PlusOutlined />}
-            ></Button>
-          </Tooltip>
-          <Tooltip title="Refresh">
-            <Button
-              size="small"
-              style={{ marginLeft: '8px' }}
-              disabled={loading}
-              onClick={fetchPlan}
-              icon={<SyncOutlined />}
-            ></Button>
-          </Tooltip>
-        </>
-      ),
+      title: 'Actions',
       key: 'action',
-      width: 150,
-      render: (_, record) => (
-        <Space size="middle" className="plan-action-btn-wrapper">
-          <Tooltip title="Edit">
-            <Button
-              disabled={copyingPlan}
-              style={{ border: 'unset' }}
-              onClick={() => goToDetail(record.id)}
-              icon={<EditOutlined />}
-            />
-          </Tooltip>
-          <Tooltip title="Copy">
-            <Button
-              style={{ border: 'unset' }}
-              disabled={copyingPlan}
-              onClick={() => copyPlan(record.id)}
-              icon={<CopyOutlined />}
-            />
-          </Tooltip>
-          <Tooltip title="Archive">
-            <Button
-              style={{ border: 'unset' }}
-              disabled={
-                record.status == PlanStatus.SOFT_ARCHIVED ||
-                record.status == PlanStatus.HARD_ARCHIVED
-              }
-              onClick={() => toggleArchiveModal(record)}
-              icon={<DeleteOutlined />}
-            />
-          </Tooltip>
-        </Space>
-      )
+      className: 'action-column',
+      fixed: 'right',
+      width: 160,
+      render: (_, record) => {
+        const disabledArchive =
+          record.status == PlanStatus.SOFT_ARCHIVED ||
+          record.status == PlanStatus.HARD_ARCHIVED
+        return (
+          <div className="plan-action-buttons">
+            <Tooltip title="Edit">
+              <Button
+                type="text"
+                disabled={copyingPlan}
+                className="plan-action-btn plan-action-btn--edit"
+                icon={<EditOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  goToDetail(record.id)
+                }}
+              />
+            </Tooltip>
+            <Tooltip title="Copy">
+              <Button
+                type="text"
+                disabled={copyingPlan}
+                className="plan-action-btn plan-action-btn--copy"
+                icon={<CopyOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  copyPlan(record.id)
+                }}
+              />
+            </Tooltip>
+            <Tooltip title="Archive">
+              <Button
+                type="text"
+                className="plan-action-btn plan-action-btn--delete"
+                disabled={disabledArchive}
+                icon={<DeleteOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleArchiveModal(record)
+                }}
+              />
+            </Tooltip>
+          </div>
+        )
+      }
     }
   ]
 
-  const onTableChange: TableProps<IPlan>['onChange'] = (_, filters, sorter) => {
-    // Reset to first page when filters change
-    onPageChange(1, 100)
-    // Store the filters in state
-    setFilters(filters as TFilters)
-
-    // Update URL parameters based on filter selections
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    filters.type == null
-      ? searchParams.delete('type')
-      : searchParams.set('type', filters.type.join('-'))
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    filters.status == null
-      ? searchParams.delete('status')
-      : searchParams.set('status', filters.status.join('-'))
+  const onTableChange: TableProps<IPlan>['onChange'] = (
+    pagination,
+    _filters,
+    sorter
+  ) => {
+    // Handle pagination
+    const newPageSize = pagination.pageSize || PAGE_SIZE
+    const newPage = pagination.current || 1
     
-    // Handle planName and internalName filters separately
-    if (!filters.planName || filters.planName.length === 0) {
-      searchParams.delete('planIds');
+    if (newPageSize !== pageSize) {
+      setPageSize(newPageSize)
+      onPageChange(1, newPageSize)
     } else {
-      searchParams.set('planIds', filters.planName.join('-'));
-    }
-    
-    if (!filters.internalName || filters.internalName.length === 0) {
-      searchParams.delete('internalNameIds');
-    } else {
-      searchParams.set('internalNameIds', filters.internalName.join('-'));
+      onPageChange(newPage, newPageSize)
     }
 
     if (Array.isArray(sorter)) {
@@ -549,27 +414,221 @@ const Index = ({
 
     setSortFilter(sorter as Sorts)
     if (sorter.field != undefined) {
-      searchParams.set('sortby', sorter.field as string)
-      searchParams.set('sortorder', sorter.order as string)
+      const newParams = new URLSearchParams(searchParams)
+      newParams.set('sortby', sorter.field as string)
+      newParams.set('sortorder', sorter.order as string)
+      setSearchParams(newParams)
     } else {
-      searchParams.delete('sortby')
-      searchParams.delete('sortorder')
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete('sortby')
+      newParams.delete('sortorder')
+      setSearchParams(newParams)
     }
-
-    setSearchParams(searchParams)
   }
 
+  // Sync form values when filters change
   useEffect(() => {
-    if (isProductValid) {
-      fetchAllPlans()
-    }
-  }, [isProductValid])
+    form.setFieldsValue({
+      type: filters.type || [],
+      status: filters.status || [],
+      planName: filters.planName || [],
+      internalName: filters.internalName || []
+    })
+  }, [filters, form])
 
   useEffect(() => {
     if (isProductValid) {
       fetchPlan()
     }
-  }, [filters, page, sortFilter])
+  }, [isProductValid, productId, filters, page, pageSize, sortFilter, searchQuery])
+
+  // Sync global plan store data to filter refs (for Plan Name and Internal Name filters)
+  useEffect(() => {
+    fetchGlobalPlans()
+  }, [fetchGlobalPlans])
+
+  useEffect(() => {
+    if (globalPlans.length === 0) return
+
+    // Filter plans by current productId
+    const productPlans = globalPlans.filter((p) => p.plan?.productId === productId)
+
+    // Update filter options with product-specific plans (format: #id planName)
+    planFilterRef.current = productPlans.map((p) => ({
+      value: p.plan?.id as number,
+      text: `#${p.plan?.id} ${p.plan?.planName}`
+    })).filter((p) => p.value && p.text)
+
+    internalNameFilterRef.current = productPlans
+      .filter((p) => p.plan?.internalName && p.plan?.internalName.trim() !== '')
+      .map((p) => ({
+        value: p.plan?.id as number,
+        text: `#${p.plan?.id} ${p.plan?.internalName}`
+      }))
+      .filter((p) => p.value && p.text)
+  }, [globalPlans, productId])
+
+  const syncFiltersToUrl = (nextFilters: TFilters) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (nextFilters.type == null || nextFilters.type.length === 0) {
+      newParams.delete('type')
+    } else {
+      newParams.set('type', nextFilters.type.join('-'))
+    }
+    if (nextFilters.status == null || nextFilters.status.length === 0) {
+      newParams.delete('status')
+    } else {
+      newParams.set('status', nextFilters.status.join('-'))
+    }
+    if (nextFilters.planName == null || nextFilters.planName.length === 0) {
+      newParams.delete('planIds')
+    } else {
+      newParams.set('planIds', nextFilters.planName.join('-'))
+    }
+    if (nextFilters.internalName == null || nextFilters.internalName.length === 0) {
+      newParams.delete('internalNameIds')
+    } else {
+      newParams.set('internalNameIds', nextFilters.internalName.join('-'))
+    }
+    setSearchParams(newParams)
+  }
+
+  // Get active filters count
+  const getActiveFilterCount = () => {
+    let count = 0
+    if (filters.type && filters.type.length > 0) count += filters.type.length
+    if (filters.status && filters.status.length > 0) count += filters.status.length
+    if (filters.planName && filters.planName.length > 0) count += filters.planName.length
+    if (filters.internalName && filters.internalName.length > 0) count += filters.internalName.length
+    return count
+  }
+
+  // Get active filters for display
+  const getActiveFilters = () => {
+    const activeFilters: { key: string; label: string; value: any; type: string }[] = []
+    
+    // Type filters
+    if (filters.type && filters.type.length > 0) {
+      filters.type.forEach((type: PlanType) => {
+        const typeLabel = PLAN_TYPE_FILTER.find(t => t.value === type)?.text
+        if (typeLabel) {
+          activeFilters.push({ key: `type-${type}`, label: typeLabel, value: type, type: 'type' })
+        }
+      })
+    }
+    
+    // Status filters
+    if (filters.status && filters.status.length > 0) {
+      filters.status.forEach((status: PlanStatus) => {
+        const statusLabel = PLAN_STATUS_FILTER.find(s => s.value === status)?.text
+        if (statusLabel) {
+          activeFilters.push({ key: `status-${status}`, label: statusLabel, value: status, type: 'status' })
+        }
+      })
+    }
+    
+    // Plan Name filters
+    if (filters.planName && filters.planName.length > 0) {
+      filters.planName.forEach((planId: number) => {
+        const planOption = planFilterRef.current.find(p => p.value === planId)
+        if (planOption) {
+          activeFilters.push({ key: `planName-${planId}`, label: planOption.text, value: planId, type: 'planName' })
+        }
+      })
+    }
+    
+    // Internal Name filters
+    if (filters.internalName && filters.internalName.length > 0) {
+      filters.internalName.forEach((planId: number) => {
+        const planOption = internalNameFilterRef.current.find(p => p.value === planId)
+        if (planOption) {
+          activeFilters.push({ key: `internalName-${planId}`, label: planOption.text, value: planId, type: 'internalName' })
+        }
+      })
+    }
+    
+    return activeFilters
+  }
+
+  // Remove a specific filter
+  const removeFilter = (filterKey: string) => {
+    let newFilters = { ...filters }
+    if (filterKey.startsWith('type-')) {
+      const type = Number(filterKey.replace('type-', '')) as PlanType
+      const newType = filters.type?.filter(t => t !== type) || []
+      newFilters.type = newType.length > 0 ? newType : null
+    } else if (filterKey.startsWith('status-')) {
+      const status = Number(filterKey.replace('status-', '')) as PlanStatus
+      const newStatus = filters.status?.filter(s => s !== status) || []
+      newFilters.status = newStatus.length > 0 ? newStatus : null
+    } else if (filterKey.startsWith('planName-')) {
+      const planId = Number(filterKey.replace('planName-', ''))
+      const newPlanName = filters.planName?.filter(id => id !== planId) || []
+      newFilters.planName = newPlanName.length > 0 ? newPlanName : null
+    } else if (filterKey.startsWith('internalName-')) {
+      const planId = Number(filterKey.replace('internalName-', ''))
+      const newInternalName = filters.internalName?.filter(id => id !== planId) || []
+      newFilters.internalName = newInternalName.length > 0 ? newInternalName : null
+    }
+    // Update form values
+    form.setFieldsValue({
+      type: newFilters.type || [],
+      status: newFilters.status || [],
+      planName: newFilters.planName || [],
+      internalName: newFilters.internalName || []
+    })
+    
+    // Update page state without triggering URL update
+    onPageChangeNoParams(1, pageSize)
+    
+    // Sync filters to URL (single setSearchParams call)
+    syncFiltersToUrl(newFilters)
+    
+    // Update filters state - useEffect will trigger fetchPlan
+    setFilters(newFilters)
+  }
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    const clearedFilters: TFilters = {
+      type: null,
+      status: null,
+      planName: null,
+      internalName: null
+    }
+    form.resetFields()
+    
+    // Update page state without triggering URL update
+    onPageChangeNoParams(1, pageSize)
+    
+    // Sync filters to URL (single setSearchParams call)
+    syncFiltersToUrl(clearedFilters)
+    
+    // Update filters state - useEffect will trigger fetchPlan
+    setFilters(clearedFilters)
+  }
+
+  // Apply filters from form
+  const applyFilters = () => {
+    const formValues = form.getFieldsValue()
+    const newFilters: TFilters = {
+      type: formValues.type && formValues.type.length > 0 ? formValues.type : null,
+      status: formValues.status && formValues.status.length > 0 ? formValues.status : null,
+      planName: formValues.planName && formValues.planName.length > 0 ? formValues.planName : null,
+      internalName: formValues.internalName && formValues.internalName.length > 0 ? formValues.internalName : null
+    }
+    setFilterDrawerOpen(false)
+    
+    // Update page state without triggering URL update
+    onPageChangeNoParams(1, pageSize)
+    
+    // Sync filters to URL (single setSearchParams call)
+    syncFiltersToUrl(newFilters)
+    
+    // Update filters state - useEffect will trigger fetchPlan
+    setFilters(newFilters)
+  }
+
 
   return (
     <>
@@ -598,65 +657,347 @@ const Index = ({
           />
         </div>
       ) : (
-        <>
-          <div className="flex justify-between mb-4">
-          <Search
-              allowClear
-              placeholder="Search by Plan Name or Description"
-              onSearch={handleSearch}
-              style={{ width: 375 }}
-              defaultValue={searchKey}
-            />
-            <Button
-              type="primary"
-              onClick={() => setExportModalOpen(true)}
-              icon={<ExportOutlined />}
-            >
-              Export
-            </Button>
-          </div>
-          <Table
-            columns={columns}
-            dataSource={plan}
-            rowKey={'id'}
-            rowClassName="clickable-tbl-row"
-            pagination={false}
-            loading={{
-              spinning: loading,
-              indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
-            }}
-            onChange={onTableChange}
-            onRow={(record) => {
-              return {
-                onClick: (event) => {
-                  if (
-                    // table's onRow event will be triggered first, then those action buttons'.
-                    // use this if-check to make action button' handlers have to chance to run.
-                    event.target instanceof Element &&
-                    event.target.closest('.plan-action-btn-wrapper') != null
-                  ) {
-                    return
+        <div className="bg-gray-50 min-h-screen">
+          <div className="p-6">
+            {/* Search Bar */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2" style={{ maxWidth: '450px', flex: 1 }}>
+                  <Input
+                    placeholder="Search by Plan Name, Description"
+                    value={searchInput}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      setSearchInput(next)
+                      const isClearClick =
+                        (e as any).nativeEvent?.type === 'click' ||
+                        (e as any).type === 'click'
+                      if (isClearClick && next === '') {
+                        if (searchQuery !== '') {
+                          setSearchQuery('')
+                        }
+                        if (page === 0) {
+                          fetchPlan('')
+                        } else {
+                          onPageChange(1, pageSize)
+                        }
+                      }
+                    }}
+                    onPressEnter={() => {
+                      const trimmed = searchInput.trim()
+                      if (trimmed === searchQuery && page === 0) {
+                        fetchPlan(trimmed)
+                        return
+                      }
+                      setSearchQuery(trimmed)
+                      if (page !== 0) {
+                        onPageChange(1, pageSize)
+                      } else {
+                        fetchPlan(trimmed)
+                      }
+                    }}
+                    size="large"
+                    allowClear
+                    style={{
+                      flex: 1,
+                      height: '48px',
+                    }}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    onClick={() => {
+                      const trimmed = searchInput.trim()
+                      if (trimmed === searchQuery && page === 0) {
+                        fetchPlan(trimmed)
+                        return
+                      }
+                      setSearchQuery(trimmed)
+                      if (page !== 0) {
+                        onPageChange(1, pageSize)
+                      } else {
+                        fetchPlan(trimmed)
+                      }
+                    }}
+                    size="large"
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0
+                    }}
+                  />
+                </div>
+
+                {/* Filter Button */}
+                <div style={{ position: 'relative' }}>
+                  <Button
+                    icon={<FilterOutlined />}
+                    onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
+                    size="large"
+                    className="flex items-center"
+                    style={{
+                      borderRadius: '8px',
+                      padding: '4px 16px',
+                      height: '40px'
+                    }}
+                  >
+                    <span style={{ marginRight: getActiveFilterCount() > 0 ? '8px' : 0 }}>Filter</span>
+                    {getActiveFilterCount() > 0 && (
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '20px',
+                          height: '20px',
+                          padding: '0 6px',
+                          backgroundColor: '#f0f0f0',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          color: '#000'
+                        }}
+                      >
+                        {getActiveFilterCount()}
+                      </span>
+                    )}
+                  </Button>
+
+                  {/* Filter Panel - Floating */}
+                  {filterDrawerOpen && (
+                    <>
+                      {/* Overlay */}
+                      <div
+                        style={{
+                          position: 'fixed',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          zIndex: 999
+                        }}
+                        onClick={() => setFilterDrawerOpen(false)}
+                      />
+                      
+                      {/* Filter Panel */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 'calc(100% + 8px)',
+                          right: 0,
+                          width: '400px',
+                          zIndex: 1000
+                        }}
+                        className="bg-white rounded-lg shadow-xl border border-gray-200"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="p-6">
+                          <h3 className="text-lg font-semibold mb-6">Filters</h3>
+                          <Form
+                            form={form}
+                            layout="vertical"
+                          >
+                            {/* Plan Name */}
+                            <Form.Item label="Plan Name" name="planName" style={{ marginBottom: '20px' }}>
+                              <Select
+                                placeholder="Choose a Plan Name"
+                                allowClear
+                                mode="multiple"
+                                showSearch
+                                filterOption={(input, option) =>
+                                  (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={planFilterRef.current.map(p => ({ label: p.text, value: p.value }))}
+                              />
+                            </Form.Item>
+
+                            {/* Internal Name */}
+                            <Form.Item label="Internal Name" name="internalName" style={{ marginBottom: '20px' }}>
+                              <Select
+                                placeholder="Choose a Internal Name"
+                                allowClear
+                                mode="multiple"
+                                showSearch
+                                filterOption={(input, option) =>
+                                  (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={internalNameFilterRef.current.map(p => ({ label: p.text, value: p.value }))}
+                              />
+                            </Form.Item>
+
+                            {/* Type */}
+                            <Form.Item label="Type" name="type" style={{ marginBottom: '20px' }}>
+                              <Select
+                                placeholder="Choose a Type"
+                                allowClear
+                                mode="multiple"
+                                showSearch
+                                filterOption={(input, option) =>
+                                  (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={PLAN_TYPE_FILTER.map(t => ({ label: t.text, value: t.value }))}
+                              />
+                            </Form.Item>
+
+                            {/* Status */}
+                            <Form.Item label="Status" name="status" style={{ marginBottom: '20px' }}>
+                              <Select
+                                placeholder="Choose a Status"
+                                allowClear
+                                mode="multiple"
+                                showSearch
+                                filterOption={(input, option) =>
+                                  (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                                }
+                                options={PLAN_STATUS_FILTER.map(s => ({ label: s.text, value: s.value }))}
+                              />
+                            </Form.Item>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center justify-end gap-3 mt-6">
+                              <Button
+                                onClick={() => setFilterDrawerOpen(false)}
+                                size="large"
+                              >
+                                Close
+                              </Button>
+                              <Button
+                                type="primary"
+                                size="large"
+                                onClick={applyFilters}
+                              >
+                                Save Filters
+                              </Button>
+                            </div>
+                          </Form>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Active Filters Display - Below Search Bar */}
+              {getActiveFilters().length > 0 && (
+                <div 
+                  className="mt-4 flex items-center gap-2 flex-wrap"
+                >
+                  {getActiveFilters().map(filter => (
+                    <Tag
+                      key={filter.key}
+                      closable
+                      onClose={() => removeFilter(filter.key)}
+                      style={{
+                        padding: '4px 12px',
+                        fontSize: '13px',
+                        borderRadius: '16px',
+                        border: '1px solid #e0e0e0',
+                        backgroundColor: '#f5f5f5',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        margin: 0,
+                        marginBottom: '4px'
+                      }}
+                    >
+                      {filter.label}
+                    </Tag>
+                  ))}
+                  <span
+                    onClick={clearAllFilters}
+                    style={{
+                      fontSize: '13px',
+                      color: '#666',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      whiteSpace: 'nowrap',
+                      marginLeft: '4px'
+                    }}
+                  >
+                    Clear all
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Plan List Section */}
+            <div className="bg-white rounded-lg shadow-sm mb-6">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-medium">Plan List</h2>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      icon={<SyncOutlined />}
+                      onClick={() => fetchPlan()}
+                      disabled={loading}
+                      className="flex items-center"
+                    >
+                      Refresh
+                    </Button>
+                    <Button
+                      icon={<ExportOutlined />}
+                      onClick={() => setExportModalOpen(true)}
+                      className="flex items-center"
+                    >
+                      Export
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={onNewPlan}
+                      disabled={copyingPlan}
+                      className="flex items-center"
+                    >
+                      Add Plan
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <ResponsiveTable
+                columns={columns.filter(c => !c.hidden)}
+                dataSource={plan}
+                rowKey={'id'}
+                rowClassName="clickable-tbl-row"
+                className="plan-table"
+                pagination={{
+                  current: page + 1,
+                  pageSize: pageSize,
+                  total: total,
+                  showSizeChanger: true,
+                  pageSizeOptions: ['10', '20', '50', '100'],
+                  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+                  locale: { items_per_page: '' },
+                  disabled: loading,
+                  className: 'plan-pagination'
+                }}
+                loading={{
+                  spinning: loading,
+                  indicator: <LoadingOutlined style={{ fontSize: 32 }} spin />
+                }}
+                onChange={onTableChange}
+                scroll={{ x: 1400 }}
+                onRow={(record) => {
+                  return {
+                    onClick: (event) => {
+                      if (
+                        // table's onRow event will be triggered first, then those action buttons'.
+                        // use this if-check to make action button' handlers have to chance to run.
+                        event.target instanceof Element &&
+                        event.target.closest('.plan-action-btn-wrapper') != null
+                      ) {
+                        return
+                      }
+                      goToDetail(record.id)
+                    }
                   }
-                  goToDetail(record.id)
-                }
-              }
-            }}
-          />
-          <div className="mx-0 my-4 flex items-center justify-end">
-            <Pagination
-              current={page + 1} // back-end starts with 0, front-end starts with 1
-              pageSize={PAGE_SIZE}
-              total={total}
-              size="small"
-              onChange={onPageChange}
-              showTotal={(total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`
-              }
-              disabled={loading}
-              showSizeChanger={false}
-            />
+                }}
+              />
+            </div>
           </div>
-        </>
+        </div>
       )}
     </>
   )
@@ -817,7 +1158,6 @@ const ExportModal = ({
   const [columnOptions, setColumnOptions] = useState<{ label: string; value: string; checked: boolean }[]>([])
   const [selectedFields, setSelectedFields] = useState<string[]>([])
   
-  // Fetch column options when component mounts
   useEffect(() => {
     const fetchColumnOptions = async () => {
       setColumnLoading(true)
@@ -830,7 +1170,6 @@ const ExportModal = ({
       }
       
       if (data && data.columnHeaders) {
-        // Convert columnHeaders object to array of options
         const options = Object.entries(data.columnHeaders).map(([key, value]) => ({
           label: value as string,
           value: key,
@@ -838,7 +1177,6 @@ const ExportModal = ({
         }))
         
         setColumnOptions(options)
-        // Select all fields by default
         setSelectedFields(options.map(opt => opt.value))
       }
     }
@@ -871,11 +1209,10 @@ const ExportModal = ({
 
       setLoading(true)
 
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         productIds: [productId]
       }
 
-      // Include filters if exporting filtered data
       if (exportType === 'filtered') {
         if (filters.type?.length) {
           payload.type = filters.type
@@ -884,7 +1221,6 @@ const ExportModal = ({
           payload.status = filters.status
         }
         
-        // Combine both planName and internalName filters into a single planIds array
         const combinedPlanIds = [
           ...(filters.planName || []),
           ...(filters.internalName || [])
@@ -894,14 +1230,12 @@ const ExportModal = ({
           payload.planIds = combinedPlanIds
         }
 
-        // Include sort information if available
         if (sortFilter.columnKey != null) {
           payload.sortField = sortFilter.columnKey == 'planName' ? 'plan_name' : 'gmt_create'
           payload.sortType = sortFilter.order == 'descend' ? 'desc' : 'asc'
         }
       }
 
-      // Call API to export data
       const [_, err] = await exportDataReq({
         task: 'PlanExport',
         payload: payload,
@@ -918,8 +1252,8 @@ const ExportModal = ({
       message.success('Plan list is being exported, please check task list for progress.')
       appConfigStore.setTaskListOpen(true)
       closeModal()
-    } catch (error: any) {
-      message.error(error.message || 'Export failed')
+    } catch (error: unknown) {
+      message.error((error as Error).message || 'Export failed')
     } finally {
       setLoading(false)
     }

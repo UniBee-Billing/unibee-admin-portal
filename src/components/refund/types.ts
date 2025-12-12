@@ -1,6 +1,6 @@
-// Refund 模块相关类型定义
+// Refund module type definitions
 
-// Credit Note API 接口类型
+// Credit Note API interface types
 export interface CreditNoteListRequest {
   searchKey?: string
   emails?: string
@@ -278,7 +278,7 @@ export interface MetricCharge {
   createTime: number
 }
 
-// 用于显示的类型
+// Display types
 export interface RefundItem {
   id: string
   invoiceId: string

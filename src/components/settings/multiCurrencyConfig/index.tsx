@@ -418,7 +418,7 @@ const MultiCurrencyConfiguration = () => {
               </div>
               <Switch
                 checked={config.exchangeApiEnabled}
-                disabled={!!savedExchangeApiKey} // 如果有保存的key就不能关闭
+                disabled={!!savedExchangeApiKey} // Cannot disable if a saved key exists
                 onChange={(checked) => {
                   setConfig(prev => ({ ...prev, exchangeApiEnabled: checked }))
                   setHasChanges(true)
@@ -492,7 +492,7 @@ const MultiCurrencyConfiguration = () => {
               </div>
               <Switch
                 checked={config.multiCurrencyEnabled}
-                disabled={config.ruleSet.length > 0} // 禁用开关如果有活跃的Rule Set
+                disabled={config.ruleSet.length > 0} // Disable switch if there are active Rule Sets
                 onChange={(checked) => {
                   setConfig(prev => ({ ...prev, multiCurrencyEnabled: checked }))
                   setHasChanges(true)

@@ -95,7 +95,9 @@ const ChangePlan = ({
       return null
     }
     const credit: TPromoAccount | undefined =
-      userProfile.promoCreditAccounts?.find((c) => c.currency == 'EUR')
+      userProfile.promoCreditAccounts?.find(
+        (c) => c.currency == selectedPlan.currency
+      )
     if (credit == undefined) {
       return { credit: null, note: 'No credit available' }
     }

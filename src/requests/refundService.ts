@@ -2,8 +2,8 @@ import { request } from './client';
 import { CreditNoteListRequest, CreditNoteListResponse } from '../components/refund/types';
 
 /**
- * 获取Credit Note列表
- * @param params 搜索参数
+ * Get Credit Note list
+ * @param params Search parameters
  * @returns Promise<[CreditNoteListResponse['data'] | null, Error | null]>
  */
 export const getCreditNoteListReq = async (params: CreditNoteListRequest): Promise<
@@ -22,9 +22,9 @@ export const getCreditNoteListReq = async (params: CreditNoteListRequest): Promi
 };
 
 /**
- * 上传CSV文件进行批量搜索
- * @param file CSV文件
- * @param params 其他搜索参数
+ * Upload CSV file for bulk search
+ * @param file CSV file
+ * @param params Other search parameters
  * @returns Promise<[CreditNoteListResponse['data'] | null, Error | null]>
  */
 export const uploadCSVAndSearchReq = async (
@@ -35,7 +35,7 @@ export const uploadCSVAndSearchReq = async (
     const formData = new FormData();
     formData.append('file', file);
     
-    // 添加其他参数
+    // Add other parameters
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {

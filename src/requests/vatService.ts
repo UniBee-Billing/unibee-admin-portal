@@ -5,7 +5,7 @@ export interface VATNumberValidateHistory {
   id: number
   merchantId: number
   vatNumber: string
-  status: number // 0-Invalid，1-Valid
+  status: number // 0-Invalid, 1-Valid
   validateGateway: string
   countryCode: string
   companyName: string
@@ -34,13 +34,13 @@ export interface VATValidationHistoryParams {
   vatNumber?: string // Filter Vat Number
   countryCode?: string // CountryCode
   validateGateway?: string // Filter Validate Gateway, vatsense
-  status?: number[] // status, 0-Invalid，1-Valid
-  sortField?: string // Sort Field，gmt_create|gmt_modify，Default gmt_modify
-  sortType?: string // Sort Type，asc|desc，Default desc
+  status?: number[] // status, 0-Invalid, 1-Valid
+  sortField?: string // Sort Field, gmt_create|gmt_modify, Default gmt_modify
+  sortType?: string // Sort Type, asc|desc, Default desc
   page?: number // Page, Start 0
   count?: number // Count Of Per Page
-  createTimeStart?: number // CreateTimeStart，UTC timestamp，seconds
-  createTimeEnd?: number // CreateTimeEnd，UTC timestamp，seconds
+  createTimeStart?: number // CreateTimeStart, UTC timestamp, seconds
+  createTimeEnd?: number // CreateTimeEnd, UTC timestamp, seconds
 }
 
 /**

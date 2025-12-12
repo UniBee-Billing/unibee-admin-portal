@@ -124,10 +124,10 @@ export const ReportPage = () => {
       // Update the current template ID reference
       currentTemplateIdRef.current = template.templateId;
 
-      // 更新当前选中的模板
+      // Update the currently selected template
       setSelectedTemplate(template)
 
-      // 填充导出字段列表
+      // Populate the export field list
       const fieldsToSet = (template.exportColumns ?? [])
         .map((fieldName) => {
           const category = findCategoryByValue(groupColumns, fieldName)
@@ -137,7 +137,7 @@ export const ReportPage = () => {
       
       setSelectedFields(fieldsToSet);
 
-      // 提取模板中的payload数据
+      // Extract payload data from the template
       const payload = template.payload || {};
         // console.log('Updating template in UI, template data:', {
         //   format: template.format,
@@ -145,14 +145,14 @@ export const ReportPage = () => {
         //   exportColumns: template.exportColumns
         // });
       
-      // 先重置表单
+      // Reset the form first
       if (previewRef.current) {
         previewRef.current.reinitialize();
       }
       
-      // 延迟一点设置表单值，确保组件已经渲染完成
+      // Delay setting form values slightly to ensure component is fully rendered
       setTimeout(() => {
-        // 填充导出设置
+        // Populate export settings
         previewRef.current!.setValue({
           exportType: template.format as ExportType,
           timezone: payload.timezone || getSystemTimezone(),

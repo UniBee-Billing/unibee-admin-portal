@@ -1,5 +1,5 @@
 import GraduationIcon from '@/assets/graduation.svg?react'
-import { METRIC_CHARGE_TYPE, METRICS_AGGREGATE_TYPE } from '@/constants'
+import { METRIC_CHARGE_TYPE, METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
 import { showAmount } from '@/helpers'
 import { getMetricUsageBySubIdReq, getSubDetailInProductReq } from '@/requests'
 import {
@@ -7,12 +7,23 @@ import {
   LimitMetricUsage,
   MetricAggregationType,
   MetricChargeType,
-  MetricGraduatedAmount
+  MetricGraduatedAmount,
+  MetricType
 } from '@/shared.types'
-import { LoadingOutlined, SyncOutlined } from '@ant-design/icons'
-import { Button, Col, Divider, message, Popover, Row, Table } from 'antd'
+import {
+  EyeOutlined,
+  EditOutlined,
+  HistoryOutlined,
+  LoadingOutlined,
+  MoreOutlined,
+  SyncOutlined
+} from '@ant-design/icons'
+import { Button, Col, Divider, Dropdown, message, Popover, Row, Table } from 'antd'
 import { ColumnsType } from 'antd/es/table'
 import { useEffect, useRef, useState } from 'react'
+import ViewTotalLimitModal from './metricLimitModals/viewTotalLimitModal'
+import EditUserLimitModal from './metricLimitModals/editUserLimitModal'
+import RecordActivityModal from './metricLimitModals/recordActivityModal'
 
 const Index = ({
   userId,
@@ -25,12 +36,28 @@ const Index = ({
 }) => {
   const [loading, setLoading] = useState(false)
   const subCurrencyRef = useRef<string>('')
+  const subscriptionIdRef = useRef<string>('')
   const [limitMetricUsage, setLimitMetricUsage] = useState<LimitMetricUsage[]>(
     []
   )
   const [chargedMetricUsage, setChargedMetricUsage] = useState<
     ChargedMetricUsage[]
   >([])
+
+  const [viewTotalLimitModal, setViewTotalLimitModal] = useState<{
+    open: boolean
+    metricLimit: LimitMetricUsage['metricLimit'] | null
+  }>({ open: false, metricLimit: null })
+
+  const [editUserLimitModal, setEditUserLimitModal] = useState<{
+    open: boolean
+    metricLimit: LimitMetricUsage['metricLimit'] | null
+  }>({ open: false, metricLimit: null })
+
+  const [recordActivityModal, setRecordActivityModal] = useState<{
+    open: boolean
+    metricLimit: LimitMetricUsage['metricLimit'] | null
+  }>({ open: false, metricLimit: null })
 
   const getSubInProduct = async () => {
     if (loading) {
@@ -52,6 +79,7 @@ const Index = ({
       // not all product have active subscription
       return
     }
+    subscriptionIdRef.current = res.subscription.subscriptionId
     const [res2, err2] = await getMetricUsageBySubIdReq(
       res.subscription.subscriptionId
     )
@@ -89,6 +117,12 @@ const Index = ({
       key: 'code'
     },
     {
+      title: 'Type',
+      dataIndex: ['metricLimit', 'type'],
+      key: 'type',
+      render: (type: MetricType) => METRICS_TYPE[type]?.label ?? '-'
+    },
+    {
       title: 'Aggregate Type',
       dataIndex: ['metricLimit', 'aggregationType'],
       key: 'aggregationType',
@@ -109,7 +143,50 @@ const Index = ({
     {
       title: 'Limit Value',
       dataIndex: ['metricLimit', 'TotalLimit'],
-      key: 'TotalLimit'
+      key: 'TotalLimit',
+      render: (totalLimit, record) => (
+        <div className="flex items-center gap-1">
+          <span>{totalLimit}</span>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'viewTotalLimit',
+                  label: 'View Total Limit',
+                  icon: <EyeOutlined />
+                },
+                {
+                  key: 'editUserLimit',
+                  label: "Edit User's Limit",
+                  icon: <EditOutlined />
+                },
+                {
+                  key: 'recordActivity',
+                  label: 'Records Activity',
+                  icon: <HistoryOutlined />
+                }
+              ],
+              onClick: ({ key }) => {
+                if (key === 'viewTotalLimit') {
+                  setViewTotalLimitModal({ open: true, metricLimit: record.metricLimit })
+                } else if (key === 'editUserLimit') {
+                  setEditUserLimitModal({ open: true, metricLimit: record.metricLimit })
+                } else if (key === 'recordActivity') {
+                  setRecordActivityModal({ open: true, metricLimit: record.metricLimit })
+                }
+              }
+            }}
+            trigger={['click']}
+          >
+            <Button
+              type="text"
+              size="small"
+              icon={<MoreOutlined />}
+              style={{ marginLeft: 4 }}
+            />
+          </Dropdown>
+        </div>
+      )
     },
     {
       title: 'Consumed',
@@ -123,6 +200,12 @@ const Index = ({
       title: 'Name',
       dataIndex: ['merchantMetric', 'metricName'],
       key: 'metricName'
+    },
+    {
+      title: 'Type',
+      dataIndex: ['merchantMetric', 'type'],
+      key: 'type',
+      render: (type: MetricType) => METRICS_TYPE[type]?.label ?? '-'
     },
     /* {
       title: 'Code',
@@ -213,7 +296,33 @@ const Index = ({
 
   return (
     <div>
-      <div className="my-6 text-lg text-gray-600">Limit Metered Usage</div>
+      {viewTotalLimitModal.open && viewTotalLimitModal.metricLimit && (
+        <ViewTotalLimitModal
+          userId={userId}
+          productId={productId}
+          metricLimit={viewTotalLimitModal.metricLimit}
+          onClose={() => setViewTotalLimitModal({ open: false, metricLimit: null })}
+        />
+      )}
+      {editUserLimitModal.open && editUserLimitModal.metricLimit && (
+        <EditUserLimitModal
+          userId={userId}
+          productId={productId}
+          subscriptionId={subscriptionIdRef.current}
+          metricLimit={editUserLimitModal.metricLimit}
+          onClose={() => setEditUserLimitModal({ open: false, metricLimit: null })}
+          onSuccess={getSubInProduct}
+        />
+      )}
+      {recordActivityModal.open && recordActivityModal.metricLimit && (
+        <RecordActivityModal
+          userId={userId}
+          productId={productId}
+          metricLimit={recordActivityModal.metricLimit}
+          onClose={() => setRecordActivityModal({ open: false, metricLimit: null })}
+        />
+      )}
+      <div className="my-6 text-lg text-gray-600">Limit Metered / Recurring Usage</div>
       <Table
         // rowKey={'id'}
         columns={limitMetricUsageColumns}

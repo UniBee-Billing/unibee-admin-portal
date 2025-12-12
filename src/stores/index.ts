@@ -240,3 +240,5 @@ export const useCreditConfigStore = create<CreditConfigSlice>()((set, get) => ({
   setCreditConfig: (p) => set({ ...p }),
   reset: () => set(INITIAL_CREDIT_CONFIG)
 }))
+
+export { usePlanListStore } from './planListStore'

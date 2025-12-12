@@ -9,7 +9,8 @@ import {
   useMerchantInfoStore,
   useMerchantMemberProfileStore,
   usePermissionStore,
-  useProductListStore
+  useProductListStore,
+  usePlanListStore
 } from '../stores'
 
 // better to use null
@@ -131,6 +132,9 @@ export const useAppInitialize = (): (() => Promise<string>) => {
       defaultPage
     })
 
+    // Initialize plan list store
+    usePlanListStore.getState().fetchAllPlans()
+    
     return defaultPage
   }, [])
 

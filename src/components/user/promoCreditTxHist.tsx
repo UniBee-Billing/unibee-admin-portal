@@ -40,7 +40,7 @@ const Index = ({
   // when this props passed as true, run fetchCreditTxList
   setRefreshTxHist, // after refresh is done, set this to false
   embeddingMode,
-  // currency
+  currency
 }: {
   userDetail?: IProfile
   refreshTxHistory: boolean
@@ -62,7 +62,7 @@ const Index = ({
   } | null>(null)
   const [supportedCurrencies, setSupportedCurrencies] = useState<string[]>([])
   const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>(
-    undefined
+    embeddingMode ? currency : undefined
   )
 
   type DataIndex = keyof TCreditTx
@@ -384,6 +384,12 @@ const Index = ({
       fetchCreditTxList()
     }
   }, [refreshTxHistory])
+
+  useEffect(() => {
+    if (embeddingMode && currency !== undefined) {
+      setSelectedCurrency(currency)
+    }
+  }, [currency, embeddingMode])
 
   useEffect(() => {
     ;(async () => {

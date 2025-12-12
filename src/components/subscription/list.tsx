@@ -6,7 +6,7 @@ import {
   showAmount
 } from '@/helpers'
 import { usePagination } from '@/hooks'
-import { exportDataReq, getPlanList, getSublist } from '@/requests'
+import { exportDataReq, getSublist } from '@/requests'
 import '@/shared.css'
 import './list.css'
 import {
@@ -50,7 +50,7 @@ import {
   SubscriptionWrapper,
   TImportDataType
 } from '../../shared.types'
-import { useAppConfigStore } from '../../stores'
+import { useAppConfigStore, usePlanListStore } from '../../stores'
 import ImportModal from '../shared/dataImportModal'
 import LongTextPopover from '../ui/longTextPopover'
 import { SubscriptionStatusTag } from '../ui/statusTag'
@@ -90,15 +90,23 @@ const Index = () => {
   const [pageSize, setPageSize] = useState(PAGE_SIZE)
   const [subList, setSubList] = useState<ISubscriptionType[]>([])
   const [loading, setLoading] = useState(false)
-  const [loadingPlans, setLoadingPlans] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [importModalOpen, setImportModalOpen] = useState<
     TImportDataType | false
   >(false) // false: modal is close, other values will trigger it open. TImportDataType has 2 values in this component: ActiveSubscriptionImport | HistorySubscriptionImport
 
+  // Use global plan list store
+  const {
+    planOptions: globalPlanOptions,
+    internalPlanNameOptions: globalInternalPlanNameOptions,
+    planTypeToIds: globalPlanTypeToIds,
+    loading: loadingPlans,
+    fetchAllPlans
+  } = usePlanListStore()
+
   const [filters, setFilters] = useState<TFilters>({
     ...initializeFilters('status', Number, SubscriptionStatus),
-    planIds: null, // when the page is loading, we don't know how many plans we have, so we set planIds to null, in fetchPlan call, we will initialize this filter.
+    planIds: null,
     internalPlanNameIds: null,
     planType: null
   } as TFilters)
@@ -438,62 +446,19 @@ const Index = () => {
     setTotal(total)
   }
 
-  const fetchPlan = async () => {
-    setLoadingPlans(true)
-    const [planList, err] = await getPlanList(
-      {
-        // type: [PlanType.MAIN, PlanType.ONE_TIME_ADD_ON],
-        status: [
-          PlanStatus.ACTIVE,
-          PlanStatus.SOFT_ARCHIVED, // users might have subscribed to an active plan, but later that plan was archived by admin
-          PlanStatus.HARD_ARCHIVED
-        ],
-        page: page,
-        count: 500
-      },
-      fetchPlan
-    )
-    setLoadingPlans(false)
-    if (err != null) {
-      message.error(err.message)
-      return
-    }
-    const { plans } = planList
-    planFilterRef.current =
-      plans == null
-        ? []
-        : plans.map((p: IPlan) => ({
-          value: p.plan?.id,
-          text: p.plan?.planName
-        }))
+  // Sync global plan store data to filter refs
+  useEffect(() => {
+    fetchAllPlans()
+  }, [fetchAllPlans])
 
-    internalPlanNameFilterRef.current =
-      plans == null
-        ? []
-        : plans
-          .filter((p: IPlan) => p.plan?.internalName != null && p.plan?.internalName.trim() !== '')
-          .map((p: IPlan) => ({
-            value: p.plan?.id,
-            text: p.plan?.internalName || '(Empty)'
-          }))
+  useEffect(() => {
+    if (globalPlanOptions.length === 0) return
 
-    // Build planType to planIds mapping
-    planTypeToIdsRef.current = {}
-    if (plans != null) {
-      plans.forEach((p: IPlan) => {
-        if (p.plan?.type != null && p.plan?.id != null) {
-          if (!planTypeToIdsRef.current[p.plan.type]) {
-            planTypeToIdsRef.current[p.plan.type] = []
-          }
-          planTypeToIdsRef.current[p.plan.type].push(p.plan.id)
-        }
-      })
-    }
+    planFilterRef.current = globalPlanOptions
+    internalPlanNameFilterRef.current = globalInternalPlanNameOptions
+    planTypeToIdsRef.current = globalPlanTypeToIds
 
-    // to initialize the planIds filter.
-    // planIds filter on URL is a string like planIds=1-2-3, or it could be null.
-    // initializeFilters's 3rd param is a Enum type or objects of all the plans, with k/v both being planId.
-    // we need to convert the planFilterRef.current to {1: 1, 2: 2, 3: 3, ...}
+    // Initialize filters from URL params
     const planIds = searchParams.get('planIds')
     const internalPlanNameIds = searchParams.get('internalPlanNameIds')
     const planType = searchParams.get('planType')
@@ -518,7 +483,7 @@ const Index = () => {
     }
 
     setFilters(newFilters)
-  }
+  }, [globalPlanOptions, globalInternalPlanNameOptions, globalPlanTypeToIds])
 
   const onTableChange: TableProps<ISubscriptionType>['onChange'] = (
     pagination,
@@ -631,10 +596,6 @@ const Index = () => {
   useEffect(() => {
     fetchData()
   }, [page, pageSize, filters])
-
-  useEffect(() => {
-    fetchPlan()
-  }, [])
 
   // Sync filters to URL params
   useEffect(() => {
@@ -1003,11 +964,6 @@ const Search = ({
             onClick={() => handleSearch()}
             size="large"
             disabled={searching || exporting}
-            style={{
-              backgroundColor: '#FFD700',
-              borderColor: '#FFD700',
-              color: '#000',
-            }}
           />
         </div>
 
@@ -1228,12 +1184,6 @@ const Search = ({
                           }
                           
                           setFilterDrawerOpen(false)
-                        }}
-                        style={{
-                          backgroundColor: '#FFD700',
-                          borderColor: '#FFD700',
-                          color: '#000',
-                          fontWeight: 500,
                         }}
                       >
                         Save Filters

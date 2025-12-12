@@ -1,9 +1,9 @@
 import { numBoolConvert, showAmount } from '@/helpers'
-import { toggleUserCreditReq } from '@/requests'
+import { getMerchantInfoReq, toggleUserCreditReq } from '@/requests'
 import { IProfile, TPromoAccount } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import { InfoCircleOutlined, MinusOutlined } from '@ant-design/icons'
-import { Button, Col, Row, Switch, Tooltip, message } from 'antd'
+import { Button, Col, Row, Select, Switch, Tooltip, message } from 'antd'
 import { Currency } from 'dinero.js'
 import { useEffect, useState } from 'react'
 import CreditSwitchConfirmModal from '../settings/creditConfig/creditSwitchConfirmModal'
@@ -18,7 +18,9 @@ const Index = ({
   refreshUser: () => void
 }) => {
   const appConfig = useAppConfigStore()
-  const normalizePromoAcc = () => {
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('EUR')
+  
+  const normalizePromoAcc = (currency: string = selectedCurrency) => {
     let promoAcc: TPromoAccount | undefined = undefined
     if (
       userDetail != undefined &&
@@ -26,7 +28,7 @@ const Index = ({
       userDetail.promoCreditAccounts.length > 0
     ) {
       promoAcc = userDetail.promoCreditAccounts.find(
-        (p) => p.currency === 'EUR'
+        (p) => p.currency === currency
       )
     }
     if (promoAcc != undefined) {
@@ -56,6 +58,17 @@ const Index = ({
 
   const [refreshTxHist, setRefreshTxHist] = useState(false)
 
+  const fetchMerchantInfo = async () => {
+    const [merchantData, error] = await getMerchantInfoReq()
+    
+    if (error === null && merchantData) {
+      const defaultCurrency = merchantData.defaultCurrency || 'EUR'
+      setSelectedCurrency(defaultCurrency)
+      const account = normalizePromoAcc(defaultCurrency)
+      setPromoAccount(account)
+    }
+  }
+
   const onCreditSwitchChange = async () => {
     if (promoAccount == undefined) {
       return
@@ -77,13 +90,25 @@ const Index = ({
     )
     setPromoAccount(UserCreditAccount)
   }
+  
+  const handleCurrencyChange = (value: string) => {
+    setSelectedCurrency(value)
+    const account = normalizePromoAcc(value)
+    setPromoAccount(account)
+    setRefreshTxHist(true)
+  }
 
   useEffect(() => {
-    setPromoAccount(normalizePromoAcc())
+    fetchMerchantInfo()
+  }, [])
+
+  useEffect(() => {
+    const account = normalizePromoAcc()
+    setPromoAccount(account)
     if (userDetail != undefined) {
       setRefreshTxHist(true)
     }
-  }, [userDetail])
+  }, [userDetail, selectedCurrency])
 
   return (
     <div>
@@ -95,7 +120,7 @@ const Index = ({
           updatePromoAccount={setPromoAccount}
           refreshTxList={setRefreshTxHist}
           userId={userDetail.id as number}
-          currency={'EUR'}
+          currency={selectedCurrency}
         />
       )}
       {creditSwitchModalOpen && promoAccount != undefined && (
@@ -108,6 +133,21 @@ const Index = ({
         />
       )}
       <div className="flex flex-col gap-4">
+        <Row align="middle" className="mb-4">
+          <Col span={6}>Currency</Col>
+          <Col span={8}>
+            <Select
+              value={selectedCurrency}
+              style={{ width: '100%' }}
+              onChange={handleCurrencyChange}
+              options={appConfig.supportCurrency.map((c) => ({
+                label: `${c.Currency}(${c.Symbol})`,
+                value: c.Currency
+              }))}
+            />
+          </Col>
+        </Row>
+        
         <Row>
           <Col span={6}>Enable Promo credit usage&nbsp; </Col>
           <Col span={4}>
@@ -169,6 +209,7 @@ const Index = ({
         refreshTxHistory={refreshTxHist}
         setRefreshTxHist={setRefreshTxHist}
         embeddingMode={true}
+        currency={selectedCurrency}
       />
     </div>
   )

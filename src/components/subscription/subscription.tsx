@@ -919,27 +919,31 @@ const SubscriptionInfoSection = ({
           </div>
         )}
 
-      {subInfo && subInfo.status == SubscriptionStatus.ACTIVE && (
-        <div className="mx-0 my-6 flex items-center justify-start gap-9">
-          <Button onClick={toggleChangPlanModal}>Change Plan</Button>
-          {subInfo.cancelAtPeriodEnd == 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Button onClick={toggleTerminateModal}>End Subscription</Button>
-            </div>
-          ) : (
-            <div>
-              <span>Subscription will end on </span>
-              <span style={{ color: 'red', marginRight: '8px' }}>
-                {subInfo &&
-                  dayjs(new Date(subInfo!.currentPeriodEnd * 1000)).format(
-                    'YYYY-MMM-DD HH:mm:ss'
-                  )}
-              </span>
-              <Button onClick={toggleResumeSubModal}>Resume</Button>
-            </div>
-          )}
-        </div>
-      )}
+      {subInfo &&
+        (subInfo.status == SubscriptionStatus.ACTIVE ||
+          subInfo.status == SubscriptionStatus.INCOMPLETE) && (
+          <div className="mx-0 my-6 flex items-center justify-start gap-9">
+            <Button onClick={toggleChangPlanModal}>Change Plan</Button>
+            {subInfo.cancelAtPeriodEnd == 0 ? (
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+              >
+                <Button onClick={toggleTerminateModal}>End Subscription</Button>
+              </div>
+            ) : (
+              <div>
+                <span>Subscription will end on </span>
+                <span style={{ color: 'red', marginRight: '8px' }}>
+                  {subInfo &&
+                    dayjs(new Date(subInfo!.currentPeriodEnd * 1000)).format(
+                      'YYYY-MMM-DD HH:mm:ss'
+                    )}
+                </span>
+                <Button onClick={toggleResumeSubModal}>Resume</Button>
+              </div>
+            )}
+          </div>
+        )}
       {subInfo?.unfinishedSubscriptionPendingUpdate && (
         <PendingUpdateSection subInfo={subInfo} />
       )}

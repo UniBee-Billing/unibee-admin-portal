@@ -893,11 +893,6 @@ const Index = ({
                 icon={<SearchOutlined />}
                 onClick={() => goSearch()}
                 size="large"
-                style={{
-                  backgroundColor: '#FFD700',
-                  borderColor: '#FFD700',
-                  color: '#000'
-                }}
               />
             </div>
 
@@ -1075,12 +1070,6 @@ const Index = ({
                               } else {
                                 pageChange(1, pageSize)
                               }
-                            }}
-                            style={{
-                              backgroundColor: '#FFD700',
-                              borderColor: '#FFD700',
-                              color: '#000',
-                              fontWeight: 500
                             }}
                           >
                             Save Filters

@@ -504,7 +504,7 @@ export const AssignSubscriptionModal = ({
       return null
     }
     const credit: TPromoAccount | undefined = user.promoCreditAccounts?.find(
-      (c) => c.currency == 'EUR'
+      (c) => c.currency == (selectedCurrency || 'EUR')
     )
     if (credit == undefined) {
       return { credit: null, note: 'No credit available' }

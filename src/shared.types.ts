@@ -150,7 +150,7 @@ interface IProduct {
   id: number
   productName: string
   description: string
-  status: number // ，1-active，2-inactive, default active
+  status: number // 1-active, 2-inactive, default active
   metaData: string // json string
   createTime: number
   isDeleted: number
@@ -248,7 +248,39 @@ export interface ISubAddon extends IPlan {
 export const enum MetricType {
   LIMIT_METERED = 1,
   CHARGE_METERED = 2,
-  CHARGE_RECURRING = 3
+  CHARGE_RECURRING = 3,
+  LIMIT_RECURRING = 4
+}
+
+export const enum QuotaType {
+  CARRYOVER = 'carryover',
+  MANUAL = 'manual'
+}
+
+export type QuotaAdjustment = {
+  id: number
+  quotaAmount: number
+  quotaType: QuotaType
+  reason: string
+  previousPeriodLimit?: number
+  previousPeriodUsed?: number
+  merchantMemberId: number
+  adjustmentTime: number
+}
+
+export type PlanLimitInfo = {
+  planId: number
+  metricLimit: number
+}
+
+export type MetricLimitDetail = {
+  metricId: number
+  code: string
+  metricName: string
+  type: MetricType
+  totalLimit: number
+  planLimits: PlanLimitInfo[]
+  quotaAdjustments: QuotaAdjustment[]
 }
 
 export const enum MetricAggregationType {
@@ -273,7 +305,12 @@ interface IBillableMetrics {
 }
 
 export interface LimitMetricUsage {
-  metricLimit: IBillableMetrics & { TotalLimit: number }
+  metricLimit: IBillableMetrics & {
+    metricId: number
+    TotalLimit: number
+    rolloverLimit?: number
+    planLimit?: number
+  }
   CurrentUsedValue: number
 }
 
@@ -616,7 +653,7 @@ export const enum InvoiceStatus {
   PAID = 3, // user paid the invoice
   FAILED = 4, // user not pay the invoice before it get expired
   CANCELLED = 5, // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
-  REVERSED = 6 // 取消后被通知支付成功的，这种情况一般是要排查的
+  REVERSED = 6 // Payment success notification received after cancellation, this typically needs investigation
 }
 type UserInvoice = {
   id: number
