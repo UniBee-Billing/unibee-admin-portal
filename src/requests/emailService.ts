@@ -61,7 +61,7 @@ export interface EmailSenderSetupParams {
 }
 
 export const saveEmailSenderSetupReq = async (params: EmailSenderSetupParams): Promise<
-  [any | null, Error | null]
+  [Record<string, unknown> | null, Error | null]
 > => {
   try {
     const res = await request.post('/merchant/email/email_sender_setup', params);
@@ -86,7 +86,7 @@ export interface AddTemplateVersionParams {
 }
 
 export const addTemplateVersionReq = async (params: AddTemplateVersionParams): Promise<
-  [any | null, Error | null]
+  [Record<string, unknown> | null, Error | null]
 > => {
   try {
     const res = await request.post('/merchant/email/template_add_localization_version', params);
@@ -112,7 +112,7 @@ export interface SaveTemplateVersionParams {
 }
 
 export const saveTemplateVersionReq = async (params: SaveTemplateVersionParams): Promise<
-  [any | null, Error | null]
+  [Record<string, unknown> | null, Error | null]
 > => {
   try {
     const res = await request.post('/merchant/email/template_edit_localization_version', params);
@@ -132,7 +132,7 @@ export interface ActivateTemplateVersionParams {
 }
 
 export const activateTemplateVersionReq = async (params: ActivateTemplateVersionParams): Promise<
-  [any | null, Error | null]
+  [Record<string, unknown> | null, Error | null]
 > => {
   try {
     const res = await request.post('/merchant/email/template_activate_localization_version', params);
@@ -154,7 +154,7 @@ export interface SendTestEmailParams {
 }
 
 export const sendTestEmailReq = async (params: SendTestEmailParams): Promise<
-  [any | null, Error | null]
+  [Record<string, unknown> | null, Error | null]
 > => {
   try {
     const res = await request.post('/merchant/email/template_test_localization_version', params);
@@ -174,7 +174,7 @@ export interface DeleteTemplateVersionParams {
 }
 
 export const deleteTemplateVersionReq = async (params: DeleteTemplateVersionParams): Promise<
-  [any | null, Error | null]
+  [Record<string, unknown> | null, Error | null]
 > => {
   try {
     const res = await request.post('/merchant/email/template_delete_localization_version', params);
@@ -228,6 +228,132 @@ export const getEmailHistoryListReq = async (params: {
       return [null, new Error(res.data.message)]
     }
     return [res.data.data as EmailHistoryListResponse, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Email Gateway Types
+export interface TSMTPGatewayConfig {
+  smtpHost?: string
+  smtpPort?: number
+  username?: string
+  password?: string
+  authType?: string
+  oauthToken?: string
+  useTLS?: boolean
+  skipTLSVerify?: boolean
+}
+
+export interface TSendGridGatewayConfig {
+  apiKey?: string
+}
+
+export interface TEmailGateways {
+  smtp?: TSMTPGatewayConfig
+  sendgrid?: TSendGridGatewayConfig
+}
+
+export interface TEmailSender {
+  name?: string
+  address?: string
+}
+
+export interface TMerchantProfileResponse {
+  merchant?: Record<string, unknown>
+  emailGateways?: TEmailGateways
+  emailSender?: TEmailSender
+  defaultEmailGateway?: string
+}
+
+export const getMerchantEmailConfigReq = async (): Promise<
+  [TMerchantProfileResponse | null, Error | null]
+> => {
+  try {
+    const res = await request.get('/merchant/get')
+    if (res.data.code !== 0) {
+      return [null, new Error(res.data.message)]
+    }
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export interface TSMTPApiCredential {
+  smtpHost: string
+  smtpPort?: number
+  username?: string
+  password?: string
+  authType?: 'plain' | 'cram-md5' | 'xoauth2' | 'none'
+  oauthToken?: string
+  useTLS?: boolean
+  skipTLSVerify?: boolean
+}
+
+export interface TSendGridApiCredential {
+  apiKey?: string
+}
+
+export interface SaveEmailGatewaySetupParams {
+  gatewayName: 'smtp' | 'sendgrid'
+  apiCredential: TSMTPApiCredential | TSendGridApiCredential
+  isDefault?: boolean
+}
+
+export const saveEmailGatewaySetupReq = async (params: SaveEmailGatewaySetupParams): Promise<
+  [Record<string, unknown> | null, Error | null]
+> => {
+  try {
+    const res = await request.post('/merchant/email/gateway_setup_v2', params)
+    if (res.data.code !== 0) {
+      return [null, new Error(res.data.message)]
+    }
+    return [res.data.data || {}, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export interface SetDefaultGatewayParams {
+  gatewayName: 'smtp' | 'sendgrid'
+}
+
+export const setDefaultEmailGatewayReq = async (params: SetDefaultGatewayParams): Promise<
+  [Record<string, unknown> | null, Error | null]
+> => {
+  try {
+    const res = await request.post('/merchant/email/gateway_set_default', params)
+    if (res.data.code !== 0) {
+      return [null, new Error(res.data.message)]
+    }
+    return [res.data.data || {}, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export interface SendEmailToUserParams {
+  email: string
+  subject?: string
+  content?: string
+  attachInvoiceId?: string
+  gatewayName?: string
+}
+
+export const sendTestEmailToUserReq = async (params: SendEmailToUserParams): Promise<
+  [Record<string, unknown> | null, Error | null]
+> => {
+  try {
+    const res = await request.post('/merchant/email/send_email_to_user', params)
+    if (res.data.code !== 0) {
+      return [null, new Error(res.data.message)]
+    }
+    return [res.data.data || {}, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
