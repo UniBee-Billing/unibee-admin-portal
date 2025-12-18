@@ -22,7 +22,7 @@ interface EmailChannelsProps {
 
 const EmailChannels = ({ onDirtyChange }: EmailChannelsProps) => {
   const { sidebarCollapsed } = uiConfigStore()
-  const [activeChannel, setActiveChannel] = useState<string>('SendGrid')
+  const [activeChannel, setActiveChannel] = useState<string | null>(null)
   const [channelStatus, setChannelStatus] = useState<'Verified' | 'Not Verified'>('Not Verified')
   
   const [selectedChannel, setSelectedChannel] = useState<ChannelType>('sendgrid')
@@ -328,6 +328,7 @@ const EmailChannels = ({ onDirtyChange }: EmailChannelsProps) => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
                   disabled={loading}
+                  autoComplete="new-password"
                 />
                 <Text type="secondary" className="field-hint">
                   SMTP authentication password (required when authType="{authType}")
@@ -374,7 +375,7 @@ const EmailChannels = ({ onDirtyChange }: EmailChannelsProps) => {
         <div className="status-info">
           <div className="status-item">
             <Text type="secondary">Active Channel:</Text>
-            <Text>{activeChannel}</Text>
+            <Text>{activeChannel ?? 'Not Configured'}</Text>
           </div>
           <div className="status-item">
             <Text type="secondary">Status:</Text>
@@ -431,6 +432,7 @@ const EmailChannels = ({ onDirtyChange }: EmailChannelsProps) => {
               onChange={(e) => setSendGridApiKey(e.target.value)}
               placeholder="SG.xxxxxxxxxxxxxxxxxxxxxxxx"
               disabled={loading}
+              autoComplete="new-password"
             />
             <Text type="secondary" className="field-hint">
               The name that appears in the "From" field

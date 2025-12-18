@@ -198,6 +198,7 @@ export type TEmailHistory = {
   response: string
   createTime: number
   status: 0 | 1 | 2 // 0-pending, 1-success, 2-failure
+  gatewayName?: string
 }
 
 export type TEmailHistoryStatistics = {

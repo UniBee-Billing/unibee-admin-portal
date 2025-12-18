@@ -80,7 +80,7 @@ const EmailRecords = () => {
           recipient: item.email,
           subject: item.title,
           status: mapStatus(item.status),
-          channel: '-',
+          channel: item.gatewayName || '-',
           failureReason: item.status === 2 ? item.response : '-',
           content: item.content
         }))
