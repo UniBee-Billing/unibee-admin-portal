@@ -8,6 +8,7 @@ import PromoCredits from './components/credit'
 import DiscountCodeDetail from './components/discountCode/detail'
 import { DiscountCodeList } from './components/discountCode/list'
 import DiscountCodeUsage from './components/discountCode/usageDetail'
+import { BulkDiscountCodeList, ChildCodeList, CodeUsageRecords } from './components/bulkDiscountCode'
 import InvoiceDetail from './components/invoice/detail'
 import InvoiceList from './components/invoice/list'
 import MerchantUserDetail from './components/merchantUser/userDetail'
@@ -132,6 +133,26 @@ export const APP_ROUTES: RouteObject[] = [
       },
       { path: ':discountCodeId', element: <DiscountCodeDetail /> },
       { path: ':discountCodeId/usage-detail', element: <DiscountCodeUsage /> }
+    ]
+  },
+  {
+    id: 'bulk-discount-code',
+    path: 'bulk-discount-code',
+    element: <Outlet />,
+    children: [
+      { index: true, element: <Navigate to="list" replace /> },
+      {
+        path: 'list',
+        element: <BulkDiscountCodeList />
+      },
+      {
+        path: ':ruleId/child-codes',
+        element: <ChildCodeList />
+      },
+      {
+        path: ':ruleId/usage-records',
+        element: <CodeUsageRecords />
+      }
     ]
   },
   {

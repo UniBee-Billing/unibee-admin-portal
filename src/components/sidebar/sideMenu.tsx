@@ -69,6 +69,11 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     icon: <Icon component={DiscountCodeSvg} />
   },
   {
+    label: 'Bulk Discount Code',
+    key: 'bulk-discount-code',
+    icon: <Icon component={DiscountCodeSvg} />
+  },
+  {
     label: (
       <NavLink to="subscription/list">
         Subscription

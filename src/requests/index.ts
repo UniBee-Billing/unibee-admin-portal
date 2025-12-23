@@ -2782,3 +2782,6 @@ export {
   type TEmailHistory,
   type EmailHistoryListResponse
 } from './emailService'
+
+// Export batch discount service functions
+export * from './batchDiscountService'

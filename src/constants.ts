@@ -225,6 +225,13 @@ const PERMISSIONS = {
     width: 120,
     permissions: ['access']
   },
+  'bulk-discount-code': {
+    order: 2.5,
+    group: 'bulk-discount-code',
+    label: 'Bulk Discount Code',
+    width: 140,
+    permissions: ['access']
+  },
   subscription: {
     order: 3,
     group: 'subscription',

@@ -945,6 +945,7 @@ export type TImportDataType =
   | 'UserImport'
   | 'ActiveSubscriptionImport'
   | 'HistorySubscriptionImport'
+  | 'BatchDiscountChildrenImport'
 
 export class ExpiredError extends Error {
   constructor(m: string) {
