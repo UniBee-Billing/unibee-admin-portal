@@ -99,8 +99,10 @@ export const signUpReq = async (body: TSignupReq) => {
 type TPassLogin = {
   email: string
   password: string
+  totpCode?: string
 }
 // caller will handle the session update(set expired: false)
+// Returns error code 49 when 2FA is required
 export const loginWithPasswordReq = async (body: TPassLogin) => {
   try {
     const res = await request.post('/merchant/auth/sso/login', body)
@@ -2785,3 +2787,119 @@ export {
 
 // Export batch discount service functions
 export * from './batchDiscountService'
+
+// ============ TOTP / 2FA APIs ============
+
+export interface GetTotpKeyData {
+  totpKey: string
+  totpResumeCode: string
+  totpUrl: string
+  totpType: number
+}
+
+export interface GetTotpKeyResponse {
+  code: number
+  message: string
+  data: GetTotpKeyData
+  redirect?: string
+  requestId?: string
+}
+
+// Get TOTP key and QR code URL for 2FA setup
+export const getTotpKeyReq = async (
+  totpType: number = 1
+): Promise<[GetTotpKeyData | null, Error | null]> => {
+  try {
+    const res = await request.post(
+      '/merchant/member/get_totp_key?ts=' + Date.now(),
+      { totpType }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data as GetTotpKeyData, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Confirm TOTP key during 2FA setup
+export const confirmTotpKeyReq = async (
+  totpType: number,
+  totpKey: string,
+  totpCode: string
+) => {
+  try {
+    const res = await request.post('/merchant/member/confirm_totp_key', {
+      totpType,
+      totpKey,
+      totpCode
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Reset/remove 2FA (requires current TOTP code)
+export const resetTotpReq = async (totpCode: string) => {
+  try {
+    const res = await request.post('/merchant/member/reset_totp', { totpCode })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Clear TOTP using backup key (used during login when user lost authenticator)
+export const clearTotpReq = async (email: string, totpResumeCode: string) => {
+  try {
+    await request.post('/merchant/auth/sso/clear_totp', {
+      email,
+      totpResumeCode
+    })
+    return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Delete a specific TOTP device
+export const deleteTotpDeviceReq = async (
+  memberId: number,
+  deviceIdentity: string
+) => {
+  try {
+    const res = await request.post('/merchant/member/delete_totp_device', {
+      memberId,
+      deviceIdentity
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Clear another member's 2FA (admin function)
+export const clearMemberTotpReq = async (
+  memberId: number,
+  totpCode?: string
+) => {
+  try {
+    const res = await request.post('/merchant/member/clear_member_totp', {
+      memberId,
+      totpCode
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}

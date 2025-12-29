@@ -87,6 +87,17 @@ export const enum MerchantUserStatus {
   ACTIVE = 0,
   SUSPENDED = 2
 }
+// Device data for 2FA
+export interface DeviceData {
+  name: string
+  identity: string
+  lastLoginTime: number
+  lastActiveTime: number
+  ipAddress: string
+  status: boolean
+  currentDevice?: boolean
+}
+
 // this is the admin user profile
 interface IMerchantMemberProfile {
   id: number
@@ -99,6 +110,8 @@ interface IMerchantMemberProfile {
   isOwner: boolean
   status: MerchantUserStatus
   MemberRoles: TRole[]
+  totpType?: number // 0=Inactive, 1-7=Different TOTP authenticator types
+  deviceList?: DeviceData[]
 }
 
 type TMerchantInfo = {
