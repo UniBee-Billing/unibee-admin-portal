@@ -9,14 +9,53 @@ const PaymentGatewaySetupModal = ({
   gatewayConfig,
   closeModal,
   refresh,
-  updateGatewayInStore
+  updateGatewayInStore,
+  isDuplicateMode = false
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
   refresh: () => void
   updateGatewayInStore: () => void
+  isDuplicateMode?: boolean
 }) => {
   const [activeTab, setActiveTab] = useState('Essentials')
+  // Shared state for display name across all tabs
+  const [sharedDisplayName, setSharedDisplayName] = useState(
+    isDuplicateMode ? `${gatewayConfig.displayName} (Copy)` : gatewayConfig.displayName
+  )
+
+  // Shared state for invoice configuration across all tabs
+  // In duplicate mode, clear all invoice fields
+  const [sharedIssueCompanyName, setSharedIssueCompanyName] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.companyIssuer?.issueCompanyName || '')
+  )
+  const [sharedIssueAddress, setSharedIssueAddress] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.companyIssuer?.issueAddress || '')
+  )
+  const [sharedIssueRegNumber, setSharedIssueRegNumber] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.companyIssuer?.issueRegNumber || '')
+  )
+  const [sharedIssueVatNumber, setSharedIssueVatNumber] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.companyIssuer?.issueVatNumber || '')
+  )
+  const [sharedIssueLogo, setSharedIssueLogo] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.companyIssuer?.issueLogo || '')
+  )
+
+  // Shared state for keys/secrets across all tabs
+  // In duplicate mode, clear keys so user can input new ones
+  const [sharedGatewayKey, setSharedGatewayKey] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.gatewayKey || '')
+  )
+  const [sharedGatewaySecret, setSharedGatewaySecret] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.gatewaySecret || '')
+  )
+  const [sharedSubGateway, setSharedSubGateway] = useState(
+    isDuplicateMode ? '' : (gatewayConfig.subGateway || '')
+  )
+  const [sharedPaymentTypes, setSharedPaymentTypes] = useState(
+    isDuplicateMode ? undefined : gatewayConfig.gatewayPaymentTypes
+  )
   const tabItems: TabsProps['items'] = [
     {
       key: 'Essentials',
@@ -36,6 +75,23 @@ const PaymentGatewaySetupModal = ({
           closeModal={closeModal}
           refresh={refresh}
           updateGatewayInStore={updateGatewayInStore}
+          isDuplicateMode={isDuplicateMode}
+          sharedDisplayName={sharedDisplayName}
+          setSharedDisplayName={setSharedDisplayName}
+          sharedIssueCompanyName={sharedIssueCompanyName}
+          setSharedIssueCompanyName={setSharedIssueCompanyName}
+          sharedIssueAddress={sharedIssueAddress}
+          setSharedIssueAddress={setSharedIssueAddress}
+          sharedIssueRegNumber={sharedIssueRegNumber}
+          setSharedIssueRegNumber={setSharedIssueRegNumber}
+          sharedIssueVatNumber={sharedIssueVatNumber}
+          setSharedIssueVatNumber={setSharedIssueVatNumber}
+          sharedIssueLogo={sharedIssueLogo}
+          setSharedIssueLogo={setSharedIssueLogo}
+          sharedGatewayKey={sharedGatewayKey}
+          sharedGatewaySecret={sharedGatewaySecret}
+          sharedSubGateway={sharedSubGateway}
+          sharedPaymentTypes={sharedPaymentTypes}
         />
       )
     },
@@ -56,6 +112,21 @@ const PaymentGatewaySetupModal = ({
           closeModal={closeModal}
           refresh={refresh}
           updateGatewayInStore={updateGatewayInStore}
+          isDuplicateMode={isDuplicateMode}
+          sharedDisplayName={sharedDisplayName}
+          sharedIssueCompanyName={sharedIssueCompanyName}
+          sharedIssueAddress={sharedIssueAddress}
+          sharedIssueRegNumber={sharedIssueRegNumber}
+          sharedIssueVatNumber={sharedIssueVatNumber}
+          sharedIssueLogo={sharedIssueLogo}
+          sharedGatewayKey={sharedGatewayKey}
+          setSharedGatewayKey={setSharedGatewayKey}
+          sharedGatewaySecret={sharedGatewaySecret}
+          setSharedGatewaySecret={setSharedGatewaySecret}
+          sharedSubGateway={sharedSubGateway}
+          setSharedSubGateway={setSharedSubGateway}
+          sharedPaymentTypes={sharedPaymentTypes}
+          setSharedPaymentTypes={setSharedPaymentTypes}
         />
       )
     },
@@ -76,6 +147,8 @@ const PaymentGatewaySetupModal = ({
           closeModal={closeModal}
           refresh={refresh}
           updateGatewayInStore={updateGatewayInStore}
+          isDuplicateMode={isDuplicateMode}
+          sharedDisplayName={sharedDisplayName}
         />
       )
     }
@@ -84,9 +157,11 @@ const PaymentGatewaySetupModal = ({
   return (
     <Modal
       title={
-        gatewayConfig.IsSetupFinished
-          ? `Editing keys for ${gatewayConfig.name}`
-          : `New keys for ${gatewayConfig.name}`
+        isDuplicateMode
+          ? `Duplicate gateway configuration for ${gatewayConfig.name}`
+          : gatewayConfig.IsSetupFinished
+            ? `Editing keys for ${gatewayConfig.name}`
+            : `New keys for ${gatewayConfig.name}`
       }
       width={'680px'}
       open={true}

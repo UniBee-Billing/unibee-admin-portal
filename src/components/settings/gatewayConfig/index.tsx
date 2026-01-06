@@ -1,15 +1,23 @@
 import {
   CheckOutlined,
   ExclamationOutlined,
-  LoadingOutlined
+  LoadingOutlined,
+  MoreOutlined,
+  StarOutlined,
+  StarFilled,
+  DeleteOutlined,
+  UndoOutlined
 } from '@ant-design/icons'
-import { Button, List, message, Tag } from 'antd'
+import { Button, List, message, Tag, Dropdown, Modal } from 'antd'
 
-import { randomString } from '@/helpers'
+
 import {
   getPaymentGatewayConfigListReq,
   getPaymentGatewayListReq,
-  sortGatewayReq
+  sortGatewayReq,
+  setGatewayDefaultReq,
+  archiveGatewayReq,
+  restoreGatewayReq
 } from '@/requests/index'
 import { TGateway } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
@@ -58,11 +66,15 @@ const Index = () => {
   const appConfig = useAppConfigStore()
   const [loading, setLoading] = useState(false)
   const [gatewayConfigList, setGatewayConfigList] = useState<TGateway[]>([])
-  const [gatewayName, setGatewayName] = useState('') // the gateway user want to config(open Modal to config this gateway)
+  const [selectedGatewayId, setSelectedGatewayId] = useState<number>(0) // the gateway user want to config(open Modal to config this gateway)
+  const [selectedGatewayName, setSelectedGatewayName] = useState<string>('') // for new gateways with gatewayId = 0
   const [openSetupModal, setOpenSetupModal] = useState(false)
-  const toggleSetupModal = (gatewayName?: string) => {
+  const [isDuplicateMode, setIsDuplicateMode] = useState(false) // flag to indicate if we're duplicating a gateway
+  const toggleSetupModal = (gatewayId?: number, gatewayName?: string, duplicate = false) => {
     setOpenSetupModal(!openSetupModal)
-    setGatewayName(gatewayName ?? '')
+    setSelectedGatewayId(gatewayId ?? 0)
+    setSelectedGatewayName(gatewayName ?? '')
+    setIsDuplicateMode(duplicate)
   }
 
   const sensors = useSensors(
@@ -74,15 +86,31 @@ const Index = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const tgt = event.activatorEvent.target
 
+    // Ignore clicks on dropdown button
+    if (
+      tgt != undefined &&
+      tgt instanceof Element &&
+      (tgt.closest('.dropdown-more-btn') != undefined ||
+        tgt.closest('.ant-dropdown') != undefined)
+    ) {
+      return
+    }
+
     if (
       tgt != undefined &&
       tgt instanceof Element &&
       tgt.closest('.btn-gateway-config') != undefined
     ) {
-      const gatewayClicked = tgt
+      const gatewayIdClicked = tgt
+        ?.closest('.btn-gateway-config')
+        ?.getAttribute('data-gateway-id')
+      const gatewayNameClicked = tgt
         ?.closest('.btn-gateway-config')
         ?.getAttribute('data-gateway-name')
-      toggleSetupModal(gatewayClicked as string)
+      const isDuplicate = tgt
+        ?.closest('.btn-gateway-config')
+        ?.getAttribute('data-action') === 'duplicate'
+      toggleSetupModal(parseInt(gatewayIdClicked as string), gatewayNameClicked as string, isDuplicate)
       return
     }
 
@@ -116,6 +144,60 @@ const Index = () => {
     appConfig.setGateway(gateways)
   }
 
+  const handleSetAsDefault = async (gatewayId: number, gatewayName: string) => {
+    setLoading(true)
+    const [_, err] = await setGatewayDefaultReq(gatewayId)
+    setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success(`${gatewayName} has been set as default`)
+
+    // Immediately update local state
+    setGatewayConfigList(prevList =>
+      prevList.map(gateway => ({
+        ...gateway,
+        isDefault: gateway.gatewayId === gatewayId
+      }))
+    )
+
+    getGatewayConfigList()
+    updateGatewayInStore()
+  }
+
+  const handleArchive = async (gatewayId: number, gatewayName: string) => {
+    Modal.confirm({
+      title: 'Archive Gateway',
+      content: `Are you sure you want to archive ${gatewayName}? If archived, it won't be shown on checkout page.`,
+      onOk: async () => {
+        setLoading(true)
+        const [_, err] = await archiveGatewayReq(gatewayId)
+        setLoading(false)
+        if (err != null) {
+          message.error(err.message)
+          return
+        }
+        message.success(`${gatewayName} has been archived`)
+        getGatewayConfigList()
+        updateGatewayInStore()
+      }
+    })
+  }
+
+  const handleRestore = async (gatewayId: number, gatewayName: string) => {
+    setLoading(true)
+    const [_, err] = await restoreGatewayReq(gatewayId)
+    setLoading(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success(`${gatewayName} has been restored`)
+    getGatewayConfigList()
+    updateGatewayInStore()
+  }
+
   const reorder = async (gatewayList: TGateway[]) => {
     const sortObj = gatewayList.map((g: TGateway, idx: number) => ({
       gatewayName: g.gatewayName,
@@ -145,7 +227,7 @@ const Index = () => {
 
     gateways
       .sort((a: TGateway, b: TGateway) => a.sort - b.sort)
-      .forEach((g: TGateway) => (g.id = randomString(8)))
+      .forEach((g: TGateway) => (g.id = g.gatewayId > 0 ? `gateway-${g.gatewayId}` : `gateway-new-${g.gatewayName}`))
 
     const wireTransferIdx = gateways.findIndex(
       (g: TGateway) => g.gatewayName == 'wire_transfer'
@@ -167,25 +249,31 @@ const Index = () => {
   return (
     <div>
       {openSetupModal &&
-        (gatewayName != 'wire_transfer' ? (
-          <PaymentGatewaySetupModal
-            gatewayConfig={
-              gatewayConfigList.find((i) => i.gatewayName == gatewayName)!
-            }
-            closeModal={toggleSetupModal}
-            refresh={getGatewayConfigList}
-            updateGatewayInStore={updateGatewayInStore}
-          />
-        ) : (
-          <ModalWireTransfer
-            gatewayConfig={
-              gatewayConfigList.find((i) => i.gatewayName == gatewayName)!
-            }
-            closeModal={toggleSetupModal}
-            refresh={getGatewayConfigList}
-            updateGatewayInStore={updateGatewayInStore}
-          />
-        ))}
+        (() => {
+          // Find gateway by ID first (for existing gateways), then by name (for new gateways)
+          const selectedGateway = selectedGatewayId > 0
+            ? gatewayConfigList.find((i) => i.gatewayId === selectedGatewayId)
+            : gatewayConfigList.find((i) => i.gatewayName === selectedGatewayName)
+
+          if (!selectedGateway) return null
+
+          return selectedGateway.gatewayName !== 'wire_transfer' ? (
+            <PaymentGatewaySetupModal
+              gatewayConfig={selectedGateway}
+              closeModal={() => toggleSetupModal()}
+              refresh={getGatewayConfigList}
+              updateGatewayInStore={updateGatewayInStore}
+              isDuplicateMode={isDuplicateMode}
+            />
+          ) : (
+            <ModalWireTransfer
+              gatewayConfig={selectedGateway}
+              closeModal={() => toggleSetupModal()}
+              refresh={getGatewayConfigList}
+              updateGatewayInStore={updateGatewayInStore}
+            />
+          )
+        })()}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -237,23 +325,65 @@ const Index = () => {
                       )
                     }
                     title={
-                      item.gatewayWebsiteLink == '' ? (
-                        <span>
-                          {item.name}
-                          <span className="text-xs text-gray-500">{` (${item.displayName})`}</span>
-                        </span>
-                      ) : (
-                        <a href={item.gatewayWebsiteLink} target="_blank">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {item.gatewayWebsiteLink == '' ? (
                           <span>
                             {item.name}
                             <span className="text-xs text-gray-500">{` (${item.displayName})`}</span>
                           </span>
-                        </a>
-                      )
+                        ) : (
+                          <a href={item.gatewayWebsiteLink} target="_blank">
+                            <span>
+                              {item.name}
+                              <span className="text-xs text-gray-500">{` (${item.displayName})`}</span>
+                            </span>
+                          </a>
+                        )}
+                        {item.isDefault && (
+                          <Tag
+                            icon={<StarFilled />}
+                            color="#1677ff"
+                            style={{
+                              backgroundColor: '#e6f4ff',
+                              borderColor: '#91caff',
+                              color: '#1677ff',
+                              fontSize: '12px',
+                              fontWeight: 500,
+                              borderRadius: '12px',
+                              padding: '2px 8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            Default
+                          </Tag>
+                        )}
+                        {item.archive && (
+                          <Tag
+                            icon={<StarFilled />}
+                            color="#ff4d4f"
+                            style={{
+                              backgroundColor: '#fff2f0',
+                              borderColor: '#ffccc7',
+                              color: '#ff4d4f',
+                              fontSize: '12px',
+                              fontWeight: 500,
+                              borderRadius: '12px',
+                              padding: '2px 8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            Archive
+                          </Tag>
+                        )}
+                      </div>
                     }
                     description={item.description}
                   />
-                  <div className="mr-3 flex w-[180px] items-center justify-between">
+                  <div className="mr-3 flex w-[240px] items-center justify-between">
                     {item.IsSetupFinished ? (
                       <Tag icon={<CheckOutlined />} color="#34C759">
                         Ready
@@ -263,15 +393,86 @@ const Index = () => {
                         Not Set
                       </Tag>
                     )}
-                    <Button
-                      className="btn-gateway-config"
-                      data-gateway-name={item.gatewayName}
-                      // this button's onClick never has a chance to run, instead it'd get captured by handleDragEnd.
-                      // so let handleDragEnd trigger setupModal based on className.
-                      type={item.IsSetupFinished ? 'default' : 'primary'}
+                    <div
+                      className="flex gap-2"
+                      onPointerDown={(e) => e.stopPropagation()}
                     >
-                      {item.IsSetupFinished ? 'Edit' : 'Set up'}
-                    </Button>
+                      <Button
+                        className="btn-gateway-config"
+                        data-gateway-id={item.gatewayId}
+                        data-gateway-name={item.gatewayName}
+                        data-action="duplicate"
+                        type="default"
+                        size="small"
+                        disabled={item.gatewayName === 'wire_transfer' || item.archive || !item.IsSetupFinished} // wire_transfer, archive state or not setup finished disabled button show
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (item.gatewayName !== 'wire_transfer') {
+                            toggleSetupModal(item.gatewayId, item.gatewayName, true)
+                          }
+                        }}
+                      >
+                        Duplicate
+                      </Button>
+                      <Button
+                        className="btn-gateway-config"
+                        data-gateway-id={item.gatewayId}
+                        data-gateway-name={item.gatewayName}
+                        data-action={item.IsSetupFinished ? 'edit' : 'setup'}
+                        type={item.IsSetupFinished ? 'default' : 'primary'}
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleSetupModal(item.gatewayId, item.gatewayName, false)
+                        }}
+                      >
+                        {item.IsSetupFinished ? 'Edit' : 'Set up'}
+                      </Button>
+                      {item.IsSetupFinished && (
+                        <Dropdown
+                          menu={{
+                            items: [
+                              {
+                                key: 'setDefault',
+                                label: (
+                                  <span style={{ color: item.archive ? '#d9d9d9' : 'inherit' }}>
+                                    {item.isDefault ? 'Default Gateway' : 'Set as Default'}
+                                  </span>
+                                ),
+                                icon: item.isDefault ?
+                                  <StarFilled style={{ color: item.archive ? '#d9d9d9' : '#faad14' }} /> :
+                                  <StarOutlined style={{ color: item.archive ? '#d9d9d9' : 'inherit' }} />,
+                                disabled: item.archive || item.isDefault, // Archived or already default cannot be set as default
+                                onClick: () => !item.isDefault && handleSetAsDefault(item.gatewayId, item.name)
+                              },
+                              ...(item.archive ? [{
+                                key: 'restore',
+                                label: 'Restore',
+                                icon: <UndoOutlined />,
+                                onClick: () => handleRestore(item.gatewayId, item.name)
+                              }] : [{
+                                key: 'archive',
+                                label: 'Archive',
+                                icon: <DeleteOutlined />,
+                                onClick: () => handleArchive(item.gatewayId, item.name)
+                              }])
+                            ]
+                          }}
+                          trigger={['click']}
+                        >
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<MoreOutlined />}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                            }}
+                          />
+                        </Dropdown>
+                      )}
+                    </div>
                   </div>
                 </List.Item>
               </SortableItem>

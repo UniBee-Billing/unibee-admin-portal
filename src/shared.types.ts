@@ -792,6 +792,14 @@ export type GatewayPaymentType = {
   name: string
   paymentType: string
 }
+export type TGatewayCompanyIssuer = {
+  issueCompanyName?: string
+  issueAddress?: string
+  issueRegNumber?: string
+  issueVatNumber?: string
+  issueLogo?: string
+}
+
 export enum GatewayType {
   BANK_CARD = 1,
   CRYPTO = 2,
@@ -800,6 +808,7 @@ export enum GatewayType {
 type TGateway = {
   IsSetupFinished: boolean // true: this gateway is ready for use
   archive: boolean
+  isDefault: boolean
   gatewayId: number // == 0: totally new gateway, admin hasn't configured anything yet.
   // as long as admin has configured something, even just the displayName or icons, gatewayId will become non-zero, but this doesn't mean this gateway is ready for use.
   gatewayPaymentTypes?: GatewayPaymentType[] // this is the list of payment types that are actually configured for this container gateway. It's only useful when setupGatewayPaymentTypes is not empty.
@@ -834,6 +843,7 @@ type TGateway = {
     iban: string
     address: string
   }
+  companyIssuer?: TGatewayCompanyIssuer // Invoice configuration for payment gateway
   sort: number
 }
 

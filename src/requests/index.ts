@@ -283,6 +283,13 @@ export type TGatewayConfigBody = {
   gatewayLogo?: string[]
   sort?: number
   currencyExchange?: TGatewayExRate[]
+  companyIssuer?: {
+    issueCompanyName?: string
+    issueAddress?: string
+    issueRegNumber?: string
+    issueVatNumber?: string
+    issueLogo?: string
+  }
 }
 
 export const saveGatewayConfigReq = async (
@@ -1979,6 +1986,48 @@ export const sortGatewayReq = async (
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e, -1]
+  }
+}
+
+// Set gateway as default
+export const setGatewayDefaultReq = async (gatewayId: number) => {
+  try {
+    const res = await request.post(`/merchant/gateway/set_default`, {
+      gatewayId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Archive gateway
+export const archiveGatewayReq = async (gatewayId: number) => {
+  try {
+    const res = await request.post(`/merchant/gateway/archive`, {
+      gatewayId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Restore gateway
+export const restoreGatewayReq = async (gatewayId: number) => {
+  try {
+    const res = await request.post(`/merchant/gateway/restore`, {
+      gatewayId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
   }
 }
 
