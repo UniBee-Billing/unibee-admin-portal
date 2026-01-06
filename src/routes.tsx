@@ -8,6 +8,7 @@ import PromoCredits from './components/credit'
 import DiscountCodeDetail from './components/discountCode/detail'
 import { DiscountCodeList } from './components/discountCode/list'
 import DiscountCodeUsage from './components/discountCode/usageDetail'
+import { BulkDiscountCodeList, ChildCodeList, CodeUsageRecords } from './components/bulkDiscountCode'
 import InvoiceDetail from './components/invoice/detail'
 import InvoiceList from './components/invoice/list'
 import MerchantUserDetail from './components/merchantUser/userDetail'
@@ -27,6 +28,7 @@ import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
 import CustomerDetail from './components/user/detail'
 import CustomerList from './components/user/list'
+import { TwoFactorSetup, TwoFactorVerify } from './components/twoFactor'
 import { useMerchantMemberProfileStore, usePermissionStore } from './stores'
 
 export const APP_ROUTES: RouteObject[] = [
@@ -34,6 +36,16 @@ export const APP_ROUTES: RouteObject[] = [
     id: 'my-account',
     path: 'my-account',
     element: <MyAccount />
+  },
+  {
+    id: 'two-factorsetup',
+    path: 'two-factorsetup',
+    element: <TwoFactorSetup />
+  },
+  {
+    id: 'two-factorverify',
+    path: 'two-factorverify',
+    element: <TwoFactorVerify />
   },
   {
     id: 'analytics',
@@ -135,6 +147,26 @@ export const APP_ROUTES: RouteObject[] = [
     ]
   },
   {
+    id: 'bulk-discount-code',
+    path: 'bulk-discount-code',
+    element: <Outlet />,
+    children: [
+      { index: true, element: <Navigate to="list" replace /> },
+      {
+        path: 'list',
+        element: <BulkDiscountCodeList />
+      },
+      {
+        path: ':ruleId/child-codes',
+        element: <ChildCodeList />
+      },
+      {
+        path: ':ruleId/usage-records',
+        element: <CodeUsageRecords />
+      }
+    ]
+  },
+  {
     id: 'user',
     path: 'user',
     element: <Outlet />,
@@ -220,6 +252,13 @@ export const APP_ROUTES: RouteObject[] = [
   }
 ]
 
+// Routes that are always accessible regardless of permissions
+const ALWAYS_ACCESSIBLE_ROUTES = [
+  'my-account',
+  'two-factorsetup',
+  'two-factorverify'
+]
+
 export const useAppRoutesConfig = () => {
   const merchantMemberProfile = useMerchantMemberProfileStore()
   const permStore = usePermissionStore()
@@ -228,6 +267,7 @@ export const useAppRoutesConfig = () => {
     () =>
       APP_ROUTES.filter(
         ({ id }) =>
+          ALWAYS_ACCESSIBLE_ROUTES.includes(id as string) ||
           merchantMemberProfile.isOwner ||
           permStore.permissions.find((p) => p == id)
       ).concat(

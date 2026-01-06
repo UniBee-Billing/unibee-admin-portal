@@ -5,7 +5,7 @@ import 'react-quill/dist/quill.snow.css'
 import { useSearchParams } from 'react-router-dom'
 import '../../shared.css'
 import CreditConfig from './creditConfig'
-// import EmailTemplates from './emailTemplates'
+import EmailSettings from './emailSettings'
 import PaymentGatewayConfig from './gatewayConfig'
 import AppIntegrationServices from './integrations'
 import Permissions from './permissions'
@@ -53,6 +53,11 @@ const Index = () => {
       key: 'creditConfig',
       label: 'Credit System Config',
       children: <CreditConfig />
+    },
+    {
+      key: 'emailSettings',
+      label: 'Email Settings',
+      children: <EmailSettings />
     }
   ]
   const onTabChange = (key: string) => {

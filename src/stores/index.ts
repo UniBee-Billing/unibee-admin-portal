@@ -24,7 +24,9 @@ const INITIAL_MERCHANT_MEMBER_PROFILE: IMerchantMemberProfile = {
   mobile: '',
   isOwner: false,
   status: 0,
-  MemberRoles: []
+  MemberRoles: [],
+  totpType: 0,
+  deviceList: []
 }
 
 interface MerchantMemberProfileSlice extends IMerchantMemberProfile {

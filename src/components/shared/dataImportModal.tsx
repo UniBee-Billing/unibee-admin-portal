@@ -25,7 +25,8 @@ const Index = ({
   const title: { [key in TImportDataType]: string } = {
     UserImport: 'User import',
     ActiveSubscriptionImport: 'Active subscription import',
-    HistorySubscriptionImport: 'Subscription history import'
+    HistorySubscriptionImport: 'Subscription history import',
+    BatchDiscountChildrenImport: 'Batch discount code import'
   }
 
   const downloadTemplate: { [key in TImportDataType]: () => void } = {
@@ -45,6 +46,12 @@ const Index = ({
       downloadStaticFile(
         'https://api.unibee.top/import/template/history_subscription_import',
         'subscription_history_import_template.xlsx'
+      )
+    },
+    BatchDiscountChildrenImport: () => {
+      downloadStaticFile(
+        'https://api.unibee.top/import/template/batch_discount_children_import',
+        'batch_discount_children_import_template.xlsx'
       )
     }
   }

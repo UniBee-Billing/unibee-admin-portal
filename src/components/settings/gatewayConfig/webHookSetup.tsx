@@ -4,7 +4,7 @@ import { Form, Input } from 'antd'
 
 import CopyToClipboard from '@/components/ui/copyToClipboard'
 import { useCopyContent } from '@/hooks/index'
-import { saveWebhookKeyReq } from '@/requests/index'
+import { saveWebhookKeyReq, saveGatewayConfigReq, TGatewayConfigBody } from '@/requests/index'
 import { TGateway } from '@/shared.types'
 import { message } from 'antd'
 import { useForm } from 'antd/es/form/Form'
@@ -15,38 +15,80 @@ const WebHookSetup = ({
   gatewayConfig,
   closeModal,
   refresh,
-  updateGatewayInStore
+  updateGatewayInStore,
+  isDuplicateMode = false,
+  sharedDisplayName
 }: {
   gatewayConfig: TGateway
   closeModal: () => void
   refresh: () => void
   updateGatewayInStore: () => void
+  isDuplicateMode?: boolean
+  sharedDisplayName?: string
 }) => {
   const [form] = useForm()
   const [loading, setLoading] = useState(false)
   // configure pub/private keys first, then configure webhook
-  const notSubmitable = gatewayConfig.gatewayKey == ''
+  // In duplicate mode, allow webhook configuration even if original gateway has no keys
+  const notSubmitable = gatewayConfig.gatewayKey == '' && !isDuplicateMode
 
   const onSave = async () => {
-    if (gatewayConfig.gatewayId == 0) {
+    if (gatewayConfig.gatewayId == 0 && !isDuplicateMode) {
       message.error('Input your public/private keys first.')
       return
     }
 
     const webHookSecret = form.getFieldValue('webhookSecret')
     setLoading(true)
-    const [_, err] = await saveWebhookKeyReq(
-      gatewayConfig.gatewayId,
-      webHookSecret
-    )
-    setLoading(false)
-    if (err != null) {
-      message.error(err.message)
-      return
+
+    try {
+      if (isDuplicateMode) {
+        // In duplicate mode, first create the gateway with all necessary data
+        const body: TGatewayConfigBody = {
+          gatewayName: gatewayConfig.gatewayName,
+          displayName: sharedDisplayName || `${gatewayConfig.displayName} (Copy)`,
+          gatewayLogo: gatewayConfig.gatewayIcons || [],
+        }
+
+        // In duplicate mode, we need the user to provide new keys
+        // Don't copy the original keys, user should input new ones
+        // Don't copy subGateway - it's optional and should be cleared in duplicate mode
+        // Don't copy payment types - user should select new ones for Payssion
+        // Don't copy currencyExchange - it's optional and should be cleared in duplicate mode
+
+        // Create the new gateway first
+        const [newGateway, setupErr] = await saveGatewayConfigReq(body, true)
+        if (setupErr != null) {
+          message.error(setupErr.message)
+          return
+        }
+
+        // Then save the webhook key for the new gateway
+        const [_, webhookErr] = await saveWebhookKeyReq(newGateway.gatewayId, webHookSecret)
+        if (webhookErr != null) {
+          message.error(webhookErr.message)
+          return
+        }
+
+        message.success(`${gatewayConfig.gatewayName} duplicated successfully with webhook configuration.`)
+      } else {
+        // Normal webhook save for existing gateway
+        const [_, err] = await saveWebhookKeyReq(gatewayConfig.gatewayId, webHookSecret)
+        if (err != null) {
+          message.error(err.message)
+          return
+        }
+        message.success(`${gatewayConfig.gatewayName} webhook key saved.`)
+      }
+
+      updateGatewayInStore()
+      refresh()
+      closeModal()
+    } catch (error) {
+      message.error('Failed to save webhook configuration.')
+    } finally {
+      setLoading(false)
     }
-    message.success(`${gatewayConfig.gatewayName} webhook key saved.`)
-    updateGatewayInStore()
-    refresh()
   }
 
   const copyContent = async () => {
@@ -60,8 +102,17 @@ const WebHookSetup = ({
 
   useEffect(() => {
     // after save, refresh() call will fetch the latest config item list, passed down as gatewayConfig props,
-    form.setFieldsValue(gatewayConfig)
-  }, [gatewayConfig])
+    if (isDuplicateMode) {
+      // In duplicate mode, clear the webhook key so user can input new one
+      const clearedConfig = {
+        ...gatewayConfig,
+        webhookSecret: ''
+      }
+      form.setFieldsValue(clearedConfig)
+    } else {
+      form.setFieldsValue(gatewayConfig)
+    }
+  }, [gatewayConfig, isDuplicateMode])
 
   return (
     <div>
@@ -77,7 +128,10 @@ const WebHookSetup = ({
         onFinish={onSave}
         colon={false}
         disabled={notSubmitable || loading}
-        initialValues={gatewayConfig}
+        initialValues={isDuplicateMode ? {
+          ...gatewayConfig,
+          webhookSecret: ''
+        } : gatewayConfig}
       >
         <Form.Item label="Gateway ID" name="gatewayId" hidden>
           <Input disabled />

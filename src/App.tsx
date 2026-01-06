@@ -9,6 +9,7 @@ import ForgetPasswordPage from './components/login/forgetPasswordPage'
 import { Sidebar } from './components/sidebar/sidebar'
 import Signup from './components/signup'
 import TaskList from './components/taskList'
+import { TwoFactorSetup, TwoFactorVerify } from './components/twoFactor'
 import { useAppInitialize } from './hooks/useAppInitialize'
 import { useAppRoutes } from './routes'
 import { getLicenseReq, getMerchantInfoReq } from './requests'
@@ -22,7 +23,13 @@ import UnibeeAnalyticSvg from './assets/navIcons/analytics.svg?react'
 const { Header, Content, Footer } = Layout
 
 const APP_PATH = import.meta.env.BASE_URL
-const noSiderRoutes = [`${APP_PATH}login`, `${APP_PATH}signup`, `${APP_PATH}forgot-password`]
+const noSiderRoutes = [
+  `${APP_PATH}login`,
+  `${APP_PATH}signup`,
+  `${APP_PATH}forgot-password`,
+  `${APP_PATH}two-factorsetup`,
+  `${APP_PATH}two-factorverify`
+]
 
 const App: React.FC = () => {
   const appInitialize = useAppInitialize()
@@ -87,6 +94,8 @@ const App: React.FC = () => {
             <Route path="/login" Component={Login} />
             <Route path="/signup" Component={Signup} />
             <Route path="/forgot-password" Component={ForgetPasswordPage} />
+            <Route path="/two-factorsetup" Component={TwoFactorSetup} />
+            <Route path="/two-factorverify" Component={TwoFactorVerify} />
           </Routes>
         </Layout>
       ) : (

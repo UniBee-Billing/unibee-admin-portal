@@ -33,6 +33,7 @@ import { useState, useEffect, useCallback } from 'react'
 export const NEW_WIRE_TRANSFER: ExtendedTGateway = {
   IsSetupFinished: false,
   archive: false,
+  isDefault: false,
   name: 'Wire Transfer',
   gatewayId: 0,
   displayName: 'Wire Transfer',
