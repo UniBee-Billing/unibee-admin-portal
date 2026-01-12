@@ -167,7 +167,7 @@ const Index = ({ detail, closeModal }: Props) => {
         </Col>
         <Col className="text-red-800" span={4}>
           <span>
-            {`${showAmount(detail.promoCreditDiscountAmount * -1, detail.currency)}`}
+            {`${showAmount(detail.promoCreditDiscountAmount * -1, detail.currency, true)}`}
           </span>
         </Col>
       </Row>
