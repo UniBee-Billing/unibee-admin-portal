@@ -167,12 +167,7 @@ const SplitPaymentRefundModal = ({
           type="primary"
           onClick={handleConfirm}
           loading={loading}
-          style={{
-            minWidth: 100,
-            backgroundColor: '#fadb14',
-            borderColor: '#fadb14',
-            color: '#000'
-          }}
+          style={{ minWidth: 100 }}
         >
           Confirm
         </Button>
