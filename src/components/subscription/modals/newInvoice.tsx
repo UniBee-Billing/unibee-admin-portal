@@ -819,6 +819,7 @@ const Index = ({
           </Col>
           <Col span={12}>
             <Button
+              type="primary"
               onClick={onRefund}
               loading={loading}
               disabled={
@@ -829,20 +830,7 @@ const Index = ({
               }
               style={{
                 width: '100%',
-                height: '40px',
-                backgroundColor:
-                  !refundAmt ||
-                  !refundReason ||
-                  (hasSplitPayment && payments.length > 1 && !selectedPaymentId)
-                    ? '#fff7cc'
-                    : '#fadb14',
-                borderColor:
-                  !refundAmt ||
-                  !refundReason ||
-                  (hasSplitPayment && payments.length > 1 && !selectedPaymentId)
-                    ? '#fff7cc'
-                    : '#fadb14',
-                color: '#000'
+                height: '40px'
               }}
             >
               Refund
