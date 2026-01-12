@@ -4,7 +4,7 @@ import { sendInvoiceInMailReq } from '@/requests'
 import { InvoiceItem, IProfile, UserInvoice } from '@/shared.types'
 import { Button, Col, Divider, message, Modal, Row } from 'antd'
 import dayjs from 'dayjs'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import CouponPopover from '../../ui/couponPopover'
 import LongTextPopover from '../../ui/longTextPopover'
 
@@ -52,34 +52,41 @@ const Index = ({ detail, closeModal }: Props) => {
 
   return (
     <Modal
-      title="Invoice Detail"
+      title={<div style={{ textAlign: 'center', fontSize: '18px', fontWeight: 600 }}>Invoice Detail</div>}
       open={true}
-      width={'820px'}
+      width={'720px'}
       footer={null}
-      closeIcon={null}
+      closeIcon={<span style={{ fontSize: '20px' }}>×</span>}
+      onCancel={closeModal}
     >
-      <Row>
-        <Col span={6} style={{ fontWeight: 'bold' }}>
-          Invoice title
-        </Col>
-        <Col span={6} style={{ fontWeight: 'bold' }}>
-          User name
-        </Col>
-        <Col span={8} style={{ fontWeight: 'bold' }}>
-          Payment gateway
-        </Col>
-        <Col span={4} style={{ fontWeight: 'bold' }}>
-          Refund
-        </Col>
-      </Row>
-      <Row
-        style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}
-      >
-        <Col span={6}>{detail.invoiceName}</Col>
-        <Col span={6}>{getUserName(detail)}</Col>
-        <Col span={8}>{detail.gateway.gatewayName}</Col>
-        <Col span={4}>{detail.refund !== null ? 'Yes' : 'No'}</Col>
-      </Row>
+      {/* Header Info Card */}
+      <div style={{
+        backgroundColor: '#f5f5f5',
+        borderRadius: '8px',
+        padding: '16px 20px',
+        marginBottom: '24px'
+      }}>
+        <Row gutter={16}>
+          <Col span={12}>
+            <div style={{ color: '#666', fontSize: '13px', marginBottom: '4px' }}>Invoice Title:</div>
+            <div style={{ fontWeight: 500, fontSize: '15px' }}>{detail.invoiceName}</div>
+          </Col>
+          <Col span={12}>
+            <div style={{ color: '#666', fontSize: '13px', marginBottom: '4px' }}>Payment Gateway:</div>
+            <div style={{ fontWeight: 500, fontSize: '15px' }}>{detail.gateway.gatewayName}</div>
+          </Col>
+        </Row>
+        <Row gutter={16} style={{ marginTop: '12px' }}>
+          <Col span={12}>
+            <div style={{ color: '#666', fontSize: '13px', marginBottom: '4px' }}>User Name:</div>
+            <div style={{ fontWeight: 500, fontSize: '15px' }}>{getUserName(detail)}</div>
+          </Col>
+          <Col span={12}>
+            <div style={{ color: '#666', fontSize: '13px', marginBottom: '4px' }}>Refund:</div>
+            <div style={{ fontWeight: 500, fontSize: '15px' }}>{detail.refund !== null ? 'Yes' : 'No'}</div>
+          </Col>
+        </Row>
+      </div>
       {detail.refund && (
         <div style={{ margin: '22px 0' }}>
           <Divider style={{ color: '#757575', fontSize: '14px' }}>
@@ -107,131 +114,119 @@ const Index = ({ detail, closeModal }: Props) => {
           </Row>
         </div>
       )}
-      <Divider style={{ color: '#757575' }} />
-      <Row style={{ display: 'flex', alignItems: 'center' }}>
-        <Col span={12}>
-          <span style={{ fontWeight: 'bold' }}>Item description</span>
-        </Col>
-        <Col span={4}>
-          <div style={{ fontWeight: 'bold' }}>Amount</div>
-        </Col>
-        <Col span={1}></Col>
-        <Col span={3}>
-          <span style={{ fontWeight: 'bold' }}>Quantity</span>
-        </Col>
-        <Col span={4}>
-          <span style={{ fontWeight: 'bold' }}>Total</span>
-        </Col>
-      </Row>
-      {invoiceList &&
-        invoiceList.map((v) => (
-          <Row
-            key={v.id}
-            style={{ margin: '8px 0', display: 'flex', alignItems: 'center' }}
-          >
-            <Col span={12}>
-              <LongTextPopover text={v.description} width="360px" />
-            </Col>
-            <Col span={4}>
-              {showAmount(v.unitAmountExcludingTax as number, v.currency, true)}
-            </Col>
-            <Col span={1} style={{ fontSize: '18px' }}>
-              ×
-            </Col>
-            <Col span={3}>{v.quantity}</Col>
-            <Col span={4}>
-              {showAmount(v.amountExcludingTax as number, v.currency, true)}
-            </Col>
-          </Row>
-        ))}
-      <Divider />
+      {/* Items Table */}
+      <div style={{ border: '1px solid #e8e8e8', borderRadius: '8px', overflow: 'hidden', marginBottom: '16px' }}>
+        <Row style={{
+          backgroundColor: '#f5f5f5',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          <Col span={10}>
+            <span style={{ fontWeight: 600, color: '#333' }}>Invoice title</span>
+          </Col>
+          <Col span={5} style={{ textAlign: 'right' }}>
+            <span style={{ fontWeight: 600, color: '#333' }}>Total Amount</span>
+          </Col>
+          <Col span={4} style={{ textAlign: 'center' }}>
+            <span style={{ fontWeight: 600, color: '#333' }}>Quantity</span>
+          </Col>
+          <Col span={5} style={{ textAlign: 'right' }}>
+            <span style={{ fontWeight: 600, color: '#333' }}>Total</span>
+          </Col>
+        </Row>
+        {invoiceList &&
+          invoiceList.map((v) => (
+            <Row
+              key={v.id}
+              style={{
+                padding: '12px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                borderTop: '1px solid #f0f0f0'
+              }}
+            >
+              <Col span={10}>
+                <LongTextPopover text={v.description} width="320px" />
+              </Col>
+              <Col span={5} style={{ textAlign: 'right' }}>
+                {showAmount(v.unitAmountExcludingTax as number, v.currency, true)}
+              </Col>
+              <Col span={4} style={{ textAlign: 'center' }}>
+                {v.quantity}
+              </Col>
+              <Col span={5} style={{ textAlign: 'right' }}>
+                {showAmount(v.amountExcludingTax as number, v.currency, true)}
+              </Col>
+            </Row>
+          ))}
+      </div>
 
-      <Row className="flex items-center">
-        <Col span={14}> </Col>
-        <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
-          Subtotal
-        </Col>
-        <Col className="text-red-800" span={4}>
-          <span>
-            {`${showAmount(detail.subscriptionAmountExcludingTax, detail.currency, true)}`}
-          </span>
-        </Col>
-      </Row>
-
-      <Row className="flex items-center">
-        <Col span={14}> </Col>
-        <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
-          Promo Credit{' '}
-          {detail?.promoCreditTransaction != null &&
-            `(${Math.abs(detail.promoCreditTransaction.deltaAmount)})`}
-        </Col>
-        <Col className="text-red-800" span={4}>
-          <span>
-            {`${showAmount(detail.promoCreditDiscountAmount * -1, detail.currency, true)}`}
-          </span>
-        </Col>
-      </Row>
-
-      <Row className="flex items-center">
-        <Col span={14}> </Col>
-        <Col span={6} style={{ fontSize: '18px' }} className="text-red-800">
-          Total Discounted
-        </Col>
-        <Col className="text-red-800" span={4}>
-          {detail.discount !== null ? (
-            <span>
-              {`${showAmount(detail.discountAmount * -1, detail.currency, true)}`}
-              <CouponPopover coupon={detail.discount} />
+      {/* Summary Card */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{
+          border: '1px solid #e8e8e8',
+          borderRadius: '8px',
+          padding: '16px 20px',
+          minWidth: '280px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#666' }}>Subtotal</span>
+            <span>{showAmount(detail.subscriptionAmountExcludingTax, detail.currency, true)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#666' }}>Promo Credit</span>
+            <span>{showAmount(detail.promoCreditDiscountAmount * -1, detail.currency, true)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#666' }}>
+              Total Discounted
+              {detail.discount !== null && <CouponPopover coupon={detail.discount} />}
             </span>
-          ) : (
-            showAmount(0, detail.currency)
-          )}
-        </Col>
-      </Row>
-      <Row>
-        <Col span={14}> </Col>
-        <Col span={6} style={{ fontSize: '18px' }} className="text-gray-700">
-          VAT{`(${detail.taxPercentage / 100} %)`}
-        </Col>
-        <Col
-          span={4}
-          className="text-gray-700"
-        >{`${showAmount(detail.taxAmount, detail.currency, true)}`}</Col>
-      </Row>
-      <Divider style={{ margin: '4px 0' }} />
-      <Row>
-        <Col span={14}> </Col>
-        <Col
-          span={6}
-          style={{ fontSize: '18px', fontWeight: 'bold' }}
-          className="text-gray-600"
-        >
-          Order Total
-        </Col>
-        <Col
-          style={{ fontSize: '18px', fontWeight: 'bold' }}
-          className="text-gray-600"
-          span={4}
-        >
-          {`${showAmount(detail.totalAmount, detail.currency, true)}`}
-          <div>
+            <span>
+              {detail.discount !== null
+                ? showAmount(detail.discountAmount * -1, detail.currency, true)
+                : showAmount(0, detail.currency)}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#666' }}>VAT({detail.taxPercentage / 100}%)</span>
+            <span>{showAmount(detail.taxAmount, detail.currency, true)}</span>
+          </div>
+          <Divider style={{ margin: '12px 0' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600, fontSize: '15px' }}>Order Total</span>
+            <span style={{ fontWeight: 600, fontSize: '15px' }}>
+              {showAmount(detail.totalAmount, detail.currency, true)}
+            </span>
+          </div>
+          <div style={{ textAlign: 'right', marginTop: '8px' }}>
             <InvoiceLink invoice={detail} />
           </div>
-        </Col>
-      </Row>
-      <div className="mt-6 flex items-center justify-end gap-4">
-        <div className="flex w-full justify-between gap-4">
-          <Button
-            onClick={onSendInvoice}
-            loading={loading}
-            disabled={loading || !getInvoicePermission(detail).sendable}
-          >
-            Send Invoice
-          </Button>
-          <Button onClick={closeModal} disabled={loading} type="primary">
-            Close
-          </Button>
         </div>
+      </div>
+      {/* Footer Buttons */}
+      <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+        <Button
+          onClick={closeModal}
+          disabled={loading}
+          style={{ flex: 1, height: '44px', fontSize: '15px' }}
+        >
+          Close
+        </Button>
+        <Button
+          type="primary"
+          onClick={onSendInvoice}
+          loading={loading}
+          disabled={loading || !getInvoicePermission(detail).sendable}
+          style={{
+            flex: 1,
+            height: '44px',
+            fontSize: '15px'
+          }}
+        >
+          Send Invoice
+        </Button>
       </div>
     </Modal>
   )
@@ -261,3 +256,4 @@ const InvoiceLink = ({ invoice }: { invoice: UserInvoice }) => {
     </a>
   )
 }
+
