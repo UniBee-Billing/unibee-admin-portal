@@ -1,11 +1,25 @@
-import { LoadingOutlined, MinusOutlined } from '@ant-design/icons'
-import { Button, Col, Row, Spin, message } from 'antd'
-import React, { CSSProperties, useEffect, useState } from 'react'
+import {
+  ArrowLeftOutlined,
+  CheckCircleOutlined,
+  DollarOutlined,
+  LoadingOutlined,
+  MinusOutlined,
+  ClockCircleOutlined,
+  UpOutlined,
+  DownOutlined
+} from '@ant-design/icons'
+import { Button, Card, Col, Row, Spin, message } from 'antd'
+import React, { CSSProperties, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { INVOICE_BIZ_TYPE } from '../../constants'
 import { getInvoicePermission, showAmount } from '../../helpers'
-import { getInvoiceDetailReq } from '../../requests'
-import { UserInvoice } from '../../shared.types'
+import { getInvoiceDetailReq, getSplitPaymentsReq } from '../../requests'
+import {
+  InvoiceStatus,
+  SplitPayment,
+  SplitPaymentsData,
+  UserInvoice
+} from '../../shared.types'
 import { normalizeAmt } from '../helpers'
 import RefundModal from '../payment/refundModal'
 import InvoiceDetailModal from '../subscription/modals/invoiceDetail'
@@ -13,17 +27,17 @@ import CopyToClipboard from '../ui/copyToClipboard'
 import { InvoiceStatusTag } from '../ui/statusTag'
 import MarkAsPaidModal from './markAsPaidModal'
 import MarkAsRefundedModal from './markAsRefundedModal'
+import SplitPaymentRefundModal from './splitPaymentRefundModal'
+import TransactionHistory from './transactionHistory'
 
-const rowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  height: '32px'
+const cardStyle: CSSProperties = {
+  borderRadius: '12px',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
 }
-const colStyle: CSSProperties = { fontWeight: 'bold' }
-const previewWrapperStyle: CSSProperties = {
-  height: 'calc(100vh - 460px)',
-  width: '100%',
-  marginTop: '24px'
+
+const infoCardStyle: CSSProperties = {
+  ...cardStyle,
+  padding: '16px 24px'
 }
 
 const Index = () => {
@@ -33,7 +47,7 @@ const Index = () => {
   const [invoiceDetail, setInvoiceDetail] = useState<UserInvoice | null>(null)
   const [showInvoiceItems, setShowInvoiceItems] = useState(false)
   const toggleInvoiceItems = () => setShowInvoiceItems(!showInvoiceItems)
-  const [refundModalOpen, setRefundModalOpen] = useState(false) // show refund detail
+  const [refundModalOpen, setRefundModalOpen] = useState(false)
   const toggleRefundModal = () => setRefundModalOpen(!refundModalOpen)
   const [markPaidModalOpen, setMarkPaidModalOpen] = useState(false)
   const toggleMarkPaidModal = () => setMarkPaidModalOpen(!markPaidModalOpen)
@@ -41,10 +55,19 @@ const Index = () => {
   const toggleMarkRefundedModal = () =>
     setMarkRefundedModalOpen(!markRefundedModalOpen)
 
-  // for wire-transfer or crypto payment, markAsPaid and markAsRefunded will refresh current component after success.
-  // new invoice pdf file will be regenerated, but old pdf file might be cached, causing pdf show 'processing', but invoice status show 'refunded'
-  // I have to deley 2.5s after refresh, then show the pdf file.
+  // Split payment states
+  const [splitPayments, setSplitPayments] = useState<SplitPayment[]>([])
+  const [splitPaymentData, setSplitPaymentData] =
+    useState<SplitPaymentsData | null>(null)
+  const [splitPaymentLoading, setSplitPaymentLoading] = useState(false)
+  const [splitPaymentRefundModalOpen, setSplitPaymentRefundModalOpen] =
+    useState(false)
+  const [selectedPaymentForRefund, setSelectedPaymentForRefund] =
+    useState<SplitPayment | null>(null)
+
+  // PDF preview states
   const [delayingPreview, setDelayingPreview] = useState(false)
+  const [previewVisible, setPreviewVisible] = useState(true)
 
   const goBack = () => {
     const params = new URL(window.location.href).searchParams
@@ -55,9 +78,15 @@ const Index = () => {
     }
     navigate(refererURL)
   }
+
   const goToUser = (userId: number) => () =>
     navigate(`/user/${userId}?tab=invoice`)
   const goToSub = (subId: string) => () => navigate(`/subscription/${subId}`)
+
+  // Check if invoice has split payment
+  const hasSplitPayment = useMemo(() => {
+    return invoiceDetail?.metadata?.HasSplitPayment === true
+  }, [invoiceDetail])
 
   const fetchData = async () => {
     const pathName = window.location.pathname.split('/')
@@ -79,16 +108,40 @@ const Index = () => {
     setInvoiceDetail(invoice)
   }
 
+  const fetchSplitPayments = async () => {
+    if (!invoiceDetail?.invoiceId) return
+
+    setSplitPaymentLoading(true)
+    const [res, err] = await getSplitPaymentsReq(
+      invoiceDetail.invoiceId,
+      fetchSplitPayments
+    )
+    setSplitPaymentLoading(false)
+
+    if (err != null) {
+      console.error('Failed to fetch split payments:', err)
+      return
+    }
+
+    if (res) {
+      setSplitPaymentData(res as SplitPaymentsData)
+      setSplitPayments((res as SplitPaymentsData).payments || [])
+    }
+  }
+
+  // Fetch split payments when invoice is loaded
+  useEffect(() => {
+    if (invoiceDetail?.invoiceId) {
+      fetchSplitPayments()
+    }
+  }, [invoiceDetail?.invoiceId])
+
   if (delayingPreview && !loading) {
     setTimeout(() => setDelayingPreview(false), 2500)
   }
 
   useEffect(() => {
     if (refundModalOpen) {
-      // for refund invoice, there is a 'show detail' button, click will open a Modal showing this refund's original invoice which is a link.
-      // click that link will reload the current component page with THAT invoice's detail info.
-      // but that original invoice is not a refund invoice, so it has no 'show detail' button, no way to open a Modal
-      // so I have to close the current modal.
       toggleRefundModal()
     }
     fetchData()
@@ -96,17 +149,29 @@ const Index = () => {
 
   const isRefund = invoiceDetail?.refund != null
   const perm = getInvoicePermission(invoiceDetail)
+
+  // Get display amounts
+  const displayAmounts = useMemo(() => {
+    // If we have split payment data, use it
+    if (splitPaymentData && splitPaymentData.payments.length > 0) {
+      return {
+        totalAmount: splitPaymentData.totalAmount,
+        paidAmount: splitPaymentData.paidAmount,
+        remainingAmount: splitPaymentData.remainingAmount
+      }
+    }
+    // Fallback: calculate based on invoice status
+    const totalAmount = invoiceDetail?.totalAmount || 0
+    const isPaid = invoiceDetail?.status === InvoiceStatus.PAID
+    return {
+      totalAmount,
+      paidAmount: isPaid ? totalAmount : 0,
+      remainingAmount: isPaid ? 0 : totalAmount
+    }
+  }, [splitPaymentData, invoiceDetail])
+
   return (
-    <div>
-      {/* <Button
-        onClick={() => {
-          setDelayingPreview(true)
-          fetchData()
-        }}
-      >
-        test dealing pdf preview
-      </Button> */}{' '}
-      {/* test dealing feature */}
+    <div className="bg-gray-50 min-h-screen">
       <Spin
         spinning={loading}
         indicator={
@@ -114,6 +179,8 @@ const Index = () => {
         }
         fullscreen
       />
+
+      {/* Modals */}
       {invoiceDetail && showInvoiceItems && (
         <InvoiceDetailModal
           user={invoiceDetail.userAccount}
@@ -145,211 +212,355 @@ const Index = () => {
           setDelayingPreview={setDelayingPreview}
         />
       )}
-      <Row style={rowStyle} gutter={[16, 16]}>
-        <Col span={4} style={colStyle}>
-          Invoice Id
-        </Col>
-        <Col span={6} className="flex items-center">
-          {invoiceDetail?.invoiceId}{' '}
-          {invoiceDetail && (
-            <CopyToClipboard content={invoiceDetail.invoiceId} />
-          )}
-        </Col>
-        <Col span={4} style={colStyle}>
-          Invoice Name
-        </Col>
-        <Col span={6}>{invoiceDetail?.invoiceName}</Col>
-      </Row>
-      <Row style={rowStyle} gutter={[16, 16]}>
-        <Col span={4} style={colStyle}>
-          Invoice Amount
-        </Col>
-        <Col span={6}>
-          {invoiceDetail == null
-            ? ''
-            : showAmount(
-                invoiceDetail?.totalAmount,
-                invoiceDetail?.currency,
-                true
-              )}
-          <span className="text-xs text-gray-500">
-            {invoiceDetail == null
-              ? ''
-              : ` (${invoiceDetail.taxPercentage / 100}% tax incl)`}
-          </span>
-        </Col>
-        <Col span={4} style={colStyle}>
-          Status
-        </Col>
-        <Col span={6}>
-          {invoiceDetail != null &&
-            InvoiceStatusTag(
-              invoiceDetail.status,
-              invoiceDetail?.refund != null
-            )}
-          {/* 
-            status == 2 (processing) is used mainly for wire-transfer payment/refund, crypto refund,
-            in which cases, payment/refund status updates are not provided by 3rd party API,
-            admin have to check them offline, then update their status manually.
-          */}
-          {/* invoiceDetail != null &&
-            invoiceDetail.status == 2 &&
-            (isWireTransfer || isCrypto) && (
-              <Button
-                onClick={
-                  isRefund ? toggleMarkRefundedModal : toggleMarkPaidModal
-                }
-                type="link"
-                style={{ padding: 0 }}
-              >
-                {isRefund ? 'Mark as Refunded' : 'Mark as Paid'}
-              </Button>
-            ) */}
-          {(perm.asPaidMarkable || perm.asRefundedMarkable) && ( // these 2 are exclusive, one is true, the other is false
-            <Button
-              onClick={
-                perm.asRefundedMarkable
-                  ? toggleMarkRefundedModal
-                  : toggleMarkPaidModal
-              }
-              type="link"
-              style={{ padding: 0 }}
-            >
-              {isRefund ? 'Mark as Refunded' : 'Mark as Paid'}
-            </Button>
-          )}
-        </Col>
-      </Row>
-      <Row style={rowStyle} gutter={[16, 16]}>
-        <Col span={4} style={colStyle}>
-          Invoice Items
-        </Col>
-        <Col span={6}>
-          <Button size="small" onClick={toggleInvoiceItems}>
-            Show Detail
-          </Button>
-        </Col>
-        <Col span={4} style={colStyle}>
-          Refund
-        </Col>
-        <Col span={6}>
-          {invoiceDetail?.refund == null ? (
-            'No'
-          ) : (
-            <>
-              <span>
-                {showAmount(
-                  invoiceDetail.refund.refundAmount,
-                  invoiceDetail.refund.currency,
-                  true
-                )}
-              </span>
-              &nbsp;&nbsp;
-              <Button size="small" onClick={toggleRefundModal}>
-                Show Detail
-              </Button>
-            </>
-          )}
-        </Col>
-      </Row>
-      {invoiceDetail?.refund == null && (
-        <Row style={rowStyle} gutter={[16, 16]}>
-          <Col span={4} style={colStyle}>
-            Payment type
-          </Col>
-          <Col span={6}>
-            {invoiceDetail != null && INVOICE_BIZ_TYPE[invoiceDetail?.bizType]}
-          </Col>
-          <Col span={4} style={colStyle}>
-            Payment Gateway
-          </Col>
-          <Col span={6}>{invoiceDetail?.gateway.displayName}</Col>
-        </Row>
-      )}
-      <Row style={rowStyle} gutter={[16, 16]}>
-        <Col span={4} style={colStyle}>
-          Discount Amount
-        </Col>
-        <Col span={6}>
-          {invoiceDetail?.discountAmount != null
-            ? showAmount(
-                invoiceDetail?.discountAmount,
-                invoiceDetail.currency,
-                true
-              )
-            : 'N/A'}
-        </Col>
-        <Col span={4} style={colStyle}>
-          Subscription Id
-        </Col>
-        <Col span={6}>
-          {' '}
-          {invoiceDetail == null ||
-          invoiceDetail.subscriptionId == null ||
-          invoiceDetail.subscriptionId == '' ? (
-            <MinusOutlined />
-          ) : (
-            <span
-              className="cursor-pointer text-blue-600"
-              onClick={goToSub(invoiceDetail.subscriptionId)}
-            >
-              {' '}
-              {invoiceDetail?.subscriptionId}
-            </span>
-          )}
-        </Col>
-      </Row>
-      <Row style={rowStyle} gutter={[16, 16]}>
-        <Col span={4} style={colStyle}>
-          Promo Credits{' '}
-          {invoiceDetail?.promoCreditTransaction != null &&
-            `(${Math.abs(invoiceDetail.promoCreditTransaction.deltaAmount)})`}
-        </Col>
-        <Col span={6}>
-          {showAmount(
-            invoiceDetail?.promoCreditDiscountAmount,
-            invoiceDetail?.currency
-          )}
-        </Col>
 
-        <Col span={4} style={colStyle}>
-          User Name(Email)
-        </Col>
-        <Col span={6}>
-          <span
-            className="cursor-pointer text-blue-600"
-            onClick={goToUser(invoiceDetail?.userId as number)}
-          >
-            {invoiceDetail &&
-              `${invoiceDetail?.userAccount.firstName} ${invoiceDetail.userAccount.lastName} (${invoiceDetail?.userAccount.email})`}
-          </span>
-        </Col>
-      </Row>
-      {/* <UserInfo user={userProfile} /> */}
-      {invoiceDetail == null ||
-      invoiceDetail.sendPdf == null ||
-      invoiceDetail.sendPdf == '' ||
-      loading ? null : delayingPreview ? (
-        <div style={previewWrapperStyle}>
-          <Spin indicator={<LoadingOutlined spin />} size="large">
-            <div className="flex items-center justify-center">
-              Invoice file loading
-            </div>
-          </Spin>
-        </div>
-      ) : (
-        <object
-          data={invoiceDetail.sendPdf}
-          type="application/pdf"
-          style={previewWrapperStyle}
+      {/* Split Payment Refund Modal */}
+      <SplitPaymentRefundModal
+        payment={selectedPaymentForRefund}
+        invoiceId={invoiceDetail?.invoiceId || ''}
+        open={splitPaymentRefundModalOpen}
+        onClose={() => {
+          setSplitPaymentRefundModalOpen(false)
+          setSelectedPaymentForRefund(null)
+        }}
+        onSuccess={() => {
+          fetchData()
+          fetchSplitPayments()
+        }}
+      />
+
+      <div className="p-6">
+        {/* Back Button */}
+        <div
+          className="flex items-center gap-2 text-gray-600 cursor-pointer mb-4 hover:text-gray-800"
+          onClick={goBack}
         >
-          <p>
-            <a href={invoiceDetail.sendPdf}>Download invoice</a>
-          </p>
-        </object>
-      )}
-      <div className="m-8 flex justify-center">
-        <Button onClick={goBack}>Back to Invoice List</Button>
+          <ArrowLeftOutlined />
+          <span>Back to Invoice List</span>
+        </div>
+
+        {/* Page Title */}
+        <h1 className="text-2xl font-semibold mb-6">Invoice Info</h1>
+
+        {/* Main Content Card */}
+        <Card style={cardStyle} className="mb-6">
+          {/* Header with Invoice Name */}
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-lg font-medium">
+              {invoiceDetail?.invoiceName || 'Invoice'}
+            </span>
+            <Button onClick={toggleInvoiceItems}>Show Detail</Button>
+          </div>
+
+          {/* Amount Cards */}
+          <Row gutter={16} className="mb-6">
+              <Col span={8}>
+                <Card
+                  style={{
+                    ...infoCardStyle,
+                    backgroundColor: '#f0f9ff',
+                    border: 'none'
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: '#e0f2fe' }}
+                    >
+                      <DollarOutlined
+                        style={{ fontSize: 20, color: '#0284c7' }}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">Total Amount</div>
+                      <div className="text-xl font-semibold">
+                        {showAmount(
+                          displayAmounts.totalAmount,
+                          invoiceDetail?.currency,
+                          true
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card
+                  style={{
+                    ...infoCardStyle,
+                    backgroundColor: '#f0fdf4',
+                    border: 'none'
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: '#dcfce7' }}
+                    >
+                      <CheckCircleOutlined
+                        style={{ fontSize: 20, color: '#16a34a' }}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">Paid Amount</div>
+                      <div className="text-xl font-semibold">
+                        {showAmount(
+                          displayAmounts.paidAmount,
+                          invoiceDetail?.currency,
+                          true
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card
+                  style={{
+                    ...infoCardStyle,
+                    backgroundColor: '#fffbeb',
+                    border: 'none'
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: '#fef3c7' }}
+                    >
+                      <ClockCircleOutlined
+                        style={{ fontSize: 20, color: '#d97706' }}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">
+                        Remaining Amount
+                      </div>
+                      <div className="text-xl font-semibold">
+                        {showAmount(
+                          displayAmounts.remainingAmount,
+                          invoiceDetail?.currency,
+                          true
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+
+          {/* Invoice Info - Two Column Layout */}
+          <Row gutter={24} style={{ display: 'flex', alignItems: 'stretch' }}>
+            {/* Left Column */}
+            <Col span={12} style={{ display: 'flex' }}>
+              <Card style={{ ...infoCardStyle, marginBottom: 0, flex: 1 }}>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Invoice ID</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-blue-600">
+                        {invoiceDetail?.invoiceId}
+                      </span>
+                      {invoiceDetail && (
+                        <CopyToClipboard content={invoiceDetail.invoiceId} />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Invoice Amount</span>
+                    <span>
+                      {invoiceDetail &&
+                        showAmount(
+                          invoiceDetail.totalAmount,
+                          invoiceDetail.currency,
+                          true
+                        )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Payment Type</span>
+                    <span>
+                      {invoiceDetail &&
+                        INVOICE_BIZ_TYPE[invoiceDetail.bizType]}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Discount Amount</span>
+                    <span>
+                      {invoiceDetail?.discountAmount != null
+                        ? showAmount(
+                            invoiceDetail.discountAmount,
+                            invoiceDetail.currency,
+                            true
+                          )
+                        : '$0'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Promo Credits</span>
+                    <span>
+                      {showAmount(
+                        invoiceDetail?.promoCreditDiscountAmount,
+                        invoiceDetail?.currency,
+                        true
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </Col>
+
+            {/* Right Column */}
+            <Col span={12} style={{ display: 'flex' }}>
+              <Card style={{ ...infoCardStyle, marginBottom: 0, flex: 1 }}>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Status</span>
+                    <div className="flex items-center gap-2">
+                      {invoiceDetail &&
+                        InvoiceStatusTag(
+                          invoiceDetail.status,
+                          invoiceDetail.refund != null
+                        )}
+                      {(perm.asPaidMarkable || perm.asRefundedMarkable) && (
+                        <Button
+                          type="link"
+                          size="small"
+                          onClick={
+                            perm.asRefundedMarkable
+                              ? toggleMarkRefundedModal
+                              : toggleMarkPaidModal
+                          }
+                          style={{ padding: 0 }}
+                        >
+                          {isRefund ? 'Mark as Refunded' : 'Mark as Paid'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Refund</span>
+                    <span>
+                      {invoiceDetail?.refund == null ? (
+                        'No'
+                      ) : (
+                        <Button
+                          type="link"
+                          size="small"
+                          onClick={toggleRefundModal}
+                          style={{ padding: 0 }}
+                        >
+                          {showAmount(
+                            invoiceDetail.refund.refundAmount,
+                            invoiceDetail.refund.currency,
+                            true
+                          )}
+                        </Button>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Payment Gateway</span>
+                    <span>{invoiceDetail?.gateway?.displayName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Subscription ID</span>
+                    {invoiceDetail?.subscriptionId ? (
+                      <span
+                        className="text-blue-600 cursor-pointer"
+                        onClick={goToSub(invoiceDetail.subscriptionId)}
+                      >
+                        {invoiceDetail.subscriptionId}
+                      </span>
+                    ) : (
+                      <MinusOutlined />
+                    )}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">User Name (Email)</span>
+                    {invoiceDetail?.userAccount ? (
+                      <span
+                        className="text-blue-600 cursor-pointer"
+                        onClick={goToUser(invoiceDetail.userId)}
+                      >
+                        {`${invoiceDetail.userAccount.firstName || ''} ${invoiceDetail.userAccount.lastName || ''} (${invoiceDetail.userAccount.email})`}
+                      </span>
+                    ) : (
+                      <MinusOutlined />
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Transaction History - Only show for split payment invoices */}
+          {hasSplitPayment && (
+            <TransactionHistory
+              payments={splitPayments}
+              currency={invoiceDetail?.currency || ''}
+              loading={splitPaymentLoading}
+              invoiceId={invoiceDetail?.invoiceId || ''}
+              onRefund={(payment) => {
+                setSelectedPaymentForRefund(payment)
+                setSplitPaymentRefundModalOpen(true)
+              }}
+            />
+          )}
+        </Card>
+
+        {/* PDF Preview Section */}
+        {invoiceDetail?.sendPdf && (
+          <div className="mt-6">
+            <div
+              className="flex items-center gap-2 cursor-pointer mb-4"
+              onClick={() => setPreviewVisible(!previewVisible)}
+            >
+              <span className="text-lg font-medium">Preview</span>
+              <span className="text-gray-400 text-sm flex items-center gap-1">
+                {previewVisible ? 'Hide' : 'Show'}
+                {previewVisible ? <UpOutlined /> : <DownOutlined />}
+              </span>
+            </div>
+
+            {previewVisible && (
+              delayingPreview ? (
+                <Card style={cardStyle}>
+                  <Spin indicator={<LoadingOutlined spin />} size="large">
+                    <div
+                      className="flex items-center justify-center"
+                      style={{ height: '500px' }}
+                    >
+                      Invoice file loading
+                    </div>
+                  </Spin>
+                </Card>
+              ) : (
+                <Card style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
+                  <object
+                    data={invoiceDetail.sendPdf}
+                    type="application/pdf"
+                    style={{
+                      width: '100%',
+                      height: 'calc(100vh - 200px)',
+                      minHeight: '600px'
+                    }}
+                  >
+                    <p className="p-4">
+                      Unable to display PDF.{' '}
+                      <a
+                        href={invoiceDetail.sendPdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600"
+                      >
+                        Download invoice
+                      </a>
+                    </p>
+                  </object>
+                </Card>
+              )
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

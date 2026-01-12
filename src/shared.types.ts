@@ -668,6 +668,27 @@ export const enum InvoiceStatus {
   CANCELLED = 5, // admin cancel the invoice after publishing, only if user hasn't paid yet. If user has paid, admin cannot cancel it.
   REVERSED = 6 // Payment success notification received after cancellation, this typically needs investigation
 }
+
+export type SplitPayment = {
+  paymentId: string
+  splitSequence: number
+  status: number // Split payment status: 10=pending, 20=success, 30=failure, 40=cancel
+  totalAmount: number
+  currency: string
+  link: string
+  createTime: number
+  paidTime: number
+  gatewayId: number
+  gatewayName: string
+}
+
+export type SplitPaymentsData = {
+  payments: SplitPayment[]
+  totalAmount: number
+  paidAmount: number
+  remainingAmount: number
+}
+
 type UserInvoice = {
   id: number
   merchantId: number
@@ -721,6 +742,7 @@ type UserInvoice = {
   refund?: TRefund //
   userAccount: IProfile
   subscription?: ISubscriptionType
+  metadata?: { HasSplitPayment?: boolean }
 }
 
 type TInvoicePerm = {
