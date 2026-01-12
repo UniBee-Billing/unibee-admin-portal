@@ -2952,6 +2952,23 @@ export const deleteTotpDeviceReq = async (
   }
 }
 
+export const getUpcomingInvoicePreviewReq = async (
+  subscriptionId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/subscription/preview_subscription_next_invoice`,
+      { params: { subscriptionId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.invoice ?? null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // Clear another member's 2FA (admin function)
 export const clearMemberTotpReq = async (
   memberId: number,

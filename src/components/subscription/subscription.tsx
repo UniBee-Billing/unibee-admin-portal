@@ -4,6 +4,7 @@ import {
   extendDueDateReq,
   getAppConfigReq,
   getSubDetailWithMore,
+  getUpcomingInvoicePreviewReq,
   resumeSubReq,
   setSimDateReq,
   terminateSubReq
@@ -17,7 +18,8 @@ import {
   ISubAddon,
   ISubscriptionType,
   SubscriptionEndMode,
-  SubscriptionStatus
+  SubscriptionStatus,
+  UserInvoice
 } from '@/shared.types'
 import { useAppConfigStore } from '@/stores'
 import {
@@ -54,6 +56,7 @@ import ChangeSubStatusModal from './modals/changeSubStatus'
 import ExtendSubModal from './modals/extendSub'
 import ResumeSubModal from './modals/resumeSub'
 import TerminateSubModal from './modals/terminateSub'
+import UpcomingInvoicePreviewModal from './modals/upcomingInvoicePreview'
 import UpdateSubPreviewModal from './modals/updateSubPreview'
 
 const Index = ({
@@ -91,6 +94,10 @@ const Index = ({
     | null
   >(null) // null: not selected
   const [isProduction, setIsProduction] = useState(false)
+  const [upcomingInvoice, setUpcomingInvoice] = useState<UserInvoice | null>(
+    null
+  )
+  const [upcomingInvoiceModalOpen, setUpcomingInvoiceModalOpen] = useState(false)
   const [simDateOpen, setSimDateOpen] = useState(false)
   const simDateContainerRef = useRef(null)
   const hideSimDate = () => setSimDateOpen(false)
@@ -300,6 +307,13 @@ const Index = ({
       message.error(err.message)
       return
     }
+
+    // Fetch upcoming invoice preview (non-blocking, don't show error if fails)
+    getUpcomingInvoicePreviewReq(subId, fetchData).then(
+      ([upcomingInvoiceRes]) => {
+        setUpcomingInvoice(upcomingInvoiceRes)
+      }
+    )
 
     const { subDetail, planList } = detailRes
     const {
@@ -585,6 +599,12 @@ const Index = ({
           refresh={fetchData}
         />
       )}
+      {upcomingInvoiceModalOpen && upcomingInvoice && (
+        <UpcomingInvoicePreviewModal
+          invoice={upcomingInvoice}
+          onClose={() => setUpcomingInvoiceModalOpen(false)}
+        />
+      )}
       <SubscriptionInfoSection
         subInfo={activeSub}
         plans={plans}
@@ -595,6 +615,8 @@ const Index = ({
         toggleChangPlanModal={toggleChangPlanModal}
         toggleCancelSubModal={toggleCancelSubModal}
         toggleChangeSubStatusModal={toggleChangeSubStatusModal}
+        upcomingInvoice={upcomingInvoice}
+        onUpcomingInvoiceClick={() => setUpcomingInvoiceModalOpen(true)}
       />
     </>
   )
@@ -619,6 +641,8 @@ interface ISubSectionProps {
   toggleChangPlanModal: () => void
   toggleCancelSubModal: () => void
   toggleChangeSubStatusModal: () => void
+  upcomingInvoice: UserInvoice | null
+  onUpcomingInvoiceClick: () => void
 }
 const SubscriptionInfoSection = ({
   subInfo,
@@ -628,7 +652,9 @@ const SubscriptionInfoSection = ({
   toggleResumeSubModal,
   toggleChangPlanModal,
   toggleCancelSubModal,
-  toggleChangeSubStatusModal
+  toggleChangeSubStatusModal,
+  upcomingInvoice,
+  onUpcomingInvoiceClick
 }: ISubSectionProps) => {
   const navigate = useNavigate()
   const appConfigStore = useAppConfigStore()
@@ -841,6 +867,40 @@ const SubscriptionInfoSection = ({
             : ''}
         </Col>
         <Col span={4} style={colStyle}>
+          Upcoming Invoice
+        </Col>
+        <Col span={10}>
+          {subInfo?.status !== SubscriptionStatus.ACTIVE ||
+          upcomingInvoice == null ? (
+            <MinusOutlined />
+          ) : (
+            <Button
+              style={{ padding: 0 }}
+              type="link"
+              onClick={onUpcomingInvoiceClick}
+            >
+              Preview
+            </Button>
+          )}
+        </Col>
+      </Row>
+      <Row style={rowStyle}>
+        <Col span={4} style={colStyle}>
+          First Pay
+        </Col>
+        <Col span={6}>
+          {' '}
+          {subInfo && subInfo.firstPaidTime != null && (
+            <span>
+              {subInfo.firstPaidTime == 0
+                ? 'N/A'
+                : dayjs(new Date(subInfo.firstPaidTime * 1000)).format(
+                    'YYYY-MMM-DD'
+                  )}
+            </span>
+          )}
+        </Col>
+        <Col span={4} style={colStyle}>
           Next due date
         </Col>
         <Col span={10}>
@@ -883,24 +943,9 @@ const SubscriptionInfoSection = ({
 
       <Row style={rowStyle}>
         <Col span={4} style={colStyle}>
-          First Pay
-        </Col>
-        <Col span={6}>
-          {' '}
-          {subInfo && subInfo.firstPaidTime != null && (
-            <span>
-              {subInfo.firstPaidTime == 0
-                ? 'N/A'
-                : dayjs(new Date(subInfo.firstPaidTime * 1000)).format(
-                    'YYYY-MMM-DD'
-                  )}
-            </span>
-          )}
-        </Col>
-        <Col span={4} style={colStyle}>
           Payment Gateway
         </Col>
-        <Col span={10}>
+        <Col span={6}>
           {' '}
           {subInfo &&
             appConfigStore.gateway.find(
