@@ -71,14 +71,9 @@ const VATDetailsModal = ({ open, onClose, record }: VATDetailsModalProps) => {
           size="large"
           onClick={onClose}
           style={{
-            backgroundColor: '#FFD700',
-            borderColor: '#FFD700',
-            color: '#000',
-            fontWeight: 500,
             width: '100%',
             marginTop: '8px'
           }}
-          className="hover:opacity-90"
         >
           Close
         </Button>

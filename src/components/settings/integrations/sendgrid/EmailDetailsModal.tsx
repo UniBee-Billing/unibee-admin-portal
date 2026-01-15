@@ -68,13 +68,7 @@ const EmailDetailsModal = ({ open, onClose, record }: EmailDetailsModalProps) =>
           type="primary"
           size="large"
           onClick={onClose}
-          style={{
-            backgroundColor: '#FFD700',
-            borderColor: '#FFD700',
-            color: '#000',
-            fontWeight: 500
-          }}
-          className="w-full hover:opacity-90"
+          className="w-full"
         >
           Close
         </Button>

@@ -1756,6 +1756,7 @@ export const revokeInvoiceReq = async (invoiceId: string) => {
 
 export const refundReq = async (body: {
   invoiceId: string
+  paymentId?: string
   refundAmount: number
   reason: string
 }) => {
@@ -1763,6 +1764,22 @@ export const refundReq = async (body: {
     const res = await request.post(`/merchant/invoice/refund`, body)
     handleStatusCode(res.data.code)
     return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getSplitPaymentsReq = async (
+  invoiceId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(`/merchant/invoice/split_payments`, {
+      params: { invoiceId }
+    })
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -2929,6 +2946,23 @@ export const deleteTotpDeviceReq = async (
     })
     handleStatusCode(res.data.code)
     return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getUpcomingInvoicePreviewReq = async (
+  subscriptionId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/subscription/preview_subscription_next_invoice`,
+      { params: { subscriptionId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.invoice ?? null, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]

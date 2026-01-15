@@ -60,6 +60,23 @@ const ViewTotalLimitModal = ({ userId, productId, metricLimit, onClose }: Props)
       ?.filter((q) => q.quotaType === QuotaType.MANUAL)
       .reduce((sum, q) => sum + (q.quotaAmount ?? 0), 0) ?? 0
 
+  const refundValue =
+    data?.quotaAdjustments
+      ?.filter((q) => q.quotaType.toLowerCase().includes('refund'))
+      .reduce((sum, q) => sum + (q.quotaAmount ?? 0), 0) ?? 0
+
+  const otherValue =
+    data?.quotaAdjustments
+      ?.filter((q) => {
+        const type = q.quotaType.toLowerCase()
+        return (
+          type !== QuotaType.CARRYOVER &&
+          type !== QuotaType.MANUAL &&
+          !type.includes('refund')
+        )
+      })
+      .reduce((sum, q) => sum + (q.quotaAmount ?? 0), 0) ?? 0
+
   return (
     <Modal
       title="View Total Limit"
@@ -95,6 +112,24 @@ const ViewTotalLimitModal = ({ userId, productId, metricLimit, onClose }: Props)
               style={{ fontSize: 14, padding: '4px 12px' }}
             >
               {manualValue > 0 ? `+${manualValue}` : manualValue}
+            </Tag>
+          </div>
+          <div>
+            <div className="mb-2 text-gray-500">Total refund value</div>
+            <Tag
+              color={refundValue < 0 ? 'red' : 'default'}
+              style={{ fontSize: 14, padding: '4px 12px' }}
+            >
+              {refundValue}
+            </Tag>
+          </div>
+          <div>
+            <div className="mb-2 text-gray-500">Total other value</div>
+            <Tag
+              color={otherValue > 0 ? 'green' : otherValue < 0 ? 'red' : 'default'}
+              style={{ fontSize: 14, padding: '4px 12px' }}
+            >
+              {otherValue > 0 ? `+${otherValue}` : otherValue}
             </Tag>
           </div>
         </div>
