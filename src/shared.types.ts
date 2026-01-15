@@ -315,6 +315,7 @@ interface IBillableMetrics {
   aggregationProperty: string
   gmtModify: string
   createTime: string
+  archived?: boolean
 }
 
 export interface LimitMetricUsage {
