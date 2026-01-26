@@ -1393,6 +1393,17 @@ export const suspendUserReq = async (userId: number) => {
   }
 }
 
+export const resumeUserReq = async (userId: number) => {
+  try {
+    const res = await request.post(`/merchant/user/resume_user`, { userId })
+    handleStatusCode(res.data.code)
+    return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // not the same as user signup, this is for admin to create the user.
 type TNewUserInfo = {
   externalUserId?: string
@@ -1941,6 +1952,19 @@ export const updateMemberRolesReq = async ({
 export const suspendMemberReq = async (memberId: number) => {
   try {
     const res = await request.post('/merchant/member/suspend_member', {
+      memberId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const resumeMemberReq = async (memberId: number) => {
+  try {
+    const res = await request.post('/merchant/member/resume_member', {
       memberId
     })
     handleStatusCode(res.data.code)
