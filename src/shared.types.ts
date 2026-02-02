@@ -986,6 +986,7 @@ export type TExportDataType =
   | 'CreditTransactionExport'
   | 'PlanExport'
   | 'CreditNoteExport'
+  | 'MetricEventExport'
 
 export type TImportDataType =
   | 'UserImport'

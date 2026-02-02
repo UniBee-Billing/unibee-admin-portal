@@ -58,6 +58,7 @@ import ResumeSubModal from './modals/resumeSub'
 import TerminateSubModal from './modals/terminateSub'
 import UpcomingInvoicePreviewModal from './modals/upcomingInvoicePreview'
 import UpdateSubPreviewModal from './modals/updateSubPreview'
+import UsageMetrics from './usageMetrics'
 
 const Index = ({
   userProfile,
@@ -992,6 +993,9 @@ const SubscriptionInfoSection = ({
       {subInfo?.unfinishedSubscriptionPendingUpdate && (
         <PendingUpdateSection subInfo={subInfo} />
       )}
+
+      {/* Usage Metrics Section */}
+      <UsageMetrics subInfo={subInfo} />
     </>
   )
 }

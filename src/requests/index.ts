@@ -671,7 +671,7 @@ export const sendMetricEventReq = async (body: {
 }
 
 export const getMetricUsageBySubIdReq = async (
-  subId: number,
+  subId: string,
   refreshCb?: () => void
 ) => {
   try {
@@ -2987,6 +2987,77 @@ export const getUpcomingInvoicePreviewReq = async (
     )
     handleStatusCode(res.data.code, refreshCb)
     return [res.data.data?.invoice ?? null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get metric event list for usage events page
+export const getMetricEventListReq = async ({
+  metricIds,
+  subscriptionIds,
+  page,
+  count,
+  createTimeStart,
+  createTimeEnd
+}: {
+  metricIds?: number[]
+  subscriptionIds?: string[]
+  page?: number
+  count?: number
+  createTimeStart?: number
+  createTimeEnd?: number
+}) => {
+  try {
+    const res = await request.post('/merchant/metric/event_list', {
+      metricIds,
+      subscriptionIds,
+      page,
+      count,
+      createTimeStart,
+      createTimeEnd,
+      sortField: 'gmt_create',
+      sortType: 'desc'
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get user history metric by subscription (for non-active subscriptions)
+export const getHistoryMetricBySubscriptionReq = async (
+  subscriptionId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/metric_by_subscription`,
+      { params: { subscriptionId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.userHistoryMetric, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get user history metric by invoice
+export const getHistoryMetricByInvoiceReq = async (
+  invoiceId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/metric_by_invoice`,
+      { params: { invoiceId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.userHistoryMetric, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
