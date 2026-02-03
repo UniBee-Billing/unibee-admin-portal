@@ -453,18 +453,28 @@ const Index = ({
     // Filter plans by current productId
     const productPlans = globalPlans.filter((p) => p.plan?.productId === productId)
 
-    // Update filter options with product-specific plans (format: #id planName)
-    planFilterRef.current = productPlans.map((p) => ({
-      value: p.plan?.id as number,
-      text: `#${p.plan?.id} ${p.plan?.planName}`
-    })).filter((p) => p.value && p.text)
+    // Helper to check if plan is archived
+    const isArchived = (status: PlanStatus | undefined) =>
+      status === PlanStatus.SOFT_ARCHIVED || status === PlanStatus.HARD_ARCHIVED
+
+    // Update filter options with product-specific plans (format: #id planName [Archived])
+    planFilterRef.current = productPlans.map((p) => {
+      const archived = isArchived(p.plan?.status)
+      return {
+        value: p.plan?.id as number,
+        text: `#${p.plan?.id} ${p.plan?.planName}${archived ? ' [Archived]' : ''}`
+      }
+    }).filter((p) => p.value && p.text)
 
     internalNameFilterRef.current = productPlans
       .filter((p) => p.plan?.internalName && p.plan?.internalName.trim() !== '')
-      .map((p) => ({
-        value: p.plan?.id as number,
-        text: `#${p.plan?.id} ${p.plan?.internalName}`
-      }))
+      .map((p) => {
+        const archived = isArchived(p.plan?.status)
+        return {
+          value: p.plan?.id as number,
+          text: `#${p.plan?.id} ${p.plan?.internalName}${archived ? ' [Archived]' : ''}`
+        }
+      })
       .filter((p) => p.value && p.text)
   }, [globalPlans, productId])
 

@@ -663,8 +663,8 @@ const Index = () => {
           exporting={exporting}
           onPageChange={onPageChange}
           clearFilters={clearFilters}
-          planFilterOptions={planFilterRef.current}
-          internalPlanNameFilterOptions={internalPlanNameFilterRef.current}
+          planFilterOptions={globalPlanOptions}
+          internalPlanNameFilterOptions={globalInternalPlanNameOptions}
           updateFilters={setFilters}
           page={page}
         />
