@@ -1503,8 +1503,12 @@ export const getDiscountCodeDetailWithMore = async (
   const [[discount, errDiscount], [planList, errPlanList]] = await Promise.all([
     getDiscountCodeDetailReq(codeId),
     getPlanList({
-      type: [PlanType.MAIN],
-      status: [PlanStatus.ACTIVE],
+      status: [
+        PlanStatus.ACTIVE,
+        PlanStatus.INACTIVE,
+        PlanStatus.SOFT_ARCHIVED,
+        PlanStatus.HARD_ARCHIVED
+      ],
       page: 0,
       count: 500
     })
