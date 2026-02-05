@@ -671,7 +671,7 @@ export const sendMetricEventReq = async (body: {
 }
 
 export const getMetricUsageBySubIdReq = async (
-  subId: number,
+  subId: string,
   refreshCb?: () => void
 ) => {
   try {
@@ -1393,6 +1393,17 @@ export const suspendUserReq = async (userId: number) => {
   }
 }
 
+export const resumeUserReq = async (userId: number) => {
+  try {
+    const res = await request.post(`/merchant/user/resume_user`, { userId })
+    handleStatusCode(res.data.code)
+    return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // not the same as user signup, this is for admin to create the user.
 type TNewUserInfo = {
   externalUserId?: string
@@ -1492,8 +1503,12 @@ export const getDiscountCodeDetailWithMore = async (
   const [[discount, errDiscount], [planList, errPlanList]] = await Promise.all([
     getDiscountCodeDetailReq(codeId),
     getPlanList({
-      type: [PlanType.MAIN],
-      status: [PlanStatus.ACTIVE],
+      status: [
+        PlanStatus.ACTIVE,
+        PlanStatus.INACTIVE,
+        PlanStatus.SOFT_ARCHIVED,
+        PlanStatus.HARD_ARCHIVED
+      ],
       page: 0,
       count: 500
     })
@@ -1941,6 +1956,19 @@ export const updateMemberRolesReq = async ({
 export const suspendMemberReq = async (memberId: number) => {
   try {
     const res = await request.post('/merchant/member/suspend_member', {
+      memberId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const resumeMemberReq = async (memberId: number) => {
+  try {
+    const res = await request.post('/merchant/member/resume_member', {
       memberId
     })
     handleStatusCode(res.data.code)
@@ -2963,6 +2991,77 @@ export const getUpcomingInvoicePreviewReq = async (
     )
     handleStatusCode(res.data.code, refreshCb)
     return [res.data.data?.invoice ?? null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get metric event list for usage events page
+export const getMetricEventListReq = async ({
+  metricIds,
+  subscriptionIds,
+  page,
+  count,
+  createTimeStart,
+  createTimeEnd
+}: {
+  metricIds?: number[]
+  subscriptionIds?: string[]
+  page?: number
+  count?: number
+  createTimeStart?: number
+  createTimeEnd?: number
+}) => {
+  try {
+    const res = await request.post('/merchant/metric/event_list', {
+      metricIds,
+      subscriptionIds,
+      page,
+      count,
+      createTimeStart,
+      createTimeEnd,
+      sortField: 'gmt_create',
+      sortType: 'desc'
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get user history metric by subscription (for non-active subscriptions)
+export const getHistoryMetricBySubscriptionReq = async (
+  subscriptionId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/metric_by_subscription`,
+      { params: { subscriptionId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.userHistoryMetric, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get user history metric by invoice
+export const getHistoryMetricByInvoiceReq = async (
+  invoiceId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/metric_by_invoice`,
+      { params: { invoiceId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.userHistoryMetric, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]

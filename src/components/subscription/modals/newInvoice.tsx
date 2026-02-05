@@ -26,6 +26,23 @@ import { Currency } from 'dinero.js'
 import update from 'immutability-helper'
 import { useEffect, useState } from 'react'
 
+// Convert dollar amount string to cents using string manipulation
+// to avoid floating-point precision issues (e.g., 9.45 * 100 = 944.9999999999999)
+const convertToCents = (amountStr: string, scale: number): number => {
+  const parts = amountStr.toString().split('.')
+  const whole = parseInt(parts[0] || '0', 10)
+
+  // For zero-decimal currencies (e.g., JPY, KRW) where scale=1,
+  // return the whole number directly without processing decimals
+  if (scale === 1) {
+    return whole
+  }
+
+  const decimal = parts[1] || ''
+  const paddedDecimal = decimal.padEnd(2, '0').substring(0, 2)
+  return whole * scale + parseInt(paddedDecimal, 10)
+}
+
 const newPlaceholderItem = (): InvoiceItem => ({
   id: randomString(8),
   description: '',
@@ -201,7 +218,10 @@ const Index = ({
     }
     const invoiceItems = invoiceList.map((v) => ({
       description: v.description,
-      unitAmountExcludingTax: Number(v.unitAmountExcludingTax) * CURRENCY.Scale,
+      unitAmountExcludingTax: convertToCents(
+        String(v.unitAmountExcludingTax),
+        CURRENCY.Scale
+      ),
       quantity: Number(v.quantity)
     }))
     setLoading(true)
@@ -303,6 +323,15 @@ const Index = ({
       return
     }
 
+    // Validate zero-decimal currencies (e.g., JPY, KRW) - must be whole number
+    const currencyScale = appConfig.currency[currency as Currency]?.Scale
+    if (currencyScale === 1 && refundAmt.includes('.')) {
+      message.error(
+        `${currency} does not support decimal places. Please enter a whole number.`
+      )
+      return
+    }
+
     // Get max refundable amount based on selected payment (for split payment) or invoice total
     const selectedPayment = hasSplitPayment
       ? payments.find((p) => p.paymentId === selectedPaymentId)
@@ -322,7 +351,10 @@ const Index = ({
     const [_, err] = await refundReq({
       invoiceId: detail?.invoiceId,
       paymentId: selectedPaymentId || undefined,
-      refundAmount: amt * appConfig.currency[currency as Currency]!.Scale,
+      refundAmount: convertToCents(
+        refundAmt,
+        appConfig.currency[currency as Currency]!.Scale
+      ),
       reason: refundReason
     })
     setLoading(false)
@@ -764,6 +796,12 @@ const Index = ({
                 value={refundAmt}
                 onChange={onRefundAmtChange}
               />
+              {appConfig.currency[currency as Currency]?.Scale === 1 && (
+                <div className="text-orange-500 text-xs mt-1">
+                  {currency} does not support decimal places. Please enter a
+                  whole number.
+                </div>
+              )}
             </Col>
             <Col span={12}>
               <div className="mb-2 text-gray-700">
