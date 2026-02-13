@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 
 type MetricLimitResponse = {
   TotalLimit: number
-  PlanLimits?: { metricLimit: number; planId: number }[]
+  PlanLimits?: { metricLimit: number; planId: number; quantity?: number }[]
   quotaAdjustments?: {
     quotaAmount: number
     quotaType: string
@@ -43,7 +43,10 @@ const ViewTotalLimitModal = ({ userId, productId, metricLimit, onClose }: Props)
   }, [])
 
   const standardValue =
-    data?.PlanLimits?.reduce((sum, p) => sum + (p.metricLimit ?? 0), 0) ??
+    data?.PlanLimits?.reduce((sum, p) => {
+      const qty = (p.quantity ?? 1) < 1 ? 1 : (p.quantity ?? 1)
+      return sum + (p.metricLimit ?? 0) * qty
+    }, 0) ??
     metricLimit.planLimit ??
     metricLimit.TotalLimit ??
     0

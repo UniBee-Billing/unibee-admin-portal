@@ -1,11 +1,12 @@
 import { getHistoryMetricByInvoiceReq, getInvoiceListReq, getMetricUsageBySubIdReq } from '@/requests'
-import { ISubscriptionType, UserInvoice } from '@/shared.types'
+import { ISubscriptionType, LimitMetricUsage, UserInvoice } from '@/shared.types'
 import { ReloadOutlined } from '@ant-design/icons'
 import { Button, Select, Spin, Table, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ViewTotalLimitModal from '../user/metricLimitModals/viewTotalLimitModal'
 
 // Progress bar color thresholds
 const USAGE_THRESHOLD = {
@@ -39,6 +40,7 @@ interface UsageMetric {
   limit: number | null // null means unlimited
   billingCycleStart: number
   billingCycleEnd: number
+  metricLimitData?: LimitMetricUsage['metricLimit']
 }
 
 interface InvoiceOption {
@@ -60,6 +62,10 @@ const UsageMetrics = ({ subInfo }: Props) => {
   const [invoiceOptions, setInvoiceOptions] = useState<InvoiceOption[]>([])
   const [selectedInvoice, setSelectedInvoice] = useState<string>('current')
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
+  const [viewLimitModal, setViewLimitModal] = useState<{
+    open: boolean
+    metricLimit: LimitMetricUsage['metricLimit'] | null
+  }>({ open: false, metricLimit: null })
 
   // Fetch invoice list for the dropdown
   const fetchInvoices = async () => {
@@ -126,7 +132,8 @@ const UsageMetrics = ({ subInfo }: Props) => {
           usage: item.CurrentUsedValue,
           limit: item.metricLimit.TotalLimit,
           billingCycleStart: subInfo.currentPeriodStart,
-          billingCycleEnd: subInfo.currentPeriodEnd
+          billingCycleEnd: subInfo.currentPeriodEnd,
+          metricLimitData: item.metricLimit
         })
       })
     }
@@ -309,8 +316,20 @@ const UsageMetrics = ({ subInfo }: Props) => {
       dataIndex: 'limit',
       key: 'limit',
       width: 100,
-      render: (limit: number | null) =>
-        limit === null ? 'Unlimited' : limit.toLocaleString()
+      render: (limit: number | null, record) =>
+        limit === null ? (
+          'Unlimited'
+        ) : record.metricLimitData ? (
+          <a
+            onClick={() =>
+              setViewLimitModal({ open: true, metricLimit: record.metricLimitData! })
+            }
+          >
+            {limit.toLocaleString()}
+          </a>
+        ) : (
+          limit.toLocaleString()
+        )
     },
     {
       title: 'Progress',
@@ -377,6 +396,14 @@ const UsageMetrics = ({ subInfo }: Props) => {
 
   return (
     <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+      {viewLimitModal.open && viewLimitModal.metricLimit && (
+        <ViewTotalLimitModal
+          userId={subInfo.user?.id ?? 0}
+          productId={subInfo.productId}
+          metricLimit={viewLimitModal.metricLimit}
+          onClose={() => setViewLimitModal({ open: false, metricLimit: null })}
+        />
+      )}
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Subscription Usage Metrics</h3>
