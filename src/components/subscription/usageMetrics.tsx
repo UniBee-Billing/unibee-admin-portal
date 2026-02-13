@@ -40,6 +40,7 @@ interface UsageMetric {
   limit: number | null // null means unlimited
   billingCycleStart: number
   billingCycleEnd: number
+  invoiceId?: string // Invoice ID for querying events
   metricLimitData?: LimitMetricUsage['metricLimit']
 }
 
@@ -95,7 +96,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
 
         return {
           value: inv.invoiceId,
-          label: `${inv.invoiceName || 'Invoice'} (${inv.invoiceId.slice(-12)}) - ${dateRange} - ${inv.currency}${(inv.totalAmount / 100).toFixed(2)}`,
+          label: `${inv.invoiceName || 'Invoice'} (${inv.invoiceId}) - ${dateRange} - ${inv.currency}${(inv.totalAmount / 100).toFixed(2)}`,
           invoiceId: inv.invoiceId,
           periodStart: inv.periodStart || inv.createTime,
           periodEnd: inv.periodEnd || inv.createTime
@@ -121,6 +122,9 @@ const UsageMetrics = ({ subInfo }: Props) => {
     // Transform API response to our format
     const usageMetrics: UsageMetric[] = []
 
+    // Get current period invoice ID
+    const currentInvoiceId = subInfo.latestInvoice?.invoiceId || ''
+
     // Handle limit metrics (field name is "limitStats" from API)
     if (res.limitStats && res.limitStats.length > 0) {
       res.limitStats.forEach((item: any) => {
@@ -133,6 +137,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
           limit: item.metricLimit.TotalLimit,
           billingCycleStart: subInfo.currentPeriodStart,
           billingCycleEnd: subInfo.currentPeriodEnd,
+          invoiceId: currentInvoiceId,
           metricLimitData: item.metricLimit
         })
       })
@@ -149,7 +154,8 @@ const UsageMetrics = ({ subInfo }: Props) => {
           usage: item.CurrentUsedValue,
           limit: null, // Metered metrics typically have no limit
           billingCycleStart: subInfo.currentPeriodStart,
-          billingCycleEnd: subInfo.currentPeriodEnd
+          billingCycleEnd: subInfo.currentPeriodEnd,
+          invoiceId: currentInvoiceId
         })
       })
     }
@@ -165,7 +171,8 @@ const UsageMetrics = ({ subInfo }: Props) => {
           usage: item.CurrentUsedValue,
           limit: null,
           billingCycleStart: subInfo.currentPeriodStart,
-          billingCycleEnd: subInfo.currentPeriodEnd
+          billingCycleEnd: subInfo.currentPeriodEnd,
+          invoiceId: currentInvoiceId
         })
       })
     }
@@ -204,7 +211,8 @@ const UsageMetrics = ({ subInfo }: Props) => {
           usage: item.usedValue || item.UsedValue || 0,
           limit: item.totalLimit || item.TotalLimit || null,
           billingCycleStart: periodStart,
-          billingCycleEnd: periodEnd
+          billingCycleEnd: periodEnd,
+          invoiceId: invoiceId
         })
       })
     }
@@ -220,7 +228,8 @@ const UsageMetrics = ({ subInfo }: Props) => {
           usage: item.usedValue || item.UsedValue || item.CurrentUsedValue || 0,
           limit: null,
           billingCycleStart: periodStart,
-          billingCycleEnd: periodEnd
+          billingCycleEnd: periodEnd,
+          invoiceId: invoiceId
         })
       })
     }
@@ -236,7 +245,8 @@ const UsageMetrics = ({ subInfo }: Props) => {
           usage: item.usedValue || item.UsedValue || item.CurrentUsedValue || 0,
           limit: null,
           billingCycleStart: periodStart,
-          billingCycleEnd: periodEnd
+          billingCycleEnd: periodEnd,
+          invoiceId: invoiceId
         })
       })
     }
@@ -272,8 +282,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
       metricId: String(metric.metricId),
       metricName: metric.name,
       metricCode: metric.code,
-      periodStart: String(metric.billingCycleStart),
-      periodEnd: String(metric.billingCycleEnd)
+      invoiceId: metric.invoiceId || ''
     })
     navigate(`/subscription/usage-events?${params.toString()}`)
   }
@@ -417,7 +426,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
               {
                 value: 'current',
                 label: subInfo?.latestInvoice
-                  ? `Current Period (${subInfo.latestInvoice.invoiceId.slice(-12)}) - ${dayjs(subInfo.currentPeriodStart * 1000).format('YYYY-MMM-DD')} to ${dayjs(subInfo.currentPeriodEnd * 1000).format('YYYY-MMM-DD')} - ${subInfo.latestInvoice.currency}${(subInfo.latestInvoice.totalAmount / 100).toFixed(2)}`
+                  ? `Current Period (${subInfo.latestInvoice.invoiceId}) - ${dayjs(subInfo.currentPeriodStart * 1000).format('YYYY-MMM-DD')} to ${dayjs(subInfo.currentPeriodEnd * 1000).format('YYYY-MMM-DD')} - ${subInfo.latestInvoice.currency}${(subInfo.latestInvoice.totalAmount / 100).toFixed(2)}`
                   : 'Current Period'
               },
               ...invoiceOptions

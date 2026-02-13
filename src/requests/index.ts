@@ -3004,7 +3004,8 @@ export const getMetricEventListReq = async ({
   page,
   count,
   createTimeStart,
-  createTimeEnd
+  createTimeEnd,
+  invoiceId
 }: {
   metricIds?: number[]
   subscriptionIds?: string[]
@@ -3012,6 +3013,7 @@ export const getMetricEventListReq = async ({
   count?: number
   createTimeStart?: number
   createTimeEnd?: number
+  invoiceId?: string
 }) => {
   try {
     const res = await request.post('/merchant/metric/event_list', {
@@ -3021,6 +3023,7 @@ export const getMetricEventListReq = async ({
       count,
       createTimeStart,
       createTimeEnd,
+      invoiceId,
       sortField: 'gmt_create',
       sortType: 'desc'
     })
