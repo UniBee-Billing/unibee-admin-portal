@@ -66,7 +66,6 @@ const UsageMetrics = ({ subInfo }: Props) => {
   const [viewLimitModal, setViewLimitModal] = useState<{
     open: boolean
     metricLimit: LimitMetricUsage['metricLimit'] | null
-    snapshotTotalLimit?: number
   }>({ open: false, metricLimit: null })
 
   // Fetch invoice list for the dropdown (using new queryable API)
@@ -257,7 +256,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
         ) : record.metricLimitData ? (
           <a
             onClick={() =>
-              setViewLimitModal({ open: true, metricLimit: record.metricLimitData!, snapshotTotalLimit: record.limit ?? undefined })
+              setViewLimitModal({ open: true, metricLimit: record.metricLimitData! })
             }
           >
             {limit.toLocaleString()}
@@ -336,7 +335,6 @@ const UsageMetrics = ({ subInfo }: Props) => {
           userId={subInfo.user?.id ?? 0}
           productId={subInfo.productId}
           metricLimit={viewLimitModal.metricLimit}
-          snapshotTotalLimit={viewLimitModal.snapshotTotalLimit}
           onClose={() => setViewLimitModal({ open: false, metricLimit: null })}
         />
       )}

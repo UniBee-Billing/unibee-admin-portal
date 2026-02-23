@@ -17,11 +17,10 @@ type Props = {
   userId: number
   productId: number
   metricLimit: LimitMetricUsage['metricLimit']
-  snapshotTotalLimit?: number
   onClose: () => void
 }
 
-const ViewTotalLimitModal = ({ userId, productId, metricLimit, snapshotTotalLimit, onClose }: Props) => {
+const ViewTotalLimitModal = ({ userId, productId, metricLimit, onClose }: Props) => {
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<MetricLimitResponse | null>(null)
 
@@ -44,7 +43,6 @@ const ViewTotalLimitModal = ({ userId, productId, metricLimit, snapshotTotalLimi
   }, [])
 
   const standardValue =
-    snapshotTotalLimit ??
     data?.PlanLimits?.reduce((sum, p) => {
       const qty = (p.quantity ?? 1) < 1 ? 1 : (p.quantity ?? 1)
       return sum + (p.metricLimit ?? 0) * qty
