@@ -253,7 +253,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
       render: (limit: number | null, record) =>
         limit === null ? (
           'Unlimited'
-        ) : record.metricLimitData ? (
+        ) : record.metricLimitData && selectedInvoice === 'current' ? (
           <a
             onClick={() =>
               setViewLimitModal({ open: true, metricLimit: record.metricLimitData! })
