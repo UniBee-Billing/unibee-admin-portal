@@ -3053,6 +3053,24 @@ export const getHistoryMetricBySubscriptionReq = async (
   }
 }
 
+// List invoices that can be used for metric_by_invoice query
+export const getMetricQueryableInvoicesReq = async (
+  params: { userId: number; subscriptionId?: string; page?: number; count?: number },
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/invoices_metric_queryable`,
+      { params }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // Get user history metric by invoice
 export const getHistoryMetricByInvoiceReq = async (
   invoiceId: string,

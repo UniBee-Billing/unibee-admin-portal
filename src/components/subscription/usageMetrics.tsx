@@ -1,10 +1,10 @@
-import { getHistoryMetricByInvoiceReq, getInvoiceListReq, getMetricUsageBySubIdReq } from '@/requests'
-import { ISubscriptionType, LimitMetricUsage, UserInvoice } from '@/shared.types'
+import { getMetricQueryableInvoicesReq } from '@/requests'
+import { ISubscriptionType, LimitMetricUsage, SubscriptionStatus } from '@/shared.types'
 import { ReloadOutlined } from '@ant-design/icons'
 import { Button, Select, Spin, Table, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ViewTotalLimitModal from '../user/metricLimitModals/viewTotalLimitModal'
 
@@ -56,6 +56,107 @@ interface Props {
   subInfo: ISubscriptionType | null
 }
 
+// Extract metrics from an invoice's lines and userMetricChargeForInvoice
+const extractMetricsFromInvoice = (inv: any): UsageMetric[] => {
+  const usageMetrics: UsageMetric[] = []
+  const periodStart = inv.periodStart || inv.createTime || 0
+  const periodEnd = inv.periodEnd || inv.createTime || 0
+
+  // Aggregate limit metrics across all lines (plan + addons, with quantity)
+  if (inv.lines && inv.lines.length > 0) {
+    const limitMap = new Map<number, { name: string; code: string; type: number; totalLimit: number }>()
+
+    inv.lines.forEach((line: any) => {
+      const qty = (line.quantity ?? 1) < 1 ? 1 : (line.quantity ?? 1)
+      if (line.planMetricLimitConfigs && line.planMetricLimitConfigs.length > 0) {
+        line.planMetricLimitConfigs.forEach((cfg: any) => {
+          const existing = limitMap.get(cfg.metricId)
+          const cfgLimit = (cfg.metricLimit ?? 0) * qty
+          if (existing) {
+            existing.totalLimit += cfgLimit
+          } else {
+            limitMap.set(cfg.metricId, {
+              name: cfg.metricName || '',
+              code: cfg.metricCode || '',
+              type: cfg.metricType ?? 0,
+              totalLimit: cfgLimit
+            })
+          }
+        })
+      }
+    })
+
+    limitMap.forEach((val, metricId) => {
+      usageMetrics.push({
+        key: `limit-${metricId}`,
+        metricId,
+        name: val.name,
+        code: val.code,
+        usage: 0,
+        limit: val.totalLimit,
+        billingCycleStart: periodStart,
+        billingCycleEnd: periodEnd,
+        invoiceId: inv.invoiceId,
+        metricLimitData: {
+          id: metricId,
+          MetricId: metricId,
+          merchantId: 0,
+          metricId: metricId,
+          metricName: val.name,
+          code: val.code,
+          TotalLimit: val.totalLimit,
+          metricDescription: '',
+          type: val.type,
+          aggregationType: 1,
+          aggregationProperty: '',
+          gmtModify: '',
+          createTime: ''
+        } as LimitMetricUsage['metricLimit']
+      })
+    })
+  }
+
+  // Extract metered/recurring charge metrics from userMetricChargeForInvoice
+  const chargeData = inv.userMetricChargeForInvoice
+  if (chargeData) {
+    if (chargeData.meteredChargeStats && chargeData.meteredChargeStats.length > 0) {
+      chargeData.meteredChargeStats.forEach((item: any) => {
+        const metricId = item.metricId || item.MetricId || 0
+        usageMetrics.push({
+          key: `metered-${metricId}`,
+          metricId,
+          name: item.name || '',
+          code: '',
+          usage: item.CurrentUsedValue || 0,
+          limit: null,
+          billingCycleStart: periodStart,
+          billingCycleEnd: periodEnd,
+          invoiceId: inv.invoiceId
+        })
+      })
+    }
+
+    if (chargeData.recurringChargeStats && chargeData.recurringChargeStats.length > 0) {
+      chargeData.recurringChargeStats.forEach((item: any) => {
+        const metricId = item.metricId || item.MetricId || 0
+        usageMetrics.push({
+          key: `recurring-${metricId}`,
+          metricId,
+          name: item.name || '',
+          code: '',
+          usage: item.CurrentUsedValue || 0,
+          limit: null,
+          billingCycleStart: periodStart,
+          billingCycleEnd: periodEnd,
+          invoiceId: inv.invoiceId
+        })
+      })
+    }
+  }
+
+  return usageMetrics
+}
+
 const UsageMetrics = ({ subInfo }: Props) => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -66,30 +167,49 @@ const UsageMetrics = ({ subInfo }: Props) => {
   const [viewLimitModal, setViewLimitModal] = useState<{
     open: boolean
     metricLimit: LimitMetricUsage['metricLimit'] | null
+    snapshotTotalLimit?: number
   }>({ open: false, metricLimit: null })
 
-  // Fetch invoice list for the dropdown
+  // Cache raw invoice data from API
+  const invoiceDataRef = useRef<Map<string, any>>(new Map())
+
+  // Extract metrics from cached invoice data for a given invoiceId
+  const showMetricsForInvoice = (invoiceId: string) => {
+    const inv = invoiceDataRef.current.get(invoiceId)
+    if (inv) {
+      setMetrics(extractMetricsFromInvoice(inv))
+    } else {
+      setMetrics([])
+    }
+    setLastRefreshed(new Date())
+  }
+
+  // Fetch all queryable invoices (contains metrics data already)
   const fetchInvoices = async () => {
     if (!subInfo?.user?.id) return
 
-    const [res, err] = await getInvoiceListReq({
+    setLoading(true)
+    const [res, err] = await getMetricQueryableInvoicesReq({
       userId: Number(subInfo.user.id),
-      status: [3], // Only paid invoices
+      subscriptionId: subInfo.subscriptionId,
       page: 0,
       count: 50
     })
+    setLoading(false)
 
     if (err || !res?.invoices) return
 
+    // Cache all invoice data
+    const dataMap = new Map<string, any>()
+    res.invoices.forEach((inv: any) => {
+      dataMap.set(inv.invoiceId, inv)
+    })
+    invoiceDataRef.current = dataMap
+
+    // Build dropdown options (exclude latestInvoice since it's shown as "Current Period")
     const options: InvoiceOption[] = res.invoices
-      .filter((inv: UserInvoice) =>
-        inv.subscriptionId === subInfo.subscriptionId &&
-        inv.bizType === 3 &&
-        inv.invoiceName !== 'Credit Note' &&
-        inv.invoiceId !== subInfo.latestInvoice?.invoiceId
-      )
-      .map((inv: UserInvoice) => {
-        // Use createTime as fallback when periodStart/periodEnd is 0
+      .filter((inv: any) => inv.invoiceId !== subInfo.latestInvoice?.invoiceId)
+      .map((inv: any) => {
         const startDate = inv.periodStart ? dayjs(inv.periodStart * 1000).format('YYYY-MMM-DD') : dayjs(inv.createTime * 1000).format('YYYY-MMM-DD')
         const endDate = inv.periodEnd ? dayjs(inv.periodEnd * 1000).format('YYYY-MMM-DD') : 'N/A'
         const dateRange = inv.periodStart && inv.periodEnd ? `${startDate} to ${endDate}` : startDate
@@ -104,175 +224,31 @@ const UsageMetrics = ({ subInfo }: Props) => {
       })
 
     setInvoiceOptions(options)
-  }
 
-  // Fetch usage metrics
-  const fetchMetrics = async () => {
-    if (!subInfo?.subscriptionId) return
-
-    setLoading(true)
-    const [res, err] = await getMetricUsageBySubIdReq(subInfo.subscriptionId)
-    setLoading(false)
-
-    if (err || !res) {
-      setMetrics([])
-      return
+    const isActive = subInfo.status === SubscriptionStatus.ACTIVE
+    if (isActive) {
+      // Show current period metrics
+      const currentInvoiceId = subInfo.latestInvoice?.invoiceId || ''
+      if (currentInvoiceId) {
+        showMetricsForInvoice(currentInvoiceId)
+      }
+    } else if (options.length > 0) {
+      // Non-active: default to most recent paid invoice
+      setSelectedInvoice(options[0].value)
+      showMetricsForInvoice(options[0].invoiceId)
     }
-
-    // Transform API response to our format
-    const usageMetrics: UsageMetric[] = []
-
-    // Get current period invoice ID
-    const currentInvoiceId = subInfo.latestInvoice?.invoiceId || ''
-
-    // Handle limit metrics (field name is "limitStats" from API)
-    if (res.limitStats && res.limitStats.length > 0) {
-      res.limitStats.forEach((item: any) => {
-        usageMetrics.push({
-          key: `limit-${item.metricLimit.MetricId}`,
-          metricId: item.metricLimit.MetricId,
-          name: item.metricLimit.metricName,
-          code: item.metricLimit.code,
-          usage: item.CurrentUsedValue,
-          limit: item.metricLimit.TotalLimit,
-          billingCycleStart: subInfo.currentPeriodStart,
-          billingCycleEnd: subInfo.currentPeriodEnd,
-          invoiceId: currentInvoiceId,
-          metricLimitData: item.metricLimit
-        })
-      })
-    }
-
-    // Handle metered charge metrics (field name is "meteredChargeStats" from API)
-    if (res.meteredChargeStats && res.meteredChargeStats.length > 0) {
-      res.meteredChargeStats.forEach((item: any) => {
-        usageMetrics.push({
-          key: `metered-${item.merchantMetric?.id || item.metricId}`,
-          metricId: item.merchantMetric?.id || item.metricId,
-          name: item.merchantMetric?.metricName || '',
-          code: item.merchantMetric?.code || '',
-          usage: item.CurrentUsedValue,
-          limit: null, // Metered metrics typically have no limit
-          billingCycleStart: subInfo.currentPeriodStart,
-          billingCycleEnd: subInfo.currentPeriodEnd,
-          invoiceId: currentInvoiceId
-        })
-      })
-    }
-
-    // Handle recurring charge metrics (field name is "recurringChargeStats" from API)
-    if (res.recurringChargeStats && res.recurringChargeStats.length > 0) {
-      res.recurringChargeStats.forEach((item: any) => {
-        usageMetrics.push({
-          key: `recurring-${item.merchantMetric?.id || item.metricId}`,
-          metricId: item.merchantMetric?.id || item.metricId,
-          name: item.merchantMetric?.metricName || '',
-          code: item.merchantMetric?.code || '',
-          usage: item.CurrentUsedValue,
-          limit: null,
-          billingCycleStart: subInfo.currentPeriodStart,
-          billingCycleEnd: subInfo.currentPeriodEnd,
-          invoiceId: currentInvoiceId
-        })
-      })
-    }
-
-    setMetrics(usageMetrics)
-    setLastRefreshed(new Date())
-  }
-
-  // Fetch historical metrics by invoice
-  const fetchHistoricalMetrics = async (invoiceId: string) => {
-    setLoading(true)
-    const [res, err] = await getHistoryMetricByInvoiceReq(invoiceId)
-    setLoading(false)
-
-    if (err || !res) {
-      setMetrics([])
-      return
-    }
-
-    // Get period dates from selected invoice
-    const selectedInv = invoiceOptions.find((inv) => inv.invoiceId === invoiceId)
-    const periodStart = selectedInv?.periodStart || 0
-    const periodEnd = selectedInv?.periodEnd || 0
-
-    // Transform API response to our format
-    const usageMetrics: UsageMetric[] = []
-
-    // Handle limit metrics from history
-    if (res.limitStats && res.limitStats.length > 0) {
-      res.limitStats.forEach((item: any) => {
-        usageMetrics.push({
-          key: `limit-${item.metricLimit?.MetricId || item.metricId || item.MetricId}`,
-          metricId: item.metricLimit?.MetricId || item.metricId || item.MetricId,
-          name: item.metricLimit?.metricName || item.metricName || '',
-          code: item.metricLimit?.code || item.code || '',
-          usage: item.usedValue || item.UsedValue || 0,
-          limit: item.totalLimit || item.TotalLimit || null,
-          billingCycleStart: periodStart,
-          billingCycleEnd: periodEnd,
-          invoiceId: invoiceId
-        })
-      })
-    }
-
-    // Handle metered charge metrics from history
-    if (res.meteredChargeStats && res.meteredChargeStats.length > 0) {
-      res.meteredChargeStats.forEach((item: any) => {
-        usageMetrics.push({
-          key: `metered-${item.merchantMetric?.id || item.metricId || item.MetricId}`,
-          metricId: item.merchantMetric?.id || item.metricId || item.MetricId,
-          name: item.merchantMetric?.metricName || item.metricName || '',
-          code: item.merchantMetric?.code || item.code || '',
-          usage: item.usedValue || item.UsedValue || item.CurrentUsedValue || 0,
-          limit: null,
-          billingCycleStart: periodStart,
-          billingCycleEnd: periodEnd,
-          invoiceId: invoiceId
-        })
-      })
-    }
-
-    // Handle recurring charge metrics from history
-    if (res.recurringChargeStats && res.recurringChargeStats.length > 0) {
-      res.recurringChargeStats.forEach((item: any) => {
-        usageMetrics.push({
-          key: `recurring-${item.merchantMetric?.id || item.metricId || item.MetricId}`,
-          metricId: item.merchantMetric?.id || item.metricId || item.MetricId,
-          name: item.merchantMetric?.metricName || item.metricName || '',
-          code: item.merchantMetric?.code || item.code || '',
-          usage: item.usedValue || item.UsedValue || item.CurrentUsedValue || 0,
-          limit: null,
-          billingCycleStart: periodStart,
-          billingCycleEnd: periodEnd,
-          invoiceId: invoiceId
-        })
-      })
-    }
-
-    setMetrics(usageMetrics)
-    setLastRefreshed(new Date())
   }
 
   // Handle invoice filter change
   const onInvoiceChange = (value: string) => {
     setSelectedInvoice(value)
-    setMetrics([]) // Clear previous data to avoid stale data display
-    if (value === 'current') {
-      fetchMetrics()
-    } else {
-      fetchHistoricalMetrics(value)
-    }
+    const invoiceId = value === 'current' ? (subInfo?.latestInvoice?.invoiceId || '') : value
+    showMetricsForInvoice(invoiceId)
   }
 
-  // Handle refresh
+  // Handle refresh - re-fetch all data from API
   const onRefresh = () => {
-    if (selectedInvoice === 'current') {
-      fetchMetrics()
-    } else {
-      fetchHistoricalMetrics(selectedInvoice)
-    }
+    fetchInvoices()
   }
 
   // Handle view records click - navigate to usage events page
@@ -287,10 +263,11 @@ const UsageMetrics = ({ subInfo }: Props) => {
     navigate(`/subscription/usage-events?${params.toString()}`)
   }
 
+  const isActive = subInfo?.status === SubscriptionStatus.ACTIVE
+
   useEffect(() => {
     if (subInfo) {
       fetchInvoices()
-      fetchMetrics()
     }
   }, [subInfo?.subscriptionId])
 
@@ -331,7 +308,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
         ) : record.metricLimitData ? (
           <a
             onClick={() =>
-              setViewLimitModal({ open: true, metricLimit: record.metricLimitData! })
+              setViewLimitModal({ open: true, metricLimit: record.metricLimitData!, snapshotTotalLimit: record.limit ?? undefined })
             }
           >
             {limit.toLocaleString()}
@@ -410,6 +387,7 @@ const UsageMetrics = ({ subInfo }: Props) => {
           userId={subInfo.user?.id ?? 0}
           productId={subInfo.productId}
           metricLimit={viewLimitModal.metricLimit}
+          snapshotTotalLimit={viewLimitModal.snapshotTotalLimit}
           onClose={() => setViewLimitModal({ open: false, metricLimit: null })}
         />
       )}
@@ -423,12 +401,16 @@ const UsageMetrics = ({ subInfo }: Props) => {
             onChange={onInvoiceChange}
             style={{ minWidth: 500 }}
             options={[
-              {
-                value: 'current',
-                label: subInfo?.latestInvoice
-                  ? `Current Period (${subInfo.latestInvoice.invoiceId}) - ${dayjs(subInfo.currentPeriodStart * 1000).format('YYYY-MMM-DD')} to ${dayjs(subInfo.currentPeriodEnd * 1000).format('YYYY-MMM-DD')} - ${subInfo.latestInvoice.currency}${(subInfo.latestInvoice.totalAmount / 100).toFixed(2)}`
-                  : 'Current Period'
-              },
+              ...(isActive
+                ? [
+                    {
+                      value: 'current',
+                      label: subInfo?.latestInvoice
+                        ? `Current Period (${subInfo.latestInvoice.invoiceId}) - ${dayjs(subInfo.currentPeriodStart * 1000).format('YYYY-MMM-DD')} to ${dayjs(subInfo.currentPeriodEnd * 1000).format('YYYY-MMM-DD')} - ${subInfo.latestInvoice.currency}${(subInfo.latestInvoice.totalAmount / 100).toFixed(2)}`
+                        : 'Current Period'
+                    }
+                  ]
+                : []),
               ...invoiceOptions
             ]}
           />
