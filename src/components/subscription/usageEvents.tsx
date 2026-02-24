@@ -46,8 +46,7 @@ const UsageEvents = () => {
   const metricId = searchParams.get('metricId') || ''
   const metricName = searchParams.get('metricName') || ''
   const metricCode = searchParams.get('metricCode') || ''
-  const periodStart = searchParams.get('periodStart') || ''
-  const periodEnd = searchParams.get('periodEnd') || ''
+  const invoiceId = searchParams.get('invoiceId') || ''
 
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -64,10 +63,9 @@ const UsageEvents = () => {
     const [res, err] = await getMetricEventListReq({
       metricIds: [Number(metricId)],
       subscriptionIds: [subscriptionId],
+      invoiceId: invoiceId || undefined,
       page: page - 1,
-      count: pageSize,
-      ...(periodStart && { createTimeStart: Number(periodStart) }),
-      ...(periodEnd && { createTimeEnd: Number(periodEnd) })
+      count: pageSize
     })
     setLoading(false)
 
@@ -111,8 +109,7 @@ const UsageEvents = () => {
       payload: {
         subscriptionIds: [subscriptionId],
         metricIds: [Number(metricId)],
-        ...(periodStart && { createTimeStart: Number(periodStart) }),
-        ...(periodEnd && { createTimeEnd: Number(periodEnd) })
+        invoiceId: invoiceId || undefined
       },
       format: 'csv'
     })
