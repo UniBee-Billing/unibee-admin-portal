@@ -38,6 +38,7 @@ interface UsageMetric {
   code: string
   usage: number
   limit: number | null // null means unlimited
+  metricType?: number
   billingCycleStart: number
   billingCycleEnd: number
   invoiceId?: string // Invoice ID for querying events
@@ -134,13 +135,15 @@ const UsageMetrics = ({ subInfo }: Props) => {
 
     if (res.limitStats && res.limitStats.length > 0) {
       res.limitStats.forEach((item: any) => {
+        const metricType = item.metricLimit?.type
         usageMetrics.push({
           key: `limit-${item.metricLimit?.MetricId || item.metricId || item.MetricId}`,
           metricId: item.metricLimit?.MetricId || item.metricId || item.MetricId,
           name: item.metricLimit?.metricName || item.metricName || '',
           code: item.metricLimit?.code || item.code || '',
           usage: item.usedValue || item.UsedValue || item.CurrentUsedValue || 0,
-          limit: item.totalLimit || item.TotalLimit || item.metricLimit?.TotalLimit || null,
+          limit: item.totalLimit ?? item.TotalLimit ?? item.metricLimit?.TotalLimit ?? null,
+          metricType,
           billingCycleStart: periodStart,
           billingCycleEnd: periodEnd,
           invoiceId: invoiceId,
@@ -250,10 +253,12 @@ const UsageMetrics = ({ subInfo }: Props) => {
       dataIndex: 'limit',
       key: 'limit',
       width: 100,
-      render: (limit: number | null, record) =>
-        limit === null ? (
-          'Unlimited'
-        ) : record.metricLimitData && selectedInvoice === 'current' ? (
+      render: (limit: number | null, record) => {
+        const isUnlimitedType = record.metricType === 2 || record.metricType === 3
+        if (limit === null || isUnlimitedType) {
+          return 'Unlimited'
+        }
+        return record.metricLimitData && selectedInvoice === 'current' ? (
           <a
             onClick={() =>
               setViewLimitModal({ open: true, metricLimit: record.metricLimitData! })
@@ -264,13 +269,15 @@ const UsageMetrics = ({ subInfo }: Props) => {
         ) : (
           limit.toLocaleString()
         )
+      }
     },
     {
       title: 'Progress',
       key: 'progress',
       width: 180,
       render: (_, record) => {
-        if (record.limit === null) {
+        const isUnlimitedType = record.metricType === 2 || record.metricType === 3
+        if (record.limit === null || isUnlimitedType) {
           return <span className="text-gray-400">No limit</span>
         }
 
