@@ -966,6 +966,14 @@ const SubscriptionInfoSection = ({
         )}
 
       {subInfo &&
+        (subInfo.status == SubscriptionStatus.CANCELLED ||
+          subInfo.status == SubscriptionStatus.FAILED) && (
+          <div className="mx-0 my-6 flex items-center justify-start gap-9">
+            <Button onClick={toggleChangPlanModal}>Change Plan</Button>
+          </div>
+        )}
+
+      {subInfo &&
         (subInfo.status == SubscriptionStatus.ACTIVE ||
           subInfo.status == SubscriptionStatus.INCOMPLETE) && (
           <div className="mx-0 my-6 flex items-center justify-start gap-9">
