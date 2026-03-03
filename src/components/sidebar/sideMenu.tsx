@@ -47,38 +47,22 @@ const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) =>
 
 const MENU_ITEMS: ItemType<MenuItemType>[] = [
   {
-    label: 'Product and Plan',
+    label: <NavLink to="plan/list">Product and Plan</NavLink>,
     key: 'plan',
     icon: <Icon component={ProductPlanSvg} />
   },
-  /*
   {
-    label: 'Analytics',
-    key: 'analytics',
-    icon: <Icon component={ProductPlanSvg} />
-  },
-  */
-  {
-    label: 'Billable Metric',
+    label: <NavLink to="billable-metric/list">Billable Metric</NavLink>,
     key: 'billable-metric',
     icon: <Icon component={BillableMetricsSvg} />
   },
   {
-    label: 'Discount Code',
+    label: <NavLink to="discount-code/list">Discount Code</NavLink>,
     key: 'discount-code',
     icon: <Icon component={DiscountCodeSvg} />
   },
-  /*{
-    label: 'Bulk Discount Code',
-    key: 'bulk-discount-code',
-    icon: <Icon component={DiscountCodeSvg} />
-  },*/
   {
-    label: (
-      <NavLink to="subscription/list">
-        Subscription
-      </NavLink>
-    ),
+    label: <NavLink to="subscription/list">Subscription</NavLink>,
     key: 'subscription',
     icon: <Icon component={SubscriptionSvg} />
   },
@@ -88,17 +72,17 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     icon: <Icon component={InvoiceSvg} />
   },
   {
-    label: 'Transaction',
+    label: <NavLink to="transaction/list">Transaction</NavLink>,
     key: 'transaction',
     icon: <DollarOutlined />
   },
   {
-    label: 'Refund',
+    label: <NavLink to="refund">Refund</NavLink>,
     key: 'refund',
     icon: <Icon component={RefundSvg} />
   },
   {
-    label: 'Promo Credit',
+    label: <NavLink to="promo-credit">Promo Credit</NavLink>,
     key: 'promo-credit',
     icon: <Icon component={PromoCreditSvg} />
   },
@@ -108,29 +92,27 @@ const MENU_ITEMS: ItemType<MenuItemType>[] = [
     icon: <Icon component={UserListSvg} />
   },
   {
-    label: 'Admin List',
+    label: <NavLink to="admin/list">Admin List</NavLink>,
     key: 'admin',
     icon: <Icon component={AdminListSvg} />
   },
-  // The backend of Analytics is not completed yet, so it should hide from the menu until backend is ready
-  // { label: 'Analytics', key: 'analytics', icon: <PieChartOutlined /> },
   {
-    label: 'My Account',
+    label: <NavLink to="my-account">My Account</NavLink>,
     key: 'my-account',
     icon: <Icon component={MyAccountSvg} />
   },
   {
-    label: 'Report',
+    label: <NavLink to="report">Report</NavLink>,
     key: 'report',
     icon: <Icon component={ReportSvg} />
   },
   {
-    label: 'Configuration',
+    label: <NavLink to="configuration">Configuration</NavLink>,
     key: 'configuration',
     icon: <Icon component={ConfigSvg} />
   },
   {
-    label: 'Activity Logs',
+    label: <NavLink to="activity-logs">Activity Logs</NavLink>,
     key: 'activity-logs',
     icon: <Icon component={ActivityLogSvg} />
   }
@@ -140,7 +122,6 @@ const DEFAULT_ACTIVE_MENU_ITEM_KEY = '/plan/list'
 
 export const SideMenu = (props: MenuProps) => {
   const permStore = usePermissionStore()
-  const navigate = useNavigate()
   const parsedMenuItems: ItemType<MenuItemType>[] = MENU_ITEMS.map((item) => {
     const route = APP_ROUTES.find(({ id }) => id === item!.key)
 
@@ -164,20 +145,7 @@ export const SideMenu = (props: MenuProps) => {
 
   useLayoutEffect(() => {
     const path = basePathName(trimEnvBasePath(window.location.pathname));
-    
-    // Handle the special case for custom NavLink paths
-    let activeKey = path;
-    
-    // Map paths like 'subscription/list' to just 'subscription' for menu highlighting
-    if (path.startsWith('subscription/')) {
-      activeKey = 'subscription';
-    } else if (path.startsWith('invoice/')) {
-      activeKey = 'invoice';
-    } else if (path.startsWith('user/')) {
-      activeKey = 'user';
-    }
-    
-    setActiveMenuItem([activeKey]);
+    setActiveMenuItem([path]);
   }, [window.location.pathname])
 
   return (
@@ -185,13 +153,8 @@ export const SideMenu = (props: MenuProps) => {
       theme="dark"
       mode="inline"
       selectedKeys={activeMenuItem}
-      onClick={(e) => {
-        // Check if the key belongs to an item with a NavLink
-        const isNavLinkItem = ['subscription', 'invoice', 'user'].includes(basePathName(e.key));
-        // Only navigate for non-NavLink items
-        if (!isNavLinkItem) {
-          navigate(e.key);
-        }
+      onClick={() => {
+        // Navigation is handled by NavLink components in each menu item
       }}
       defaultSelectedKeys={['/plan/list']}
       items={items}
