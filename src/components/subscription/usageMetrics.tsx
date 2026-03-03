@@ -82,9 +82,12 @@ const UsageMetrics = ({ subInfo }: Props) => {
 
     if (err || !res?.invoices) return
 
-    // Build dropdown options (exclude latestInvoice since it's shown as "Current Period")
+    const isActive = subInfo.status === SubscriptionStatus.ACTIVE
+
+    // For active subs, exclude latestInvoice from options (shown as "Current Period" separately)
+    // For non-active subs, include all invoices so they all get formatted labels
     const options: InvoiceOption[] = res.invoices
-      .filter((inv: any) => inv.invoiceId !== subInfo.latestInvoice?.invoiceId)
+      .filter((inv: any) => isActive ? inv.invoiceId !== subInfo.latestInvoice?.invoiceId : true)
       .map((inv: any) => {
         const startDate = inv.periodStart ? dayjs(inv.periodStart * 1000).format('YYYY-MMM-DD') : dayjs(inv.createTime * 1000).format('YYYY-MMM-DD')
         const endDate = inv.periodEnd ? dayjs(inv.periodEnd * 1000).format('YYYY-MMM-DD') : 'N/A'
@@ -101,7 +104,6 @@ const UsageMetrics = ({ subInfo }: Props) => {
 
     setInvoiceOptions(options)
 
-    const isActive = subInfo.status === SubscriptionStatus.ACTIVE
     if (isActive) {
       const currentInvoiceId = subInfo.latestInvoice?.invoiceId || ''
       if (currentInvoiceId) {
