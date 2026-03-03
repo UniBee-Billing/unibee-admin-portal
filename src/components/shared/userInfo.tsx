@@ -1,6 +1,6 @@
 import { Button, Col, Row } from 'antd'
 import { CSSProperties } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
 import CopyToClipboard from '../ui/copyToClipboard'
@@ -55,7 +55,11 @@ const Index = ({ user }: { user: IProfile | undefined }) => {
         </Col>
         <Col span={6}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <a href={`mailto:${user?.email}`}>{user?.email}</a>
+            {user?.id ? (
+              <Link to={`/user/${user.id}`}>{user?.email}</Link>
+            ) : (
+              <span>{user?.email}</span>
+            )}
             {user?.email && <CopyToClipboard content={user.email} />}
           </div>
         </Col>
