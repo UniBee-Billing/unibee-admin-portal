@@ -3,6 +3,7 @@ import { CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IProfile } from '../../shared.types'
 import { useAppConfigStore } from '../../stores'
+import CopyToClipboard from '../ui/copyToClipboard'
 import { UserStatusTag } from '../ui/statusTag'
 
 const rowStyle: CSSProperties = {
@@ -53,7 +54,10 @@ const Index = ({ user }: { user: IProfile | undefined }) => {
           <span style={{ fontWeight: 'bold' }}>Email</span>
         </Col>
         <Col span={6}>
-          <a href={`mailto:${user?.email}`}>{user?.email} </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <a href={`mailto:${user?.email}`}>{user?.email}</a>
+            {user?.email && <CopyToClipboard content={user.email} />}
+          </div>
         </Col>
       </Row>
       <Row style={rowStyle}>

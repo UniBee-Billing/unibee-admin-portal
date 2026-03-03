@@ -186,7 +186,14 @@ const Index = () => {
     {
       title: 'Email',
       dataIndex: 'email',
-      key: 'email'
+      key: 'email',
+      render: (email: string) =>
+        email ? (
+          <div className="flex items-center gap-1">
+            <span>{email}</span>
+            <CopyToClipboard content={email} />
+          </div>
+        ) : null
     },
     {
       title: 'External User ID',
