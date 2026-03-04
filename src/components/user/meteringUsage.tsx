@@ -139,7 +139,14 @@ const Index = ({
     {
       title: 'Limit Value',
       dataIndex: ['metricLimit', 'TotalLimit'],
-      key: 'TotalLimit'
+      key: 'TotalLimit',
+      render: (value: number, record: LimitMetricUsage) => {
+        const metricType = record.metricLimit?.type
+        if (metricType === MetricType.CHARGE_METERED || metricType === MetricType.CHARGE_RECURRING) {
+          return 'Unlimited'
+        }
+        return value
+      }
     },
     {
       title: 'Consumed',

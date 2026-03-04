@@ -235,10 +235,10 @@ const Index = ({
       title: 'Name',
       dataIndex: 'planName',
       key: 'planName',
-      width: 120,
+      width: 200,
       render: (planName) => (
-        <div className="w-28 overflow-hidden whitespace-nowrap">
-          <LongTextPopover text={planName} placement="topLeft" width="120px" />
+        <div style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
+          {planName}
         </div>
       )
     },
@@ -246,10 +246,10 @@ const Index = ({
       title: 'Internal Name',
       dataIndex: 'internalName',
       key: 'internalName',
-      width: 120,
+      width: 200,
       render: (internalName) => (
-        <div className="w-28 overflow-hidden whitespace-nowrap">
-          <LongTextPopover text={internalName || ''} placement="topLeft" width="120px" />
+        <div style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
+          {internalName || ''}
         </div>
       )
     },
