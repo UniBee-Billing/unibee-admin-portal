@@ -316,6 +316,7 @@ interface IBillableMetrics {
   gmtModify: string
   createTime: string
   archived?: boolean
+  carryoverProrationEnabled?: boolean
 }
 
 export interface LimitMetricUsage {
