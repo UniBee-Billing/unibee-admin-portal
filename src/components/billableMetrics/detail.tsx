@@ -2,7 +2,8 @@ import CopyToClipboard from '@/components/ui/copyToClipboard'
 import { METRICS_AGGREGATE_TYPE, METRICS_TYPE } from '@/constants'
 import { getMetricDetailReq, saveMetricsReq, getUserListReq, getProductListReq } from '@/requests/index'
 import { IBillableMetrics, MetricAggregationType, MetricType } from '@/shared.types'
-import { LoadingOutlined, ApiOutlined, ThunderboltOutlined, ClockCircleOutlined, DatabaseOutlined, MailOutlined, UserOutlined, FileTextOutlined, CopyOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { uiConfigStore } from '@/stores'
+import { LoadingOutlined, ApiOutlined, ThunderboltOutlined, ClockCircleOutlined, DatabaseOutlined, MailOutlined, UserOutlined, FileTextOutlined, CopyOutlined, CheckCircleOutlined, InfoCircleOutlined, BulbOutlined } from '@ant-design/icons'
 import {
   Button,
   Col,
@@ -12,6 +13,7 @@ import {
   Row,
   Select,
   Spin,
+  Switch,
   message,
   Card,
   Tooltip,
@@ -145,6 +147,7 @@ const Index = () => {
   const navigate = useNavigate()
   const [form] = Form.useForm()
   const [testForm] = Form.useForm()
+  const { sidebarCollapsed } = uiConfigStore()
   const [selectedTemplate, setSelectedTemplate] = useState<string>('')
   const [testResult, setTestResult] = useState<any>(null)
   const [testLoading, setTestLoading] = useState(false)
@@ -155,7 +158,7 @@ const Index = () => {
   const [userSearchValue, setUserSearchValue] = useState('')
   const [productList, setProductList] = useState<any[]>([])
   const [productListLoading, setProductListLoading] = useState(false)
-  
+
   const watchTestCode = Form.useWatch('metricCode', testForm)
   const watchTestEventId = Form.useWatch('externalEventId', testForm)
   const watchTestUserIdentifierType = Form.useWatch('userIdentifierType', testForm)
@@ -170,16 +173,17 @@ const Index = () => {
   const watchName = Form.useWatch('metricName', form)
   const watchUnit = Form.useWatch('unit', form)
   const watchLabels = Form.useWatch('labels', form)
+  const watchProration = Form.useWatch('carryoverProrationEnabled', form)
 
-  const aggrePropRequired = watchAggreType === MetricAggregationType.SUM || 
-                            watchAggreType === MetricAggregationType.MAX || 
-                            watchAggreType === MetricAggregationType.LATEST ||
-                            watchAggreType === MetricAggregationType.COUNT_UNIQUE
+  const aggrePropRequired = watchAggreType === MetricAggregationType.SUM ||
+    watchAggreType === MetricAggregationType.MAX ||
+    watchAggreType === MetricAggregationType.LATEST ||
+    watchAggreType === MetricAggregationType.COUNT_UNIQUE
 
   // Template selection handler
   const handleTemplateSelect = (template: MetricTemplate) => {
     setSelectedTemplate(template.id)
-    
+
     if (template.id === 'custom') {
       // Clear form for custom
       form.setFieldsValue({
@@ -222,7 +226,8 @@ const Index = () => {
         type: form.getFieldValue('type'),
         metricName: form.getFieldValue('metricName'),
         metricDescription: form.getFieldValue('metricDescription'),
-        unit: form.getFieldValue('unit')
+        unit: form.getFieldValue('unit'),
+        carryoverProrationEnabled: form.getFieldValue('carryoverProrationEnabled') ?? false
       }
     }
 
@@ -234,7 +239,7 @@ const Index = () => {
       return
     }
     message.success(`Metrics ${isNew ? 'created' : 'updated'}.`)
-    
+
     // If creating new metric, navigate to edit page with the new ID
     if (isNew && data && data.merchantMetric && data.merchantMetric.id) {
       setTimeout(() => {
@@ -249,13 +254,13 @@ const Index = () => {
   const fetchUserList = async (searchTerm: string = '') => {
     setUserListLoading(true)
     const merchantInfo = JSON.parse(localStorage.getItem('merchantInfo') || '{}')
-    
+
     const searchParams: any = {
       merchantId: merchantInfo.id,
       page: 0,
       count: 50 // Load fewer users since we're using search
     }
-    
+
     // Add search based on identifier type
     if (searchTerm) {
       if (watchTestUserIdentifierType === 'email') {
@@ -273,15 +278,15 @@ const Index = () => {
         }
       }
     }
-    
+
     const [data, err] = await getUserListReq(searchParams)
     setUserListLoading(false)
-    
+
     if (err != null) {
       message.error('Failed to fetch user list')
       return
     }
-    
+
     if (data && data.userAccounts) {
       setUserList(data.userAccounts)
     }
@@ -289,12 +294,12 @@ const Index = () => {
 
   const handleUserSearch = (value: string) => {
     setUserSearchValue(value)
-    
+
     // Clear existing timer
     if (searchTimerRef.current) {
       clearTimeout(searchTimerRef.current)
     }
-    
+
     // Debounce search - wait 500ms after user stops typing
     searchTimerRef.current = setTimeout(() => {
       fetchUserList(value)
@@ -305,12 +310,12 @@ const Index = () => {
     setProductListLoading(true)
     const [res, err] = await getProductListReq({})
     setProductListLoading(false)
-    
+
     if (err != null) {
       message.error('Failed to fetch product list')
       return
     }
-    
+
     if (res && res.products) {
       setProductList(res.products)
     }
@@ -321,29 +326,29 @@ const Index = () => {
       message.warning('Please save the metric first to test it')
       return
     }
-    
+
     // Open modal and pre-fill with default values
     const defaultValues: any = {
       metricCode: watchCode,
       userIdentifierType: 'email'
     }
-    
+
     // Pre-fill aggregation fields based on type
     if (watchAggreType === MetricAggregationType.COUNT_UNIQUE && watchAggreProps) {
       defaultValues.aggregationUniqueId = 'unique_id_123'
-    } else if (watchAggreType === MetricAggregationType.SUM || 
-               watchAggreType === MetricAggregationType.MAX || 
-               watchAggreType === MetricAggregationType.LATEST) {
+    } else if (watchAggreType === MetricAggregationType.SUM ||
+      watchAggreType === MetricAggregationType.MAX ||
+      watchAggreType === MetricAggregationType.LATEST) {
       defaultValues.aggregationValue = 123
     }
-    
+
     testForm.setFieldsValue(defaultValues)
     setTestResult(null)
     setMetricProperties([])
     setUserList([]) // Clear user list
     setUserSearchValue('') // Clear search value
     setTestModalVisible(true)
-    
+
     // Fetch product list for dropdown
     fetchProductList()
   }
@@ -398,8 +403,8 @@ const Index = () => {
     Modal.confirm({
       title: (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ 
-            fontSize: '24px', 
+          <span style={{
+            fontSize: '24px',
             lineHeight: '1',
             display: 'flex',
             alignItems: 'center'
@@ -432,11 +437,11 @@ const Index = () => {
       onOk: async () => {
         setTestLoading(true)
         setTestResult(null)
-        
+
         try {
           const requestBody = buildRequestBody()
           const apiUrl = import.meta.env.VITE_API_URL || ''
-          
+
           // Make API request
           const response = await fetch(`${apiUrl}/merchant/metric/event/new`, {
             method: 'POST',
@@ -497,7 +502,7 @@ const Index = () => {
       ...metricData,
       labels: '' // Backend doesn't have this field yet, use empty string
     })
-    
+
     // Find matching template to highlight
     const matchingTemplate = METRIC_TEMPLATES.find(
       t => t.name === metricData.metricName || t.code === metricData.code
@@ -514,13 +519,13 @@ const Index = () => {
       externalUserId: '__EXTERNAL_USER_ID__',
       externalEventId: '__EVENT_ID__'
     }
-    
+
     if (aggrePropRequired && watchAggreProps) {
       event.metricProperties = {
         [watchAggreProps || 'YOUR_AGGREGATION_PROPERTY']: '__PROPERTY_VALUE__'
       }
     }
-    
+
     return JSON.stringify(event, null, 2)
   }
 
@@ -529,9 +534,9 @@ const Index = () => {
     if (!watchAggreType) {
       return 'Select aggregation method to see preview'
     }
-    
+
     const aggrLabel = METRICS_AGGREGATE_TYPE[watchAggreType as MetricAggregationType]?.label || 'Unknown'
-    
+
     switch (watchAggreType) {
       case MetricAggregationType.COUNT:
         return 'Sample calculation:\nEvents: 4 events\nResult: COUNT = 4'
@@ -552,7 +557,7 @@ const Index = () => {
     if (watchAggreType == MetricAggregationType.COUNT) {
       return ''
     }
-    
+
     const propName = watchAggreProps || 'YOUR_AGGREGATION_PROPERTY'
     return `
     "metricProperties": { 
@@ -564,7 +569,7 @@ const Index = () => {
     if (!isNew) {
       fetchMetrics()
     }
-    
+
     // Cleanup timer on unmount
     return () => {
       if (searchTimerRef.current) {
@@ -590,7 +595,7 @@ const Index = () => {
     "externalUserId": "__EXTERNAL_USER_ID__",
     "externalEventId": "__EVENT_ID__",${getPropsArg()}    
   }'`
-  
+
   const curlCmdWithComments = `${curlCmd}
 
 # To use the snippet, don't forget to edit your
@@ -600,7 +605,7 @@ const Index = () => {
 ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
 
   return (
-    <div className="h-full bg-gray-50 p-6 pb-24">
+    <div className="h-full bg-gray-50 p-6 pb-32">
       <Spin
         spinning={loading}
         indicator={
@@ -628,11 +633,10 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                   key={template.id}
                   size="small"
                   hoverable={isNew}
-                  className={`${isNew ? 'cursor-pointer' : 'cursor-default'} ${
-                    selectedTemplate === template.id
-                      ? 'border-2 border-blue-500'
-                      : 'border border-gray-200'
-                  }`}
+                  className={`${isNew ? 'cursor-pointer' : 'cursor-default'} ${selectedTemplate === template.id
+                    ? 'border-2 border-blue-500'
+                    : 'border border-gray-200'
+                    }`}
                   onClick={() => isNew && handleTemplateSelect(template)}
                   bodyStyle={{ padding: '12px' }}
                 >
@@ -657,7 +661,7 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
               form={form}
               onFinish={onSave}
               layout="vertical"
-              initialValues={{ 
+              initialValues={{
                 type: MetricType.CHARGE_METERED,
                 aggregationType: MetricAggregationType.COUNT
               }}
@@ -682,8 +686,8 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                 name="code"
                 rules={[{ required: true, message: 'Please input metric code!' }]}
               >
-                <Input 
-                  placeholder="e.g., api_requests" 
+                <Input
+                  placeholder="e.g., api_requests"
                   disabled={!isNew}
                 />
               </Form.Item>
@@ -693,9 +697,9 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                 name="metricDescription"
                 help={`${form.getFieldValue('metricDescription')?.length || 0}/500 characters`}
               >
-                <TextArea 
-                  rows={3} 
-                  maxLength={500} 
+                <TextArea
+                  rows={3}
+                  maxLength={500}
                   placeholder="Describe what this metric tracks..."
                 />
               </Form.Item>
@@ -750,8 +754,8 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                 {aggrePropRequired && (
                   <Form.Item
                     label={
-                      watchAggreType === MetricAggregationType.COUNT_UNIQUE 
-                        ? "Distinct By" 
+                      watchAggreType === MetricAggregationType.COUNT_UNIQUE
+                        ? "Distinct By"
                         : "Value Property"
                     }
                     name="aggregationProperty"
@@ -764,7 +768,7 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                       }
                     ]}
                   >
-                    <Input 
+                    <Input
                       placeholder={
                         watchAggreType === MetricAggregationType.COUNT_UNIQUE
                           ? 'e.g., user_id, subject'
@@ -788,6 +792,155 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                 >
                   <Input placeholder="e.g., region, plan_type (comma separated)" />
                 </Form.Item> */}
+              </div>
+
+              {/* Metric Proration Section */}
+              <div className="mt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-semibold" style={{ margin: 0 }}>Enable Metric Proration</h3>
+                    <Tooltip title="Controls whether metric limits are prorated during subscription upgrades">
+                      <InfoCircleOutlined style={{ color: '#bfbfbf', fontSize: 14 }} />
+                    </Tooltip>
+                  </div>
+                  <Form.Item name="carryoverProrationEnabled" valuePropName="checked" noStyle>
+                    <Switch />
+                  </Form.Item>
+                </div>
+                <p className="mt-1 text-sm text-gray-500" style={{ marginBottom: 16 }}>
+                  When enabled, metric limits will be prorated based on subscription upgrade timing
+                </p>
+
+                {/* Status Banner */}
+                <div
+                  style={{
+                    border: `1px ${watchProration ? 'solid' : 'dashed'} ${watchProration ? '#b7eb8f' : '#d9d9d9'}`,
+                    borderRadius: 8,
+                    padding: '10px 16px',
+                    backgroundColor: watchProration ? '#f6ffed' : '#fafafa',
+                    marginBottom: watchProration ? 16 : 0
+                  }}
+                >
+                  <span className="text-sm text-gray-500">Current Status: </span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '1px 10px',
+                      borderRadius: 4,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      backgroundColor: watchProration ? '#52c41a' : '#e8e8e8',
+                      color: watchProration ? '#fff' : '#8c8c8c',
+                      marginRight: 10
+                    }}
+                  >
+                    {watchProration ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <span className="text-sm text-gray-400">
+                    {watchProration
+                      ? 'Metric limits will be calculated proportionally based on upgrade timing.'
+                      : 'Full limits apply regardless of upgrade timing.'}
+                  </span>
+                </div>
+
+                {/* Expanded explanation when enabled */}
+                {watchProration && (
+                  <div
+                    style={{
+                      border: '1px solid #e6f7e6',
+                      borderRadius: 8,
+                      padding: '20px 24px',
+                      backgroundColor: '#fcfffe'
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#8c8c8c', letterSpacing: 1, marginBottom: 16 }}>
+                      HOW PRORATION WORKS
+                    </div>
+
+                    {/* Scenario 1 */}
+                    <div className="mb-4">
+                      <div className="flex items-start gap-3">
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: '#e6f7e6',
+                            color: '#52c41a',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            flexShrink: 0,
+                            marginTop: 2
+                          }}
+                        >
+                          1
+                        </span>
+                        <div>
+                          <div className="text-sm font-semibold" style={{ marginBottom: 4 }}>Same-Period Subscription Upgrade</div>
+                          <div className="text-sm text-gray-500" style={{ marginBottom: 6 }}>Old and new plan share the same proration ratio:</div>
+                          <ul style={{ margin: 0, paddingLeft: 16, listStyle: 'none' }}>
+                            <li className="text-sm text-gray-600" style={{ marginBottom: 2 }}>
+                              <span style={{ color: '#52c41a', marginRight: 6 }}>›</span>Old period limit is prorated and refunded
+                            </li>
+                            <li className="text-sm text-gray-600" style={{ marginBottom: 2 }}>
+                              <span style={{ color: '#52c41a', marginRight: 6 }}>›</span>New period limit is provided proportionally
+                            </li>
+                            <li className="text-sm text-gray-600">
+                              <span style={{ color: '#52c41a', marginRight: 6 }}>›</span>Credit items are generated to balance the difference
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Scenario 2 */}
+                    <div className="mb-4">
+                      <div className="flex items-start gap-3">
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: '#e6f7e6',
+                            color: '#52c41a',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            flexShrink: 0,
+                            marginTop: 2
+                          }}
+                        >
+                          2
+                        </span>
+                        <div>
+                          <div className="text-sm font-semibold" style={{ marginBottom: 4 }}>Cross-Period Subscription Upgrade</div>
+                          <div className="text-sm text-gray-500" style={{ marginBottom: 6 }}>Old and new plan have different proration ratios:</div>
+                          <ul style={{ margin: 0, paddingLeft: 16, listStyle: 'none' }}>
+                            <li className="text-sm text-gray-600" style={{ marginBottom: 2 }}>
+                              <span style={{ color: '#52c41a', marginRight: 6 }}>›</span>Old period limit is prorated and refunded
+                            </li>
+                            <li className="text-sm text-gray-600">
+                              <span style={{ color: '#52c41a', marginRight: 6 }}>›</span>New period is not prorated — full limit is provided immediately
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tip */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#faad14', marginTop: 8 }}>
+                      <BulbOutlined style={{ fontSize: 16 }} />
+                      <span className="text-sm text-gray-500">
+                        All proration adjustments are calculated automatically and reflected in the customer's invoice.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </Form>
           </div>
@@ -959,7 +1112,7 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
 
               <div className="mb-4">
                 <h3 className="mb-3 text-base font-semibold">Body</h3>
-                
+
                 <Form form={testForm} layout="vertical">
                   {/* externalEventId */}
                   <div className="mb-4">
@@ -1010,11 +1163,11 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                       <Form.Item name="userIdentifierValue" noStyle>
                         <Select
                           placeholder={
-                            watchTestUserIdentifierType === 'email' 
+                            watchTestUserIdentifierType === 'email'
                               ? 'Type to search by email...'
                               : watchTestUserIdentifierType === 'userId'
-                              ? 'Type to search by user ID or email...'
-                              : 'Type to search by external user ID...'
+                                ? 'Type to search by user ID or email...'
+                                : 'Type to search by external user ID...'
                           }
                           loading={userListLoading}
                           showSearch
@@ -1042,19 +1195,19 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                           options={
                             watchTestUserIdentifierType === 'email'
                               ? userList
-                                  .filter(u => u.email)
-                                  .map(u => ({ label: u.email, value: u.email }))
+                                .filter(u => u.email)
+                                .map(u => ({ label: u.email, value: u.email }))
                               : watchTestUserIdentifierType === 'userId'
-                              ? userList
-                                  .map(u => ({ 
-                                    label: `${u.id} (${u.email || 'No email'})`, 
-                                    value: u.id 
+                                ? userList
+                                  .map(u => ({
+                                    label: `${u.id} (${u.email || 'No email'})`,
+                                    value: u.id
                                   }))
-                              : userList
+                                : userList
                                   .filter(u => u.externalUserId)
-                                  .map(u => ({ 
-                                    label: `${u.externalUserId} (${u.email || 'No email'})`, 
-                                    value: u.externalUserId 
+                                  .map(u => ({
+                                    label: `${u.externalUserId} (${u.email || 'No email'})`,
+                                    value: u.externalUserId
                                   }))
                           }
                         />
@@ -1211,11 +1364,11 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
   --header 'Content-Type: application/json' \\
   --data '{
 ${Object.entries(requestBody).map(([key, value]) => {
-  if (typeof value === 'object' && value !== null) {
-    return `  "${key}": ${JSON.stringify(value, null, 2).split('\n').join('\n  ')}`
-  }
-  return `  "${key}": ${JSON.stringify(value)}`
-}).join(',\n')}
+                          if (typeof value === 'object' && value !== null) {
+                            return `  "${key}": ${JSON.stringify(value, null, 2).split('\n').join('\n  ')}`
+                          }
+                          return `  "${key}": ${JSON.stringify(value)}`
+                        }).join(',\n')}
 }'`
                       })()}
                     </SyntaxHighlighter>
@@ -1228,9 +1381,8 @@ ${Object.entries(requestBody).map(([key, value]) => {
                     <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`rounded px-2 py-0.5 text-sm font-semibold ${
-                            testResult.success ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
-                          }`}
+                          className={`rounded px-2 py-0.5 text-sm font-semibold ${testResult.success ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
+                            }`}
                         >
                           {testResult.success ? '200' : 'Error'}
                         </span>
@@ -1271,11 +1423,11 @@ ${Object.entries(requestBody).map(([key, value]) => {
       </Modal>
 
       {/* Bottom Action Bar - Fixed */}
-      <div 
+      <div
         className="fixed bottom-0 flex items-center justify-end gap-3 border-t border-gray-200 bg-white px-6 py-4 shadow-lg"
-        style={{ 
+        style={{
           zIndex: 100,
-          left: 'var(--sidebar-width, 240px)',
+          left: sidebarCollapsed ? 80 : 200,
           right: 0
         }}
       >
@@ -1292,9 +1444,9 @@ ${Object.entries(requestBody).map(([key, value]) => {
           onClick={form.submit}
           loading={loading}
           disabled={loading}
-          style={{ 
-            backgroundColor: '#1890ff', 
-            borderColor: '#1890ff', 
+          style={{
+            backgroundColor: '#1890ff',
+            borderColor: '#1890ff',
             color: '#fff',
             minWidth: '120px',
             fontWeight: 500

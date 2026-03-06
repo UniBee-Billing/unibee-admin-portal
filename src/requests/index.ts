@@ -534,9 +534,8 @@ export const togglePublishReq = async ({
   planId: number
   publishAction: 'PUBLISH' | 'UNPUBLISH'
 }) => {
-  const url = `/merchant/plan/${
-    publishAction === 'PUBLISH' ? 'publish' : 'unpublished'
-  }`
+  const url = `/merchant/plan/${publishAction === 'PUBLISH' ? 'publish' : 'unpublished'
+    }`
   try {
     const res = await request.post(url, { planId })
     handleStatusCode(res.data.code)
@@ -607,6 +606,7 @@ type TMetricsBody = {
   metricId: number
   metricName: string
   metricDescription: string
+  carryoverProrationEnabled?: boolean
 }
 type TMetricsBodyNew = {
   // for creation
@@ -615,6 +615,7 @@ type TMetricsBodyNew = {
   metricDescription: string
   aggregationType: number
   aggregationProperty: number
+  carryoverProrationEnabled?: boolean
 }
 // create a new or save an existing metrics
 export const saveMetricsReq = async (
@@ -2723,15 +2724,15 @@ export const getExportColumnListReq = async (task: TExportDataType) => {
 // Multi-currency related functions
 export const getCreditConfigForCurrencyReq = async (currency: string) => {
   try {
-    const res = await request.post(`/merchant/credit/config_list`, { 
-      types: [2], 
-      currency 
+    const res = await request.post(`/merchant/credit/config_list`, {
+      types: [2],
+      currency
     })
     handleStatusCode(res.data.code)
-    
+
     const creditConfigs = res.data.data.creditConfigs || []
     const isEnabled = creditConfigs.length > 0 && creditConfigs[0]?.payoutEnable === 1
-    
+
     return [{ creditConfigs, isEnabled }, null] as const
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
