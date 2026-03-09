@@ -1,3 +1,10 @@
 .clickable-tbl-row {
   cursor: pointer;
 }
+
+/* MRR Adjustment confirm modal - remove focus outline on Save button */
+.mrr-confirm-modal .ant-btn-primary:focus,
+.mrr-confirm-modal .ant-btn-primary:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

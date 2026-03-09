@@ -1,20 +1,30 @@
 import { formatDate, showAmount } from '@/helpers'
 import { usePagination } from '@/hooks'
-import { getProductListReq, getSubscriptionHistoryReq } from '@/requests'
+import { useAppConfigStore } from '@/stores'
+import {
+  getMrrAdjustmentReq,
+  getProductListReq,
+  getSubscriptionHistoryReq,
+  TMrrAdjustmentItem,
+  updateMrrAdjustmentReq
+} from '@/requests'
 import { IProduct, ISubAddon, ISubHistoryItem } from '@/shared.types'
-import { LoadingOutlined } from '@ant-design/icons'
+import { EditOutlined, LoadingOutlined, CloseOutlined } from '@ant-design/icons'
 import {
   Col,
   Divider,
+  InputNumber,
   message,
+  Modal,
   Pagination,
   Popover,
   Row,
   Spin,
-  Table
+  Table,
+  Tooltip
 } from 'antd'
 import { ColumnsType } from 'antd/es/table'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LongTextPopover from '../ui/longTextPopover'
 import { SubHistoryStatus } from '../ui/statusTag'
@@ -29,6 +39,17 @@ const Index = ({ userId }: { userId: number }) => {
   const [subHistory, setSubHistory] = useState<ISubHistoryItem[]>([])
   const [productList, setProductList] = useState<IProduct[]>([])
   const [loadignProducts, setLoadingProducts] = useState(false)
+
+  // MRR Adjustment state
+  const [mrrAdjMap, setMrrAdjMap] = useState<
+    Map<string, TMrrAdjustmentItem>
+  >(new Map())
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null)
+  const [editingValue, setEditingValue] = useState<number | null>(null)
+  const [savingMrr, setSavingMrr] = useState(false)
+  const originalValueRef = useRef<number | null>(null)
+  const inputBlurIsFromCloseBtn = useRef(false)
+  const enterKeyPressed = useRef(false)
 
   const getSubHistory = async () => {
     setHistoryLoading(true)
@@ -47,6 +68,28 @@ const Index = ({ userId }: { userId: number }) => {
     const { subscriptionTimeLines, total } = res
     setSubHistory(subscriptionTimeLines ?? [])
     setTotal(total)
+
+    // Fetch MRR adjustments for the loaded invoices
+    const invoiceIds = (subscriptionTimeLines ?? [])
+      .map((item: ISubHistoryItem) => item.invoiceId)
+      .filter((id: string) => id != null && id !== '')
+    if (invoiceIds.length > 0) {
+      fetchMrrAdjustments(invoiceIds)
+    }
+  }
+
+  const fetchMrrAdjustments = async (invoiceList: string[]) => {
+    const [res, err] = await getMrrAdjustmentReq({ userId, invoiceList })
+    if (err != null) {
+      // Silently fail — MRR adjustment is not critical
+      return
+    }
+    const list: TMrrAdjustmentItem[] = res?.subscriptionList ?? []
+    const map = new Map<string, TMrrAdjustmentItem>()
+    for (const item of list) {
+      map.set(item.invoiceId, item)
+    }
+    setMrrAdjMap(map)
   }
 
   const getProductList = async () => {
@@ -60,6 +103,89 @@ const Index = ({ userId }: { userId: number }) => {
     setProductList(res.products ?? [])
   }
 
+  const getCurrencyScale = (currency: string | undefined) => {
+    if (!currency) return 100
+    const CURRENCIES = useAppConfigStore.getState().supportCurrency
+    const c = CURRENCIES.find((c) => c.Currency === currency)
+    return c?.Scale ?? 100
+  }
+
+  const startEditing = (invoiceId: string) => {
+    const adj = mrrAdjMap.get(invoiceId)
+    const currency = adj?.currency ?? subHistory.find((h) => h.invoiceId === invoiceId)?.plan?.currency ?? subHistory.find((h) => h.invoiceId === invoiceId)?.currency
+    const scale = getCurrencyScale(currency)
+    const currentValue =
+      adj?.mrrAdjustmentAmount != null ? adj.mrrAdjustmentAmount / scale : null
+    originalValueRef.current = currentValue
+    setEditingInvoiceId(invoiceId)
+    setEditingValue(currentValue)
+  }
+
+  const cancelEditing = () => {
+    setEditingInvoiceId(null)
+    setEditingValue(null)
+    originalValueRef.current = null
+  }
+
+  const saveMrrAdjustment = async (invoiceId: string, value: number | null) => {
+    const adj = mrrAdjMap.get(invoiceId)
+    const record = subHistory.find((h) => h.invoiceId === invoiceId)
+    const currency = adj?.currency ?? record?.plan?.currency ?? record?.currency
+    const scale = getCurrencyScale(currency)
+    const scaledValue = value != null ? Math.round(value * scale) : null
+    setSavingMrr(true)
+    const [, err] = await updateMrrAdjustmentReq({
+      userId,
+      invoiceId,
+      mrrAdjustmentAmount: scaledValue
+    })
+    setSavingMrr(false)
+    if (err != null) {
+      message.error(err.message)
+      return
+    }
+    message.success('MRR Adjustment saved')
+    cancelEditing()
+    // Refresh MRR adjustments
+    const invoiceIds = subHistory
+      .map((item) => item.invoiceId)
+      .filter((id) => id != null && id !== '')
+    if (invoiceIds.length > 0) {
+      fetchMrrAdjustments(invoiceIds)
+    }
+  }
+
+  const handleSaveOrDiscard = (invoiceId: string) => {
+    const hasChanged = editingValue !== originalValueRef.current
+    if (!hasChanged) {
+      cancelEditing()
+      return
+    }
+    Modal.confirm({
+      className: 'mrr-confirm-modal',
+      title: 'Save changes to this field?',
+      content: (
+        <span style={{ fontSize: 12, color: '#888' }}>
+          Notes: MRR adjustment won't work on canceled subscriptions.
+        </span>
+      ),
+      okText: 'Save',
+      cancelText: 'Cancel',
+      onOk: () => saveMrrAdjustment(invoiceId, editingValue),
+      onCancel: () => {
+        cancelEditing()
+      }
+    })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent, invoiceId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      enterKeyPressed.current = true
+      handleSaveOrDiscard(invoiceId)
+    }
+  }
+
   useEffect(() => {
     getSubHistory()
   }, [page, userId])
@@ -67,6 +193,11 @@ const Index = ({ userId }: { userId: number }) => {
   useEffect(() => {
     getProductList()
   }, [])
+
+  const getCurrencySymbol = (currency: string | undefined) => {
+    if (!currency) return ''
+    return showAmount(0, currency).replace('0', '').trim()
+  }
 
   const getColumns = (): ColumnsType<ISubHistoryItem> => [
     {
@@ -192,7 +323,104 @@ const Index = ({ userId }: { userId: number }) => {
           </div>
         )
     },
-    { title: 'Payment Id', dataIndex: 'paymentId', key: 'paymentId' }
+    { title: 'Payment Id', dataIndex: 'paymentId', key: 'paymentId' },
+    {
+      title: 'MRR Adjustment',
+      dataIndex: 'invoiceId',
+      key: 'mrrAdjustment',
+      width: 180,
+      render: (invoiceId: string, record) => {
+        if (!invoiceId) return '―'
+
+        const adj = mrrAdjMap.get(invoiceId)
+        const currency = adj?.currency ?? record.plan?.currency ?? record.currency
+        const currencySymbol = getCurrencySymbol(currency)
+        const isEditing = editingInvoiceId === invoiceId
+
+        if (isEditing) {
+          return (
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              <InputNumber
+                autoFocus
+                size="small"
+                style={{ width: 120 }}
+                prefix={currencySymbol}
+                value={editingValue}
+                onChange={(val) => setEditingValue(val)}
+                onKeyDown={(e) => handleKeyDown(e, invoiceId)}
+                onBlur={() => {
+                  setTimeout(() => {
+                    if (inputBlurIsFromCloseBtn.current) {
+                      inputBlurIsFromCloseBtn.current = false
+                      return
+                    }
+                    if (enterKeyPressed.current) {
+                      enterKeyPressed.current = false
+                      return
+                    }
+                    handleSaveOrDiscard(invoiceId)
+                  }, 150)
+                }}
+                disabled={savingMrr}
+                placeholder="Type in"
+              />
+              <Tooltip title="Cancel">
+                <CloseOutlined
+                  style={{
+                    fontSize: 12,
+                    color: '#999',
+                    cursor: 'pointer'
+                  }}
+                  onMouseDown={() => {
+                    inputBlurIsFromCloseBtn.current = true
+                  }}
+                  onClick={() => cancelEditing()}
+                />
+              </Tooltip>
+            </div>
+          )
+        }
+
+        const hasValue =
+          adj?.mrrAdjustmentAmount != null && adj.mrrAdjustmentAmount !== undefined
+
+        return (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              cursor: 'pointer'
+            }}
+            onClick={() => startEditing(invoiceId)}
+          >
+            {hasValue ? (
+              <span>
+                {showAmount(adj!.mrrAdjustmentAmount!, currency)}
+              </span>
+            ) : (
+              <span
+                style={{
+                  color: '#bbb',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 4,
+                  padding: '1px 8px',
+                  fontSize: 13
+                }}
+              >
+                Type in
+              </span>
+            )}
+            <EditOutlined
+              style={{ color: '#1890ff', fontSize: 14 }}
+            />
+          </div>
+        )
+      }
+    }
   ]
 
   return (
@@ -220,10 +448,10 @@ const Index = ({ userId }: { userId: number }) => {
           rowKey={'uniqueId'}
           rowClassName="clickable-tbl-row"
           pagination={false}
-          scroll={{ x: 1280 }}
+          scroll={{ x: 1480 }}
           onRow={() => {
             return {
-              onClick: () => {}
+              onClick: () => { }
             }
           }}
           loading={{

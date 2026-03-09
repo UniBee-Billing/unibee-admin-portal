@@ -3107,3 +3107,63 @@ export const clearMemberTotpReq = async (
     return [null, e]
   }
 }
+
+// MRR Adjustment: fetch adjustment values for a list of invoices
+export type TMrrAdjustmentItem = {
+  merchantId: number
+  userId: number
+  productId: number
+  planId: number
+  invoiceId: string
+  subscriptionId: string
+  periodStart: number
+  periodEnd: number
+  originalMrrAmount: number
+  mrrAmount: number
+  mrrAdjustmentAmount: number | null
+  currency: string
+}
+
+export const getMrrAdjustmentReq = async ({
+  userId,
+  invoiceList
+}: {
+  userId: number
+  invoiceList: string[]
+}) => {
+  try {
+    const res = await analyticsRequest.post('/mrr-adjustment', {
+      userId,
+      invoiceList
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// MRR Adjustment: update/clear the adjustment value for a specific invoice
+export const updateMrrAdjustmentReq = async ({
+  userId,
+  invoiceId,
+  mrrAdjustmentAmount
+}: {
+  userId: number
+  invoiceId: string
+  mrrAdjustmentAmount: number | null
+}) => {
+  try {
+    const res = await analyticsRequest.post('/update-mrr-adjustment', {
+      userId,
+      invoiceId,
+      mrrAdjustmentAmount
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
