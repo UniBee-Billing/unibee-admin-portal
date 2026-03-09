@@ -3148,16 +3148,19 @@ export const getMrrAdjustmentReq = async ({
 export const updateMrrAdjustmentReq = async ({
   userId,
   invoiceId,
+  periodStart,
   mrrAdjustmentAmount
 }: {
   userId: number
   invoiceId: string
+  periodStart?: number
   mrrAdjustmentAmount: number | null
 }) => {
   try {
     const res = await analyticsRequest.post('/update-mrr-adjustment', {
       userId,
       invoiceId,
+      periodStart,
       mrrAdjustmentAmount
     })
     handleStatusCode(res.data.code)

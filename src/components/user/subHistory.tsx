@@ -137,6 +137,7 @@ const Index = ({ userId }: { userId: number }) => {
     const [, err] = await updateMrrAdjustmentReq({
       userId,
       invoiceId,
+      periodStart: record?.periodStart,
       mrrAdjustmentAmount: scaledValue
     })
     setSavingMrr(false)
