@@ -3195,11 +3195,13 @@ export const updateMrrAdjustmentReq = async ({
   userId,
   invoiceId,
   periodStart,
+  originalMrrAmount,
   mrrAdjustmentAmount
 }: {
   userId: number
   invoiceId: string
   periodStart?: number
+  originalMrrAmount: number
   mrrAdjustmentAmount: number | null
 }) => {
   try {
@@ -3207,6 +3209,7 @@ export const updateMrrAdjustmentReq = async ({
       userId,
       invoiceId,
       periodStart,
+      originalMrrAmount,
       mrrAdjustmentAmount
     })
     handleStatusCode(res.data.code)

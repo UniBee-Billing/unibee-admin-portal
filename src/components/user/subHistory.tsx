@@ -138,6 +138,7 @@ const Index = ({ userId }: { userId: number }) => {
       userId,
       invoiceId,
       periodStart: record?.periodStart,
+      originalMrrAmount: adj?.originalMrrAmount ?? 0,
       mrrAdjustmentAmount: scaledValue
     })
     setSavingMrr(false)
