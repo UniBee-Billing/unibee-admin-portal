@@ -89,7 +89,7 @@ const Index = ({
     if (isNew) {
       const baseAmount = form.getFieldValue('amount')
       const baseCurrency = form.getFieldValue('currency')
-      
+
       if (baseAmount && baseCurrency) {
         await fetchMultiCurrencyExchange()
       } else {
@@ -116,8 +116,8 @@ const Index = ({
   }, [additionalCurrencies, form])
 
   const updateCurrency = (index: number, field: keyof MultiCurrency, value: any) => {
-    setAdditionalCurrencies(prev => 
-      prev.map((curr, i) => 
+    setAdditionalCurrencies(prev =>
+      prev.map((curr, i) =>
         i === index ? { ...curr, [field]: value } : curr
       )
     )
@@ -130,24 +130,24 @@ const Index = ({
   // Call API to get multi-currency exchange rates
   const fetchMultiCurrencyExchange = async () => {
     if (!isNew) return // Only for new plans
-    
+
     const baseAmount = form.getFieldValue('amount') || 0
     const baseCurrency = form.getFieldValue('currency')
-    
+
     if (!baseAmount || !baseCurrency) return
-    
+
     setApiLoading(true)
     try {
       const baseCurrencyInfo = appConfig.supportCurrency.find(c => c.Currency === baseCurrency)
       const baseAmountWithScale = Math.round(baseAmount * (baseCurrencyInfo?.Scale || 100))
-      
+
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       )
-      
+
       const apiPromise = amountMultiCurrenciesExchangeReq(baseAmountWithScale, baseCurrency)
       const [data, error] = await Promise.race([apiPromise, timeoutPromise]) as [unknown, unknown]
-      
+
       if (error) {
         // console.error('Failed to fetch multi-currency exchange:', error)
         return
@@ -161,7 +161,7 @@ const Index = ({
           amount: config.amount,
           disable: false // Default to enabled as requested
         }))
-        
+
         setAdditionalCurrencies(apiCurrencies)
       }
     } catch (_error) {
@@ -344,7 +344,13 @@ const Index = ({
         ]}
       >
         <InputNumber
-          disabled={disableAfterActive.current || formDisabled}
+          disabled={
+            formDisabled &&
+            !(
+              plan.status == PlanStatus.ACTIVE &&
+              plan.publishStatus == PlanPublishStatus.UNPUBLISHED
+            )
+          }
           style={{ width: 180 }}
           prefix={getCurrency()?.Symbol}
           min={0}
@@ -361,14 +367,14 @@ const Index = ({
             </div>
           ) : (
             <div className="mb-4">
-              
+
               {/* Show plan info when loading from existing plan */}
               {!isNew && additionalCurrencies.length > 0 && (
                 <div className="flex items-center space-x-2 mb-3">
                   <Tag color="green">Plan Configuration</Tag>
                 </div>
               )}
-              
+
               {additionalCurrencies.length > 0 ? (
                 <div className="max-w-5xl">
                   <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
@@ -379,18 +385,17 @@ const Index = ({
                       <div className="text-sm font-medium text-gray-700">Exchange Rate</div>
                       <div className="text-sm font-medium text-gray-700 text-center w-16">Actions</div>
                     </div>
-                    
+
                     {/* Currency Rows */}
                     {additionalCurrencies.map((currency, index) => {
                       const currencyInfo = appConfig.supportCurrency.find(c => c.Currency === currency.currency)
                       return (
-                        <div 
-                          key={index} 
-                          className={`grid grid-cols-[auto,1fr,1fr,auto] gap-4 px-4 py-3 border-b border-gray-100 last:border-b-0 transition-colors ${
-                            currency.disable 
-                              ? 'bg-gray-100 opacity-60' 
+                        <div
+                          key={index}
+                          className={`grid grid-cols-[auto,1fr,1fr,auto] gap-4 px-4 py-3 border-b border-gray-100 last:border-b-0 transition-colors ${currency.disable
+                              ? 'bg-gray-100 opacity-60'
                               : 'hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center space-x-3 min-w-[140px]">
                             <Checkbox
@@ -399,13 +404,12 @@ const Index = ({
                               disabled={formDisabled}
                               className="flex-shrink-0"
                             />
-                            <span className={`font-medium text-sm ${
-                              currency.disable ? 'text-gray-500' : 'text-gray-900'
-                            }`}>
+                            <span className={`font-medium text-sm ${currency.disable ? 'text-gray-500' : 'text-gray-900'
+                              }`}>
                               {currency.currency} ({currencyInfo?.Symbol})
                             </span>
                           </div>
-                          
+
                           <div className="max-w-[140px]">
                             <InputNumber
                               value={currency.amount ? currency.amount / (currencyInfo?.Scale || 100) : 0}
@@ -431,7 +435,7 @@ const Index = ({
                               placeholder="0.00"
                             />
                           </div>
-                          
+
                           <div className="max-w-[140px]">
                             <InputNumber
                               value={currency.exchangeRate}
@@ -454,7 +458,7 @@ const Index = ({
                               placeholder="1.000000"
                             />
                           </div>
-                          
+
                           <div className="flex justify-center w-16">
                             <Button
                               type="text"
@@ -499,7 +503,7 @@ const Index = ({
       >
         <div className="flex items-center gap-4">
           <div className="flex items-center h-[38px] bg-white rounded-lg border border-solid border-gray-200 overflow-hidden !shadow-none [&]:shadow-none [&_*]:shadow-none" style={{ boxShadow: 'none !important', filter: 'none', WebkitBoxShadow: 'none', MozBoxShadow: 'none', WebkitAppearance: 'none' }}>
-            <div className="flex items-center h-[38px] px-4 bg-gray-50 border-r border-solid border-gray-200 !shadow-none [&_*]:shadow-none relative" style={{ 
+            <div className="flex items-center h-[38px] px-4 bg-gray-50 border-r border-solid border-gray-200 !shadow-none [&_*]:shadow-none relative" style={{
               boxShadow: 'none !important',
               WebkitBoxShadow: 'none !important',
               MozBoxShadow: 'none !important',
@@ -518,7 +522,7 @@ const Index = ({
                 {watchPlanType === PlanType.ONE_TIME_ADD_ON ? 'For' : 'Every'}
               </span>
             </div>
-            
+
             <Form.Item
               name="intervalCount"
               noStyle
@@ -556,7 +560,7 @@ const Index = ({
               />
             </Form.Item>
           </div>
-          
+
           <Form.Item
             name="intervalUnit"
             noStyle

@@ -546,6 +546,52 @@ export const togglePublishReq = async ({
   }
 }
 
+// Active plan price change - preview impact
+export const activePriceChangePreviewReq = async ({
+  planId,
+  newAmount
+}: {
+  planId: number
+  newAmount: number
+}) => {
+  try {
+    const res = await request.post(
+      '/merchant/plan/active_price_change/preview',
+      { planId, newAmount }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Active plan price change - confirm and apply
+export const activePriceChangeConfirmReq = async ({
+  planId,
+  newAmount,
+  confirmOldAmount,
+  reason
+}: {
+  planId: number
+  newAmount: number
+  confirmOldAmount: number
+  reason?: string
+}) => {
+  try {
+    const res = await request.post(
+      '/merchant/plan/active_price_change/confirm',
+      { planId, newAmount, confirmOldAmount, reason }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // export const getMetricsListReq = async ({
 //   refreshCb,
 //   page,
