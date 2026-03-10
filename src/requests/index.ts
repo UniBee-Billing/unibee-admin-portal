@@ -546,6 +546,52 @@ export const togglePublishReq = async ({
   }
 }
 
+// Active plan price change - preview impact
+export const activePriceChangePreviewReq = async ({
+  planId,
+  newAmount
+}: {
+  planId: number
+  newAmount: number
+}) => {
+  try {
+    const res = await request.post(
+      '/merchant/plan/active_price_change/preview',
+      { planId, newAmount }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Active plan price change - confirm and apply
+export const activePriceChangeConfirmReq = async ({
+  planId,
+  newAmount,
+  confirmOldAmount,
+  reason
+}: {
+  planId: number
+  newAmount: number
+  confirmOldAmount: number
+  reason?: string
+}) => {
+  try {
+    const res = await request.post(
+      '/merchant/plan/active_price_change/confirm',
+      { planId, newAmount, confirmOldAmount, reason }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // export const getMetricsListReq = async ({
 //   refreshCb,
 //   page,
@@ -3099,6 +3145,72 @@ export const clearMemberTotpReq = async (
     const res = await request.post('/merchant/member/clear_member_totp', {
       memberId,
       totpCode
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// MRR Adjustment: fetch adjustment values for a list of invoices
+export type TMrrAdjustmentItem = {
+  merchantId: number
+  userId: number
+  productId: number
+  planId: number
+  invoiceId: string
+  subscriptionId: string
+  periodStart: number
+  periodEnd: number
+  originalMrrAmount: number
+  mrrAmount: number
+  mrrAdjustmentAmount: number | null
+  currency: string
+}
+
+export const getMrrAdjustmentReq = async ({
+  userId,
+  invoiceList
+}: {
+  userId: number
+  invoiceList: string[]
+}) => {
+  try {
+    const res = await analyticsRequest.post('/mrr-adjustment', {
+      userId,
+      invoiceList
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// MRR Adjustment: update/clear the adjustment value for a specific invoice
+export const updateMrrAdjustmentReq = async ({
+  userId,
+  invoiceId,
+  periodStart,
+  originalMrrAmount,
+  mrrAdjustmentAmount
+}: {
+  userId: number
+  invoiceId: string
+  periodStart?: number
+  originalMrrAmount: number
+  mrrAdjustmentAmount: number | null
+}) => {
+  try {
+    const res = await analyticsRequest.post('/update-mrr-adjustment', {
+      userId,
+      invoiceId,
+      periodStart,
+      originalMrrAmount,
+      mrrAdjustmentAmount
     })
     handleStatusCode(res.data.code)
     return [res.data.data, null]
