@@ -43,9 +43,7 @@ import { TIME_UNITS, TNewPlan, TrialSummary } from './types'
 const Index = () => {
   // Price change modal state
   const [showPriceChangeModal, setShowPriceChangeModal] = useState(false)
-  const [pendingNewAmountInCents, setPendingNewAmountInCents] = useState(0)
   const originalPlanAmountRef = useRef<number>(0) // original amount in cents
-  const pendingSaveRef = useRef<any>(null)
   const [metricData, setMetricData] = useState<MetricData>({
     // metricData is too complicated to be controlled by antd form, so we use context to manage it.
     metricLimits: [],
@@ -298,16 +296,8 @@ const Index = () => {
       return
     }
 
-    let activePlanPriceChanged = false
-    let newAmountForModal = 0
-
     if (plan?.status == PlanStatus.ACTIVE) {
-      // Capture new amount in cents before deleting
-      newAmountForModal = Math.round(f.amount)
-      activePlanPriceChanged =
-        newAmountForModal !== Math.round(originalPlanAmountRef.current)
-
-      // These fields are not editable for active plans, backend will complain if included
+      // These fields are not editable for active plans (price is changed via separate modal)
       delete f.intervalCount
       delete f.intervalUnit
       delete f.amount
@@ -331,14 +321,6 @@ const Index = () => {
     f.metricMeteredCharge = metric.metricMeteredChargeLocal
     f.metricRecurringCharge = metric.metricRecurringChargeLocal
 
-    // If active plan price changed, show confirmation modal instead of saving directly
-    if (activePlanPriceChanged) {
-      pendingSaveRef.current = f
-      setPendingNewAmountInCents(newAmountForModal)
-      setShowPriceChangeModal(true)
-      return
-    }
-
     setLoading(true)
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
@@ -360,23 +342,17 @@ const Index = () => {
     }
   }
 
-  const handlePriceChangeSuccess = async () => {
+  const handlePriceChangeSuccess = () => {
     setShowPriceChangeModal(false)
-    // After price change confirmed, save other fields via regular save
-    if (pendingSaveRef.current) {
-      setLoading(true)
-      const [, err] = await savePlan(pendingSaveRef.current, false)
-      setLoading(false)
-      if (err) {
-        message.error(err.message)
-        return
-      }
-      pendingSaveRef.current = null
-    }
     // Refresh global plan list store and local data
     usePlanListStore.getState().fetchAllPlans(true)
     fetchData()
   }
+
+  const isActivePlan = plan?.status === PlanStatus.ACTIVE
+  const currentPriceDisplay = isActivePlan
+    ? showAmount(originalPlanAmountRef.current, plan?.currency ?? '')
+    : ''
 
   const onActivate = async () => {
     const planId = Number(params.planId)
@@ -643,6 +619,9 @@ const Index = () => {
                         watchPlanType={watchPlanType}
                         formDisabled={formDisabled}
                         disableAfterActive={disableAfterActive}
+                        isActivePlan={isActivePlan}
+                        currentPriceDisplay={currentPriceDisplay}
+                        onOpenPriceChange={() => setShowPriceChangeModal(true)}
                       />
                     )
                   },
@@ -750,7 +729,6 @@ const Index = () => {
         onSuccess={handlePriceChangeSuccess}
         planId={Number(params.planId) || 0}
         oldAmount={originalPlanAmountRef.current}
-        newAmount={pendingNewAmountInCents}
         currency={plan?.currency ?? ''}
       />
     </MetricDataContext.Provider>

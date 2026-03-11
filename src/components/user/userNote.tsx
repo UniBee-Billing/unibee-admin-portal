@@ -159,7 +159,7 @@ const Note = ({ content }: { content: TUserNote }) => {
         {content.note}
       </div>
       <div className="my-2" style={{ fontSize: '11px', color: 'lightgray' }}>
-        <span>{`${content.merchantMember.firstName} ${content.merchantMember.lastName}`}</span>
+        <span>{`${content.merchantMember?.firstName ?? ''} ${content.merchantMember?.lastName ?? ''}`.trim() || 'Unknown'}</span>
         :&nbsp;&nbsp;
         {formatDate(content.createTime, true)}
       </div>

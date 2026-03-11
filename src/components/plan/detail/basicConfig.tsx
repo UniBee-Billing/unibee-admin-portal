@@ -40,6 +40,9 @@ interface Props {
   getCurrency: () => CURRENCY
   loading: boolean
   refresh: () => void
+  isActivePlan?: boolean
+  currentPriceDisplay?: string
+  onOpenPriceChange?: () => void
 }
 const Index = ({
   isNew,
@@ -50,7 +53,10 @@ const Index = ({
   disableAfterActive,
   getCurrency,
   loading,
-  refresh
+  refresh,
+  isActivePlan,
+  currentPriceDisplay,
+  onOpenPriceChange
 }: Props) => {
   const appConfig = useAppConfigStore()
   const [publishing, setPublishing] = useState(false)
@@ -323,40 +329,54 @@ const Index = ({
         />
       </Form.Item>
 
-      <Form.Item
-        label="Price"
-        name="amount"
-        dependencies={['currency']}
-        rules={[
-          {
-            required: true,
-            message: 'Please input your plan price!'
-          },
-          ({ getFieldValue }) => ({
-            validator(_, value) {
-              const num = Number(value)
-              if (!currencyDecimalValidate(num, getFieldValue('currency'))) {
-                return Promise.reject('Please input a valid price')
+      {isActivePlan ? (
+        <Form.Item label="Price">
+          <div>
+            <span className="mr-2 text-base font-medium">{currentPriceDisplay}</span>
+            <Button
+              onClick={onOpenPriceChange}
+              disabled={formDisabled || loading}
+            >
+              Update Price
+            </Button>
+          </div>
+        </Form.Item>
+      ) : (
+        <Form.Item
+          label="Price"
+          name="amount"
+          dependencies={['currency']}
+          rules={[
+            {
+              required: true,
+              message: 'Please input your plan price!'
+            },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                const num = Number(value)
+                if (!currencyDecimalValidate(num, getFieldValue('currency'))) {
+                  return Promise.reject('Please input a valid price')
+                }
+                return Promise.resolve()
               }
-              return Promise.resolve()
+            })
+          ]}
+        >
+          <InputNumber
+            disabled={
+              formDisabled &&
+              !(
+                plan.status == PlanStatus.ACTIVE &&
+                plan.publishStatus == PlanPublishStatus.UNPUBLISHED
+              )
             }
-          })
-        ]}
-      >
-        <InputNumber
-          disabled={
-            formDisabled &&
-            !(
-              plan.status == PlanStatus.ACTIVE &&
-              plan.publishStatus == PlanPublishStatus.UNPUBLISHED
-            )
-          }
-          style={{ width: 180 }}
-          prefix={getCurrency()?.Symbol}
-          min={0}
-          onChange={handleAmountChange}
-        />
-      </Form.Item>
+            style={{ width: 180 }}
+            prefix={getCurrency()?.Symbol}
+            min={0}
+            onChange={handleAmountChange}
+          />
+        </Form.Item>
+      )}
 
       {/* Additional Currencies Section */}
       <Form.Item label="Additional Currencies">
