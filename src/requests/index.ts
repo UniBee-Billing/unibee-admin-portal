@@ -3168,6 +3168,7 @@ export type TMrrAdjustmentItem = {
   mrrAmount: number
   mrrAdjustmentAmount: number | null
   currency: string
+  isDeleted: boolean
 }
 
 export const getMrrAdjustmentReq = async ({

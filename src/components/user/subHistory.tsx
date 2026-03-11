@@ -163,21 +163,28 @@ const Index = ({ userId }: { userId: number }) => {
       cancelEditing()
       return
     }
-    Modal.confirm({
-      className: 'mrr-confirm-modal',
-      title: 'Save changes to this field?',
-      content: (
-        <span style={{ fontSize: 12, color: '#888' }}>
-          Notes: MRR adjustment won't work on canceled subscriptions.
-        </span>
-      ),
-      okText: 'Save',
-      cancelText: 'Cancel',
-      onOk: () => saveMrrAdjustment(invoiceId, editingValue),
-      onCancel: () => {
-        cancelEditing()
-      }
-    })
+    const adj = mrrAdjMap.get(invoiceId)
+    if (adj?.isDeleted) {
+      // Only show confirm modal for deleted data
+      Modal.confirm({
+        className: 'mrr-confirm-modal',
+        title: 'Save changes to this field?',
+        content: (
+          <span style={{ fontSize: 12, color: '#888' }}>
+            Notes: MRR adjustment won't work on canceled subscriptions.
+          </span>
+        ),
+        okText: 'Save',
+        cancelText: 'Cancel',
+        onOk: () => saveMrrAdjustment(invoiceId, editingValue),
+        onCancel: () => {
+          cancelEditing()
+        }
+      })
+    } else {
+      // Save directly without confirmation
+      saveMrrAdjustment(invoiceId, editingValue)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent, invoiceId: string) => {
@@ -335,6 +342,8 @@ const Index = ({ userId }: { userId: number }) => {
         if (!invoiceId) return '―'
 
         const adj = mrrAdjMap.get(invoiceId)
+        // If GET returned no data for this invoice, disable the cell
+        if (!adj) return '―'
         const currency = adj?.currency ?? record.plan?.currency ?? record.currency
         const currencySymbol = getCurrencySymbol(currency)
         const isEditing = editingInvoiceId === invoiceId
