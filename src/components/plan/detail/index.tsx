@@ -5,7 +5,6 @@ import {
   getPlanDetailWithMore,
   savePlan
 } from '@/requests'
-import PriceChangeModal from './priceChangeModal'
 import {
   IBillableMetrics,
   IPlan,
@@ -41,11 +40,6 @@ import Summary from './summary'
 import { TIME_UNITS, TNewPlan, TrialSummary } from './types'
 
 const Index = () => {
-  // Price change modal state
-  const [showPriceChangeModal, setShowPriceChangeModal] = useState(false)
-  const [pendingNewAmountInCents, setPendingNewAmountInCents] = useState(0)
-  const originalPlanAmountRef = useRef<number>(0) // original amount in cents
-  const pendingSaveRef = useRef<any>(null)
   const [metricData, setMetricData] = useState<MetricData>({
     // metricData is too complicated to be controlled by antd form, so we use context to manage it.
     metricLimits: [],
@@ -128,8 +122,8 @@ const Index = () => {
   useEffect(() => {
     let durationTime =
       enableTrialWatch &&
-        Number.isInteger(watchTrialDurationTime) &&
-        watchTrialDurationTime > 0
+      Number.isInteger(watchTrialDurationTime) &&
+      watchTrialDurationTime > 0
         ? watchTrialDurationTime
         : undefined
 
@@ -162,7 +156,7 @@ const Index = () => {
   // disable editing for 4 keys fields after activate(currency, price, intervalUnit/Count)
   const disableAfterActive = useRef(
     plan?.status == PlanStatus.ACTIVE &&
-    plan.publishStatus == PlanPublishStatus.UNPUBLISHED
+      plan.publishStatus == PlanPublishStatus.UNPUBLISHED
   )
   let savable =
     isNew ||
@@ -240,8 +234,7 @@ const Index = () => {
   }, [watchPlanType])
 
   const onSave = async () => {
-    const isActivePlan = plan?.status == PlanStatus.ACTIVE
-    if (productDetail === null && !isActivePlan) {
+    if (productDetail === null) {
       return
     }
     const CURRENCY = getCurrency()
@@ -298,16 +291,8 @@ const Index = () => {
       return
     }
 
-    let activePlanPriceChanged = false
-    let newAmountForModal = 0
-
     if (plan?.status == PlanStatus.ACTIVE) {
-      // Capture new amount in cents before deleting
-      newAmountForModal = Math.round(f.amount)
-      activePlanPriceChanged =
-        newAmountForModal !== Math.round(originalPlanAmountRef.current)
-
-      // These fields are not editable for active plans, backend will complain if included
+      // when in active, these fields are not editable. Although disabled, but backend will complain if included in body
       delete f.intervalCount
       delete f.intervalUnit
       delete f.amount
@@ -331,14 +316,6 @@ const Index = () => {
     f.metricMeteredCharge = metric.metricMeteredChargeLocal
     f.metricRecurringCharge = metric.metricRecurringChargeLocal
 
-    // If active plan price changed, show confirmation modal instead of saving directly
-    if (activePlanPriceChanged) {
-      pendingSaveRef.current = f
-      setPendingNewAmountInCents(newAmountForModal)
-      setShowPriceChangeModal(true)
-      return
-    }
-
     setLoading(true)
     const [updatedPlan, err] = await savePlan(f, isNew)
     setLoading(false)
@@ -348,34 +325,16 @@ const Index = () => {
     }
 
     message.success(`Plan ${isNew ? 'created' : 'saved'}`)
-
+    
     // Force refresh global plan list store
     usePlanListStore.getState().fetchAllPlans(true)
-
+    
     productId.current = updatedPlan.productId
     if (isNew) {
       navigate(`/plan/${updatedPlan.id}?productId=${updatedPlan.productId}`, {
         replace: true
       })
     }
-  }
-
-  const handlePriceChangeSuccess = async () => {
-    setShowPriceChangeModal(false)
-    // After price change confirmed, save other fields via regular save
-    if (pendingSaveRef.current) {
-      setLoading(true)
-      const [, err] = await savePlan(pendingSaveRef.current, false)
-      setLoading(false)
-      if (err) {
-        message.error(err.message)
-        return
-      }
-      pendingSaveRef.current = null
-    }
-    // Refresh global plan list store and local data
-    usePlanListStore.getState().fetchAllPlans(true)
-    fetchData()
   }
 
   const onActivate = async () => {
@@ -450,8 +409,8 @@ const Index = () => {
       addonList.plans == null
         ? []
         : addonList.plans
-          .map(({ plan }: IPlan) => plan)
-          .filter((plan: IPlan) => plan.productId === productId.current)
+            .map(({ plan }: IPlan) => plan)
+            .filter((plan: IPlan) => plan.productId === productId.current)
     const regularAddons = addons.filter((p: IPlan) => p.type == PlanType.ADD_ON)
     const onetimeAddons = addons.filter(
       (p: IPlan) => p.type == PlanType.ONE_TIME_ADD_ON
@@ -494,7 +453,6 @@ const Index = () => {
 
     // plan obj and addon obj are at the same level in planDetailRes.data.data obj
     // but I want to put addonIds obj as a props of the local plan obj.
-    originalPlanAmountRef.current = planDetail.plan.amount // store raw amount in cents before conversion
     planDetail.plan.amount = getAmount(
       planDetail.plan.amount,
       planDetail.plan.currency
@@ -561,7 +519,7 @@ const Index = () => {
         metricRecurringCharge
       } as MetricData,
       useAppConfigStore.getState().currency[
-      planDetail.plan.currency as Currency
+        planDetail.plan.currency as Currency
       ]!,
       'downward'
     )
@@ -744,15 +702,6 @@ const Index = () => {
           </div>{' '}
         </>
       )}
-      <PriceChangeModal
-        open={showPriceChangeModal}
-        onCancel={() => setShowPriceChangeModal(false)}
-        onSuccess={handlePriceChangeSuccess}
-        planId={Number(params.planId) || 0}
-        oldAmount={originalPlanAmountRef.current}
-        newAmount={pendingNewAmountInCents}
-        currency={plan?.currency ?? ''}
-      />
     </MetricDataContext.Provider>
   )
 }
