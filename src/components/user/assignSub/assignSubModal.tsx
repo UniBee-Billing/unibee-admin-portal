@@ -194,13 +194,11 @@ export const AssignSubscriptionModal = ({
   // Replace requirePayment boolean with enum
   const [paymentRequireType, setPaymentRequireType] = useState<PaymentRequireType>(PaymentRequireType.ACTIVATE_AFTER_PAYMENT)
   const [freeMode, setFreeMode] = useState<'custom_end_time' | 'one_period'>('custom_end_time')
-  const [freeStartDate, setFreeStartDate] = useState<dayjs.Dayjs | null>(null)
   const [freeEndDate, setFreeEndDate] = useState<dayjs.Dayjs | null>(null)
 
   // Reset free mode state when payment type changes
   useEffect(() => {
     setFreeMode('custom_end_time')
-    setFreeStartDate(null)
     setFreeEndDate(null)
   }, [paymentRequireType])
 
@@ -862,7 +860,6 @@ export const AssignSubscriptionModal = ({
                     onChange={(e) => {
                       setFreeMode(e.target.value)
                       if (e.target.value === 'one_period') {
-                        setFreeStartDate(null)
                         setFreeEndDate(null)
                       }
                     }}
@@ -881,30 +878,16 @@ export const AssignSubscriptionModal = ({
                       <div style={{ marginBottom: 6, color: '#6b7280', fontSize: 13 }}>
                         Select End Date and Time
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <DatePicker
-                          value={freeStartDate}
-                          onChange={(val) => setFreeStartDate(val)}
-                          disabledDate={(current) =>
-                            current != null && current < dayjs().startOf('day')
-                          }
-                          style={{ flex: 1 }}
-                          placeholder="From"
-                        />
-                        <span style={{ color: '#d1d5db' }}>-</span>
-                        <DatePicker
-                          value={freeEndDate}
-                          onChange={(val) => setFreeEndDate(val)}
-                          disabledDate={(current) => {
-                            if (current == null) return false
-                            if (current < dayjs().startOf('day')) return true
-                            if (freeStartDate && current < freeStartDate.startOf('day')) return true
-                            return false
-                          }}
-                          style={{ flex: 1 }}
-                          placeholder="To"
-                        />
-                      </div>
+                      <DatePicker
+                        showTime
+                        value={freeEndDate}
+                        onChange={(val) => setFreeEndDate(val)}
+                        disabledDate={(current) =>
+                          current != null && current < dayjs().startOf('day')
+                        }
+                        style={{ width: '100%' }}
+                        placeholder="Select date and time"
+                      />
                       {combinedFreeEndTime && combinedFreeEndTime.isBefore(dayjs()) && (
                         <div style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
                           Selected time must be later than the current time
