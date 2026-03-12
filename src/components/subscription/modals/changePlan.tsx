@@ -1,5 +1,5 @@
 import { showAmount } from '@/helpers'
-import { applyDiscountPreviewReq } from '@/requests'
+import { applyDiscountPreviewReq, getCreditConfigForCurrencyReq } from '@/requests'
 import {
   DiscountCode,
   DiscountType,
@@ -67,6 +67,24 @@ const ChangePlan = ({
   ) // null: no code provided
   const [codeChecking, setCodeChecking] = useState(false)
   const [previewInfo, setPreviewInfo] = useState<IPreview | null>(null)
+  const [creditConfigEnabled, setCreditConfigEnabled] = useState<boolean>(false)
+
+  useEffect(() => {
+    const currency = subInfo?.currency
+    if (!currency) return
+    let cancelled = false
+    const fetch = async () => {
+      const [result, error] = await getCreditConfigForCurrencyReq(currency)
+      if (cancelled) return
+      if (error || result === null) {
+        setCreditConfigEnabled(false)
+      } else {
+        setCreditConfigEnabled(result.isEnabled)
+      }
+    }
+    fetch()
+    return () => { cancelled = true }
+  }, [subInfo?.currency])
 
   if (selectedPlanId == null) {
     return null
@@ -88,6 +106,9 @@ const ChangePlan = ({
   }
 
   const getCreditInfo = () => {
+    if (!creditConfigEnabled) {
+      return null
+    }
     if (
       userProfile == undefined ||
       userProfile.promoCreditAccounts == undefined
@@ -96,7 +117,7 @@ const ChangePlan = ({
     }
     const credit: TPromoAccount | undefined =
       userProfile.promoCreditAccounts?.find(
-        (c) => c.currency == selectedPlan.currency
+        (c) => c.currency == subInfo?.currency
       )
     if (credit == undefined) {
       return { credit: null, note: 'No credit available' }
@@ -258,7 +279,7 @@ const ChangePlan = ({
             style={{ width: 240 }}
             value={creditAmt}
             disabled={getCreditInfo()?.credit == null}
-            placeholder={getCreditInfo()?.note}
+            placeholder={!creditConfigEnabled && subInfo?.currency ? `Not configured for ${subInfo.currency}` : getCreditInfo()?.note}
           />
           <Button>Apply</Button>
         </div>

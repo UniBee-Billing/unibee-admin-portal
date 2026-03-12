@@ -1,6 +1,6 @@
 import { showAmount } from '@/helpers'
 import { IPlan, PlanType } from '@/shared.types'
-import { Checkbox, Divider, Input } from 'antd'
+import { Checkbox, InputNumber } from 'antd'
 import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import React, { useEffect, useState } from 'react'
 import LongTextPopover from '../ui/longTextPopover'
@@ -17,7 +17,7 @@ const secondsToUnit = (sec: number) => {
   const units = [...TIME_UNITS].sort((a, b) => b.value - a.value)
   for (let i = 0; i < units.length; i++) {
     if (sec % units[i].value === 0) {
-      return [sec / units[i].value, units[i].value] // if sec is 60 * 60 * 24 * 30 * 3, then return [3, 60 * 60 * 24 * 30 * 3]
+      return [sec / units[i].value, units[i].value]
     }
   }
   throw Error('Invalid time unit')
@@ -26,8 +26,8 @@ const secondsToUnit = (sec: number) => {
 interface IPLanProps {
   plan: IPlan
   selectedPlan: number | null
-  isActive: boolean // whether current plan is the one user has subscribed(Y: highlight it)
-  width?: string // '100%' or arbitrary width like '240px', '16rem' is assumed if not specified.
+  isActive: boolean
+  width?: string
   isThumbnail?: boolean
   setSelectedPlan?: (p: number) => void
   onAddonChange?: (
@@ -44,18 +44,22 @@ const Index = ({
   width,
   setSelectedPlan,
   onAddonChange
-  // isThumbnail = false
 }: IPLanProps) => {
   const [totalAmount, setTotalAmount] = useState(0)
   const addonCheck = (addonId: number) => (e: CheckboxChangeEvent) => {
     onAddonChange?.(addonId, null, e.target.checked)
   }
-  const addonQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const q = Number(e.target.value)
-    if (isNaN(q) || !Number.isInteger(q) || q <= 0) {
-      return
-    }
-    onAddonChange?.(Number(e.target.id), q, null)
+  const addonQuantityChange = (addonId: number, delta: number) => {
+    const addon = plan.addons?.find((a) => a.id === addonId)
+    if (!addon) return
+    const currentQty = Number(addon.quantity) || 1
+    const newQty = Math.max(1, currentQty + delta)
+    onAddonChange?.(addonId, newQty, null)
+  }
+
+  const addonQuantityInputChange = (addonId: number, value: number | null) => {
+    const quantity = Math.max(1, Number(value) || 1)
+    onAddonChange?.(addonId, quantity, null)
   }
 
   const trialInfo = () => {
@@ -69,14 +73,10 @@ const Index = ({
     let lengthUnit = 0
     if (!isNaN(durationTime) && durationTime > 0) {
       enabled = true
-      // amount = getAmount(trialAmount, plan.currency);
       const [val, unit] = secondsToUnit(durationTime)
       lengthUnit = unit
       durationTime = val
-      // setTrialLengthUnit(unit)
-      //  trialDemand?: 'paymentMethod' | '' | boolean // back
       requireCardInfo = trialDemand == 'paymentMethod' ? true : false
-      //   cancelAtTrialEnd?: 0 | 1 | boolean // backend requires this field to be a number of 1 | 0, but to ease the UX, front-end use <Switch />
       autoRenew = cancelAtTrialEnd == 1 ? false : true
     }
     if (!enabled) {
@@ -115,79 +115,91 @@ const Index = ({
     <div style={{ width: width ?? '16rem' }}>
       <div
         onClick={() => setSelectedPlan?.(plan.id)}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-6 rounded-md px-2 py-2`}
         style={{
-          border: `1px solid ${isActive ? 'orange' : '#BDBDBD'}`,
-          background: selectedPlan == plan.id ? '#FFF' : '#FBFBFB'
+          border: `1px solid ${isActive ? '#1677ff' : '#e5e7eb'}`,
+          borderRadius: 8,
+          padding: '16px',
+          background: '#fff',
+          cursor: 'pointer'
         }}
       >
-        <div style={{ fontSize: '28px' }}>
+        {/* Plan name + price */}
+        <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
           <LongTextPopover text={plan.planName} width="250px" />
         </div>
-        <div style={{ fontSize: '14px' }}>
-          {`${showAmount(plan.amount, plan.currency)}`}{' '}
-          {plan.type == PlanType.MAIN &&
-            `/${plan.intervalCount == 1 ? '' : plan.intervalCount}${
-              plan.intervalUnit
-            }`}
+        <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
+          {showAmount(plan.amount, plan.currency)}
         </div>
 
-        {plan.addons && (
-          <div style={{ maxHeight: '74px', overflowY: 'auto' }}>
-            {plan.addons.map((a) => (
-              <div
-                className="flex w-full items-center justify-between"
-                key={a.id}
-              >
-                <Checkbox onChange={addonCheck(a.id)} checked={a.checked}>
-                  <div style={{ display: 'flex' }}>
+        {/* Addons */}
+        {plan.addons && plan.addons.length > 0 && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              Add-ons (Optional)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {plan.addons.map((a) => (
+                <div
+                  key={a.id}
+                  style={{
+                    border: `1px solid ${a.checked ? '#1677ff' : '#e5e7eb'}`,
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    background: a.checked ? '#e6f4ff' : '#fff'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Checkbox
+                      onChange={addonCheck(a.id)}
+                      checked={a.checked}
+                      style={{ marginRight: 0 }}
+                    />
                     <div>
-                      <div
-                        style={{
-                          width: '120px',
-                          textOverflow: 'ellipsis',
-                          overflow: 'hidden',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
+                      <div style={{ fontSize: 13, fontWeight: 500, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {a.planName}
                       </div>
-                      <div style={{ fontSize: '11px' }}>{` ${showAmount(
-                        a.amount,
-                        a.currency
-                      )}/${a.intervalCount == 1 ? '' : a.intervalCount}${
-                        a.intervalUnit
-                      }`}</div>
+                      <div style={{ fontSize: 11, color: '#9ca3af' }}>
+                        {`${showAmount(a.amount, a.currency)}/${a.intervalCount == 1 ? '' : a.intervalCount}${a.intervalUnit}`}
+                      </div>
                     </div>
-
-                    <Input
-                      id={a.id.toString()}
-                      value={a.quantity || 1}
-                      onChange={addonQuantityChange}
-                      disabled={!a.checked}
-                      size="small"
-                      style={{ width: '48px', height: '24px' }}
-                      placeholder="count"
-                    />
                   </div>
-                </Checkbox>
-              </div>
-            ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span
+                        onClick={(e) => { e.stopPropagation(); addonQuantityChange(a.id, -1) }}
+                        style={{ cursor: 'pointer', color: '#1677ff', fontWeight: 700, fontSize: 18, lineHeight: 1, userSelect: 'none' }}
+                      >—</span>
+                      <InputNumber
+                        min={1}
+                        controls={false}
+                        value={Number(a.quantity) || 1}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(value) => addonQuantityInputChange(a.id, value)}
+                        style={{ width: 48 }}
+                        className="addon-qty-input"
+                      />
+                      <span
+                        onClick={(e) => { e.stopPropagation(); addonQuantityChange(a.id, 1) }}
+                        style={{ cursor: 'pointer', color: '#1677ff', fontWeight: 700, fontSize: 18, lineHeight: 1, userSelect: 'none' }}
+                      >+</span>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>
+                      {showAmount((Number(a.quantity) || 1) * a.amount, a.currency)}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#9ca3af' }}>
+                      {`${showAmount(a.amount, a.currency)} × ${Number(a.quantity) || 1}`}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-        <div>{trialInfo()}</div>
 
-        <Divider orientation="left" style={{ margin: '4px 0' }} />
-        <div className="flex w-full justify-around text-lg">
-          <div>Total</div>
-          <div>
-            {`${showAmount(totalAmount, plan.currency)}`}{' '}
-            {plan.type == PlanType.MAIN &&
-              `/${
-                plan.intervalCount == 1 ? '' : plan.intervalCount
-              }${plan.intervalUnit}`}
-          </div>
-        </div>
+        <div>{trialInfo()}</div>
       </div>
     </div>
   )

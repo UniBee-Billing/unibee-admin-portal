@@ -1,4 +1,3 @@
-import { Col, Row } from 'antd'
 import { IProfile } from '../../../shared.types'
 
 export interface UserInfoCardProps {
@@ -6,15 +5,27 @@ export interface UserInfoCardProps {
 }
 
 export const UserInfoCard = ({ user }: { user: IProfile }) => (
-  <Row className="text-gray-600">
-    <Col span={8}>
-      <span>User Id: </span> <span>{user.id}</span>{' '}
-    </Col>
-    <Col span={8}>
-      <span>Name: </span> <span>{`${user.firstName} ${user.lastName}`}</span>{' '}
-    </Col>
-    <Col span={8}>
-      <span>Email: </span> <span>{user.email}</span>{' '}
-    </Col>
-  </Row>
+  <div
+    style={{
+      background: '#e5e7eb',
+      border: '1px solid #e5e7eb',
+      borderRadius: 8,
+      padding: '16px 24px',
+      display: 'flex',
+      gap: 24
+    }}
+  >
+    <div style={{ flex: 1 }}>
+      <div style={{ color: '#9ca3af', fontSize: 12, marginBottom: 2 }}>User ID</div>
+      <div style={{ color: '#1f2937', fontSize: 14, fontWeight: 500 }}>{user.id}</div>
+    </div>
+    <div style={{ flex: 1 }}>
+      <div style={{ color: '#9ca3af', fontSize: 12, marginBottom: 2 }}>Name</div>
+      <div style={{ color: '#1f2937', fontSize: 14, fontWeight: 500 }}>{`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || '-'}</div>
+    </div>
+    <div style={{ flex: 1 }}>
+      <div style={{ color: '#9ca3af', fontSize: 12, marginBottom: 2 }}>Email</div>
+      <div style={{ color: '#1f2937', fontSize: 14, fontWeight: 500 }}>{user.email}</div>
+    </div>
+  </div>
 )

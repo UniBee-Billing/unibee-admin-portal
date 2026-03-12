@@ -1,15 +1,16 @@
 import { PLAN_TYPE } from '@/constants'
 import {
+  Alert,
   Button,
-  Divider,
+  DatePicker,
   Input,
   InputNumber,
   message,
   Modal,
+  Radio,
   Select,
-  // Switch
 } from 'antd'
-import { Currency } from 'dinero.js'
+import dayjs from 'dayjs'
 import update from 'immutability-helper'
 import {
   ChangeEvent,
@@ -84,6 +85,7 @@ interface CreateSubScriptionBody {
   userId: number
   startIncomplete: boolean
   trialEnd?: number
+  freeTimeEnd?: number
   user: UserData & Partial<BusinessUserData>
   vatCountryCode: string | undefined
   vatNumber: string | undefined
@@ -175,25 +177,45 @@ export const AssignSubscriptionModal = ({
     setSelectedCurrency(undefined)
   }, [selectedPlanType])
 
-  // Update selected currency when plan changes
+  // Update selected currency only when a different plan is selected (not on addon toggle)
+  const prevPlanIdRef = useRef<number | undefined>()
   useEffect(() => {
     if (selectedPlan) {
-      // Default to the plan's main currency
-      setSelectedCurrency(selectedPlan.currency)
+      if (prevPlanIdRef.current !== selectedPlan.id) {
+        setSelectedCurrency(selectedPlan.currency)
+      }
+      prevPlanIdRef.current = selectedPlan.id
     } else {
       setSelectedCurrency(undefined)
+      prevPlanIdRef.current = undefined
     }
   }, [selectedPlan])
 
   // Replace requirePayment boolean with enum
   const [paymentRequireType, setPaymentRequireType] = useState<PaymentRequireType>(PaymentRequireType.ACTIVATE_AFTER_PAYMENT)
-  
-  // // Keep the requirePayment for backward compatibility with existing code
-  // const requirePayment = useMemo(() => 
-  //   paymentRequireType !== PaymentRequireType.FREE_FIRST_PERIOD, 
-  //   [paymentRequireType]
-  // )
-  
+  const [freeMode, setFreeMode] = useState<'custom_end_time' | 'one_period'>('custom_end_time')
+  const [freeStartDate, setFreeStartDate] = useState<dayjs.Dayjs | null>(null)
+  const [freeEndDate, setFreeEndDate] = useState<dayjs.Dayjs | null>(null)
+
+  // Reset free mode state when payment type changes
+  useEffect(() => {
+    setFreeMode('custom_end_time')
+    setFreeStartDate(null)
+    setFreeEndDate(null)
+  }, [paymentRequireType])
+
+  // Use the "To" date as the free end time for validation/submission
+  const combinedFreeEndTime = useMemo(() => {
+    if (!freeEndDate) return null
+    return freeEndDate
+  }, [freeEndDate])
+
+  const isFreeEndTimeValid = useMemo(() => {
+    if (paymentRequireType !== PaymentRequireType.FREE_FIRST_PERIOD) return true
+    if (freeMode !== 'custom_end_time') return true
+    return combinedFreeEndTime != null && combinedFreeEndTime.isAfter(dayjs())
+  }, [paymentRequireType, freeMode, combinedFreeEndTime])
+
   const [accountType, setAccountType] = useState(user.type)
   const [previewData, setPreviewData] = useState<PreviewData | undefined>()
   const [discountCode, setDiscountCode] = useState<string | undefined>()
@@ -270,6 +292,25 @@ export const AssignSubscriptionModal = ({
     
     return selectedPlan.amount;
   }, [selectedPlan]);
+
+  // Get addon price for selected currency
+  const getAddonPriceForCurrency = useCallback((addon: IPlan, currency?: string) => {
+    if (!currency) return addon.amount;
+
+    if (currency === addon.currency) {
+      return addon.amount;
+    }
+
+    const addonWithMultiCurrencies = addon as IPlanWithMultiCurrencies;
+    if (addonWithMultiCurrencies.multiCurrencies && addonWithMultiCurrencies.multiCurrencies.length > 0) {
+      const multiCurrency = addonWithMultiCurrencies.multiCurrencies.find((mc: MultiCurrency) => mc.currency === currency);
+      if (multiCurrency) {
+        return multiCurrency.amount;
+      }
+    }
+
+    return addon.amount;
+  }, []);
 
   const onAddonChange = (
     addonId: number,
@@ -379,16 +420,18 @@ export const AssignSubscriptionModal = ({
         .map((a) => ({ quantity: a.quantity as number, addonPlanId: a.id }))
     }
 
-    // console.log(paymentRequireType)
     // Use the new payment requirement type
     if (paymentRequireType === PaymentRequireType.FREE_FIRST_PERIOD) {
-      // const fiveYearFromNow = new Date(
-      //   new Date().setFullYear(new Date().getFullYear() + 5)
-      // )
-
+      if (freeMode === 'custom_end_time' && combinedFreeEndTime) {
+        return {
+          ...submitData,
+          freeInInitialPeriod: true,
+          freeTimeEnd: combinedFreeEndTime.unix()
+        }
+      }
+      // one_period mode
       return {
         ...submitData,
-        // trialEnd: Math.round(fiveYearFromNow.getTime() / 1000)
         freeInInitialPeriod: true
       }
     }
@@ -433,8 +476,18 @@ export const AssignSubscriptionModal = ({
       }
     }
 
+    // Validate freeEndTime for custom_end_time mode
+    if (
+      paymentRequireType === PaymentRequireType.FREE_FIRST_PERIOD &&
+      freeMode === 'custom_end_time'
+    ) {
+      if (!combinedFreeEndTime || combinedFreeEndTime.isBefore(dayjs())) {
+        message.error('Please select a free end time that is later than the current time')
+        return
+      }
+    }
+
     const submitData = getSubmitData(values)
-    // console.log(submitData)
 
     const body = {
       ...submitData,
@@ -500,6 +553,9 @@ export const AssignSubscriptionModal = ({
   // }, [getSubmitData])
 
   const getCreditInfo = () => {
+    if (!creditConfigEnabled) {
+      return null
+    }
     if (user == undefined || user.promoCreditAccounts == undefined) {
       return null
     }
@@ -507,7 +563,7 @@ export const AssignSubscriptionModal = ({
       (c) => c.currency == (selectedCurrency || 'EUR')
     )
     if (credit == undefined) {
-      return { credit: null, note: 'No credit available' }
+      return { credit: null, note: `No credit available for ${selectedCurrency}` }
     }
     return {
       credit: {
@@ -528,9 +584,9 @@ export const AssignSubscriptionModal = ({
     if (creditAmt == 0 || creditAmt == null) {
       return <div className="text-xs text-gray-500">No promo credit used</div>
     }
-    if (creditAmt) {
+    if (creditAmt && previewData) {
       return (
-        <div className="mt-1 text-xs text-green-500">{`At most ${creditAmt} credits (${appConfig.currency[credit.credit.currency as Currency]?.Symbol}${(creditAmt * credit.credit.exchangeRate) / 100}) to be used.`}</div>
+        <div className="mt-1 text-xs text-green-500">{`Credit used(${previewData.invoice.promoCreditPayout?.creditAmount}) ${showAmount(-1 * previewData.invoice.promoCreditDiscountAmount, previewData.invoice.currency)}`}</div>
       )
     }
   }
@@ -572,6 +628,14 @@ export const AssignSubscriptionModal = ({
     return null
   }
 
+  // Get placeholder text for promo credit input
+  const getPromoCreditPlaceholder = () => {
+    if (!creditConfigEnabled && selectedCurrency) {
+      return `Not configured for ${selectedCurrency}`;
+    }
+    return getCreditInfo()?.note || '';
+  };
+
   const onApplyPromoCredit = () => {
     if (creditAmt != null && creditAmt <= 0) {
       message.error('Please enter a valid amount')
@@ -585,16 +649,13 @@ export const AssignSubscriptionModal = ({
   }
 
   useEffect(() => {
-    if (!selectedPlan) {
+    if (!selectedPlan || !selectedCurrency) {
       return
     }
     // Only update price when the currency is valid for the current plan
-    // Allow update when selectedCurrency is undefined (initial state) or when it's valid
-    if (selectedCurrency) {
-      const currencies = getAvailableCurrencies()
-      if (!currencies.includes(selectedCurrency)) {
-        return
-      }
+    const currencies = getAvailableCurrencies()
+    if (!currencies.includes(selectedCurrency)) {
+      return
     }
     // Debounce to avoid firing for transient currency changes (e.g., RUB -> USD)
     const timer = setTimeout(() => {
@@ -619,41 +680,71 @@ export const AssignSubscriptionModal = ({
 
   return (
     <Modal
-      title="Choose a Subscription Plan"
+      title="Choose and Assign Subscription Plan"
       open={true}
       width={'800px'}
-      footer={[
-        <Button key="cancel" onClick={closeModal} disabled={loading}>
-          Cancel
-        </Button>,
-        <Button
-          key="ok"
-          type="primary"
-          onClick={onSubmit}
-          loading={loading}
-          disabled={
-            loading ||
-            isEmpty(selectedPlan) ||
-            (previewData != null && previewData.discountMessage != '') ||
-            // Block when currency is missing or invalid for the selected plan
-            !selectedCurrency ||
-            (selectedPlan != null && selectedCurrency != null && !getAvailableCurrencies().includes(selectedCurrency))
-          }
-        >
-          OK
-        </Button>
-      ]}
-      closeIcon={null}
+      onCancel={closeModal}
+      styles={{ header: { textAlign: 'center', borderBottom: 'none', paddingBottom: 0 }, body: { padding: '24px' }, content: { padding: '20px 24px' } }}
+      footer={
+        <div style={{ display: 'flex', gap: 16, padding: '0' }}>
+          <Button
+            key="cancel"
+            onClick={closeModal}
+            disabled={loading}
+            style={{ flex: 1, height: 44, borderRadius: 8, fontWeight: 500, fontSize: 15 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            key="ok"
+            type="primary"
+            onClick={onSubmit}
+            loading={loading}
+            disabled={
+              loading ||
+              isEmpty(selectedPlan) ||
+              (previewData != null && previewData.discountMessage != '') ||
+              !selectedCurrency ||
+              (selectedPlan != null && selectedCurrency != null && !getAvailableCurrencies().includes(selectedCurrency)) ||
+              !isFreeEndTimeValid
+            }
+            style={{ flex: 1, height: 44, borderRadius: 8, fontWeight: 600, fontSize: 15 }}
+          >
+            Confirm
+          </Button>
+        </div>
+      }
     >
-      <div className="my-6">
+      <div>
         <UserInfoCard user={user} />
-        <Divider orientation="left" style={{ margin: '16px 0' }} />
-        <div className="flex gap-8">
+        <div className="flex gap-8" style={{ marginTop: 24 }}>
           <div className="w-1/2">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-lg text-gray-800">Choose plan type</div>
+            <InfoItem title="" className="">
+              <AccountTypeForm
+                loading={isLoading}
+                previewData={previewData}
+                onFormValuesChange={(changedValues, values, accountType) => {
+                  const [changedKey] = Object.keys(changedValues)
+
+                  setAccountType(accountType)
+                  accountFormValues.current = values as AccountValues
+
+                  if (
+                    TRIGGER_PREVIEW_FIELDS.includes(changedKey) &&
+                    selectedPlan
+                  ) {
+                    updatePrice()
+                  }
+                }}
+                ref={accountTypeFormRef}
+                user={user}
+              ></AccountTypeForm>
+            </InfoItem>
+
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>Select Plan Type:</div>
               <Select
-                style={{ width: 180 }}
+                style={{ width: '100%' }}
                 options={[
                   {
                     label: PLAN_TYPE[PlanType.MAIN].label,
@@ -669,7 +760,9 @@ export const AssignSubscriptionModal = ({
               />
             </div>
 
-            <div className="mb-2 text-lg text-gray-800">Choose plan</div>
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>Select Plan:</div>
+            </div>
             <PlanSelector
               onPlanSelected={setSelectedPlan}
               productId={productId}
@@ -685,8 +778,8 @@ export const AssignSubscriptionModal = ({
 
             {/* Currency Selector */}
             {selectedPlan && getAvailableCurrencies().length > 1 && (
-              <div className="mt-4">
-                <div className="mb-2 text-lg text-gray-800">Choose currency</div>
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>Currency:</div>
                 <Select
                   style={{ width: '100%', height: '40px' }}
                   value={selectedCurrency}
@@ -715,8 +808,13 @@ export const AssignSubscriptionModal = ({
                 <Plan
                   plan={{
                     ...selectedPlan,
-                    currency: selectedCurrency as Currency,
-                    amount: getPlanPriceForCurrency(selectedCurrency) || selectedPlan.amount
+                    currency: selectedCurrency as any,
+                    amount: getPlanPriceForCurrency(selectedCurrency) || selectedPlan.amount,
+                    addons: selectedPlan.addons?.map(addon => ({
+                      ...addon,
+                      currency: selectedCurrency as any,
+                      amount: getAddonPriceForCurrency(addon, selectedCurrency)
+                    }))
                   }}
                   width="280px"
                   selectedPlan={selectedPlan.id}
@@ -726,31 +824,15 @@ export const AssignSubscriptionModal = ({
                 />
               </div>
             )}
-            <InfoItem title="Account type" className="mt-6">
-              <AccountTypeForm
-                loading={isLoading}
-                previewData={previewData}
-                onFormValuesChange={(changedValues, values, accountType) => {
-                  const [changedKey] = Object.keys(changedValues)
-
-                  setAccountType(accountType)
-                  accountFormValues.current = values as AccountValues
-
-                  if (
-                    TRIGGER_PREVIEW_FIELDS.includes(changedKey) &&
-                    selectedPlan
-                  ) {
-                    updatePrice()
-                  }
-                }}
-                ref={accountTypeFormRef}
-                user={user}
-              ></AccountTypeForm>
-            </InfoItem>
           </div>
 
           <div className="w-1/2">
-            <div className="text-lg text-gray-800">Payment</div>
+            <div className="flex items-center gap-2">
+              <div className="text-lg text-gray-800">Payment</div>
+              {paymentRequireType === PaymentRequireType.FREE_FIRST_PERIOD && (
+                <span style={{ background: '#d1fae5', color: '#059669', fontSize: 12, fontWeight: 500, padding: '2px 10px', borderRadius: 999 }}>Free</span>
+              )}
+            </div>
             <div className="my-4">
               <InfoItem title="" horizontal isBold={false}>
                 <Select
@@ -764,6 +846,83 @@ export const AssignSubscriptionModal = ({
                   ]}
                 />
               </InfoItem>
+
+              {paymentRequireType === PaymentRequireType.FREE_FIRST_PERIOD && (
+                <div
+                  style={{
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    padding: '16px',
+                    marginTop: 12,
+                    background: '#f9fafb'
+                  }}
+                >
+                  <Radio.Group
+                    value={freeMode}
+                    onChange={(e) => {
+                      setFreeMode(e.target.value)
+                      if (e.target.value === 'one_period') {
+                        setFreeStartDate(null)
+                        setFreeEndDate(null)
+                      }
+                    }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
+                    <Radio value="custom_end_time" style={{ fontWeight: freeMode === 'custom_end_time' ? 600 : 400 }}>
+                      Custom Free End Time
+                    </Radio>
+                    <Radio value="one_period" style={{ fontWeight: freeMode === 'one_period' ? 600 : 400 }}>
+                      One Period Free
+                    </Radio>
+                  </Radio.Group>
+
+                  {freeMode === 'custom_end_time' && (
+                    <div style={{ marginTop: 16 }}>
+                      <div style={{ marginBottom: 6, color: '#6b7280', fontSize: 13 }}>
+                        Select End Date and Time
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <DatePicker
+                          value={freeStartDate}
+                          onChange={(val) => setFreeStartDate(val)}
+                          disabledDate={(current) =>
+                            current != null && current < dayjs().startOf('day')
+                          }
+                          style={{ flex: 1 }}
+                          placeholder="From"
+                        />
+                        <span style={{ color: '#d1d5db' }}>-</span>
+                        <DatePicker
+                          value={freeEndDate}
+                          onChange={(val) => setFreeEndDate(val)}
+                          disabledDate={(current) => {
+                            if (current == null) return false
+                            if (current < dayjs().startOf('day')) return true
+                            if (freeStartDate && current < freeStartDate.startOf('day')) return true
+                            return false
+                          }}
+                          style={{ flex: 1 }}
+                          placeholder="To"
+                        />
+                      </div>
+                      {combinedFreeEndTime && combinedFreeEndTime.isBefore(dayjs()) && (
+                        <div style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
+                          Selected time must be later than the current time
+                        </div>
+                      )}
+                      <div style={{ color: '#6b7280', fontSize: 12, marginTop: 8 }}>
+                        The free period will end at the selected date and time. After this, the subscription will begin billing according to the selected plan.
+                      </div>
+                    </div>
+                  )}
+
+                  {freeMode === 'one_period' && (
+                    <div style={{ color: '#6b7280', fontSize: 13, marginTop: 16 }}>
+                      The user will receive the first billing period completely free. Billing will automatically start at the beginning of the second period based on the selected plan&apos;s billing cycle.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mr-16 w-full flex-1">
               <PaymentMethodSelector
@@ -776,32 +935,58 @@ export const AssignSubscriptionModal = ({
             </div>
 
             <div className="mt-4 flex-1">
-              <div className="mb-1 mt-2 text-gray-700">Promo Credit</div>
-              <div className="mb-1 flex justify-between">
-                <InputNumber
-                  placeholder={getCreditInfo()?.note}
-                  min={1}
-                  style={{ width: 240 }}
-                  value={creditAmt}
-                  onChange={(value) => setCreditAmt(value)}
-                  disabled={isCreditInputDisabled}
-                />
-                <Button onClick={onApplyPromoCredit} disabled={isCreditInputDisabled}>Apply</Button>
-              </div>
-              {creditUseNote()}
+              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Discounts</div>
 
-              <div className="mb-1 mt-4 text-gray-700">Discount Code</div>
-              <div className="mb-1 flex justify-between">
-                <Input
-                  style={{ width: 240 }}
-                  value={discountCode}
-                  onChange={onDiscountCodeChange}
-                />
-                <Button onClick={onApplyDiscountCode}>Apply</Button>
+              <div style={{ marginBottom: 16 }}>
+                <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, color: '#6b7280' }}>Promotional Credits</span>
+                  {(!creditAmt || creditAmt <= 0) && (
+                    <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', borderRadius: 999, padding: '1px 8px' }}>No applied</span>
+                  )}
+                </div>
+                <div className="flex" style={{ gap: 8 }}>
+                  <InputNumber
+                    placeholder={getPromoCreditPlaceholder()}
+                    min={1}
+                    style={{ flex: 1 }}
+                    value={creditAmt}
+                    onChange={(value) => setCreditAmt(value)}
+                    disabled={isCreditInputDisabled}
+                  />
+                  <Button
+                    onClick={onApplyPromoCredit}
+                    disabled={isCreditInputDisabled}
+                    type="primary"
+                    style={{ fontWeight: 600, borderRadius: 6 }}
+                  >Apply</Button>
+                </div>
+                {creditUseNote()}
               </div>
-              {discountCodeUseNote()}
 
-              <div className="my-8 h-[1px] w-full bg-gray-100"></div>
+              <div style={{ marginBottom: 16 }}>
+                <div className="flex items-center justify-between" style={{ marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, color: '#6b7280' }}>Discount Code</span>
+                  {(!discountCode || discountCode.trim() === '') && (
+                    <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', borderRadius: 999, padding: '1px 8px' }}>No applied</span>
+                  )}
+                </div>
+                <div className="flex" style={{ gap: 8 }}>
+                  <Input
+                    style={{ flex: 1 }}
+                    value={discountCode}
+                    onChange={onDiscountCodeChange}
+                    placeholder="Enter Discount Code"
+                  />
+                  <Button
+                    onClick={onApplyDiscountCode}
+                    type="primary"
+                    style={{ fontWeight: 600, borderRadius: 6 }}
+                  >Apply</Button>
+                </div>
+                {discountCodeUseNote()}
+              </div>
+
+              {/* Checkout summary items */}
               <CheckoutItem
                 label="Subtotal"
                 loading={isLoading}
@@ -833,17 +1018,14 @@ export const AssignSubscriptionModal = ({
                   value={formatAmount(previewData?.invoice.taxAmount)}
                 />
               )}
-              {selectedPlan && (
-                <div className="my-8 h-[1px] w-full bg-gray-100"></div>
-              )}
-              <CheckoutItem
-                labelStyle="text-lg"
-                loading={isLoading}
-                label="Total"
-                value={formatAmount(previewData?.totalAmount)}
-              />
             </div>
           </div>
+        </div>
+
+        {/* Total bar */}
+        <div style={{ background: '#f3f4f6', borderRadius: 8, padding: '12px 16px', marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 16, fontWeight: 600 }}>Total</span>
+          <span style={{ fontSize: 16, fontWeight: 600 }}>{formatAmount(previewData?.totalAmount)}</span>
         </div>
       </div>
     </Modal>
