@@ -20,6 +20,9 @@ export const normalizeAmt = (iv: UserInvoice[]) => {
     if (v.originAmount != null) {
       v.originAmount /= f
     }
+    if (v.promoCreditDiscountAmount != null) {
+      v.promoCreditDiscountAmount /= f
+    }
 
     v.lines?.forEach((l) => {
       ;(l.amount as number) /= f

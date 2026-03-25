@@ -35,6 +35,7 @@ import { ReactElement, useEffect, useState } from 'react'
 import PaymentSelector from '../ui/paymentSelector'
 import { UserStatusTag } from '../ui/statusTag'
 import PaymentCardList from '../user/paymentCards'
+import ResumeModal from '../user/resumeModal'
 import SuspendModal from '../user/suspendModal'
 import './userAccountTab.css'
 
@@ -60,6 +61,8 @@ const UserAccountTab = ({
   const [loading, setLoading] = useState(false)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false)
   const toggleSuspend = () => setSuspendModalOpen(!suspendModalOpen)
+  const [resumeModalOpen, setResumeModalOpen] = useState(false)
+  const toggleResume = () => setResumeModalOpen(!resumeModalOpen)
   const [gatewayId, setGatewayId] = useState<number | undefined>(undefined)
   const onGatewayChange = (gatewayId: number) => setGatewayId(gatewayId) // React.ChangeEventHandler<HTMLInputElement> = (evt) =>
   const [gatewayPaymentType, setGatewayPaymentType] = useState<
@@ -195,6 +198,13 @@ const UserAccountTab = ({
               setRefreshSub={setRefreshSub}
             />
           )}
+          {resumeModalOpen && (
+            <ResumeModal
+              user={user}
+              closeModal={toggleResume}
+              refresh={refresh}
+            />
+          )}
 
           <Form
             form={form}
@@ -212,10 +222,18 @@ const UserAccountTab = ({
             <Row>
               <Col span={12}>
                 <Form.Item label="User Id / External Id" name="id">
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className="text-gray-500">{`${user?.id} / ${user?.externalUserId == '' ? '―' : user?.externalUserId}`}</span>
-                    &nbsp;&nbsp;
                     {UserStatusTag(user.status)}
+                    {user.status == UserStatus.SUSPENDED && (
+                      <Button
+                        size="small"
+                        onClick={toggleResume}
+                        disabled={loading}
+                      >
+                        Resume
+                      </Button>
+                    )}
                   </div>
                 </Form.Item>
               </Col>

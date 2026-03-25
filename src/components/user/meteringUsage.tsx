@@ -13,10 +13,9 @@ import {
 import {
   EyeOutlined,
   LoadingOutlined,
-  MoreOutlined,
   SyncOutlined
 } from '@ant-design/icons'
-import { Button, Col, Divider, Dropdown, message, Popover, Row, Table } from 'antd'
+import { Button, Col, Divider, message, Popover, Row, Table } from 'antd'
 import { ColumnsType } from 'antd/es/table'
 import { useEffect, useRef, useState } from 'react'
 import ViewTotalLimitModal from './metricLimitModals/viewTotalLimitModal'
@@ -132,40 +131,74 @@ const Index = ({
       title: 'Limit Value',
       dataIndex: ['metricLimit', 'TotalLimit'],
       key: 'TotalLimit',
-      render: (totalLimit, record) => (
-        <div className="flex items-center gap-1">
-          <span>{totalLimit}</span>
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: 'viewTotalLimit',
-                  label: 'View Total Limit',
-                  icon: <EyeOutlined />
+      render: (totalLimit: number, record: LimitMetricUsage) => {
+        const metricType = record.metricLimit?.type
+        if (metricType === MetricType.CHARGE_METERED || metricType === MetricType.CHARGE_RECURRING) {
+          return 'Unlimited'
+        }
+        return (
+          <div className="flex items-center gap-1">
+            <span>{totalLimit}</span>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'viewTotalLimit',
+                    label: 'View Total Limit',
+                    icon: <EyeOutlined />
+                  }
+                ],
+                onClick: ({ key }) => {
+                  if (key === 'viewTotalLimit') {
+                    setViewTotalLimitModal({ open: true, metricLimit: record.metricLimit })
+                  }
                 }
-              ],
-              onClick: ({ key }) => {
-                if (key === 'viewTotalLimit') {
-                  setViewTotalLimitModal({ open: true, metricLimit: record.metricLimit })
-                }
-              }
-            }}
-            trigger={['click']}
-          >
-            <Button
-              type="text"
-              size="small"
-              icon={<MoreOutlined />}
-              style={{ marginLeft: 4 }}
-            />
-          </Dropdown>
-        </div>
-      )
+              }}
+              trigger={['click']}
+            >
+              <Button
+                type="text"
+                size="small"
+                icon={<MoreOutlined />}
+                style={{ marginLeft: 4 }}
+              />
+            </Dropdown>
+          </div>
+        )
+      }
     },
     {
       title: 'Consumed',
       dataIndex: 'CurrentUsedValue',
       key: 'CurrentUsedValue'
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <div className="flex items-center gap-2">
+          <a
+            className="text-blue-500 cursor-pointer"
+            onClick={() => setViewTotalLimitModal({ open: true, metricLimit: record.metricLimit })}
+          >
+            View
+          </a>
+          <span className="text-gray-400">|</span>
+          <a
+            className="text-blue-500 cursor-pointer"
+            onClick={() => setEditUserLimitModal({ open: true, metricLimit: record.metricLimit })}
+          >
+            Edit
+          </a>
+          <span className="text-gray-400">|</span>
+          <a
+            className="text-blue-500 cursor-pointer"
+            onClick={() => setRecordActivityModal({ open: true, metricLimit: record.metricLimit })}
+          >
+            Activity
+          </a>
+        </div>
+      )
     }
   ]
 

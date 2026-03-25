@@ -1,4 +1,4 @@
-import { normalizeSub, showAmount } from '@/helpers'
+import { daysBetweenDate, normalizeSub, showAmount } from '@/helpers'
 import { getSubDetailInProductReq } from '@/requests'
 import {
   InvoiceStatus,
@@ -347,6 +347,27 @@ const Index = ({
                 {subInfo &&
                   dayjs(new Date(subInfo.currentPeriodEnd * 1000)).format(
                     'YYYY-MMM-DD'
+                  )}
+                {subInfo != null &&
+                  subInfo.trialEnd != 0 &&
+                  subInfo.trialEnd > subInfo.currentPeriodEnd && (
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        color: '#f44336',
+                        marginLeft: '6px'
+                      }}
+                    >
+                      +
+                      {daysBetweenDate(
+                        subInfo.currentPeriodEnd * 1000,
+                        subInfo.trialEnd * 1000
+                      )}{' '}
+                      days →{' '}
+                      {dayjs(new Date(subInfo.trialEnd * 1000)).format(
+                        'YYYY-MMM-DD'
+                      )}
+                    </span>
                   )}
               </Col>
             </Row>

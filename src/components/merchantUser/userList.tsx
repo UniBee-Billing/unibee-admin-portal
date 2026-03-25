@@ -6,6 +6,7 @@ import {
   getMerchantUserListWithMoreReq,
   inviteMemberReq,
   suspendMemberReq,
+  resumeMemberReq,
   updateMemberRolesReq,
   getRoleListReq
 } from '@/requests'
@@ -17,6 +18,7 @@ import {
   SyncOutlined,
   UserAddOutlined,
   UserDeleteOutlined,
+  UserSwitchOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons'
 import {
@@ -90,6 +92,14 @@ const Index = () => {
       setActiveUser(undefined)
     }
     setSuspendModalOpen(!suspendModalOpen)
+  }
+
+  const [resumeModalOpen, setResumeModalOpen] = useState(false)
+  const toggleResumeModal = () => {
+    if (resumeModalOpen) {
+      setActiveUser(undefined)
+    }
+    setResumeModalOpen(!resumeModalOpen)
   }
 
   const normalizeSearchTerms = () => {
@@ -229,18 +239,33 @@ const Index = () => {
             />
           </Tooltip>
 
-          <Tooltip title="Suspend account">
-            <Button
-              type="text"
-              className="btn-merchant-suspend"
-              disabled={loading}
-              onClick={() => {
-                setActiveUser(record);
-                toggleSuspendModal();
-              }}
-              icon={<UserDeleteOutlined className="text-red-500" />}
-            />
-          </Tooltip>
+          {record.status !== 2 ? (
+            <Tooltip title="Suspend account">
+              <Button
+                type="text"
+                className="btn-merchant-suspend"
+                disabled={loading}
+                onClick={() => {
+                  setActiveUser(record);
+                  toggleSuspendModal();
+                }}
+                icon={<UserDeleteOutlined className="text-red-500" />}
+              />
+            </Tooltip>
+          ) : (
+            <Tooltip title="Resume account">
+              <Button
+                type="text"
+                className="btn-merchant-resume"
+                disabled={loading}
+                onClick={() => {
+                  setActiveUser(record);
+                  toggleResumeModal();
+                }}
+                icon={<UserSwitchOutlined className="text-green-500" />}
+              />
+            </Tooltip>
+          )}
         </Space>
       )
     }
@@ -302,6 +327,13 @@ const Index = () => {
       {suspendModalOpen && (
         <SuspendModal
           closeModal={toggleSuspendModal}
+          refresh={fetchData}
+          userData={activeUser}
+        />
+      )}
+      {resumeModalOpen && (
+        <ResumeModal
+          closeModal={toggleResumeModal}
           refresh={fetchData}
           userData={activeUser}
         />
@@ -392,6 +424,16 @@ const Index = () => {
                   ) {
                     setActiveUser(user)
                     toggleSuspendModal()
+                    return
+                  }
+
+                  // Check if clicked on resume button
+                  if (
+                    tgt instanceof Element &&
+                    tgt.closest('.btn-merchant-resume')
+                  ) {
+                    setActiveUser(user)
+                    toggleResumeModal()
                     return
                   }
                   // navigate(`/admin/${user.id}`)
@@ -674,6 +716,92 @@ const SuspendModal = ({
           disabled={loading}
         >
           Suspend
+        </Button>
+      </div>
+    </Modal>
+  )
+}
+
+const ResumeModal = ({
+  closeModal,
+  refresh,
+  userData
+}: {
+  closeModal: () => void
+  refresh: () => void
+  userData: IMerchantMemberProfile | undefined
+}) => {
+  const [loading, setLoading] = useState(false)
+
+  const onConfirm = async () => {
+    if (userData == null) {
+      return
+    }
+    setLoading(true)
+    const [_, err] = await resumeMemberReq(userData!.id)
+    setLoading(false)
+    if (null != err) {
+      message.error(err.message)
+      return
+    }
+
+    message.success(
+      `Admin account of '${userData!.firstName} ${userData!.lastName}' has been resumed`
+    )
+    closeModal()
+    refresh()
+  }
+
+  return (
+    <Modal
+      title={`Resume account confirm`}
+      width={'640px'}
+      open={true}
+      footer={null}
+      closeIcon={null}
+    >
+      <Row style={rowStyle}>
+        <Col span={8} style={colStyle}>
+          First Name
+        </Col>
+        <Col span={16}>{userData?.firstName}</Col>
+      </Row>
+      <Row style={rowStyle}>
+        <Col style={colStyle} span={8}>
+          Last Name
+        </Col>
+        <Col span={16}>{userData?.lastName}</Col>
+      </Row>
+      <Row style={rowStyle}>
+        <Col style={colStyle} span={8}>
+          Email
+        </Col>
+        <Col span={16}>{userData?.email}</Col>
+      </Row>
+      <Row style={rowStyle}>
+        <Col style={colStyle} span={8}>
+          Roles
+        </Col>
+        <Col span={16}>
+          <Space size={[0, 8]} wrap>
+            {userData?.MemberRoles.map((r) => (
+              <Tag key={r.id as number}>{r.role}</Tag>
+            ))}
+          </Space>
+        </Col>
+      </Row>
+
+      <div className="mt-6 flex items-center justify-end gap-4">
+        <Button onClick={closeModal} disabled={loading}>
+          Cancel
+        </Button>
+        <Button
+          type="primary"
+          onClick={onConfirm}
+          loading={loading}
+          disabled={loading}
+        >
+          Resume
         </Button>
       </div>
     </Modal>

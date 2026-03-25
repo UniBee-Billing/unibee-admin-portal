@@ -26,6 +26,7 @@ import VATSenseRecords from './components/settings/integrations/vatsense/VATSens
 import RefundModule from './components/refund'
 import SubscriptionDetail from './components/subscription/detail'
 import SubscriptionList from './components/subscription/list'
+import UsageEvents from './components/subscription/usageEvents'
 import CustomerDetail from './components/user/detail'
 import CustomerList from './components/user/list'
 import { TwoFactorSetup, TwoFactorVerify } from './components/twoFactor'
@@ -88,6 +89,10 @@ export const APP_ROUTES: RouteObject[] = [
       {
         path: ':subscriptionId',
         element: <SubscriptionDetail />
+      },
+      {
+        path: 'usage-events',
+        element: <UsageEvents />
       }
     ]
   },

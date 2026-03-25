@@ -430,7 +430,7 @@ const Index = ({
       </div>
 
       {/* Multi-Currency Pricing Section */}
-      {watchDiscountType !== DiscountType.PERCENTAGE && watchDiscountAmount && watchDiscountAmount > 0 && (
+      {watchDiscountType !== DiscountType.PERCENTAGE && watchDiscountAmount > 0 && (
         <div className="mt-4 mb-4">
           <div className="bg-gray-50 rounded-md p-4">
             <div className="flex items-center justify-between mb-3">

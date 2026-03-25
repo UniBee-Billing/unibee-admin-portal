@@ -303,13 +303,7 @@ const VATCorrectModal = ({ open, onClose, record, onConfirm }: VATCorrectModalPr
               type="primary"
               size="large"
               onClick={handleConfirm}
-              style={{
-                backgroundColor: '#FFD700',
-                borderColor: '#FFD700',
-                color: '#000',
-                fontWeight: 500
-              }}
-              className="flex-1 hover:opacity-90"
+              className="flex-1"
             >
               Confirm
             </Button>
@@ -344,13 +338,7 @@ const VATCorrectModal = ({ open, onClose, record, onConfirm }: VATCorrectModalPr
               size="large"
               onClick={handleFinalConfirm}
               loading={loading}
-              style={{
-                backgroundColor: '#FFD700',
-                borderColor: '#FFD700',
-                color: '#000',
-                fontWeight: 500
-              }}
-              className="flex-1 hover:opacity-90"
+              className="flex-1"
             >
               Confirm
             </Button>

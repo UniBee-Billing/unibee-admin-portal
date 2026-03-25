@@ -534,13 +534,58 @@ export const togglePublishReq = async ({
   planId: number
   publishAction: 'PUBLISH' | 'UNPUBLISH'
 }) => {
-  const url = `/merchant/plan/${
-    publishAction === 'PUBLISH' ? 'publish' : 'unpublished'
-  }`
+  const url = `/merchant/plan/${publishAction === 'PUBLISH' ? 'publish' : 'unpublished'
+    }`
   try {
     const res = await request.post(url, { planId })
     handleStatusCode(res.data.code)
     return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Active plan price change - preview impact
+export const activePriceChangePreviewReq = async ({
+  planId,
+  newAmount
+}: {
+  planId: number
+  newAmount: number
+}) => {
+  try {
+    const res = await request.post(
+      '/merchant/plan/active_price_change/preview',
+      { planId, newAmount }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Active plan price change - confirm and apply
+export const activePriceChangeConfirmReq = async ({
+  planId,
+  newAmount,
+  confirmOldAmount,
+  reason
+}: {
+  planId: number
+  newAmount: number
+  confirmOldAmount: number
+  reason?: string
+}) => {
+  try {
+    const res = await request.post(
+      '/merchant/plan/active_price_change/confirm',
+      { planId, newAmount, confirmOldAmount, reason }
+    )
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -607,6 +652,7 @@ type TMetricsBody = {
   metricId: number
   metricName: string
   metricDescription: string
+  carryoverProrationEnabled?: boolean
 }
 type TMetricsBodyNew = {
   // for creation
@@ -615,6 +661,7 @@ type TMetricsBodyNew = {
   metricDescription: string
   aggregationType: number
   aggregationProperty: number
+  carryoverProrationEnabled?: boolean
 }
 // create a new or save an existing metrics
 export const saveMetricsReq = async (
@@ -671,7 +718,7 @@ export const sendMetricEventReq = async (body: {
 }
 
 export const getMetricUsageBySubIdReq = async (
-  subId: number,
+  subId: string,
   refreshCb?: () => void
 ) => {
   try {
@@ -1393,6 +1440,17 @@ export const suspendUserReq = async (userId: number) => {
   }
 }
 
+export const resumeUserReq = async (userId: number) => {
+  try {
+    const res = await request.post(`/merchant/user/resume_user`, { userId })
+    handleStatusCode(res.data.code)
+    return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // not the same as user signup, this is for admin to create the user.
 type TNewUserInfo = {
   externalUserId?: string
@@ -1492,8 +1550,12 @@ export const getDiscountCodeDetailWithMore = async (
   const [[discount, errDiscount], [planList, errPlanList]] = await Promise.all([
     getDiscountCodeDetailReq(codeId),
     getPlanList({
-      type: [PlanType.MAIN],
-      status: [PlanStatus.ACTIVE],
+      status: [
+        PlanStatus.ACTIVE,
+        PlanStatus.INACTIVE,
+        PlanStatus.SOFT_ARCHIVED,
+        PlanStatus.HARD_ARCHIVED
+      ],
       page: 0,
       count: 500
     })
@@ -1756,6 +1818,7 @@ export const revokeInvoiceReq = async (invoiceId: string) => {
 
 export const refundReq = async (body: {
   invoiceId: string
+  paymentId?: string
   refundAmount: number
   reason: string
 }) => {
@@ -1763,6 +1826,22 @@ export const refundReq = async (body: {
     const res = await request.post(`/merchant/invoice/refund`, body)
     handleStatusCode(res.data.code)
     return [null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const getSplitPaymentsReq = async (
+  invoiceId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(`/merchant/invoice/split_payments`, {
+      params: { invoiceId }
+    })
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data, null]
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
     return [null, e]
@@ -1924,6 +2003,19 @@ export const updateMemberRolesReq = async ({
 export const suspendMemberReq = async (memberId: number) => {
   try {
     const res = await request.post('/merchant/member/suspend_member', {
+      memberId
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+export const resumeMemberReq = async (memberId: number) => {
+  try {
+    const res = await request.post('/merchant/member/resume_member', {
       memberId
     })
     handleStatusCode(res.data.code)
@@ -2678,15 +2770,15 @@ export const getExportColumnListReq = async (task: TExportDataType) => {
 // Multi-currency related functions
 export const getCreditConfigForCurrencyReq = async (currency: string) => {
   try {
-    const res = await request.post(`/merchant/credit/config_list`, { 
-      types: [2], 
-      currency 
+    const res = await request.post(`/merchant/credit/config_list`, {
+      types: [2],
+      currency
     })
     handleStatusCode(res.data.code)
-    
+
     const creditConfigs = res.data.data.creditConfigs || []
     const isEnabled = creditConfigs.length > 0 && creditConfigs[0]?.payoutEnable === 1
-    
+
     return [{ creditConfigs, isEnabled }, null] as const
   } catch (err) {
     const e = err instanceof Error ? err : new Error('Unknown error')
@@ -2935,6 +3027,115 @@ export const deleteTotpDeviceReq = async (
   }
 }
 
+export const getUpcomingInvoicePreviewReq = async (
+  subscriptionId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/subscription/preview_subscription_next_invoice`,
+      { params: { subscriptionId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.invoice ?? null, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get metric event list for usage events page
+export const getMetricEventListReq = async ({
+  metricIds,
+  subscriptionIds,
+  page,
+  count,
+  createTimeStart,
+  createTimeEnd,
+  invoiceId
+}: {
+  metricIds?: number[]
+  subscriptionIds?: string[]
+  page?: number
+  count?: number
+  createTimeStart?: number
+  createTimeEnd?: number
+  invoiceId?: string
+}) => {
+  try {
+    const res = await request.post('/merchant/metric/event_list', {
+      metricIds,
+      subscriptionIds,
+      page,
+      count,
+      createTimeStart,
+      createTimeEnd,
+      invoiceId,
+      sortField: 'gmt_create',
+      sortType: 'desc'
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get user history metric by subscription (for non-active subscriptions)
+export const getHistoryMetricBySubscriptionReq = async (
+  subscriptionId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/metric_by_subscription`,
+      { params: { subscriptionId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.userHistoryMetric, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// List invoices that can be used for metric_by_invoice query
+export const getMetricQueryableInvoicesReq = async (
+  params: { userId: number; subscriptionId?: string; page?: number; count?: number },
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/invoices_metric_queryable`,
+      { params }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// Get user history metric by invoice
+export const getHistoryMetricByInvoiceReq = async (
+  invoiceId: string,
+  refreshCb?: () => void
+) => {
+  try {
+    const res = await request.get(
+      `/merchant/metric/user/history/metric_by_invoice`,
+      { params: { invoiceId } }
+    )
+    handleStatusCode(res.data.code, refreshCb)
+    return [res.data.data?.userHistoryMetric, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
 // Clear another member's 2FA (admin function)
 export const clearMemberTotpReq = async (
   memberId: number,
@@ -2944,6 +3145,73 @@ export const clearMemberTotpReq = async (
     const res = await request.post('/merchant/member/clear_member_totp', {
       memberId,
       totpCode
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// MRR Adjustment: fetch adjustment values for a list of invoices
+export type TMrrAdjustmentItem = {
+  merchantId: number
+  userId: number
+  productId: number
+  planId: number
+  invoiceId: string
+  subscriptionId: string
+  periodStart: number
+  periodEnd: number
+  originalMrrAmount: number
+  mrrAmount: number
+  mrrAdjustmentAmount: number | null
+  currency: string
+  isDeleted: boolean
+}
+
+export const getMrrAdjustmentReq = async ({
+  userId,
+  invoiceList
+}: {
+  userId: number
+  invoiceList: string[]
+}) => {
+  try {
+    const res = await analyticsRequest.post('/mrr-adjustment', {
+      userId,
+      invoiceList
+    })
+    handleStatusCode(res.data.code)
+    return [res.data.data, null]
+  } catch (err) {
+    const e = err instanceof Error ? err : new Error('Unknown error')
+    return [null, e]
+  }
+}
+
+// MRR Adjustment: update/clear the adjustment value for a specific invoice
+export const updateMrrAdjustmentReq = async ({
+  userId,
+  invoiceId,
+  periodStart,
+  originalMrrAmount,
+  mrrAdjustmentAmount
+}: {
+  userId: number
+  invoiceId: string
+  periodStart?: number
+  originalMrrAmount: number
+  mrrAdjustmentAmount: number | null
+}) => {
+  try {
+    const res = await analyticsRequest.post('/update-mrr-adjustment', {
+      userId,
+      invoiceId,
+      periodStart,
+      originalMrrAmount,
+      mrrAdjustmentAmount
     })
     handleStatusCode(res.data.code)
     return [res.data.data, null]

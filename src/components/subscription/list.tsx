@@ -354,7 +354,14 @@ const Index = () => {
       title: 'End',
       dataIndex: 'currentPeriodEnd',
       key: 'currentPeriodEnd',
-      render: (_, sub) => formatDate(sub.currentPeriodEnd, true)
+      render: (_, sub) => {
+        // If trialEnd exists and is greater than currentPeriodEnd, show trialEnd (extended due date)
+        const endDate =
+          sub.trialEnd != 0 && sub.trialEnd > sub.currentPeriodEnd
+            ? sub.trialEnd
+            : sub.currentPeriodEnd
+        return formatDate(endDate, true)
+      }
     },
     {
       title: 'User',
@@ -656,8 +663,8 @@ const Index = () => {
           exporting={exporting}
           onPageChange={onPageChange}
           clearFilters={clearFilters}
-          planFilterOptions={planFilterRef.current}
-          internalPlanNameFilterOptions={internalPlanNameFilterRef.current}
+          planFilterOptions={globalPlanOptions}
+          internalPlanNameFilterOptions={globalInternalPlanNameOptions}
           updateFilters={setFilters}
           page={page}
         />

@@ -1,3 +1,4 @@
+import { PLAN_STATUS, PLAN_TYPE } from '@/constants'
 import { numBoolConvert, showAmount, toFixedNumber } from '@/helpers'
 import { useSkipFirstRender } from '@/hooks'
 import {
@@ -166,17 +167,14 @@ const Index = () => {
     // if discount.currency is EUR, and discountType == fixed-amt, then filter the planList to contain only euro plans
     let plans =
       planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
-
-    // ① Only allow ACTIVE plans to be selected/displayed
-    plans = plans.filter((p: IPlan) => p.status === PlanStatus.ACTIVE)
-
-    // If discount type is fixed amount, filter by currency as well
+    // Exclude EDITING plans
+    plans = plans.filter((p: IPlan) => p.status != PlanStatus.EDITING)
     if (discount.discountType == DiscountType.AMOUNT) {
       plans = plans.filter((p: IPlan) => p.currency == discount.currency)
     }
     setPlanList(plans)
-    // keep the same ACTIVE-only rule for the ref copy as well
-    planListRef.current = plans
+    planListRef.current =
+      planList.plans == null ? [] : planList.plans.map((p: IPlan) => p.plan)
 
     discount.validityRange = [
       dayjs(discount.startTime * 1000),
@@ -207,8 +205,12 @@ const Index = () => {
     setLoading(true)
     const [res, err] = await getPlanList(
       {
-        type: [PlanType.MAIN],
-        status: [PlanStatus.ACTIVE],
+        status: [
+          PlanStatus.ACTIVE,
+          PlanStatus.INACTIVE,
+          PlanStatus.SOFT_ARCHIVED,
+          PlanStatus.HARD_ARCHIVED
+        ],
         page: 0,
         count: 500
       },
@@ -222,6 +224,8 @@ const Index = () => {
     const { plans } = res
     // if NEW_CODE.currency is EUR, and discountType == fixed-amt, then filter the planList to contain only euro plans
     let planList = plans == null ? [] : plans.map((p: IPlan) => p.plan)
+    // Exclude EDITING plans
+    planList = planList.filter((p: IPlan) => p.status != PlanStatus.EDITING)
     if (DEFAULT_NEW_CODE.discountType == DiscountType.AMOUNT) {
       planList = planList.filter(
         (p: IPlan) => p.currency == DEFAULT_NEW_CODE.currency
@@ -357,7 +361,15 @@ const Index = () => {
         <span className="text-xs text-gray-500">
           {showAmount(p.amount, p.currency)}/
           {p.intervalCount == 1 ? '' : p.intervalCount}
-          {p.intervalUnit})
+          {p.intervalUnit}
+        </span>
+        )&nbsp;
+        <span className="text-xs text-blue-500">
+          [{PLAN_TYPE[p.type]?.label}]
+        </span>
+        &nbsp;
+        <span className="text-xs" style={{ color: PLAN_STATUS[p.status]?.color }}>
+          [{PLAN_STATUS[p.status]?.label}]
         </span>
       </>
     )

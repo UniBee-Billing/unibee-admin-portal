@@ -5,7 +5,7 @@ import {
   MetricAggregationType,
   MetricType
 } from '@/shared.types'
-import { EditOutlined, DeleteOutlined, PlusOutlined, SyncOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { EditOutlined, InboxOutlined, PlusOutlined, SyncOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { Button, Input, Tag, Tooltip, message, Modal } from 'antd'
 
 const { Search } = Input
@@ -92,42 +92,40 @@ const Index = () => {
     navigate(`/billable-metric/${record.id}`)
   }
 
-  const handleDelete = (record: IBillableMetrics, e: React.MouseEvent) => {
+  const handleArchive = (record: IBillableMetrics, e: React.MouseEvent) => {
     e.stopPropagation()
-    
+
     Modal.confirm({
-      title: 'Delete Billable Metric',
+      title: 'Archive Billable Metric',
       icon: <ExclamationCircleOutlined />,
       content: (
         <div>
-          <p>Are you sure you want to delete this billable metric?</p>
+          <p>Are you sure you want to archive this billable metric?</p>
           <p className="mt-2">
             <strong>Name:</strong> {record.metricName}
           </p>
           <p>
             <strong>Code:</strong> {record.code}
           </p>
-          <p className="mt-2 text-red-500">This action cannot be undone.</p>
         </div>
       ),
-      okText: 'Delete',
-      okType: 'danger',
+      okText: 'Archive',
       cancelText: 'Cancel',
       onOk: async () => {
         try {
           const [, error] = await deleteMetricReq(record.id)
-          
+
           if (error) {
-            message.error('Failed to delete metric: ' + error.message)
+            message.error('Failed to archive metric: ' + error.message)
             return
           }
-          
-          message.success('Metric deleted successfully')
+
+          message.success('Metric archived successfully')
           // Refresh the list
           fetchMetricsList()
         } catch (err) {
-          message.error('An error occurred while deleting the metric')
-          console.error('Exception in handleDelete:', err)
+          message.error('An error occurred while archiving the metric')
+          console.error('Exception in handleArchive:', err)
         }
       },
     })
@@ -138,13 +136,14 @@ const Index = () => {
       title: 'Name',
       dataIndex: 'metricName',
       key: 'metricName',
-      width: 180,
+      width: 120,
+      ellipsis: true,
     },
     {
       title: 'Code',
       dataIndex: 'code',
       key: 'code',
-      width: 150,
+      width: 120,
       render: (code: string) => (
         <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm font-mono">
           {code}
@@ -155,14 +154,19 @@ const Index = () => {
       title: 'Description',
       dataIndex: 'metricDescription',
       key: 'metricDescription',
+      width: 150,
       ellipsis: true,
-      render: (desc: string) => desc || '-',
+      render: (desc: string) => (
+        <Tooltip title={desc} placement="topLeft">
+          <span>{desc || '-'}</span>
+        </Tooltip>
+      ),
     },
     {
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
-      width: 150,
+      width: 120,
       render: (t: MetricType) => {
         const typeLabel = METRICS_TYPE[t]?.label || t
         return <Tag color="blue">{typeLabel}</Tag>
@@ -172,7 +176,7 @@ const Index = () => {
       title: 'Aggregation',
       dataIndex: 'aggregationType',
       key: 'aggregationType',
-      width: 150,
+      width: 100,
       render: (aggreType: MetricAggregationType) => {
         const aggreLabel = METRICS_AGGREGATE_TYPE[aggreType]?.label || aggreType
         return <span>{aggreLabel}</span>
@@ -182,13 +186,24 @@ const Index = () => {
       title: 'Updated',
       dataIndex: 'gmtModify',
       key: 'gmtModify',
-      width: 150,
+      width: 160,
       render: (d) => formatDate(d, true)
+    },
+    {
+      title: 'Status',
+      dataIndex: 'archived',
+      key: 'archived',
+      width: 80,
+      render: (archived: boolean) => (
+        <Tag color={archived ? 'default' : 'green'}>
+          {archived ? 'Archived' : 'Active'}
+        </Tag>
+      )
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 100,
       fixed: 'right',
       render: (_: any, record: IBillableMetrics) => (
         <div className="flex items-center gap-3">
@@ -199,11 +214,12 @@ const Index = () => {
               onClick={(e) => handleEdit(record, e)}
             />
           </Tooltip>
-          <Tooltip title="Delete">
+          <Tooltip title="Archive">
             <Button
               type="text"
-              icon={<DeleteOutlined className="text-red-500" />}
-              onClick={(e) => handleDelete(record, e)}
+              icon={<InboxOutlined className="text-gray-500" />}
+              onClick={(e) => handleArchive(record, e)}
+              disabled={record.archived}
             />
           </Tooltip>
         </div>
@@ -289,7 +305,7 @@ const Index = () => {
             }}
             loading={loading}
             onChange={handleTableChange}
-            scroll={{ x: 1200 }}
+            scroll={{ x: 950 }}
             onRow={(record) => {
               return {
                 onClick: () => {

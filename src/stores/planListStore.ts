@@ -74,21 +74,31 @@ export const usePlanListStore = create<PlanListSlice>()((set, get) => ({
       return orderA - orderB
     })
 
+    const isArchived = (status: number | undefined) =>
+      status === PlanStatus.SOFT_ARCHIVED || status === PlanStatus.HARD_ARCHIVED
+
+
     const planOptions = allPlans
-      .map((p) => ({
-        value: p.plan?.id as number,
-        text: `#${p.plan?.id} ${p.plan?.planName}`
-      }))
+      .map((p) => {
+        const archived = isArchived(p.plan?.status)
+        return {
+          value: p.plan?.id as number,
+          text: `#${p.plan?.id} ${p.plan?.planName}${archived ? ' [Archived]' : ''}`
+        }
+      })
       .filter((p) => p.value && p.text)
 
     const internalPlanNameOptions = allPlans
       .filter(
         (p) => p.plan?.internalName != null && p.plan?.internalName.trim() !== ''
       )
-      .map((p) => ({
-        value: p.plan?.id as number,
-        text: `#${p.plan?.id} ${p.plan?.internalName}`
-      }))
+      .map((p) => {
+        const archived = isArchived(p.plan?.status)
+        return {
+          value: p.plan?.id as number,
+          text: `#${p.plan?.id} ${p.plan?.internalName}${archived ? ' [Archived]' : ''}`
+        }
+      })
       .filter((p) => p.value)
 
     const planTypeToIds: { [key: number]: number[] } = {}
