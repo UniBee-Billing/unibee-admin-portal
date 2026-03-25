@@ -12,8 +12,6 @@ import {
 } from '@/shared.types'
 import {
   EyeOutlined,
-  EditOutlined,
-  HistoryOutlined,
   LoadingOutlined,
   MoreOutlined,
   SyncOutlined
@@ -22,8 +20,6 @@ import { Button, Col, Divider, Dropdown, message, Popover, Row, Table } from 'an
 import { ColumnsType } from 'antd/es/table'
 import { useEffect, useRef, useState } from 'react'
 import ViewTotalLimitModal from './metricLimitModals/viewTotalLimitModal'
-import EditUserLimitModal from './metricLimitModals/editUserLimitModal'
-import RecordActivityModal from './metricLimitModals/recordActivityModal'
 
 const Index = ({
   userId,
@@ -49,15 +45,7 @@ const Index = ({
     metricLimit: LimitMetricUsage['metricLimit'] | null
   }>({ open: false, metricLimit: null })
 
-  const [editUserLimitModal, setEditUserLimitModal] = useState<{
-    open: boolean
-    metricLimit: LimitMetricUsage['metricLimit'] | null
-  }>({ open: false, metricLimit: null })
 
-  const [recordActivityModal, setRecordActivityModal] = useState<{
-    open: boolean
-    metricLimit: LimitMetricUsage['metricLimit'] | null
-  }>({ open: false, metricLimit: null })
 
   const getSubInProduct = async () => {
     if (loading) {
@@ -154,25 +142,11 @@ const Index = ({
                   key: 'viewTotalLimit',
                   label: 'View Total Limit',
                   icon: <EyeOutlined />
-                },
-                {
-                  key: 'editUserLimit',
-                  label: "Edit User's Limit",
-                  icon: <EditOutlined />
-                },
-                {
-                  key: 'recordActivity',
-                  label: 'Records Activity',
-                  icon: <HistoryOutlined />
                 }
               ],
               onClick: ({ key }) => {
                 if (key === 'viewTotalLimit') {
                   setViewTotalLimitModal({ open: true, metricLimit: record.metricLimit })
-                } else if (key === 'editUserLimit') {
-                  setEditUserLimitModal({ open: true, metricLimit: record.metricLimit })
-                } else if (key === 'recordActivity') {
-                  setRecordActivityModal({ open: true, metricLimit: record.metricLimit })
                 }
               }
             }}
@@ -304,24 +278,7 @@ const Index = ({
           onClose={() => setViewTotalLimitModal({ open: false, metricLimit: null })}
         />
       )}
-      {editUserLimitModal.open && editUserLimitModal.metricLimit && (
-        <EditUserLimitModal
-          userId={userId}
-          productId={productId}
-          subscriptionId={subscriptionIdRef.current}
-          metricLimit={editUserLimitModal.metricLimit}
-          onClose={() => setEditUserLimitModal({ open: false, metricLimit: null })}
-          onSuccess={getSubInProduct}
-        />
-      )}
-      {recordActivityModal.open && recordActivityModal.metricLimit && (
-        <RecordActivityModal
-          userId={userId}
-          productId={productId}
-          metricLimit={recordActivityModal.metricLimit}
-          onClose={() => setRecordActivityModal({ open: false, metricLimit: null })}
-        />
-      )}
+
       <div className="my-6 text-lg text-gray-600">Limit Metered / Recurring Usage</div>
       <Table
         // rowKey={'id'}

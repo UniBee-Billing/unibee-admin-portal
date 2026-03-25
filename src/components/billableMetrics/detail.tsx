@@ -704,7 +704,7 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
                 label={
                   <span>
                     Metric Type{' '}
-                    <Tooltip title="Limit Metered: quota resets each billing cycle; Limit Recurring: quota accumulates across cycles; Charge Metered: usage-based billing; Charge Recurring: fixed recurring charge">
+                    <Tooltip title="Limit Metered: quota resets each billing cycle; Charge Metered: usage-based billing; Charge Recurring: fixed recurring charge">
                       <span className="text-gray-400">ⓘ</span>
                     </Tooltip>
                   </span>
@@ -713,7 +713,7 @@ ${watchAggreType == MetricAggregationType.COUNT ? '' : '# __PROPERTY_VALUE__'}`
               >
                 <Select disabled={!isNew}>
                   <Select.Option value={MetricType.LIMIT_METERED}>Limit Metered</Select.Option>
-                  <Select.Option value={MetricType.LIMIT_RECURRING}>Limit Recurring</Select.Option>
+
                   <Select.Option value={MetricType.CHARGE_METERED}>Charge Metered</Select.Option>
                   <Select.Option value={MetricType.CHARGE_RECURRING}>Charge Recurring</Select.Option>
                 </Select>

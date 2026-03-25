@@ -89,9 +89,7 @@ const Index = ({
               )}
               options={metricsList
                 .filter(
-                  (m) =>
-                    m.type == MetricType.LIMIT_METERED ||
-                    m.type == MetricType.LIMIT_RECURRING
+                  (m) => m.type == MetricType.LIMIT_METERED
                 )
                 .map((m) => ({
                   label: m.metricName,
