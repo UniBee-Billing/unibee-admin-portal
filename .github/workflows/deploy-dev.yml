@@ -1,9 +1,10 @@
 name: Deploy development environment
 
-on:
-  push:
-    branches:
-      - develop/v**
+# on:
+#   push:
+#     branches:
+#       - develop/v**
+on: workflow_dispatch
 
 jobs:
   parse-version:
